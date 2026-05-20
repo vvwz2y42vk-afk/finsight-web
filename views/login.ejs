@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تسجيل الدخول — Finsight</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/client.css">
+</head>
+<body>
+<div class="login-wrap">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="ico">FS</div>
+      <h2>Finsight</h2>
+      <p>لوحة تحكم الموظفين</p>
+    </div>
+    <% if (error) { %>
+      <div class="login-error"><%= error %></div>
+    <% } %>
+    <form method="POST" action="/login">
+      <div class="login-group">
+        <label>كلمة المرور</label>
+        <input type="password" name="password" placeholder="••••••••" autofocus>
+      </div>
+      <button type="submit" class="login-btn">دخول ←</button>
+    </form>
+    <div style="margin-top:20px;text-align:center;">
+      <a href="/" style="color:#555;font-size:12px;">← العودة للموقع</a>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>الوحدات المتاحة — Finsight</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/client.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-ico">FS</div>
+      <div>
+        <div class="logo-name">Finsight</div>
+        <div class="logo-sub">Real Estate</div>
+      </div>
+    </div>
+    <nav class="site-nav">
+      <a href="/" class="nav-link">الرئيسية</a>
+      <a href="/apartments" class="nav-link active">الوحدات المتاحة</a>
+      <a href="/inquiry" class="nav-link">تواصل معنا</a>
+      <a href="/inquiry" class="btn btn-gold btn-sm" style="margin-right:8px;">احجز الآن</a>
+    </nav>
+  </div>
+</header>
+
+<div class="page-hero">
+  <div class="page-hero-inner">
+    <h1>🏠 الوحدات المتاحة</h1>
+    <p>تصفح الوحدات الشاغرة واحجز مباشرة</p>
+  </div>
+</div>
+
+<section class="section">
+  <div class="section-inner">
+
+    <!-- Filter -->
+    <div class="filter-bar">
+      <a href="/apartments" class="filter-btn <%= selectedBuilding === '' ? 'active' : '' %>">الكل</a>
+      <% buildings.forEach(b => { %>
+        <a href="/apartments?building=<%= encodeURIComponent(b) %>" class="filter-btn <%= selectedBuilding === b ? 'active' : '' %>"><%= b %></a>
+      <% }) %>
+    </div>
+
+    <%
+      const bClass = { 'المنارا': 'm', 'جوان ان': 'j', 'الماسة': 'a', 'الواحة': 'w' };
+      const bIcon  = { 'المنارا': '🏢', 'جوان ان': '🏨', 'الماسة': '💎', 'الواحة': '🌴' };
+      const keys = Object.keys(available);
+    %>
+
+    <% if (keys.length === 0) { %>
+      <div class="empty-state">
+        <div class="ico">🏠</div>
+        <p>لا توجد وحدات متاحة حالياً في هذا المجمع</p>
+        <a href="/inquiry" class="btn btn-gold" style="margin-top:16px;display:inline-flex;">📩 أرسل طلب انتظار</a>
+      </div>
+    <% } else { %>
+      <% keys.forEach(bName => { %>
+        <% const data = available[bName]; %>
+        <% if (data.free.length === 0) return; %>
+        <div class="apt-section">
+          <div class="apt-section-hd <%= bClass[bName] || 'm' %>">
+            <span style="font-size:1.4rem;"><%= bIcon[bName] || '🏢' %></span>
+            <div>
+              <h3><%= bName %></h3>
+            </div>
+            <div class="apt-count"><%= data.free.length %> وحدة متاحة</div>
+          </div>
+          <div class="apt-grid">
+            <% data.free.forEach(apt => { %>
+              <div class="apt-card">
+                <div class="apt-num"><%= apt.apt %></div>
+                <div class="apt-floor"><%= apt.floor %></div>
+                <div class="apt-status">متاحة</div>
+                <a href="/inquiry?building=<%= encodeURIComponent(bName) %>&apartment=<%= apt.apt %>">احجز ←</a>
+              </div>
+            <% }) %>
+          </div>
+        </div>
+      <% }) %>
+    <% } %>
+
+  </div>
+</section>
+
+<section class="cta-banner">
+  <div class="container">
+    <h2>لم تجد ما يناسبك؟</h2>
+    <p>أرسل طلبك وسنتواصل معك بمجرد توفر وحدة مناسبة</p>
+    <a href="/inquiry" class="btn btn-gold">📩 أرسل طلبك</a>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <p>© 2026 Finsight Real Estate — <a href="/login">لوحة التحكم</a></p>
+</footer>
+
+</body>
+</html>

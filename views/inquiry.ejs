@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>طلب حجز — Finsight</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/client.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-ico">FS</div>
+      <div>
+        <div class="logo-name">Finsight</div>
+        <div class="logo-sub">Real Estate</div>
+      </div>
+    </div>
+    <nav class="site-nav">
+      <a href="/" class="nav-link">الرئيسية</a>
+      <a href="/apartments" class="nav-link">الوحدات المتاحة</a>
+      <a href="/inquiry" class="nav-link active">تواصل معنا</a>
+    </nav>
+  </div>
+</header>
+
+<div class="page-hero">
+  <div class="page-hero-inner">
+    <h1>📩 طلب حجز أو استفسار</h1>
+    <p>أرسل بياناتك وسيتواصل معك فريقنا خلال ٢٤ ساعة</p>
+  </div>
+</div>
+
+<section class="section">
+  <div class="form-wrap">
+
+    <% if (success) { %>
+      <div class="success-box">
+        <div class="ico">✅</div>
+        <h3>تم إرسال طلبك بنجاح!</h3>
+        <p>سيتواصل معك فريق Finsight في أقرب وقت ممكن</p>
+        <div style="margin-top:20px;display:flex;gap:10px;justify-content:center;">
+          <a href="/apartments" class="btn btn-gold">تصفح المزيد</a>
+          <a href="/" class="btn btn-outline">الرئيسية</a>
+        </div>
+      </div>
+    <% } else { %>
+      <div class="form-card">
+        <h2 style="margin-bottom:24px;font-size:1.3rem;">أرسل طلبك</h2>
+
+        <% if (typeof error !== 'undefined' && error) { %>
+          <div style="background:rgba(192,57,43,.1);border:1px solid rgba(192,57,43,.2);color:#c0392b;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:13px;"><%= error %></div>
+        <% } %>
+
+        <form method="POST" action="/inquiry">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>الاسم الكامل *</label>
+              <input type="text" name="name" required placeholder="محمد العمري">
+            </div>
+            <div class="form-group">
+              <label>رقم الجوال *</label>
+              <input type="tel" name="phone" required placeholder="05xxxxxxxx">
+            </div>
+            <div class="form-group">
+              <label>البريد الإلكتروني</label>
+              <input type="email" name="email" placeholder="example@email.com">
+            </div>
+            <div class="form-group">
+              <label>المجمع المفضل</label>
+              <select name="building">
+                <option value="">غير محدد</option>
+                <% buildings.forEach(b => { %>
+                  <option value="<%= b %>" <%= b === building ? 'selected' : '' %>><%= b %></option>
+                <% }) %>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>الميزانية الشهرية</label>
+              <select name="budget">
+                <option value="">غير محدد</option>
+                <option>أقل من ١٥٠٠ ﷼</option>
+                <option>١٥٠٠ - ٣٠٠٠ ﷼</option>
+                <option>٣٠٠٠ - ٥٠٠٠ ﷼</option>
+                <option>أكثر من ٥٠٠٠ ﷼</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>مدة الإيجار</label>
+              <select name="duration">
+                <option value="">غير محدد</option>
+                <option>شهر</option>
+                <option>٣ أشهر</option>
+                <option>٦ أشهر</option>
+                <option>سنة</option>
+              </select>
+            </div>
+            <% if (apartment) { %>
+            <div class="form-group form-full">
+              <label>الوحدة المطلوبة</label>
+              <input type="text" name="apartmentRef" value="<%= building %> — شقة <%= apartment %>" readonly style="background:#f0f0f0;">
+            </div>
+            <% } %>
+            <div class="form-group form-full">
+              <label>رسالتك / ملاحظات</label>
+              <textarea name="message" placeholder="اكتب أي تفاصيل إضافية أو استفسار..."></textarea>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-gold form-submit">📩 إرسال الطلب</button>
+        </form>
+      </div>
+
+      <div style="margin-top:20px;background:#f9f7f2;border:1px solid #e8e4da;border-radius:12px;padding:20px 24px;display:flex;gap:16px;align-items:center;">
+        <span style="font-size:1.8rem;">📞</span>
+        <div>
+          <div style="font-size:13px;font-weight:700;margin-bottom:2px;">تفضل بالتواصل المباشر</div>
+          <div style="font-size:12px;color:#777;">يمكنك التواصل معنا عبر واتساب وسنرد فوراً</div>
+        </div>
+        <a href="https://wa.me/966500000000" target="_blank" class="btn btn-gold btn-sm" style="margin-right:auto;">واتساب ←</a>
+      </div>
+    <% } %>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <p>© 2026 Finsight Real Estate — <a href="/login">لوحة التحكم</a></p>
+</footer>
+
+</body>
+</html>

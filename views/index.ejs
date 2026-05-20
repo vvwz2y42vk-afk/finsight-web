@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Finsight — وحدات سكنية متميزة</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/client.css">
+</head>
+<body>
+
+<!-- Header -->
+<header class="site-header">
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-ico">FS</div>
+      <div>
+        <div class="logo-name">Finsight</div>
+        <div class="logo-sub">Real Estate</div>
+      </div>
+    </div>
+    <nav class="site-nav">
+      <a href="/" class="nav-link active">الرئيسية</a>
+      <a href="/apartments" class="nav-link">الوحدات المتاحة</a>
+      <a href="/inquiry" class="nav-link">تواصل معنا</a>
+      <a href="/inquiry" class="btn btn-gold btn-sm" style="margin-right:8px;">احجز الآن</a>
+    </nav>
+  </div>
+</header>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">🏙️ إدارة عقارية احترافية</div>
+    <h1>سكنك المثالي<br><span>في قلب المدينة المنورة</span></h1>
+    <p class="hero-sub">٤ مجمعات سكنية متكاملة — وحدات متنوعة تناسب جميع الاحتياجات مع خدمة إدارية على أعلى مستوى</p>
+    <div class="hero-btns">
+      <a href="/apartments" class="btn btn-gold">🏠 تصفح الوحدات المتاحة</a>
+      <a href="/inquiry" class="btn btn-outline" style="color:rgba(255,255,255,.8);border-color:rgba(255,255,255,.3);">📞 تواصل معنا</a>
+    </div>
+    <div class="hero-stats">
+      <div style="text-align:center;">
+        <div class="hero-stat-num"><%= stats.totalContracts %>+</div>
+        <div class="hero-stat-lbl">عقد إيجاري نشط</div>
+      </div>
+      <div style="text-align:center;">
+        <div class="hero-stat-num"><%= stats.buildings %></div>
+        <div class="hero-stat-lbl">مجمعات سكنية</div>
+      </div>
+      <div style="text-align:center;">
+        <div class="hero-stat-num"><%= stats.totalUnits %></div>
+        <div class="hero-stat-lbl">وحدة سكنية</div>
+      </div>
+      <div style="text-align:center;">
+        <div class="hero-stat-num"><%= stats.freeUnits %></div>
+        <div class="hero-stat-lbl">وحدة متاحة الآن</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Buildings -->
+<section class="section section-alt">
+  <div class="section-inner">
+    <div class="section-hd">
+      <div class="section-label">مجمعاتنا السكنية</div>
+      <h2 class="section-title">٤ مواقع متميزة في المدينة المنورة</h2>
+      <p class="section-sub">كل مجمع يوفر بيئة سكنية راقية بخدمات متكاملة</p>
+    </div>
+    <div class="buildings-grid">
+      <div class="building-card">
+        <div class="building-card-hd bc-m">
+          <h3>🏢 المنارا</h3>
+          <span>Almanara Residence</span>
+        </div>
+        <div class="building-card-body">
+          <div class="bc-row"><span>الوحدات</span><b>٣٢ وحدة</b></div>
+          <div class="bc-row"><span>الطوابق</span><b>٦ أدوار</b></div>
+          <div class="bc-row"><span>النوع</span><b>شقق سكنية</b></div>
+        </div>
+        <div class="bc-cta"><a href="/apartments?building=المنارا">عرض الوحدات المتاحة ←</a></div>
+      </div>
+      <div class="building-card">
+        <div class="building-card-hd bc-j">
+          <h3>🏨 جوان إن</h3>
+          <span>Jouan Inn</span>
+        </div>
+        <div class="building-card-body">
+          <div class="bc-row"><span>الوحدات</span><b>٢٢ وحدة</b></div>
+          <div class="bc-row"><span>الطوابق</span><b>٥ أدوار</b></div>
+          <div class="bc-row"><span>النوع</span><b>شقق سكنية</b></div>
+        </div>
+        <div class="bc-cta"><a href="/apartments?building=جوان ان">عرض الوحدات المتاحة ←</a></div>
+      </div>
+      <div class="building-card">
+        <div class="building-card-hd bc-a">
+          <h3>💎 الماسة</h3>
+          <span>Al-Masa Residence</span>
+        </div>
+        <div class="building-card-body">
+          <div class="bc-row"><span>الوحدات</span><b>١٦ وحدة</b></div>
+          <div class="bc-row"><span>الطوابق</span><b>٣ أدوار</b></div>
+          <div class="bc-row"><span>النوع</span><b>شقق راقية</b></div>
+        </div>
+        <div class="bc-cta"><a href="/apartments?building=الماسة">عرض الوحدات المتاحة ←</a></div>
+      </div>
+      <div class="building-card">
+        <div class="building-card-hd bc-w">
+          <h3>🌴 الواحة</h3>
+          <span>Al-Waha Residence</span>
+        </div>
+        <div class="building-card-body">
+          <div class="bc-row"><span>الوحدات</span><b>٢٤ وحدة</b></div>
+          <div class="bc-row"><span>الطوابق</span><b>٣ أدوار</b></div>
+          <div class="bc-row"><span>النوع</span><b>شقق عائلية</b></div>
+        </div>
+        <div class="bc-cta"><a href="/apartments?building=الواحة">عرض الوحدات المتاحة ←</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section class="section">
+  <div class="section-inner">
+    <div class="section-hd">
+      <div class="section-label">لماذا Finsight</div>
+      <h2 class="section-title">خدمات على أعلى مستوى</h2>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-ico">⚡</div>
+        <h3>حجز سريع</h3>
+        <p>أرسل طلبك الآن وسنتواصل معك خلال ٢٤ ساعة لإتمام جميع الإجراءات</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-ico">🔒</div>
+        <h3>عقود موثوقة</h3>
+        <p>عقود إيجار موثقة إلكترونياً عبر منصة إيجار مع ضمان حقوق الطرفين</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-ico">🏆</div>
+        <h3>إدارة احترافية</h3>
+        <p>فريق إداري متخصص يتابع جميع احتياجاتك طوال فترة الإقامة</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-ico">📍</div>
+        <h3>مواقع متميزة</h3>
+        <p>جميع مجمعاتنا في مواقع استراتيجية في المدينة المنورة قريبة من الخدمات والمرافق</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-banner">
+  <div class="container">
+    <h2>هل تبحث عن وحدة سكنية؟</h2>
+    <p>تواصل معنا الآن وسنساعدك في العثور على ما يناسبك</p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+      <a href="/apartments" class="btn btn-gold">🏠 تصفح الوحدات</a>
+      <a href="/inquiry" class="btn btn-white">📩 أرسل طلبك</a>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="site-footer">
+  <p>© 2026 Finsight Real Estate — جميع الحقوق محفوظة &nbsp;|&nbsp; <a href="/login">لوحة التحكم</a></p>
+</footer>
+
+</body>
+</html>
