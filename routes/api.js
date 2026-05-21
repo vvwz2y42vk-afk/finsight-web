@@ -9,9 +9,26 @@ const auth = (req, res, next) => {
   res.status(401).json({ error: 'غير مخوّل' });
 };
 
+// ─── Auto-close expired contracts ────────────────────────
+async function autoCloseExpired() {
+  const contracts = await Contract.find({ st: { $nin: ['مغلق'] }, ex: { $ne: '' } }).lean();
+  const today = new Date(); today.setHours(0,0,0,0);
+  const toClose = contracts.filter(c => {
+    if (!c.ex) return false;
+    const parts = String(c.ex).trim().split('/');
+    if (parts.length !== 3) return false;
+    const d = new Date(`${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`);
+    return !isNaN(d) && d < today;
+  });
+  if (toClose.length) {
+    await Promise.all(toClose.map(c => Contract.updateOne({ id: c.id }, { st: 'مغلق' })));
+  }
+}
+
 // ─── Contracts ────────────────────────────────────────────
 router.get('/contracts', auth, async (req, res) => {
   try {
+    await autoCloseExpired();
     const contracts = await Contract.find().lean();
     res.json(contracts);
   } catch (e) { res.status(500).json({ error: e.message }); }
