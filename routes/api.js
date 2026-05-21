@@ -143,23 +143,24 @@ router.post('/ai/chat', auth, async (req, res) => {
   try {
     const { message, context } = req.body;
     const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) return res.status(500).json({ error: 'مفتاح Gemini غير موجود' });
+    if (!apiKey) return res.status(500).json({ text: 'مفتاح Gemini غير موجود في الإعدادات.' });
 
+    const fullPrompt = `${context}\n\nسؤال المستخدم: ${message}`;
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          systemInstruction: { parts: [{ text: context }] },
-          contents: [{ parts: [{ text: message }] }]
+          contents: [{ role: 'user', parts: [{ text: fullPrompt }] }]
         })
       }
     );
     const data = await response.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || 'عذراً، لم أفهم السؤال.';
+    if (data.error) return res.json({ text: `خطأ: ${data.error.message}` });
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || 'لم يصل رد من الذكاء الاصطناعي.';
     res.json({ text });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { res.status(500).json({ text: `تعذّر الاتصال: ${e.message}` }); }
 });
 
 module.exports = router;
