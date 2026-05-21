@@ -182,12 +182,52 @@ tbody td{padding:7px 5px;font-size:11px;}
 .toast.show{transform:translateX(50%) translateY(0);}
 @media(max-width:900px){.sidebar{display:none;}.kpi-grid{grid-template-columns:repeat(2,1fr);}.g2,.g4,.buildings-grid,.map-stats{grid-template-columns:1fr 1fr;}}
 ::-webkit-scrollbar{width:4px;height:4px;}::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px;}
+
+/* ── Sidebar Dark Professional Theme ─────────────────── */
+.sidebar{background:#160E04;border-left:1px solid rgba(184,134,11,.18);}
+.sb-logo{border-bottom:1px solid rgba(184,134,11,.18);padding:16px 14px 14px;}
+.logo-ico{background:linear-gradient(135deg,#F5C842,#B8860B);box-shadow:0 2px 10px rgba(184,134,11,.4);font-size:15px;font-weight:900;letter-spacing:-1px;}
+.logo-name{font-size:15px;font-weight:800;color:#DAA520;letter-spacing:1.5px;text-transform:uppercase;}
+.logo-sub{font-size:8px;color:rgba(255,255,255,.3);letter-spacing:1.5px;margin-top:1px;}
+.nav{padding:10px 8px;}
+.ni{color:rgba(255,255,255,.45);font-size:12px;padding:9px 10px;}
+.ni:hover{background:rgba(184,134,11,.12);color:rgba(255,255,255,.85);}
+.ni.active{background:rgba(184,134,11,.18);color:#DAA520;font-weight:600;}
+.ni.active::before{background:#DAA520;}
+.ni-badge{background:rgba(184,134,11,.25);color:#DAA520;}
+.ni-ico{opacity:.7;}
+.ni.active .ni-ico{opacity:1;}
+.sb-user{border-top:1px solid rgba(184,134,11,.18);padding:10px 12px;}
+.user-row{background:rgba(255,255,255,.04);border:1px solid rgba(184,134,11,.12);}
+.user-name{color:rgba(255,255,255,.85);font-size:12px;}
+.user-role{color:rgba(255,255,255,.3);font-size:9px;}
+
+/* ── Watermark ───────────────────────────────────────── */
+.watermark{position:fixed;top:50%;left:calc(50% + 105px);transform:translate(-50%,-50%);pointer-events:none;z-index:0;opacity:.028;user-select:none;}
+.watermark-f{font-size:280px;font-weight:900;color:var(--gold);line-height:1;letter-spacing:-10px;font-family:'IBM Plex Sans Arabic',sans-serif;}
+.watermark-txt{font-size:42px;font-weight:800;color:var(--gold);letter-spacing:12px;text-align:center;text-transform:uppercase;margin-top:-20px;}
+.main{position:relative;}
+
+/* ── Topbar & General Refinements ───────────────────── */
+.topbar{padding:4px 0 14px;}
+.page-title{font-size:18px;font-weight:800;letter-spacing:.3px;}
+.kpi{border-radius:14px;padding:14px 16px;}
+.kpi-lbl{font-size:9px;letter-spacing:.8px;font-weight:600;}
+.kpi-val{font-size:20px;}
+.card{border-radius:14px;padding:16px;}
+.sync-badge{border-radius:8px;padding:5px 12px;font-size:10px;}
+
+/* ── Print ───────────────────────────────────────────── */
+@media print{.sidebar,.ai-wrap,.topbar-right,.watermark{display:none!important;}}
 </style>
 </head>
 <body>
 <div class="layout">
 <aside class="sidebar">
-  <div class="sb-logo"><div class="logo-ico">FS</div><div><div class="logo-name">Finsight</div><div class="logo-sub">Real Estate Pro</div></div></div>
+  <div class="sb-logo">
+    <div class="logo-ico">F</div>
+    <div><div class="logo-name">Finsight</div><div class="logo-sub">Real Estate Pro</div></div>
+  </div>
   <nav class="nav">
     <button id="nav-dashboard" class="ni active" onclick="go('dashboard',this)"><span class="ni-ico">⬡</span>لوحة التحكم</button>
     <button id="nav-contracts" class="ni" onclick="go('contracts',this)"><span class="ni-ico">📋</span>العقود<span class="ni-badge" id="nb-total">—</span></button>
@@ -202,10 +242,11 @@ tbody td{padding:7px 5px;font-size:11px;}
   <div class="sb-user"><div class="user-row"><div class="user-av" id="user-av">ع</div><div><div class="user-name" id="user-name">عبد الملك</div><div class="user-role" id="user-role">مساعد إداري · Finsight</div></div></div></div>
 </aside>
 <div class="main">
+  <div class="watermark" aria-hidden="true"><div class="watermark-f">F</div><div class="watermark-txt">INSIGHT</div></div>
   <div class="topbar">
     <div><div class="page-title" id="pageTitle">لوحة <span>التحكم</span></div><div style="font-size:10px;color:var(--t3);margin-top:1px;" id="pageDate"></div></div>
     <div class="topbar-right">
-      <div class="sync-badge ok" id="syncBadge"><div class="sync-dot"></div><span id="syncTxt">متزامن مع الشيت ✓</span></div>
+      <div class="sync-badge ok" id="syncBadge"><div class="sync-dot"></div><span id="syncTxt">متصل بقاعدة البيانات ✓</span></div>
       <button class="btn btn-gold" id="addBtn" onclick="openAdd()" style="display:none">+ إضافة عقد</button>
     </div>
   </div>
@@ -222,7 +263,7 @@ tbody td{padding:7px 5px;font-size:11px;}
   </div>
   <div class="tc active" id="tab-dashboard">
     <div class="kpi-grid">
-      <div class="kpi c1"><div class="kpi-ico">📁</div><div class="kpi-lbl">إجمالي العقود</div><div class="kpi-val" id="k0">—</div><div class="kpi-note">كل الشيتات</div></div>
+      <div class="kpi c1"><div class="kpi-ico">📁</div><div class="kpi-lbl">إجمالي العقود</div><div class="kpi-val" id="k0">—</div><div class="kpi-note">كل المباني</div></div>
       <div class="kpi c2"><div class="kpi-ico">✅</div><div class="kpi-lbl">المحصّل</div><div class="kpi-val" id="k1">—</div><div class="kpi-note" id="k1n">—</div></div>
       <div class="kpi c3"><div class="kpi-ico">⚠️</div><div class="kpi-lbl">المتبقي</div><div class="kpi-val" id="k2">—</div><div class="kpi-note">يحتاج متابعة</div></div>
       <div class="kpi c4" id="kpi-comm-card"><div class="kpi-ico">💰</div><div class="kpi-lbl">عمولاتك</div><div class="kpi-val" id="k3">—</div><div class="kpi-note" id="k3n">—</div></div>
@@ -243,10 +284,10 @@ tbody td{padding:7px 5px;font-size:11px;}
   <div class="tc" id="tab-contracts">
     <div class="sr">
       <input class="si" type="text" id="cSearch" placeholder="🔍 ابحث..." oninput="renderContracts()" style="flex:2;">
-      <select class="si" id="cSheet" onchange="renderContracts()"><option value="">كل الشيتات</option><option>المنارا</option><option>جوان ان</option><option>الماسة</option><option>الواحة</option></select>
+      <select class="si" id="cSheet" onchange="renderContracts()"><option value="">كل المباني</option><option>المنارا</option><option>جوان ان</option><option>الماسة</option><option>الواحة</option></select>
       <select class="si" id="cStatus" onchange="renderContracts()"><option value="">كل الحالات</option><option>مفتوح</option><option>مغلق</option></select>
     </div>
-    <div class="card"><div class="tbl-wrap"><table><thead><tr><th>العميل</th><th>الشيت</th><th>الشقة</th><th>القيمة</th><th>المدفوع</th><th>المتبقي</th><th>الدخول</th><th>الخروج</th><th>الحالة</th><th>السداد</th><th>رسوم إيجار</th><th>طريقة الدفع</th><th></th></tr></thead><tbody id="contracts-tbody"></tbody></table></div><div style="margin-top:6px;font-size:10px;color:var(--t3);" id="c-count"></div></div>
+    <div class="card"><div class="tbl-wrap"><table><thead><tr><th>العميل</th><th>المبنى</th><th>الشقة</th><th>القيمة</th><th>المدفوع</th><th>المتبقي</th><th>الدخول</th><th>الخروج</th><th>الحالة</th><th>السداد</th><th>رسوم إيجار</th><th>طريقة الدفع</th><th></th></tr></thead><tbody id="contracts-tbody"></tbody></table></div><div style="margin-top:6px;font-size:10px;color:var(--t3);" id="c-count"></div></div>
   </div>
   <div class="tc" id="tab-commissions">
     <div class="month-ctrl">
@@ -346,7 +387,7 @@ tbody td{padding:7px 5px;font-size:11px;}
     <div class="modal-body">
       <div class="form-grid">
         <div class="form-full"><label class="form-lbl">اسم العميل *</label><input class="form-inp" id="f-name" type="text"></div>
-        <div><label class="form-lbl">الشيت</label><select class="form-inp" id="f-sheet"><option>المنارا</option><option>جوان ان</option><option>الماسة</option><option>الواحة</option></select></div>
+        <div><label class="form-lbl">المبنى</label><select class="form-inp" id="f-sheet"><option>المنارا</option><option>جوان ان</option><option>الماسة</option><option>الواحة</option></select></div>
         <div><label class="form-lbl">رقم الشقة</label><input class="form-inp" id="f-apt" type="text"></div>
         <div><label class="form-lbl">قيمة العقد</label><input class="form-inp" id="f-val" type="number"></div>
         <div><label class="form-lbl">المبلغ المدفوع</label><input class="form-inp" id="f-paid" type="number"></div>
@@ -364,7 +405,7 @@ tbody td{padding:7px 5px;font-size:11px;}
       </div>
       <div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end;">
         <button class="btn" onclick="closeForm()">إلغاء</button>
-        <button class="btn btn-gold" onclick="saveContract()">💾 حفظ ومزامنة مع الشيت</button>
+        <button class="btn btn-gold" onclick="saveContract()">💾 حفظ</button>
       </div>
     </div>
   </div>
