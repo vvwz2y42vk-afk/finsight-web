@@ -627,7 +627,21 @@ function renderCommissions(){
     if(fm&&m!==fm)return false;
     return true;
   });
-  set('comm-history',filtered.length===0?'<div style="text-align:center;padding:14px;color:var(--t3);">لا توجد سجلات للفترة المحددة</div>':filtered.map(h=>{const amH=h.comm.filter(c=>c.m==='عبدالملك').reduce((a,c)=>a+c.a,0),jH=h.comm.filter(c=>c.m==='جود').reduce((a,c)=>a+c.a,0);return`<div class="hist-item"><div class="hist-month">${h.label}</div><div class="hist-row"><span style="color:var(--t3)">عبد الملك</span><span style="font-weight:700;color:var(--gold);">${fmt(amH)} ﷼ (${toAr(h.comm.filter(c=>c.m==='عبدالملك').length)} عقد)</span></div><div class="hist-row"><span style="color:var(--t3)">جود</span><span style="font-weight:700;color:var(--blue);">${fmt(jH)} ﷼</span></div><div class="hist-row" style="border:none;"><span style="color:var(--t3)">الإجمالي</span><span style="font-weight:700;color:var(--gold);">${fmt(amH+jH)} ﷼</span></div></div>`;}).join(''));
+  set('comm-history',filtered.length===0?'<div style="text-align:center;padding:14px;color:var(--t3);">لا توجد سجلات للفترة المحددة</div>':filtered.map(h=>{
+    const amH=h.comm.filter(c=>c.m==='عبدالملك').reduce((a,c)=>a+c.a,0),jH=h.comm.filter(c=>c.m==='جود').reduce((a,c)=>a+c.a,0);
+    const rows=h.comm.map((c,i)=>`<tr><td style="color:var(--t3);">${toAr(i+1)}</td><td style="font-weight:600;">${c.c}</td><td><span class="pill ${SP[c.sh]||'pm'}">${c.sh}</span></td><td style="font-weight:600;color:${c.m==='عبدالملك'?'var(--gold)':'var(--blue)'};">${c.m}</td><td style="color:var(--t3);font-size:10px;">${c.d||''}</td><td style="font-weight:700;color:${c.m==='عبدالملك'?'var(--gold)':'var(--blue)'};">${fmt(c.a)} ﷼</td></tr>`).join('');
+    return`<div class="hist-item">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div class="hist-month">${h.label}</div>
+        <div style="display:flex;gap:10px;font-size:10px;">
+          <span style="color:var(--gold);font-weight:700;">عبدالملك: ${fmt(amH)} ﷼</span>
+          <span style="color:var(--blue);font-weight:700;">جود: ${fmt(jH)} ﷼</span>
+          <span style="color:var(--t3);">إجمالي: <b style="color:var(--gold);">${fmt(amH+jH)} ﷼</b></span>
+        </div>
+      </div>
+      <div class="tbl-wrap"><table><thead><tr><th>#</th><th>العميل</th><th>المبنى</th><th>المسوّق</th><th>التاريخ</th><th>العمولة</th></tr></thead><tbody>${rows}</tbody></table></div>
+    </div>`;
+  }).join(''));
 }
 
 function renderCollection(){
