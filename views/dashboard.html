@@ -203,9 +203,7 @@ tbody td{padding:7px 5px;font-size:11px;}
 .user-role{color:rgba(255,255,255,.3);font-size:9px;}
 
 /* ── Watermark ───────────────────────────────────────── */
-.watermark{position:fixed;top:50%;left:calc(50% + 105px);transform:translate(-50%,-50%);pointer-events:none;z-index:0;opacity:.028;user-select:none;}
-.watermark-f{font-size:280px;font-weight:900;color:var(--gold);line-height:1;letter-spacing:-10px;font-family:'IBM Plex Sans Arabic',sans-serif;}
-.watermark-txt{font-size:42px;font-weight:800;color:var(--gold);letter-spacing:12px;text-align:center;text-transform:uppercase;margin-top:-20px;}
+.watermark{position:fixed;top:50%;left:calc(50% + 105px);transform:translate(-50%,-50%);pointer-events:none;z-index:0;opacity:.04;user-select:none;}
 .main{position:relative;}
 
 /* ── Topbar & General Refinements ───────────────────── */
@@ -224,9 +222,20 @@ tbody td{padding:7px 5px;font-size:11px;}
 <body>
 <div class="layout">
 <aside class="sidebar">
-  <div class="sb-logo">
-    <div class="logo-ico">F</div>
-    <div><div class="logo-name">Finsight</div><div class="logo-sub">Real Estate Pro</div></div>
+  <div class="sb-logo" style="gap:12px;">
+    <svg width="38" height="44" viewBox="0 0 58 68" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;">
+      <defs>
+        <linearGradient id="lg1" x1="0.1" y1="0" x2="0.6" y2="1">
+          <stop offset="0%" stop-color="#F5D060"/>
+          <stop offset="40%" stop-color="#D4A017"/>
+          <stop offset="100%" stop-color="#8B6010"/>
+        </linearGradient>
+      </defs>
+      <path d="M4,4 L54,4 L54,24 L26,24 L18,32 L4,32 Z" fill="url(#lg1)"/>
+      <rect x="4" y="4" width="14" height="60" fill="url(#lg1)"/>
+      <path d="M4,40 L42,40 L42,52 L18,52 L4,62 Z" fill="url(#lg1)"/>
+    </svg>
+    <div><div class="logo-name">FINSIGHT</div><div class="logo-sub">Real Estate Pro</div></div>
   </div>
   <nav class="nav">
     <button id="nav-dashboard" class="ni active" onclick="go('dashboard',this)"><span class="ni-ico">⬡</span>لوحة التحكم</button>
@@ -242,7 +251,22 @@ tbody td{padding:7px 5px;font-size:11px;}
   <div class="sb-user"><div class="user-row"><div class="user-av" id="user-av">ع</div><div><div class="user-name" id="user-name">عبد الملك</div><div class="user-role" id="user-role">مساعد إداري · Finsight</div></div></div></div>
 </aside>
 <div class="main">
-  <div class="watermark" aria-hidden="true"><div class="watermark-f">F</div><div class="watermark-txt">INSIGHT</div></div>
+  <div class="watermark" aria-hidden="true">
+    <svg width="320" height="120" viewBox="0 0 420 120" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="wg" x1="0" y1="0" x2="0.5" y2="1">
+          <stop offset="0%" stop-color="#B8860B"/>
+          <stop offset="100%" stop-color="#8B6010"/>
+        </linearGradient>
+      </defs>
+      <!-- F shape -->
+      <path d="M4,4 L54,4 L54,24 L26,24 L18,32 L4,32 Z" fill="url(#wg)"/>
+      <rect x="4" y="4" width="14" height="60" fill="url(#wg)"/>
+      <path d="M4,40 L42,40 L42,52 L18,52 L4,62 Z" fill="url(#wg)"/>
+      <!-- INSIGHT text -->
+      <text x="72" y="52" font-family="'IBM Plex Sans Arabic', sans-serif" font-size="52" font-weight="800" fill="#B8860B" letter-spacing="6">INSIGHT</text>
+    </svg>
+  </div>
   <div class="topbar">
     <div><div class="page-title" id="pageTitle">لوحة <span>التحكم</span></div><div style="font-size:10px;color:var(--t3);margin-top:1px;" id="pageDate"></div></div>
     <div class="topbar-right">
