@@ -138,4 +138,28 @@ router.put('/inquiries/:id', auth, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ─── AI Chat (Gemini) ─────────────────────────────────────
+router.post('/ai/chat', auth, async (req, res) => {
+  try {
+    const { message, context } = req.body;
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) return res.status(500).json({ error: 'مفتاح Gemini غير موجود' });
+
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: context }] },
+          contents: [{ parts: [{ text: message }] }]
+        })
+      }
+    );
+    const data = await response.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || 'عذراً، لم أفهم السؤال.';
+    res.json({ text });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 module.exports = router;

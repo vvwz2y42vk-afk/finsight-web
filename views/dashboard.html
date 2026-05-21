@@ -778,7 +778,7 @@ async function sendAI(){
   const debtors=allC.filter(c=>c.r>0&&c.n).sort((a,b)=>b.r-a.r).slice(0,5);
   const expiring=allC.filter(c=>c.n&&c.st==='مفتوح'&&c.ex).map(c=>({...c,d:daysTo(c.ex)})).filter(c=>c.d>=0&&c.d<=30);
   const context=`أنت مساعد إداري لشركة Finsight. المستخدم: عبد الملك. البيانات: ${allC.filter(c=>c.n).length} عقد — محصّل ${fmt(tp)} ﷼ (${Math.round(tp/(tv||1)*100)}٪) — متبقي ${fmt(tr)} ﷼ — عمولات عبدالملك ${fmt(amT)} ﷼ (${amN} عقد) — مدينون: ${debtors.map(c=>c.n+' '+fmt(c.r)+' ﷼').join('، ')} — تنتهي قريباً: ${expiring.length} عقد. أجب بالعربية بشكل مختصر.`;
-  try{const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,system:context,messages:[{role:'user',content:q}]})});const data=await res.json();removeLastBot();addMsg(data.content?.[0]?.text||'عذراً.','bot');}
+  try{const res=await fetch('/api/ai/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:q,context})});const data=await res.json();removeLastBot();addMsg(data.text||'عذراً.','bot');}
   catch(e){removeLastBot();addMsg('عذراً، تعذّر الاتصال.','bot');}
 }
 function addMsg(text,cls){const msgs=document.getElementById('aiMsgs'),div=document.createElement('div');div.className='msg '+cls;div.innerHTML=text.replace(/\n/g,'<br>');msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;}
