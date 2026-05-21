@@ -536,10 +536,10 @@ async function loadData(){
   set('curr-month-lbl',monthLabel(currMonthKey()));
   try{
     const [cRes,chRes]=await Promise.all([fetch('/api/contracts'),fetch('/api/commission-history')]);
+    if(cRes.status===401){location.href='/login';return;}
+    if(!cRes.ok) throw new Error(`server ${cRes.status}`);
     const cData=await cRes.json();
     const chData=await chRes.json();
-    if(cRes.status===401){location.href='/login';return;}
-    if(!cRes.ok) throw new Error('server error');
     allC=Array.isArray(cData)?cData:[];
     commHistory=Array.isArray(chData)?chData:[];
     const key=currMonthKey();
@@ -554,7 +554,7 @@ async function loadData(){
     commHistory=lsGet('fs-comm-history')||[];
     const rd=lsGet('fs-reset-date');
     if(rd){resetDate=new Date(rd);set('reset-info','آخر تصفير: '+resetDate.toLocaleDateString('ar-SA'));}
-    setSyncStatus('err','تعذّر الاتصال — بيانات محلية');
+    setSyncStatus('err',`خطأ: ${e.message}`);
   }
   renderAll();
 }
