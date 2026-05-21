@@ -30,10 +30,35 @@ app.set('views', path.join(__dirname, 'views'));
 app.use('/', require('./routes/client'));
 app.use('/api', require('./routes/api'));
 
+// ── Users ────────────────────────────────────────────────
+const USERS = [
+  {
+    username: 'عبدالملك',
+    password: process.env.DASHBOARD_PASSWORD || 'admin123',
+    name: 'عبد الملك',
+    role: 'admin',
+    avatar: 'ع',
+    allowed: ['dashboard','contracts','commissions','collection','expiry','map','performance','sources','reports']
+  },
+  {
+    username: 'Yomna',
+    password: 'Yomna123',
+    name: 'Yomna',
+    role: 'employee',
+    avatar: 'Y',
+    allowed: ['dashboard','contracts','commissions','expiry']
+  }
+];
+
 // ── Dashboard (محمي بكلمة مرور) ──────────────────────────
 app.get('/dashboard', (req, res) => {
   if (!req.session.auth) return res.redirect('/login');
   res.sendFile(path.join(__dirname, 'views', 'dashboard.html'));
+});
+
+app.get('/api/me', (req, res) => {
+  if (!req.session.auth || !req.session.user) return res.status(401).json({ error: 'غير مخوّل' });
+  res.json(req.session.user);
 });
 
 app.get('/login', (req, res) => {
@@ -42,12 +67,14 @@ app.get('/login', (req, res) => {
 });
 
 app.post('/login', (req, res) => {
-  const pass = process.env.DASHBOARD_PASSWORD || 'admin123';
-  if (req.body.password === pass) {
+  const { username, password } = req.body;
+  const user = USERS.find(u => u.username === username && u.password === password);
+  if (user) {
     req.session.auth = true;
+    req.session.user = { username: user.username, name: user.name, role: user.role, avatar: user.avatar, allowed: user.allowed };
     res.redirect('/dashboard');
   } else {
-    res.render('login', { error: 'كلمة المرور غير صحيحة' });
+    res.render('login', { error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
   }
 });
 

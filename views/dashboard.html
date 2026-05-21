@@ -189,17 +189,17 @@ tbody td{padding:7px 5px;font-size:11px;}
 <aside class="sidebar">
   <div class="sb-logo"><div class="logo-ico">FS</div><div><div class="logo-name">Finsight</div><div class="logo-sub">Real Estate Pro</div></div></div>
   <nav class="nav">
-    <button class="ni active" onclick="go('dashboard',this)"><span class="ni-ico">⬡</span>لوحة التحكم</button>
-    <button class="ni" onclick="go('contracts',this)"><span class="ni-ico">📋</span>العقود<span class="ni-badge" id="nb-total">—</span></button>
-    <button class="ni" onclick="go('commissions',this)"><span class="ni-ico">💰</span>العمولات</button>
-    <button class="ni" onclick="go('collection',this)"><span class="ni-ico">🚨</span>التحصيل<span class="ni-badge" id="nb-debt">—</span></button>
-    <button class="ni" onclick="go('expiry',this)"><span class="ni-ico">⏰</span>المنتهية</button>
-    <button class="ni" onclick="go('map',this)"><span class="ni-ico">🏢</span>خريطة الشقق</button>
-    <button class="ni" onclick="go('performance',this)"><span class="ni-ico">📈</span>الأداء</button>
-    <button class="ni" onclick="go('sources',this)"><span class="ni-ico">📊</span>المصادر</button>
-    <button class="ni" onclick="go('reports',this)"><span class="ni-ico">📅</span>التقارير</button>
+    <button id="nav-dashboard" class="ni active" onclick="go('dashboard',this)"><span class="ni-ico">⬡</span>لوحة التحكم</button>
+    <button id="nav-contracts" class="ni" onclick="go('contracts',this)"><span class="ni-ico">📋</span>العقود<span class="ni-badge" id="nb-total">—</span></button>
+    <button id="nav-commissions" class="ni" onclick="go('commissions',this)"><span class="ni-ico">💰</span>العمولات</button>
+    <button id="nav-collection" class="ni" onclick="go('collection',this)"><span class="ni-ico">🚨</span>التحصيل<span class="ni-badge" id="nb-debt">—</span></button>
+    <button id="nav-expiry" class="ni" onclick="go('expiry',this)"><span class="ni-ico">⏰</span>المنتهية</button>
+    <button id="nav-map" class="ni" onclick="go('map',this)"><span class="ni-ico">🏢</span>خريطة الشقق</button>
+    <button id="nav-performance" class="ni" onclick="go('performance',this)"><span class="ni-ico">📈</span>الأداء</button>
+    <button id="nav-sources" class="ni" onclick="go('sources',this)"><span class="ni-ico">📊</span>المصادر</button>
+    <button id="nav-reports" class="ni" onclick="go('reports',this)"><span class="ni-ico">📅</span>التقارير</button>
   </nav>
-  <div class="sb-user"><div class="user-row"><div class="user-av">ع</div><div><div class="user-name">عبد الملك</div><div class="user-role">مساعد إداري · Finsight</div></div></div></div>
+  <div class="sb-user"><div class="user-row"><div class="user-av" id="user-av">ع</div><div><div class="user-name" id="user-name">عبد الملك</div><div class="user-role" id="user-role">مساعد إداري · Finsight</div></div></div></div>
 </aside>
 <div class="main">
   <div class="topbar">
@@ -410,7 +410,7 @@ const BUILDINGS={
 function lsGet(k){try{const v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch(e){return null;}}
 function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 
-let allC=[], currComm=[], commHistory=[], editId=null, deleteId=null, mapFilter='all', resetDate=null;
+let allC=[], currComm=[], commHistory=[], editId=null, deleteId=null, mapFilter='all', resetDate=null, currentUser=null;
 
 const fmt=n=>Number(n||0).toLocaleString('ar-SA');
 const toAr=n=>String(n).replace(/\d/g,d=>'٠١٢٣٤٥٦٧٨٩'[d]);
@@ -619,7 +619,27 @@ async function confirmDelete(){
 }
 
 const titles={dashboard:'لوحة <span>التحكم</span>',contracts:'<span>العقود</span>',commissions:'<span>العمولات</span>',collection:'<span>التحصيل</span>',expiry:'العقود <span>المنتهية</span>',map:'خريطة <span>الشقق</span>',performance:'تحليل <span>الأداء</span>',sources:'تحليل <span>المصادر</span>',reports:'<span>التقارير</span> الشهرية'};
-function go(id,el){document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));el?.classList.add('active');showTabById(id);set('pageTitle',titles[id]||id);document.getElementById('addBtn').style.display=id==='contracts'?'flex':'none';}
+async function loadUser(){
+  try{
+    const res=await fetch('/api/me');
+    if(!res.ok)return;
+    currentUser=await res.json();
+    document.getElementById('user-av').textContent=currentUser.avatar||currentUser.name[0];
+    document.getElementById('user-name').textContent=currentUser.name;
+    document.getElementById('user-role').textContent=currentUser.role==='admin'?'مدير · Finsight':'موظفة · Finsight';
+    ['dashboard','contracts','commissions','collection','expiry','map','performance','sources','reports'].forEach(s=>{
+      if(!currentUser.allowed.includes(s)){
+        const btn=document.getElementById('nav-'+s);
+        if(btn)btn.style.display='none';
+      }
+    });
+  }catch(e){}
+}
+
+function go(id,el){
+  if(currentUser&&!currentUser.allowed.includes(id)){showToast('⛔ ليس لديك صلاحية لعرض هذا القسم');return;}
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));el?.classList.add('active');showTabById(id);set('pageTitle',titles[id]||id);document.getElementById('addBtn').style.display=id==='contracts'?'flex':'none';
+}
 function st(id,el){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el?.classList.add('active');showTabById(id);set('pageTitle',titles[id]||id);document.getElementById('addBtn').style.display=id==='contracts'?'flex':'none';}
 function showTabById(id){document.querySelectorAll('.tc').forEach(t=>t.classList.remove('active'));document.getElementById('tab-'+id)?.classList.add('active');}
 
@@ -860,7 +880,7 @@ function getInitialComm(){return[
 {id:'c037',m:'جود',c:'اسرار باموسى',sh:'الواحة',d:'21/4/2026',a:40},
 ];}
 
-window.addEventListener('load',loadData);
+window.addEventListener('load',()=>{loadUser();loadData();});
 </script>
 </body>
 </html>
