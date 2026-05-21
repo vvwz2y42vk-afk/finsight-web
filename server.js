@@ -9,9 +9,23 @@ const app = express();
 const SECRET = process.env.SESSION_SECRET || 'finsight_2026';
 
 // ── MongoDB ──────────────────────────────────────────────
-mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/finsight')
-  .then(() => console.log('✅ MongoDB متصل'))
-  .catch(err => console.error('❌ خطأ MongoDB:', err));
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/finsight';
+let _dbConn = null;
+
+async function connectDB() {
+  if (_dbConn && mongoose.connection.readyState === 1) return _dbConn;
+  _dbConn = await mongoose.connect(MONGO_URI, {
+    serverSelectionTimeoutMS: 8000,
+    socketTimeoutMS: 30000,
+  });
+  console.log('✅ MongoDB متصل');
+  return _dbConn;
+}
+
+async function dbMiddleware(req, res, next) {
+  try { await connectDB(); next(); }
+  catch (e) { res.status(500).json({ error: 'فشل الاتصال بقاعدة البيانات: ' + e.message }); }
+}
 
 // ── Cookie Auth ──────────────────────────────────────────
 function createToken(user) {
@@ -67,11 +81,11 @@ const USERS = [
 ];
 
 // ── Routes ───────────────────────────────────────────────
-app.use('/api', (req, res, next) => {
+app.use('/api', dbMiddleware, (req, res, next) => {
   req.user = verifyToken(req.cookies?.fs_auth);
   next();
 });
-app.use('/', require('./routes/client'));
+app.use('/', dbMiddleware, require('./routes/client'));
 app.use('/api', require('./routes/api'));
 
 // ── Dashboard ────────────────────────────────────────────
