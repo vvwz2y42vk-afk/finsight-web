@@ -537,7 +537,7 @@ async function loadData(){
   try{
     const [cRes,chRes]=await Promise.all([fetch('/api/contracts'),fetch('/api/commission-history')]);
     if(cRes.status===401){location.href='/login';return;}
-    if(!cRes.ok) throw new Error(`server ${cRes.status}`);
+    if(!cRes.ok){let ed='';try{const ej=await cRes.json();ed=ej.error||'';}catch{}throw new Error(`${cRes.status}: ${ed||'unknown'}`);};
     const cData=await cRes.json();
     const chData=await chRes.json();
     allC=Array.isArray(cData)?cData:[];
