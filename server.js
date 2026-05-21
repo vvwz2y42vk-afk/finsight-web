@@ -1,36 +1,50 @@
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
-const session = require('express-session');
-const MongoStore = require('connect-mongo');
+const cookieParser = require('cookie-parser');
+const crypto = require('crypto');
 const path = require('path');
 
 const app = express();
+const SECRET = process.env.SESSION_SECRET || 'finsight_2026';
 
 // ── MongoDB ──────────────────────────────────────────────
 mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/finsight')
   .then(() => console.log('✅ MongoDB متصل'))
   .catch(err => console.error('❌ خطأ MongoDB:', err));
 
+// ── Cookie Auth ──────────────────────────────────────────
+function createToken(user) {
+  const data = Buffer.from(JSON.stringify(user)).toString('base64');
+  const sig = crypto.createHmac('sha256', SECRET).update(data).digest('hex');
+  return `${data}.${sig}`;
+}
+function verifyToken(token) {
+  if (!token) return null;
+  const dot = token.lastIndexOf('.');
+  if (dot === -1) return null;
+  const data = token.slice(0, dot);
+  const sig = token.slice(dot + 1);
+  const expected = crypto.createHmac('sha256', SECRET).update(data).digest('hex');
+  if (sig !== expected) return null;
+  try { return JSON.parse(Buffer.from(data, 'base64').toString()); }
+  catch { return null; }
+}
+function requireAuth(req, res, next) {
+  req.user = verifyToken(req.cookies?.fs_auth);
+  if (!req.user) return res.status(401).json({ error: 'غير مخوّل' });
+  next();
+}
+
 // ── Middleware ───────────────────────────────────────────
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'finsight_2026',
-  resave: false,
-  saveUninitialized: false,
-  store: MongoStore.create({ mongoUrl: process.env.MONGO_URI }),
-  cookie: { secure: false, maxAge: 24 * 60 * 60 * 1000 }
-}));
 
 // ── View Engine ──────────────────────────────────────────
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
-
-// ── Routes ───────────────────────────────────────────────
-app.use('/', require('./routes/client'));
-app.use('/api', require('./routes/api'));
 
 // ── Users ────────────────────────────────────────────────
 const USERS = [
@@ -52,19 +66,28 @@ const USERS = [
   }
 ];
 
-// ── Dashboard (محمي بكلمة مرور) ──────────────────────────
+// ── Routes ───────────────────────────────────────────────
+app.use('/api', (req, res, next) => {
+  req.user = verifyToken(req.cookies?.fs_auth);
+  next();
+});
+app.use('/', require('./routes/client'));
+app.use('/api', require('./routes/api'));
+
+// ── Dashboard ────────────────────────────────────────────
 app.get('/dashboard', (req, res) => {
-  if (!req.session.auth) return res.redirect('/login');
+  if (!verifyToken(req.cookies?.fs_auth)) return res.redirect('/login');
   res.sendFile(path.join(__dirname, 'views', 'dashboard.html'));
 });
 
 app.get('/api/me', (req, res) => {
-  if (!req.session.auth || !req.session.user) return res.status(401).json({ error: 'غير مخوّل' });
-  res.json(req.session.user);
+  const user = verifyToken(req.cookies?.fs_auth);
+  if (!user) return res.status(401).json({ error: 'غير مخوّل' });
+  res.json(user);
 });
 
 app.get('/login', (req, res) => {
-  if (req.session.auth) return res.redirect('/dashboard');
+  if (verifyToken(req.cookies?.fs_auth)) return res.redirect('/dashboard');
   res.render('login', { error: null });
 });
 
@@ -72,8 +95,8 @@ app.post('/login', (req, res) => {
   const { username, password } = req.body;
   const user = USERS.find(u => u.username === username && u.password === password);
   if (user) {
-    req.session.auth = true;
-    req.session.user = { username: user.username, name: user.name, role: user.role, avatar: user.avatar, allowed: user.allowed };
+    const token = createToken({ username: user.username, name: user.name, role: user.role, avatar: user.avatar, allowed: user.allowed });
+    res.cookie('fs_auth', token, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000, sameSite: 'lax' });
     res.redirect('/dashboard');
   } else {
     res.render('login', { error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
@@ -81,14 +104,12 @@ app.post('/login', (req, res) => {
 });
 
 app.get('/logout', (req, res) => {
-  req.session.destroy(() => res.redirect('/login'));
+  res.clearCookie('fs_auth');
+  res.redirect('/login');
 });
 
 // ── Start ────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Finsight شغّال على http://localhost:${PORT}`);
-  console.log(`   الموقع العام   → http://localhost:${PORT}`);
-  console.log(`   لوحة التحكم   → http://localhost:${PORT}/dashboard`);
-  console.log(`   كلمة المرور   → ${process.env.DASHBOARD_PASSWORD || 'admin123'}`);
 });

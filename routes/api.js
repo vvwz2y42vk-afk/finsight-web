@@ -5,7 +5,7 @@ const Inquiry = require('../models/Inquiry');
 const CommissionHistory = require('../models/CommissionHistory');
 
 const auth = (req, res, next) => {
-  if (req.session.auth) return next();
+  if (req.user) return next();
   res.status(401).json({ error: 'غير مخوّل' });
 };
 
