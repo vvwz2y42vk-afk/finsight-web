@@ -156,7 +156,7 @@ h3 { font-size: 1.15rem; font-weight: 700; }
 
 /* ── Login Page ── */
 .login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--dark); padding: 24px; position: relative; overflow: hidden; }
-.login-bg-logo { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: .04; pointer-events: none; user-select: none; }
+.login-bg-logo { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: .18; pointer-events: none; user-select: none; }
 .login-card { background: #1a1a1a; border: 1px solid #333; border-radius: 16px; padding: 40px; width: 100%; max-width: 360px; }
 .login-logo { text-align: center; margin-bottom: 32px; }
 .login-logo .ico { width: 54px; height: 54px; background: var(--gold); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 20px; color: #fff; margin: 0 auto 10px; }
