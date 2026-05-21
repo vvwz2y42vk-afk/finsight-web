@@ -332,7 +332,22 @@ tbody td{padding:7px 5px;font-size:11px;}
       <div class="tbl-wrap"><table><thead><tr><th>#</th><th>العميل</th><th>الشيت</th><th>المسوّق</th><th>التاريخ</th><th>العمولة</th></tr></thead><tbody id="comm-tbody"></tbody></table></div>
       <div style="margin-top:8px;padding:8px 12px;background:var(--gl);border:1px solid var(--gb);border-radius:8px;display:flex;justify-content:space-between;align-items:center;"><span style="font-size:11px;color:var(--t3);">الإجمالي</span><span style="font-size:16px;font-weight:700;color:var(--gold);" id="comm-grand">—</span></div>
     </div>
-    <div class="card"><div class="card-hd"><div class="card-title">📚 السجل السابق</div></div><div id="comm-history"></div></div>
+    <div class="card">
+      <div class="card-hd">
+        <div class="card-title">📚 السجل السابق</div>
+        <div style="display:flex;gap:6px;">
+          <select class="si" id="hist-filter-year" onchange="renderCommissions()" style="font-size:10px;padding:4px 8px;min-width:80px;flex:none;"><option value="">كل السنوات</option></select>
+          <select class="si" id="hist-filter-month" onchange="renderCommissions()" style="font-size:10px;padding:4px 8px;min-width:90px;flex:none;">
+            <option value="">كل الأشهر</option>
+            <option value="01">يناير</option><option value="02">فبراير</option><option value="03">مارس</option>
+            <option value="04">أبريل</option><option value="05">مايو</option><option value="06">يونيو</option>
+            <option value="07">يوليو</option><option value="08">أغسطس</option><option value="09">سبتمبر</option>
+            <option value="10">أكتوبر</option><option value="11">نوفمبر</option><option value="12">ديسمبر</option>
+          </select>
+        </div>
+      </div>
+      <div id="comm-history"></div>
+    </div>
   </div>
   <div class="tc" id="tab-collection">
     <div style="background:var(--rg);border:1px solid var(--rb);border-radius:10px;padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;"><div style="font-size:11px;color:var(--t3);">إجمالي المتأخرات</div><div style="font-size:18px;font-weight:700;color:var(--red);" id="total-debt-amt">—</div></div>
@@ -595,7 +610,24 @@ function renderCommissions(){
   set('comm-am-n',toAr(am.length)+' عقد × ٥٠ ﷼');set('comm-j-n',toAr(jd.length)+' عقد × ٤٠ ﷼');
   set('comm-total-b',fmt(amT+jT)+' ﷼');set('comm-grand',fmt(amT+jT)+' ﷼');
   set('comm-tbody',currComm.length===0?'<tr><td colspan="6" style="text-align:center;color:var(--t3);padding:14px;">لا توجد عمولات — تم التصفير ✓</td></tr>':currComm.map((c,i)=>`<tr><td style="color:var(--t3);">${toAr(i+1)}</td><td style="font-weight:600;">${c.c}</td><td><span class="pill ${SP[c.sh]||'pm'}">${c.sh}</span></td><td style="font-weight:600;color:${c.m==='عبدالملك'?'var(--gold)':'var(--blue)'};">${c.m}</td><td style="color:var(--t3);font-size:10px;">${c.d}</td><td style="font-weight:700;color:${c.m==='عبدالملك'?'var(--gold)':'var(--blue)'};">${fmt(c.a)} ﷼</td></tr>`).join(''));
-  set('comm-history',commHistory.length===0?'<div style="text-align:center;padding:14px;color:var(--t3);">لا توجد سجلات</div>':commHistory.map(h=>{const amH=h.comm.filter(c=>c.m==='عبدالملك').reduce((a,c)=>a+c.a,0),jH=h.comm.filter(c=>c.m==='جود').reduce((a,c)=>a+c.a,0);return`<div class="hist-item"><div class="hist-month">${h.label}</div><div class="hist-row"><span style="color:var(--t3)">عبد الملك</span><span style="font-weight:700;color:var(--gold);">${fmt(amH)} ﷼ (${toAr(h.comm.filter(c=>c.m==='عبدالملك').length)} عقد)</span></div><div class="hist-row"><span style="color:var(--t3)">جود</span><span style="font-weight:700;color:var(--blue);">${fmt(jH)} ﷼</span></div><div class="hist-row" style="border:none;"><span style="color:var(--t3)">الإجمالي</span><span style="font-weight:700;color:var(--gold);">${fmt(amH+jH)} ﷼</span></div></div>`;}).join(''));
+  // ── ملء قائمة السنوات تلقائياً ──
+  const yearSel=document.getElementById('hist-filter-year');
+  if(yearSel){
+    const years=[...new Set(commHistory.map(h=>h.key?.split('-')[0]).filter(Boolean))].sort().reverse();
+    const cur=yearSel.value;
+    yearSel.innerHTML='<option value="">كل السنوات</option>'+years.map(y=>`<option value="${y}"${y===cur?'selected':''}>${y}</option>`).join('');
+  }
+  // ── فلترة السجل ──
+  const fy=document.getElementById('hist-filter-year')?.value||'';
+  const fm=document.getElementById('hist-filter-month')?.value||'';
+  const filtered=commHistory.filter(h=>{
+    if(!h.key)return true;
+    const[y,m]=h.key.split('-');
+    if(fy&&y!==fy)return false;
+    if(fm&&m!==fm)return false;
+    return true;
+  });
+  set('comm-history',filtered.length===0?'<div style="text-align:center;padding:14px;color:var(--t3);">لا توجد سجلات للفترة المحددة</div>':filtered.map(h=>{const amH=h.comm.filter(c=>c.m==='عبدالملك').reduce((a,c)=>a+c.a,0),jH=h.comm.filter(c=>c.m==='جود').reduce((a,c)=>a+c.a,0);return`<div class="hist-item"><div class="hist-month">${h.label}</div><div class="hist-row"><span style="color:var(--t3)">عبد الملك</span><span style="font-weight:700;color:var(--gold);">${fmt(amH)} ﷼ (${toAr(h.comm.filter(c=>c.m==='عبدالملك').length)} عقد)</span></div><div class="hist-row"><span style="color:var(--t3)">جود</span><span style="font-weight:700;color:var(--blue);">${fmt(jH)} ﷼</span></div><div class="hist-row" style="border:none;"><span style="color:var(--t3)">الإجمالي</span><span style="font-weight:700;color:var(--gold);">${fmt(amH+jH)} ﷼</span></div></div>`;}).join(''));
 }
 
 function renderCollection(){
