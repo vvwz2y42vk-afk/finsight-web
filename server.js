@@ -9,9 +9,15 @@ const app = express();
 const SECRET = process.env.SESSION_SECRET || 'finsight_2026';
 
 // ── MongoDB ──────────────────────────────────────────────
-mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/finsight')
+mongoose.set('bufferCommands', false);
+const dbPromise = mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/finsight')
   .then(() => console.log('✅ MongoDB متصل'))
   .catch(err => console.error('❌ خطأ MongoDB:', err));
+
+async function ensureDB(req, res, next) {
+  try { await dbPromise; next(); }
+  catch (e) { res.status(500).json({ error: 'DB: ' + e.message }); }
+}
 
 // ── Cookie Auth ──────────────────────────────────────────
 function createToken(user) {
@@ -67,7 +73,7 @@ const USERS = [
 ];
 
 // ── Routes ───────────────────────────────────────────────
-app.use('/api', (req, res, next) => {
+app.use('/api', ensureDB, (req, res, next) => {
   req.user = verifyToken(req.cookies?.fs_auth);
   next();
 });
