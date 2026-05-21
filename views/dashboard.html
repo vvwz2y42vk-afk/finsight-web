@@ -210,15 +210,15 @@ tbody td{padding:7px 5px;font-size:11px;}
     </div>
   </div>
   <div class="tabs">
-    <button class="tab active" onclick="st('dashboard',this)">⬡ الرئيسية</button>
-    <button class="tab" onclick="st('contracts',this)">📋 العقود</button>
-    <button class="tab" onclick="st('commissions',this)">💰 العمولات</button>
-    <button class="tab" onclick="st('collection',this)">🚨 التحصيل</button>
-    <button class="tab" onclick="st('expiry',this)">⏰ المنتهية</button>
-    <button class="tab" onclick="st('map',this)">🏢 الخريطة</button>
-    <button class="tab" onclick="st('performance',this)">📈 الأداء</button>
-    <button class="tab" onclick="st('sources',this)">📊 المصادر</button>
-    <button class="tab" onclick="st('reports',this)">📅 التقارير</button>
+    <button id="tab-nav-dashboard" class="tab active" onclick="st('dashboard',this)">⬡ الرئيسية</button>
+    <button id="tab-nav-contracts" class="tab" onclick="st('contracts',this)">📋 العقود</button>
+    <button id="tab-nav-commissions" class="tab" onclick="st('commissions',this)">💰 العمولات</button>
+    <button id="tab-nav-collection" class="tab" onclick="st('collection',this)">🚨 التحصيل</button>
+    <button id="tab-nav-expiry" class="tab" onclick="st('expiry',this)">⏰ المنتهية</button>
+    <button id="tab-nav-map" class="tab" onclick="st('map',this)">🏢 الخريطة</button>
+    <button id="tab-nav-performance" class="tab" onclick="st('performance',this)">📈 الأداء</button>
+    <button id="tab-nav-sources" class="tab" onclick="st('sources',this)">📊 المصادر</button>
+    <button id="tab-nav-reports" class="tab" onclick="st('reports',this)">📅 التقارير</button>
   </div>
   <div class="tc active" id="tab-dashboard">
     <div class="kpi-grid">
@@ -629,8 +629,8 @@ async function loadUser(){
     document.getElementById('user-role').textContent=currentUser.role==='admin'?'مدير · Finsight':'موظفة · Finsight';
     ['dashboard','contracts','commissions','collection','expiry','map','performance','sources','reports'].forEach(s=>{
       if(!currentUser.allowed.includes(s)){
-        const btn=document.getElementById('nav-'+s);
-        if(btn)btn.style.display='none';
+        const nb=document.getElementById('nav-'+s);if(nb)nb.style.display='none';
+        const tb=document.getElementById('tab-nav-'+s);if(tb)tb.style.display='none';
       }
     });
   }catch(e){}
@@ -640,7 +640,10 @@ function go(id,el){
   if(currentUser&&!currentUser.allowed.includes(id)){showToast('⛔ ليس لديك صلاحية لعرض هذا القسم');return;}
   document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));el?.classList.add('active');showTabById(id);set('pageTitle',titles[id]||id);document.getElementById('addBtn').style.display=id==='contracts'?'flex':'none';
 }
-function st(id,el){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el?.classList.add('active');showTabById(id);set('pageTitle',titles[id]||id);document.getElementById('addBtn').style.display=id==='contracts'?'flex':'none';}
+function st(id,el){
+  if(currentUser&&!currentUser.allowed.includes(id)){showToast('⛔ ليس لديك صلاحية لعرض هذا القسم');return;}
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el?.classList.add('active');showTabById(id);set('pageTitle',titles[id]||id);document.getElementById('addBtn').style.display=id==='contracts'?'flex':'none';
+}
 function showTabById(id){document.querySelectorAll('.tc').forEach(t=>t.classList.remove('active'));document.getElementById('tab-'+id)?.classList.add('active');}
 
 function toggleAI(){document.getElementById('aiPanel').classList.toggle('open');}
