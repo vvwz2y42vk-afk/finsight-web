@@ -225,7 +225,7 @@ tbody td{padding:7px 5px;font-size:11px;}
       <div class="kpi c1"><div class="kpi-ico">📁</div><div class="kpi-lbl">إجمالي العقود</div><div class="kpi-val" id="k0">—</div><div class="kpi-note">كل الشيتات</div></div>
       <div class="kpi c2"><div class="kpi-ico">✅</div><div class="kpi-lbl">المحصّل</div><div class="kpi-val" id="k1">—</div><div class="kpi-note" id="k1n">—</div></div>
       <div class="kpi c3"><div class="kpi-ico">⚠️</div><div class="kpi-lbl">المتبقي</div><div class="kpi-val" id="k2">—</div><div class="kpi-note">يحتاج متابعة</div></div>
-      <div class="kpi c4"><div class="kpi-ico">💰</div><div class="kpi-lbl">عمولاتك</div><div class="kpi-val" id="k3">—</div><div class="kpi-note" id="k3n">—</div></div>
+      <div class="kpi c4" id="kpi-comm-card"><div class="kpi-ico">💰</div><div class="kpi-lbl">عمولاتك</div><div class="kpi-val" id="k3">—</div><div class="kpi-note" id="k3n">—</div></div>
       <div class="kpi c5"><div class="kpi-ico">🔓</div><div class="kpi-lbl">عقود مفتوحة</div><div class="kpi-val" id="k4">—</div><div class="kpi-note" id="k4n">—</div></div>
     </div>
     <div id="alerts-wrap"></div>
@@ -633,6 +633,9 @@ async function loadUser(){
         const tb=document.getElementById('tab-nav-'+s);if(tb)tb.style.display='none';
       }
     });
+    if(currentUser.role!=='admin'){
+      const kc=document.getElementById('kpi-comm-card');if(kc)kc.style.display='none';
+    }
   }catch(e){}
 }
 
