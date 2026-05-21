@@ -538,7 +538,8 @@ async function loadData(){
     const [cRes,chRes]=await Promise.all([fetch('/api/contracts'),fetch('/api/commission-history')]);
     const cData=await cRes.json();
     const chData=await chRes.json();
-    allC=Array.isArray(cData)&&cData.length?cData:getInitialContracts();
+    if(!cRes.ok) throw new Error('auth');
+    allC=Array.isArray(cData)?cData:[];
     commHistory=Array.isArray(chData)?chData:[];
     const key=currMonthKey();
     const curr=commHistory.find(h=>h.key===key);
@@ -547,7 +548,7 @@ async function loadData(){
     if(rd){resetDate=new Date(rd);set('reset-info','آخر تصفير: '+resetDate.toLocaleDateString('ar-SA'));}
     setSyncStatus('ok','متصل بقاعدة البيانات ✓');
   }catch(e){
-    allC=lsGet('fs-contracts')||getInitialContracts();
+    allC=lsGet('fs-contracts')||[];
     currComm=lsGet('fs-curr-comm')||getInitialComm();
     commHistory=lsGet('fs-comm-history')||[];
     const rd=lsGet('fs-reset-date');
