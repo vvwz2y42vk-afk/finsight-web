@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const session = require('express-session');
+const MongoStore = require('connect-mongo');
 const path = require('path');
 
 const app = express();
@@ -19,6 +20,7 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'finsight_2026',
   resave: false,
   saveUninitialized: false,
+  store: MongoStore.create({ mongoUrl: process.env.MONGO_URI }),
   cookie: { secure: false, maxAge: 24 * 60 * 60 * 1000 }
 }));
 
