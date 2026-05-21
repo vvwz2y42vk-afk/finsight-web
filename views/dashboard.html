@@ -250,9 +250,9 @@ tbody td{padding:7px 5px;font-size:11px;}
   </nav>
   <div class="sb-user">
     <div class="user-row"><div class="user-av" id="user-av">ع</div><div><div class="user-name" id="user-name">عبد الملك</div><div class="user-role" id="user-role">مساعد إداري · Finsight</div></div></div>
-    <a href="/logout" style="display:flex;align-items:center;gap:7px;margin-top:8px;padding:7px 10px;border-radius:8px;background:rgba(192,57,43,.12);border:1px solid rgba(192,57,43,.2);color:rgba(255,100,80,.85);font-size:11px;font-weight:600;text-decoration:none;transition:all .15s;" onmouseover="this.style.background='rgba(192,57,43,.22)'" onmouseout="this.style.background='rgba(192,57,43,.12)'">
+    <button onclick="document.getElementById('logoutOverlay').style.display='flex'" style="display:flex;align-items:center;gap:7px;margin-top:8px;padding:7px 10px;border-radius:8px;background:rgba(192,57,43,.12);border:1px solid rgba(192,57,43,.2);color:rgba(255,100,80,.85);font-size:11px;font-weight:600;cursor:pointer;width:100%;font-family:inherit;transition:all .15s;" onmouseover="this.style.background='rgba(192,57,43,.22)'" onmouseout="this.style.background='rgba(192,57,43,.12)'">
       <span>⎋</span> تسجيل الخروج
-    </a>
+    </button>
   </div>
 </aside>
 <div class="main">
@@ -442,6 +442,9 @@ tbody td{padding:7px 5px;font-size:11px;}
 <div class="overlay" id="roomOverlay" style="display:none;"><div class="modal"><div class="modal-hd" id="roomHd"></div><div class="modal-body" id="roomBody"></div></div></div>
 <div class="overlay" id="deleteOverlay" style="display:none;">
   <div class="modal" style="max-width:300px;"><div class="modal-body"><div class="confirm-box"><div class="ico">🗑️</div><div class="ttl">حذف العقد</div><div class="sub">هل أنت متأكد؟</div><div class="btns"><button class="btn" onclick="closeDelete()">إلغاء</button><button class="btn" style="background:var(--red);color:#fff;border-color:var(--red);" onclick="confirmDelete()">نعم، احذف</button></div></div></div></div>
+</div>
+<div class="overlay" id="logoutOverlay" style="display:none;">
+  <div class="modal" style="max-width:300px;"><div class="modal-body"><div class="confirm-box"><div class="ico">⎋</div><div class="ttl">تسجيل الخروج</div><div class="sub">هل تريد تسجيل الخروج من حسابك؟</div><div class="btns"><button class="btn" onclick="document.getElementById('logoutOverlay').style.display='none'">إلغاء</button><a href="/logout" class="btn" style="background:var(--red);color:#fff;border-color:var(--red);text-decoration:none;">نعم، خروج</a></div></div></div></div>
 </div>
 <div class="overlay" id="resetOverlay" style="display:none;">
   <div class="modal" style="max-width:300px;"><div class="modal-body"><div class="confirm-box"><div class="ico">🔄</div><div class="ttl">تصفير عمولات الشهر</div><div class="sub">سيتم حفظ العمولات في السجل.<br>لن ترجع العمولات القديمة حتى لو حدّثت الصفحة.</div><div class="btns"><button class="btn" onclick="closeReset()">إلغاء</button><button class="btn btn-gold" onclick="doReset()">نعم، صفّر</button></div></div></div></div>
