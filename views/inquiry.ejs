@@ -3,130 +3,126 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>طلب حجز — Finsight</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<title>تواصل معنا — Finsight Real Estate</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/client.css">
 </head>
-<body>
+<body class="home-page">
 
-<header class="site-header">
-  <div class="header-inner">
-    <div class="logo">
-      <div class="logo-ico">FS</div>
+<nav class="navbar scrolled" id="navbar">
+  <div class="nav-container">
+    <a href="/" class="nav-logo">
+      <div class="nav-logo-icon">FS</div>
       <div>
-        <div class="logo-name">Finsight</div>
-        <div class="logo-sub">Real Estate</div>
+        <div class="nav-logo-name">Finsight</div>
+        <div class="nav-logo-sub">Real Estate</div>
       </div>
+    </a>
+    <div class="nav-links" id="navLinks">
+      <a href="/" class="nav-lnk">الرئيسية</a>
+      <a href="/about" class="nav-lnk">من نحن</a>
+      <a href="/apartments" class="nav-lnk">عقاراتنا</a>
+      <a href="/inquiry" class="nav-lnk active">تواصل معنا</a>
     </div>
-    <nav class="site-nav">
-      <a href="/" class="nav-link">الرئيسية</a>
-      <a href="/apartments" class="nav-link">الوحدات المتاحة</a>
-      <a href="/inquiry" class="nav-link active">تواصل معنا</a>
-    </nav>
+    <div class="nav-actions">
+      <a href="/inquiry" class="btn btn-gold btn-sm">احجز الآن</a>
+      <button class="hamburger" id="hamburger" onclick="toggleNav()">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
   </div>
-</header>
+</nav>
 
-<div class="page-hero">
-  <div class="page-hero-inner">
-    <h1>📩 طلب حجز أو استفسار</h1>
-    <p>أرسل بياناتك وسيتواصل معك فريقنا خلال ٢٤ ساعة</p>
-  </div>
-</div>
-
-<section class="section">
-  <div class="form-wrap">
-
-    <% if (success) { %>
-      <div class="success-box">
-        <div class="ico">✅</div>
-        <h3>تم إرسال طلبك بنجاح!</h3>
-        <p>سيتواصل معك فريق Finsight في أقرب وقت ممكن</p>
-        <div style="margin-top:20px;display:flex;gap:10px;justify-content:center;">
-          <a href="/apartments" class="btn btn-gold">تصفح المزيد</a>
-          <a href="/" class="btn btn-outline">الرئيسية</a>
-        </div>
-      </div>
-    <% } else { %>
-      <div class="form-card">
-        <h2 style="margin-bottom:24px;font-size:1.3rem;">أرسل طلبك</h2>
-
-        <% if (typeof error !== 'undefined' && error) { %>
-          <div style="background:rgba(192,57,43,.1);border:1px solid rgba(192,57,43,.2);color:#c0392b;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:13px;"><%= error %></div>
-        <% } %>
-
-        <form method="POST" action="/inquiry">
-          <div class="form-grid">
-            <div class="form-group">
-              <label>الاسم الكامل *</label>
-              <input type="text" name="name" required placeholder="محمد العمري">
-            </div>
-            <div class="form-group">
-              <label>رقم الجوال *</label>
-              <input type="tel" name="phone" required placeholder="05xxxxxxxx">
-            </div>
-            <div class="form-group">
-              <label>البريد الإلكتروني</label>
-              <input type="email" name="email" placeholder="example@email.com">
-            </div>
-            <div class="form-group">
-              <label>المجمع المفضل</label>
-              <select name="building">
-                <option value="">غير محدد</option>
-                <% buildings.forEach(b => { %>
-                  <option value="<%= b %>" <%= b === building ? 'selected' : '' %>><%= b %></option>
-                <% }) %>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>الميزانية الشهرية</label>
-              <select name="budget">
-                <option value="">غير محدد</option>
-                <option>أقل من ١٥٠٠ ﷼</option>
-                <option>١٥٠٠ - ٣٠٠٠ ﷼</option>
-                <option>٣٠٠٠ - ٥٠٠٠ ﷼</option>
-                <option>أكثر من ٥٠٠٠ ﷼</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>مدة الإيجار</label>
-              <select name="duration">
-                <option value="">غير محدد</option>
-                <option>شهر</option>
-                <option>٣ أشهر</option>
-                <option>٦ أشهر</option>
-                <option>سنة</option>
-              </select>
-            </div>
-            <% if (apartment) { %>
-            <div class="form-group form-full">
-              <label>الوحدة المطلوبة</label>
-              <input type="text" name="apartmentRef" value="<%= building %> — شقة <%= apartment %>" readonly style="background:#f0f0f0;">
-            </div>
-            <% } %>
-            <div class="form-group form-full">
-              <label>رسالتك / ملاحظات</label>
-              <textarea name="message" placeholder="اكتب أي تفاصيل إضافية أو استفسار..."></textarea>
-            </div>
-          </div>
-          <button type="submit" class="btn btn-gold form-submit">📩 إرسال الطلب</button>
-        </form>
-      </div>
-
-      <div style="margin-top:20px;background:#f9f7f2;border:1px solid #e8e4da;border-radius:12px;padding:20px 24px;display:flex;gap:16px;align-items:center;">
-        <span style="font-size:1.8rem;">📞</span>
-        <div>
-          <div style="font-size:13px;font-weight:700;margin-bottom:2px;">تفضل بالتواصل المباشر</div>
-          <div style="font-size:12px;color:#777;">يمكنك التواصل معنا عبر واتساب وسنرد فوراً</div>
-        </div>
-        <a href="https://wa.me/966500000000" target="_blank" class="btn btn-gold btn-sm" style="margin-right:auto;">واتساب ←</a>
-      </div>
-    <% } %>
+<!-- HERO -->
+<section class="about-hero">
+  <div class="about-hero__content">
+    <div class="sec-tag">تواصل معنا</div>
+    <h1 class="about-hero__title">نحن هنا <span class="c-gold">لمساعدتك</span></h1>
+    <p class="about-hero__sub">تواصل معنا عبر واتساب أو إيميل وسنرد عليك في أقرب وقت</p>
   </div>
 </section>
 
-<footer class="site-footer">
-  <p>© 2026 Finsight Real Estate — <a href="/login">لوحة التحكم</a></p>
+<!-- CONTACT OPTIONS -->
+<section style="padding:88px 0;background:#fff;">
+  <div class="page-container">
+    <div style="max-width:600px;margin:0 auto;display:flex;flex-direction:column;gap:20px;">
+
+      <!-- واتساب -->
+      <a href="https://wa.me/966590561057" target="_blank" class="contact-option-card">
+        <div class="contact-option-card__ico" style="background:linear-gradient(135deg,#25D366,#128C7E);">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+        </div>
+        <div class="contact-option-card__text">
+          <div class="contact-option-card__title">واتساب</div>
+          <div class="contact-option-card__val">0590561057</div>
+          <div class="contact-option-card__hint">اضغط للتواصل المباشر</div>
+        </div>
+        <div class="contact-option-card__arrow">←</div>
+      </a>
+
+      <!-- إيميل -->
+      <a href="mailto:realstate@barezz.com" class="contact-option-card">
+        <div class="contact-option-card__ico" style="background:linear-gradient(135deg,#D4AF37,#A8892A);">
+          <svg width="32" height="32" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        </div>
+        <div class="contact-option-card__text">
+          <div class="contact-option-card__title">البريد الإلكتروني</div>
+          <div class="contact-option-card__val">realstate@barezz.com</div>
+          <div class="contact-option-card__hint">راسلنا وسنرد خلال ٢٤ ساعة</div>
+        </div>
+        <div class="contact-option-card__arrow">←</div>
+      </a>
+
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="site-footer-new">
+  <div class="page-container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-brand__logo">
+          <div class="nav-logo-icon">FS</div>
+          <div>
+            <div class="nav-logo-name">Finsight</div>
+            <div class="nav-logo-sub">Real Estate</div>
+          </div>
+        </div>
+        <p class="footer-brand__desc">شركة رائدة في إدارة الأملاك والوساطة العقارية بالمدينة المنورة.</p>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col__title">روابط سريعة</div>
+        <a href="/">الرئيسية</a>
+        <a href="/about">من نحن</a>
+        <a href="/apartments">عقاراتنا</a>
+        <a href="/inquiry">تواصل معنا</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col__title">المجمعات</div>
+        <a href="/apartments?building=المنارا">مجمع المنارا</a>
+        <a href="/apartments?building=جوان ان">مجمع جوان إن</a>
+        <a href="/apartments?building=الماسة">مجمع الماسة</a>
+        <a href="/apartments?building=الواحة">مجمع الواحة</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col__title">تواصل معنا</div>
+        <a href="https://wa.me/966590561057">0590561057</a>
+        <a href="mailto:realstate@barezz.com">realstate@barezz.com</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 Finsight Real Estate — جميع الحقوق محفوظة</p>
+      <a href="/login" class="footer-bottom__admin">لوحة التحكم</a>
+    </div>
+  </div>
 </footer>
 
+<script>
+function toggleNav() {
+  document.getElementById('navLinks').classList.toggle('open');
+  document.getElementById('hamburger').classList.toggle('active');
+}
+</script>
 </body>
 </html>

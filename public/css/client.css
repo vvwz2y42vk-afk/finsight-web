@@ -497,3 +497,60 @@ h3 { font-size: 1.15rem; font-weight: 700; }
   .form-card { padding: 24px 18px; }
   .buildings-grid { grid-template-columns: 1fr; }
 }
+
+/* ── Contact Option Cards (inquiry page) ──────────────────── */
+.contact-option-card {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: #fff;
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  padding: 24px 28px;
+  text-decoration: none;
+  color: inherit;
+  transition: box-shadow .2s, border-color .2s, transform .2s;
+  cursor: pointer;
+}
+.contact-option-card:hover {
+  border-color: var(--gold);
+  box-shadow: 0 8px 32px rgba(212,175,55,.15);
+  transform: translateY(-2px);
+}
+.contact-option-card__ico {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.contact-option-card__text {
+  flex: 1;
+}
+.contact-option-card__title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text3);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.contact-option-card__val {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--dark);
+  margin-bottom: 4px;
+  direction: ltr;
+  text-align: right;
+}
+.contact-option-card__hint {
+  font-size: 13px;
+  color: var(--text3);
+}
+.contact-option-card__arrow {
+  font-size: 1.4rem;
+  color: var(--gold);
+  flex-shrink: 0;
+}
