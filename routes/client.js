@@ -78,6 +78,29 @@ router.post('/inquiry', async (req, res) => {
   try {
     const Inquiry = require('../models/Inquiry');
     await new Inquiry(req.body).save();
+
+    // إرسال إشعار إيميل
+    if (process.env.RESEND_API_KEY) {
+      const { name, phone, message, building, apartment } = req.body;
+      fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${process.env.RESEND_API_KEY}` },
+        body: JSON.stringify({
+          from: 'Finsight <onboarding@resend.dev>',
+          to: 'realstate@barezz.com',
+          subject: `استفسار جديد من ${name || 'عميل'}`,
+          html: `<div dir="rtl" style="font-family:Arial;font-size:15px;line-height:1.8;">
+            <h2 style="color:#D4AF37;">استفسار جديد — Finsight</h2>
+            <p><b>الاسم:</b> ${name || '—'}</p>
+            <p><b>الجوال:</b> ${phone || '—'}</p>
+            <p><b>المبنى:</b> ${building || '—'}</p>
+            <p><b>الشقة:</b> ${apartment || '—'}</p>
+            <p><b>الرسالة:</b> ${message || '—'}</p>
+          </div>`
+        })
+      }).catch(() => {});
+    }
+
     res.render('inquiry', { building: '', apartment: '', success: true, buildings: Object.keys(BUILDINGS) });
   } catch (e) {
     res.render('inquiry', { building: '', apartment: '', success: false, buildings: Object.keys(BUILDINGS), error: 'حدث خطأ، حاول مجدداً' });
