@@ -61,6 +61,10 @@ router.get('/apartments', async (req, res) => {
   }
 });
 
+router.get('/about', (req, res) => {
+  res.render('about');
+});
+
 router.get('/inquiry', (req, res) => {
   res.render('inquiry', {
     building: req.query.building || '',

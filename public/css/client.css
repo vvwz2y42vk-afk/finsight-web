@@ -300,6 +300,51 @@ img { max-width: 100%; display: block; }
 .footer-bottom__admin:hover { color: var(--gold); }
 
 /* ══════════════════════════════════
+   ABOUT PAGE
+══════════════════════════════════ */
+.about-hero {
+  min-height: 52vh; position: relative;
+  display: flex; align-items: center; justify-content: center;
+  background:
+    linear-gradient(160deg, rgba(0,0,0,.82) 0%, rgba(8,6,1,.78) 100%),
+    url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1920&q=80') center/cover no-repeat;
+  text-align: center; padding: 120px 24px 72px;
+}
+.about-hero__content { position: relative; z-index: 2; }
+.about-hero__title { color: #fff; font-size: clamp(2rem,4.5vw,3.4rem); font-weight: 900; margin: 12px 0 16px; }
+.about-hero__sub { color: rgba(255,255,255,.6); font-size: 16px; }
+
+.about-svc-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 32px 28px; transition: all .3s; }
+.about-svc-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: rgba(212,175,55,.4); }
+.about-svc-card--featured { background: var(--dark); border-color: var(--gold); }
+.about-svc-card--featured h3 { color: #fff; }
+.about-svc-card--featured p { color: rgba(255,255,255,.55); }
+.about-svc-card--featured .about-svc-card__list li { color: rgba(255,255,255,.65); border-color: rgba(255,255,255,.1); }
+.about-svc-card__ico { font-size: 2.4rem; margin-bottom: 16px; }
+.about-svc-card h3 { font-size: 17px; margin-bottom: 10px; }
+.about-svc-card p { font-size: 13px; color: var(--text2); line-height: 1.85; margin-bottom: 18px; }
+.about-svc-card__list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.about-svc-card__list li { font-size: 13px; color: var(--text2); padding: 6px 0; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+.about-svc-card__list li::before { content: '✦'; color: var(--gold); font-size: 10px; flex-shrink: 0; }
+
+.vmv-card { background: var(--dark2); border: 1px solid var(--border-dark); border-radius: var(--radius); padding: 32px 28px; transition: all .3s; }
+.vmv-card:hover { border-color: rgba(212,175,55,.35); transform: translateY(-3px); }
+.vmv-card--gold { background: var(--gold); border-color: var(--gold); }
+.vmv-card--gold .vmv-card__tag { color: rgba(0,0,0,.6); }
+.vmv-card--gold h3, .vmv-card--gold p { color: var(--black); }
+.vmv-card__ico { font-size: 2.2rem; margin-bottom: 14px; }
+.vmv-card__tag { font-size: 10px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
+.vmv-card h3 { font-size: 16px; font-weight: 800; color: #fff; margin-bottom: 10px; }
+.vmv-card p { font-size: 13px; color: rgba(255,255,255,.5); line-height: 1.85; }
+
+.team-card { background: var(--light); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px 20px; text-align: center; transition: all .3s; }
+.team-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+.team-card__avatar { width: 72px; height: 72px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 900; color: #fff; margin: 0 auto 14px; }
+.team-card__name { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
+.team-card__role { font-size: 12px; color: var(--gold); font-weight: 700; margin-bottom: 10px; letter-spacing: .5px; }
+.team-card__desc { font-size: 12px; color: var(--text3); line-height: 1.75; }
+
+/* ══════════════════════════════════
    OLD PAGES (apartments, inquiry, login)
    — keep existing classes intact
 ══════════════════════════════════ */
