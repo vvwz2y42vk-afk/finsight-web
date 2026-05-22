@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>حجز — <%= listing.title %> — Finsight</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/client.css">
+</head>
+<body class="home-page">
+
+<nav class="navbar scrolled" id="navbar">
+  <div class="nav-container">
+    <a href="/" class="nav-logo">
+      <div class="nav-logo-icon">FS</div>
+      <div><div class="nav-logo-name">Finsight</div><div class="nav-logo-sub">Real Estate</div></div>
+    </a>
+    <div class="nav-links" id="navLinks">
+      <a href="/" class="nav-lnk">الرئيسية</a>
+      <a href="/about" class="nav-lnk">من نحن</a>
+      <a href="/listings" class="nav-lnk active">عقاراتنا</a>
+      <a href="/inquiry" class="nav-lnk">تواصل معنا</a>
+    </div>
+    <div class="nav-actions">
+      <a href="/listings" class="btn btn-gold btn-sm">احجز الآن</a>
+      <button class="hamburger" id="hamburger" onclick="toggleNav()"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+</nav>
+
+<section style="padding:80px 0;background:var(--light);min-height:80vh;">
+  <div class="page-container" style="max-width:760px;">
+
+    <!-- LISTING SUMMARY -->
+    <a href="/listings/<%= listing._id %>" class="book-listing-preview">
+      <div class="book-listing-preview__photo">
+        <% if (listing.photos && listing.photos.length) { %>
+        <img src="<%= listing.photos[0] %>" alt="<%= listing.title %>">
+        <% } else { %>
+        <div class="listing-card__photo-ph" style="height:100%;">🏢</div>
+        <% } %>
+      </div>
+      <div class="book-listing-preview__info">
+        <div style="font-size:12px;color:var(--gold);font-weight:700;"><%= listing.building %></div>
+        <div style="font-size:1rem;font-weight:700;margin:4px 0;"><%= listing.title %></div>
+        <div style="font-size:13px;color:var(--text3);">🛏 <%= listing.bedrooms %> غرف | 🚿 <%= listing.bathrooms %> حمام<% if(listing.area) { %> | 📐 <%= listing.area %> م²<% } %></div>
+      </div>
+      <span style="color:var(--text3);font-size:12px;margin-right:auto;white-space:nowrap;">← تفاصيل</span>
+    </a>
+
+    <!-- FORM CARD -->
+    <div class="book-form-card">
+      <h2 style="font-size:1.4rem;font-weight:800;margin-bottom:4px;">تأكيد الحجز</h2>
+      <p style="color:var(--text3);font-size:13px;margin-bottom:28px;">أدخل بياناتك وسيتواصل معك فريقنا لتأكيد الحجز</p>
+
+      <form method="POST" action="/book/<%= listing._id %>">
+
+        <!-- RENTAL TYPE -->
+        <div style="margin-bottom:20px;">
+          <div class="form-lbl">نوع الإيجار</div>
+          <div class="book-type-toggle">
+            <% const showDaily = listing.type==='daily'||listing.type==='both'; %>
+            <% const showAnnual = listing.type==='annual'||listing.type==='both'; %>
+            <% if (showDaily) { %>
+            <label class="book-type-opt">
+              <input type="radio" name="bookingType" value="daily" <%= prefill.type==='daily'?'checked':'' %> onchange="toggleType(this.value)">
+              <span class="book-type-opt__label">
+                <span class="book-type-opt__ico">🌙</span>
+                <span>
+                  <strong>يومي</strong>
+                  <small><%= listing.price_daily.toLocaleString() %> ريال/ليلة</small>
+                </span>
+              </span>
+            </label>
+            <% } %>
+            <% if (showAnnual) { %>
+            <label class="book-type-opt">
+              <input type="radio" name="bookingType" value="annual" <%= prefill.type==='annual'?'checked':'' %> onchange="toggleType(this.value)">
+              <span class="book-type-opt__label">
+                <span class="book-type-opt__ico">📋</span>
+                <span>
+                  <strong>سنوي</strong>
+                  <small><%= listing.price_annual.toLocaleString() %> ريال/سنة</small>
+                </span>
+              </span>
+            </label>
+            <% } %>
+          </div>
+        </div>
+
+        <!-- DAILY DATES -->
+        <div id="dailySection" style="display:<%= prefill.type==='daily'?'block':'none' %>">
+          <div class="book-form-grid">
+            <div>
+              <label class="form-lbl">تاريخ الوصول</label>
+              <input type="date" name="checkIn" class="form-inp" value="<%= prefill.checkIn %>" min="<%= new Date().toISOString().split('T')[0] %>" onchange="calcTotal()">
+            </div>
+            <div>
+              <label class="form-lbl">تاريخ المغادرة</label>
+              <input type="date" name="checkOut" class="form-inp" value="<%= prefill.checkOut %>" onchange="calcTotal()">
+            </div>
+          </div>
+          <div style="margin-bottom:20px;">
+            <label class="form-lbl">عدد الضيوف</label>
+            <select name="guests" class="form-inp" style="max-width:200px;">
+              <% for(let i=1;i<=listing.maxGuests;i++) { %><option value="<%= i %>"><%= i %> <%= i===1?'ضيف':'ضيوف' %></option><% } %>
+            </select>
+          </div>
+          <div class="book-total-box" id="totalBox" style="display:none">
+            <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text3);"><span id="totalNights">—</span><span id="totalCalc">—</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:1rem;font-weight:700;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);"><span>الإجمالي</span><span class="c-gold" id="totalFinal">—</span></div>
+          </div>
+        </div>
+
+        <!-- ANNUAL START -->
+        <div id="annualSection" style="display:<%= prefill.type==='annual'?'block':'none' %>">
+          <div style="margin-bottom:20px;">
+            <label class="form-lbl">تاريخ البدء المقترح</label>
+            <input type="date" name="checkIn" class="form-inp" style="max-width:260px;" min="<%= new Date().toISOString().split('T')[0] %>">
+            <input type="hidden" name="checkOut">
+          </div>
+        </div>
+
+        <div class="book-divider"></div>
+
+        <!-- PERSONAL INFO -->
+        <div class="book-form-grid">
+          <div>
+            <label class="form-lbl">الاسم الكامل <span style="color:var(--red)">*</span></label>
+            <input type="text" name="name" class="form-inp" placeholder="اسمك الكامل" required>
+          </div>
+          <div>
+            <label class="form-lbl">رقم الهاتف <span style="color:var(--red)">*</span></label>
+            <input type="tel" name="phone" class="form-inp" placeholder="05xxxxxxxx" required>
+          </div>
+          <div class="book-full">
+            <label class="form-lbl">البريد الإلكتروني <span style="color:var(--text3);font-size:11px;">(اختياري)</span></label>
+            <input type="email" name="email" class="form-inp" placeholder="email@example.com">
+          </div>
+          <div class="book-full">
+            <label class="form-lbl">ملاحظات <span style="color:var(--text3);font-size:11px;">(اختياري)</span></label>
+            <textarea name="notes" class="form-inp" rows="3" placeholder="أي متطلبات أو استفسارات..." style="resize:vertical;"></textarea>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-gold" style="width:100%;padding:14px;font-size:1rem;font-weight:700;border-radius:12px;margin-top:8px;">
+          إرسال طلب الحجز ←
+        </button>
+        <p style="text-align:center;font-size:12px;color:var(--text3);margin-top:10px;">لن يُطلب منك الدفع الآن — سنتواصل معك للتأكيد</p>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="site-footer-new">
+  <div class="page-container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-brand__logo">
+          <div class="nav-logo-icon">FS</div>
+          <div><div class="nav-logo-name">Finsight</div><div class="nav-logo-sub">Real Estate</div></div>
+        </div>
+        <p class="footer-brand__desc">شركة رائدة في إدارة الأملاك والوساطة العقارية بالمدينة المنورة.</p>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col__title">روابط سريعة</div>
+        <a href="/">الرئيسية</a><a href="/about">من نحن</a>
+        <a href="/listings">عقاراتنا</a><a href="/inquiry">تواصل معنا</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col__title">تواصل معنا</div>
+        <a href="https://wa.me/966590561057">0590561057</a>
+        <a href="mailto:realstate@barezz.com">realstate@barezz.com</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 Finsight Real Estate — جميع الحقوق محفوظة</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+function toggleNav() {
+  document.getElementById('navLinks').classList.toggle('open');
+  document.getElementById('hamburger').classList.toggle('active');
+}
+const priceDaily = <%= listing.price_daily || 0 %>;
+
+function toggleType(type) {
+  document.getElementById('dailySection').style.display = type === 'daily' ? 'block' : 'none';
+  document.getElementById('annualSection').style.display = type === 'annual' ? 'block' : 'none';
+}
+
+function calcTotal() {
+  const ci = document.querySelector('[name=checkIn]').value;
+  const co = document.querySelector('[name=checkOut]').value;
+  if (!ci || !co) return;
+  const n = Math.max(1, Math.round((new Date(co) - new Date(ci)) / 86400000));
+  document.getElementById('totalNights').textContent = n + ' ليلة × ' + priceDaily.toLocaleString('ar-SA') + ' ريال';
+  document.getElementById('totalCalc').textContent = (n * priceDaily).toLocaleString('ar-SA') + ' ريال';
+  document.getElementById('totalFinal').textContent = (n * priceDaily).toLocaleString('ar-SA') + ' ريال';
+  document.getElementById('totalBox').style.display = 'block';
+}
+calcTotal();
+</script>
+</body>
+</html>

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>وحداتنا للإيجار — Finsight Real Estate</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/client.css">
+</head>
+<body class="home-page">
+
+<nav class="navbar scrolled" id="navbar">
+  <div class="nav-container">
+    <a href="/" class="nav-logo">
+      <div class="nav-logo-icon">FS</div>
+      <div><div class="nav-logo-name">Finsight</div><div class="nav-logo-sub">Real Estate</div></div>
+    </a>
+    <div class="nav-links" id="navLinks">
+      <a href="/" class="nav-lnk">الرئيسية</a>
+      <a href="/about" class="nav-lnk">من نحن</a>
+      <a href="/listings" class="nav-lnk active">عقاراتنا</a>
+      <a href="/inquiry" class="nav-lnk">تواصل معنا</a>
+    </div>
+    <div class="nav-actions">
+      <a href="/listings" class="btn btn-gold btn-sm">احجز الآن</a>
+      <button class="hamburger" id="hamburger" onclick="toggleNav()"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="about-hero" style="min-height:320px;">
+  <div class="about-hero__content">
+    <div class="sec-tag">وحداتنا</div>
+    <h1 class="about-hero__title">شقق للإيجار في <span class="c-gold">المدينة المنورة</span></h1>
+    <p class="about-hero__sub">يومي وسنوي — اختر الوحدة المناسبة واحجزها مباشرة</p>
+  </div>
+</section>
+
+<!-- FILTER BAR -->
+<div class="listings-filter-bar">
+  <div class="page-container">
+    <form method="GET" action="/listings" class="listings-filter-form">
+      <div class="lf-group">
+        <label class="lf-lbl">المجمع</label>
+        <select name="building" class="lf-select" onchange="this.form.submit()">
+          <option value="">الكل</option>
+          <% buildings.forEach(b => { %>
+          <option value="<%= b %>" <%= q.building===b?'selected':'' %>><%= b %></option>
+          <% }); %>
+        </select>
+      </div>
+      <div class="lf-group">
+        <label class="lf-lbl">نوع الإيجار</label>
+        <div class="lf-tabs">
+          <a href="/listings?<%= q.building?'building='+q.building+'&':'' %>type=all" class="lf-tab <%= !q.type||q.type==='all'?'active':'' %>">الكل</a>
+          <a href="/listings?<%= q.building?'building='+q.building+'&':'' %>type=daily" class="lf-tab <%= q.type==='daily'?'active':'' %>">يومي</a>
+          <a href="/listings?<%= q.building?'building='+q.building+'&':'' %>type=annual" class="lf-tab <%= q.type==='annual'?'active':'' %>">سنوي</a>
+        </div>
+      </div>
+      <div class="lf-count">
+        <span class="c-gold" style="font-weight:700;font-size:1.1rem;"><%= listings.length %></span>
+        <span style="color:var(--text3);font-size:13px;"> وحدة متاحة</span>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- LISTINGS GRID -->
+<section style="padding:56px 0 80px;background:var(--light);">
+  <div class="page-container">
+    <% if (listings.length === 0) { %>
+    <div style="text-align:center;padding:80px 0;">
+      <div style="font-size:3rem;margin-bottom:16px;">🏠</div>
+      <h3 style="font-size:1.4rem;font-weight:700;margin-bottom:8px;">لا توجد وحدات متاحة حالياً</h3>
+      <p style="color:var(--text3);">تواصل معنا مباشرة لمعرفة ما هو متاح</p>
+      <a href="/inquiry" class="btn btn-gold" style="margin-top:20px;display:inline-flex;">تواصل معنا</a>
+    </div>
+    <% } else { %>
+    <div class="listing-grid">
+      <% listings.forEach(l => { %>
+      <a href="/listings/<%= l._id %>" class="listing-card">
+        <div class="listing-card__photo">
+          <% if (l.photos && l.photos.length) { %>
+          <img src="<%= l.photos[0] %>" alt="<%= l.title %>" loading="lazy">
+          <% } else { %>
+          <div class="listing-card__photo-ph">🏢</div>
+          <% } %>
+          <div class="listing-card__badges">
+            <% if (l.featured) { %><span class="lc-badge lc-badge--featured">⭐ مميز</span><% } %>
+            <span class="lc-badge lc-badge--type">
+              <%= l.type==='daily'?'يومي':l.type==='annual'?'سنوي':'يومي + سنوي' %>
+            </span>
+          </div>
+        </div>
+        <div class="listing-card__body">
+          <div class="listing-card__building"><%= l.building %></div>
+          <div class="listing-card__title"><%= l.title %></div>
+          <div class="listing-card__meta">
+            <span>🛏 <%= l.bedrooms %> <%= l.bedrooms===1?'غرفة':'غرف' %></span>
+            <span>🚿 <%= l.bathrooms %> حمام</span>
+            <% if (l.area) { %><span>📐 <%= l.area %> م²</span><% } %>
+          </div>
+          <div class="listing-card__footer">
+            <div class="listing-card__price">
+              <% if (l.type==='daily'||l.type==='both') { %>
+              <span class="lcp-num"><%= l.price_daily.toLocaleString() %></span>
+              <span class="lcp-unit"> ريال / ليلة</span>
+              <% } else { %>
+              <span class="lcp-num"><%= l.price_annual.toLocaleString() %></span>
+              <span class="lcp-unit"> ريال / سنة</span>
+              <% } %>
+            </div>
+            <span class="listing-card__cta">تفاصيل ←</span>
+          </div>
+        </div>
+      </a>
+      <% }); %>
+    </div>
+    <% } %>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="site-footer-new">
+  <div class="page-container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-brand__logo">
+          <div class="nav-logo-icon">FS</div>
+          <div><div class="nav-logo-name">Finsight</div><div class="nav-logo-sub">Real Estate</div></div>
+        </div>
+        <p class="footer-brand__desc">شركة رائدة في إدارة الأملاك والوساطة العقارية بالمدينة المنورة.</p>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col__title">روابط سريعة</div>
+        <a href="/">الرئيسية</a>
+        <a href="/about">من نحن</a>
+        <a href="/listings">عقاراتنا</a>
+        <a href="/inquiry">تواصل معنا</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col__title">المجمعات</div>
+        <a href="/listings?building=المنارا">مجمع المنارا</a>
+        <a href="/listings?building=جوان ان">مجمع جوان إن</a>
+        <a href="/listings?building=الماسة">مجمع الماسة</a>
+        <a href="/listings?building=الواحة">مجمع الواحة</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col__title">تواصل معنا</div>
+        <a href="https://wa.me/966590561057">0590561057</a>
+        <a href="mailto:realstate@barezz.com">realstate@barezz.com</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 Finsight Real Estate — جميع الحقوق محفوظة</p>
+      <a href="/login" class="footer-bottom__admin">لوحة التحكم</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+function toggleNav() {
+  document.getElementById('navLinks').classList.toggle('open');
+  document.getElementById('hamburger').classList.toggle('active');
+}
+</script>
+</body>
+</html>

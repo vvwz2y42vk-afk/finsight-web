@@ -65,6 +65,87 @@ router.get('/about', (req, res) => {
   res.render('about');
 });
 
+// ─── Listings Marketplace ─────────────────────────────────
+router.get('/listings', async (req, res) => {
+  try {
+    const Listing = require('../models/Listing');
+    const filter = { available: true };
+    if (req.query.building) filter.building = req.query.building;
+    if (req.query.type && req.query.type !== 'all') {
+      filter.$or = [{ type: req.query.type }, { type: 'both' }];
+    }
+    const listings = await Listing.find(filter).sort({ featured: -1, createdAt: -1 }).lean();
+    res.render('listings', { listings, buildings: Object.keys(BUILDINGS), q: req.query });
+  } catch (e) {
+    res.render('listings', { listings: [], buildings: Object.keys(BUILDINGS), q: req.query });
+  }
+});
+
+router.get('/listings/:id', async (req, res) => {
+  try {
+    const Listing = require('../models/Listing');
+    const listing = await Listing.findById(req.params.id).lean();
+    if (!listing) return res.redirect('/listings');
+    res.render('listing', { listing });
+  } catch (e) { res.redirect('/listings'); }
+});
+
+router.get('/book/:id', async (req, res) => {
+  try {
+    const Listing = require('../models/Listing');
+    const listing = await Listing.findById(req.params.id).lean();
+    if (!listing) return res.redirect('/listings');
+    const today = new Date().toISOString().split('T')[0];
+    const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+    res.render('book', {
+      listing,
+      prefill: {
+        type: req.query.type || (listing.type === 'daily' ? 'daily' : 'annual'),
+        checkIn: req.query.checkin || today,
+        checkOut: req.query.checkout || tomorrow,
+      }
+    });
+  } catch (e) { res.redirect('/listings'); }
+});
+
+router.post('/book/:id', async (req, res) => {
+  try {
+    const Listing = require('../models/Listing');
+    const Booking = require('../models/Booking');
+    const listing = await Listing.findById(req.params.id).lean();
+    if (!listing) return res.redirect('/listings');
+
+    const { name, phone, email, bookingType, checkIn, checkOut, guests, notes } = req.body;
+    let nights = 0, totalPrice = 0;
+    if (bookingType === 'daily' && checkIn && checkOut) {
+      const d1 = new Date(checkIn), d2 = new Date(checkOut);
+      nights = Math.max(1, Math.round((d2 - d1) / 86400000));
+      totalPrice = nights * (listing.price_daily || 0);
+    } else if (bookingType === 'annual') {
+      totalPrice = listing.price_annual || 0;
+    }
+
+    const booking = await new Booking({
+      listing: listing._id, listingTitle: listing.title,
+      building: listing.building, apt: listing.apt,
+      name, phone, email, bookingType,
+      checkIn: checkIn ? new Date(checkIn) : undefined,
+      checkOut: checkOut ? new Date(checkOut) : undefined,
+      guests: parseInt(guests) || 1, nights, totalPrice, notes,
+    }).save();
+
+    res.redirect(`/booking/success?id=${booking._id}&name=${encodeURIComponent(name)}&listing=${encodeURIComponent(listing.title)}`);
+  } catch (e) { res.redirect('/listings'); }
+});
+
+router.get('/booking/success', (req, res) => {
+  res.render('book-success', {
+    name: req.query.name || '',
+    listingTitle: req.query.listing || '',
+    bookingId: req.query.id || '',
+  });
+});
+
 router.get('/inquiry', (req, res) => {
   res.render('inquiry', {
     building: req.query.building || '',

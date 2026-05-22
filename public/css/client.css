@@ -498,6 +498,117 @@ h3 { font-size: 1.15rem; font-weight: 700; }
   .buildings-grid { grid-template-columns: 1fr; }
 }
 
+/* ── Listings Marketplace ─────────────────────────────────── */
+.listings-filter-bar { background:#fff;border-bottom:1px solid var(--border);padding:16px 0;position:sticky;top:72px;z-index:90; }
+.listings-filter-form { display:flex;align-items:center;gap:24px;flex-wrap:wrap; }
+.lf-group { display:flex;flex-direction:column;gap:6px; }
+.lf-lbl { font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.05em; }
+.lf-select { background:var(--light);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-family:inherit;font-size:13px;color:var(--dark);outline:none;cursor:pointer; }
+.lf-select:focus { border-color:var(--gold); }
+.lf-tabs { display:flex;gap:4px; }
+.lf-tab { padding:7px 16px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;color:var(--text3);background:var(--light);border:1px solid var(--border);transition:all .15s; }
+.lf-tab.active { background:var(--gold);color:#fff;border-color:var(--gold); }
+.lf-count { margin-right:auto;padding:8px 0; }
+
+.listing-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:24px; }
+.listing-card { background:#fff;border:1px solid var(--border);border-radius:16px;overflow:hidden;text-decoration:none;color:inherit;transition:box-shadow .2s,transform .2s;display:flex;flex-direction:column; }
+.listing-card:hover { box-shadow:0 12px 40px rgba(0,0,0,.1);transform:translateY(-4px); }
+.listing-card__photo { aspect-ratio:4/3;position:relative;overflow:hidden;background:var(--dark); }
+.listing-card__photo img { width:100%;height:100%;object-fit:cover;transition:transform .4s; }
+.listing-card:hover .listing-card__photo img { transform:scale(1.05); }
+.listing-card__photo-ph { width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:3rem;background:linear-gradient(135deg,#0f1a2e,#1a2d4a); }
+.listing-card__badges { position:absolute;top:10px;right:10px;display:flex;flex-direction:column;gap:5px;align-items:flex-end; }
+.lc-badge { padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700; }
+.lc-badge--featured { background:var(--gold);color:#fff; }
+.lc-badge--type { background:rgba(0,0,0,.55);color:#fff;backdrop-filter:blur(4px); }
+.listing-card__body { padding:16px;flex:1;display:flex;flex-direction:column;gap:6px; }
+.listing-card__building { font-size:11px;color:var(--gold);font-weight:700;text-transform:uppercase;letter-spacing:.05em; }
+.listing-card__title { font-size:15px;font-weight:700;line-height:1.4;color:var(--dark); }
+.listing-card__meta { display:flex;gap:12px;font-size:12px;color:var(--text3);flex-wrap:wrap;margin-top:2px; }
+.listing-card__footer { display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:12px;border-top:1px solid var(--border); }
+.listing-card__price .lcp-num { font-size:1.2rem;font-weight:800;color:var(--dark); }
+.listing-card__price .lcp-unit { font-size:12px;color:var(--text3); }
+.listing-card__cta { font-size:13px;font-weight:600;color:var(--gold); }
+
+/* Listing Detail */
+.listing-gallery-section { background:#fff;padding:24px 0 0;border-bottom:1px solid var(--border); }
+.listing-gallery { display:flex;flex-direction:column;gap:8px;max-height:520px; }
+.listing-gallery__main { flex:1;border-radius:16px;overflow:hidden;background:var(--dark);max-height:420px; }
+.listing-gallery__main img { width:100%;height:100%;object-fit:cover;display:block; }
+.listing-gallery__thumbs { display:flex;gap:8px;padding-bottom:16px;overflow-x:auto; }
+.listing-gallery__thumb { width:80px;height:60px;border-radius:8px;overflow:hidden;cursor:pointer;flex-shrink:0;border:2px solid transparent;opacity:.7;transition:all .15s; }
+.listing-gallery__thumb.active { border-color:var(--gold);opacity:1; }
+.listing-gallery__thumb img { width:100%;height:100%;object-fit:cover; }
+.listing-gallery__placeholder { background:linear-gradient(135deg,#0f1a2e,#1a2d4a);border-radius:16px;height:360px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;margin-bottom:16px; }
+.listing-gallery__placeholder span { font-size:4rem; }
+.listing-gallery__placeholder p { color:rgba(255,255,255,.4);font-size:14px; }
+
+.listing-layout { display:grid;grid-template-columns:1fr 400px;gap:48px;align-items:start; }
+.listing-info { min-width:0; }
+.listing-stats { display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px; }
+.listing-stat { background:var(--light);border-radius:12px;padding:14px;text-align:center; }
+.listing-stat__val { font-size:1.5rem;font-weight:800;color:var(--dark); }
+.listing-stat__lbl { font-size:11px;color:var(--text3);margin-top:2px; }
+.listing-divider { height:1px;background:var(--border);margin:24px 0; }
+.listing-amenities { display:grid;grid-template-columns:repeat(3,1fr);gap:10px; }
+.listing-amenity { display:flex;align-items:center;gap:8px;font-size:13px;padding:10px 12px;background:var(--light);border-radius:10px; }
+
+.listing-book-box { background:#fff;border:1px solid var(--border);border-radius:20px;padding:24px;position:sticky;top:96px;box-shadow:0 8px 32px rgba(0,0,0,.08); }
+.lbb-price { margin-bottom:16px; }
+.lbb-price__num { font-size:2rem;font-weight:900;color:var(--dark); }
+.lbb-price__unit { font-size:14px;color:var(--text3); }
+.lbb-toggle { display:flex;gap:4px;background:var(--light);border-radius:10px;padding:4px;margin-bottom:16px; }
+.lbb-toggle__btn { flex:1;padding:8px;border:none;border-radius:8px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:var(--text3);transition:all .15s; }
+.lbb-toggle__btn.active { background:#fff;color:var(--dark);box-shadow:0 1px 4px rgba(0,0,0,.1); }
+.lbb-row { margin-bottom:12px; }
+.lbb-lbl { display:block;font-size:11px;color:var(--text3);font-weight:600;margin-bottom:5px; }
+.lbb-inp { width:100%;background:var(--light);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-family:inherit;font-size:13px;outline:none;color:var(--dark); }
+.lbb-inp:focus { border-color:var(--gold); }
+.lbb-total { background:var(--light);border-radius:10px;padding:12px 14px;margin-top:12px; }
+.lbb-total__row { display:flex;justify-content:space-between;font-size:12px;color:var(--text3);margin-bottom:6px; }
+.lbb-total__sum { display:flex;justify-content:space-between;font-size:14px;font-weight:700; }
+.lbb-wa { display:flex;align-items:center;justify-content:center;gap:8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:10px;padding:10px;font-size:13px;font-weight:600;text-decoration:none;margin-top:8px;transition:background .15s; }
+.lbb-wa:hover { background:#dcfce7; }
+
+/* Booking Form */
+.book-listing-preview { display:flex;align-items:center;gap:16px;background:#fff;border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:20px;text-decoration:none;color:inherit;transition:border-color .15s; }
+.book-listing-preview:hover { border-color:var(--gold); }
+.book-listing-preview__photo { width:80px;height:64px;border-radius:10px;overflow:hidden;flex-shrink:0;background:var(--dark); }
+.book-listing-preview__photo img { width:100%;height:100%;object-fit:cover; }
+.book-listing-preview__info { flex:1;min-width:0; }
+.book-form-card { background:#fff;border:1px solid var(--border);border-radius:20px;padding:28px; }
+.book-form-grid { display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:0; }
+.book-full { grid-column:1/-1; }
+.book-divider { height:1px;background:var(--border);margin:20px 0; }
+.book-type-toggle { display:flex;gap:12px;flex-wrap:wrap; }
+.book-type-opt { cursor:pointer; }
+.book-type-opt input { display:none; }
+.book-type-opt__label { display:flex;align-items:center;gap:10px;padding:12px 16px;border:2px solid var(--border);border-radius:12px;transition:all .15s;font-size:14px; }
+.book-type-opt input:checked + .book-type-opt__label { border-color:var(--gold);background:rgba(212,175,55,.06); }
+.book-type-opt__ico { font-size:1.3rem; }
+.book-type-opt__label strong { display:block;font-weight:700; }
+.book-type-opt__label small { display:block;color:var(--text3);font-size:12px;margin-top:2px; }
+.book-total-box { background:var(--light);border-radius:10px;padding:12px 14px;margin-bottom:16px; }
+
+/* Success Page */
+.book-success-card { background:#fff;border:1px solid var(--border);border-radius:20px;padding:40px;text-align:center; }
+.book-success-card__icon { font-size:4rem;margin-bottom:16px;display:block; }
+.book-success-ref { background:var(--light);border:1px dashed var(--border);border-radius:10px;padding:12px 20px;margin:0 auto;display:inline-block; }
+
+@media (max-width: 1024px) {
+  .listing-grid { grid-template-columns:repeat(2,1fr); }
+  .listing-layout { grid-template-columns:1fr; }
+  .listing-book-box { position:static; }
+}
+@media (max-width: 600px) {
+  .listing-grid { grid-template-columns:1fr; }
+  .listing-stats { grid-template-columns:repeat(2,1fr); }
+  .listing-amenities { grid-template-columns:repeat(2,1fr); }
+  .book-form-grid { grid-template-columns:1fr; }
+  .book-type-toggle { flex-direction:column; }
+  .lf-tabs { flex-wrap:wrap; }
+}
+
 /* ── Contact Option Cards (inquiry page) ──────────────────── */
 .contact-option-card {
   display: flex;

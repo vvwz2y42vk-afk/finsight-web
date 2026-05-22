@@ -138,6 +138,64 @@ router.put('/inquiries/:id', auth, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ─── Listings (public read, auth write) ──────────────────
+router.get('/listings', async (req, res) => {
+  try {
+    const Listing = require('../models/Listing');
+    const listings = await Listing.find().sort({ featured: -1, createdAt: -1 }).lean();
+    res.json(listings);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.post('/listings', auth, async (req, res) => {
+  try {
+    const Listing = require('../models/Listing');
+    const listing = await new Listing(req.body).save();
+    res.json({ success: true, listing });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.put('/listings/:id', auth, async (req, res) => {
+  try {
+    const Listing = require('../models/Listing');
+    await Listing.findByIdAndUpdate(req.params.id, req.body);
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.delete('/listings/:id', auth, async (req, res) => {
+  try {
+    const Listing = require('../models/Listing');
+    await Listing.findByIdAndDelete(req.params.id);
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ─── Bookings (auth) ──────────────────────────────────────
+router.get('/bookings', auth, async (req, res) => {
+  try {
+    const Booking = require('../models/Booking');
+    const bookings = await Booking.find().sort({ createdAt: -1 }).lean();
+    res.json(bookings);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.put('/bookings/:id', auth, async (req, res) => {
+  try {
+    const Booking = require('../models/Booking');
+    await Booking.findByIdAndUpdate(req.params.id, req.body);
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.delete('/bookings/:id', auth, async (req, res) => {
+  try {
+    const Booking = require('../models/Booking');
+    await Booking.findByIdAndDelete(req.params.id);
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // ─── AI Chat (Gemini) ─────────────────────────────────────
 router.post('/ai/chat', auth, async (req, res) => {
   try {

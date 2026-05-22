@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title><%= listing.title %> — Finsight Real Estate</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/client.css">
+</head>
+<body class="home-page">
+
+<nav class="navbar scrolled" id="navbar">
+  <div class="nav-container">
+    <a href="/" class="nav-logo">
+      <div class="nav-logo-icon">FS</div>
+      <div><div class="nav-logo-name">Finsight</div><div class="nav-logo-sub">Real Estate</div></div>
+    </a>
+    <div class="nav-links" id="navLinks">
+      <a href="/" class="nav-lnk">الرئيسية</a>
+      <a href="/about" class="nav-lnk">من نحن</a>
+      <a href="/listings" class="nav-lnk active">عقاراتنا</a>
+      <a href="/inquiry" class="nav-lnk">تواصل معنا</a>
+    </div>
+    <div class="nav-actions">
+      <a href="/listings" class="btn btn-gold btn-sm">احجز الآن</a>
+      <button class="hamburger" id="hamburger" onclick="toggleNav()"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+</nav>
+
+<!-- BREADCRUMB -->
+<div style="background:#fff;border-bottom:1px solid var(--border);padding:12px 0;">
+  <div class="page-container">
+    <div style="font-size:13px;color:var(--text3);display:flex;align-items:center;gap:8px;">
+      <a href="/listings" style="color:var(--gold);text-decoration:none;">عقاراتنا</a>
+      <span>/</span>
+      <a href="/listings?building=<%= listing.building %>" style="color:var(--gold);text-decoration:none;"><%= listing.building %></a>
+      <span>/</span>
+      <span><%= listing.title %></span>
+    </div>
+  </div>
+</div>
+
+<!-- GALLERY -->
+<div class="listing-gallery-section">
+  <div class="page-container">
+    <% if (listing.photos && listing.photos.length > 0) { %>
+    <div class="listing-gallery">
+      <div class="listing-gallery__main" id="mainPhoto">
+        <img src="<%= listing.photos[0] %>" alt="<%= listing.title %>" id="mainImg">
+      </div>
+      <% if (listing.photos.length > 1) { %>
+      <div class="listing-gallery__thumbs">
+        <% listing.photos.forEach((ph, i) => { %>
+        <div class="listing-gallery__thumb <%= i===0?'active':'' %>" onclick="setPhoto('<%= ph %>',this)">
+          <img src="<%= ph %>" alt="صورة <%= i+1 %>">
+        </div>
+        <% }); %>
+      </div>
+      <% } %>
+    </div>
+    <% } else { %>
+    <div class="listing-gallery__placeholder">
+      <span>🏢</span>
+      <p>لا توجد صور مضافة</p>
+    </div>
+    <% } %>
+  </div>
+</div>
+
+<!-- DETAIL LAYOUT -->
+<section style="padding:48px 0 80px;background:#fff;">
+  <div class="page-container">
+    <div class="listing-layout">
+
+      <!-- LEFT: INFO -->
+      <div class="listing-info">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <span class="lc-badge lc-badge--type" style="font-size:12px;">
+            <%= listing.type==='daily'?'يومي':listing.type==='annual'?'سنوي':'يومي + سنوي' %>
+          </span>
+          <% if (listing.featured) { %><span class="lc-badge lc-badge--featured" style="font-size:12px;">⭐ مميز</span><% } %>
+        </div>
+        <h1 style="font-size:clamp(1.5rem,3vw,2rem);font-weight:800;line-height:1.3;margin-bottom:8px;"><%= listing.title %></h1>
+        <p style="color:var(--text3);font-size:14px;margin-bottom:24px;">
+          📍 <%= listing.building %> — شقة <%= listing.apt %><% if(listing.floor){ %> | الدور <%= listing.floor %><% } %>
+        </p>
+
+        <!-- STATS -->
+        <div class="listing-stats">
+          <div class="listing-stat"><div class="listing-stat__val"><%= listing.maxGuests %></div><div class="listing-stat__lbl">ضيوف</div></div>
+          <div class="listing-stat"><div class="listing-stat__val"><%= listing.bedrooms %></div><div class="listing-stat__lbl"><%= listing.bedrooms===1?'غرفة نوم':'غرف نوم' %></div></div>
+          <div class="listing-stat"><div class="listing-stat__val"><%= listing.bathrooms %></div><div class="listing-stat__lbl"><%= listing.bathrooms===1?'حمام':'حمامات' %></div></div>
+          <% if (listing.area) { %><div class="listing-stat"><div class="listing-stat__val"><%= listing.area %></div><div class="listing-stat__lbl">م²</div></div><% } %>
+        </div>
+
+        <div class="listing-divider"></div>
+
+        <!-- DESCRIPTION -->
+        <% if (listing.description) { %>
+        <div style="margin-bottom:32px;">
+          <h3 style="font-size:1.1rem;font-weight:700;margin-bottom:12px;">عن الوحدة</h3>
+          <p style="color:var(--text2);line-height:2;font-size:15px;"><%= listing.description %></p>
+        </div>
+        <% } %>
+
+        <!-- AMENITIES -->
+        <% if (listing.amenities && listing.amenities.length > 0) { %>
+        <div>
+          <h3 style="font-size:1.1rem;font-weight:700;margin-bottom:16px;">المرافق والمميزات</h3>
+          <div class="listing-amenities">
+            <% const amenityIcons = {'واي فاي':'📶','مكيف':'❄️','مطبخ مجهز':'🍳','تلفزيون':'📺','غسالة':'🌀','موقف سيارة':'🚗','مصعد':'🛗','حراسة 24 ساعة':'🔒','مطل على الشارع':'🪟','أثاث كامل':'🛋️','ثلاجة':'🧊','تدفئة مركزية':'🌡️'}; %>
+            <% listing.amenities.forEach(am => { %>
+            <div class="listing-amenity">
+              <span><%= amenityIcons[am] || '✓' %></span>
+              <span><%= am %></span>
+            </div>
+            <% }); %>
+          </div>
+        </div>
+        <% } %>
+      </div>
+
+      <!-- RIGHT: BOOKING BOX -->
+      <div class="listing-book-box" id="bookBox">
+        <div class="lbb-price">
+          <% if (listing.type==='daily'||listing.type==='both') { %>
+          <span class="lbb-price__num"><%= listing.price_daily.toLocaleString() %></span>
+          <span class="lbb-price__unit"> ريال / ليلة</span>
+          <% } %>
+          <% if (listing.type==='annual'||listing.type==='both') { %>
+          <% if(listing.type==='both') { %><div style="font-size:12px;color:var(--text3);margin-top:4px;">أو</div><% } %>
+          <span class="lbb-price__num" style="<%= listing.type==='both'?'font-size:1.2rem;':'' %>"><%= listing.price_annual.toLocaleString() %></span>
+          <span class="lbb-price__unit"> ريال / سنة</span>
+          <% } %>
+        </div>
+
+        <% if (listing.type==='both') { %>
+        <div class="lbb-toggle" id="typeToggle">
+          <button class="lbb-toggle__btn active" onclick="setType('daily',this)">يومي</button>
+          <button class="lbb-toggle__btn" onclick="setType('annual',this)">سنوي</button>
+        </div>
+        <% } %>
+
+        <div id="dailyFields" style="<%= listing.type==='annual'?'display:none':'display:block' %>">
+          <div class="lbb-row">
+            <label class="lbb-lbl">تاريخ الوصول</label>
+            <input type="date" class="lbb-inp" id="checkIn" onchange="calcNights()">
+          </div>
+          <div class="lbb-row">
+            <label class="lbb-lbl">تاريخ المغادرة</label>
+            <input type="date" class="lbb-inp" id="checkOut" onchange="calcNights()">
+          </div>
+          <div class="lbb-row">
+            <label class="lbb-lbl">عدد الضيوف</label>
+            <select class="lbb-inp" id="guests">
+              <% for(let i=1;i<=listing.maxGuests;i++) { %><option value="<%= i %>"><%= i %> ضيف<%= i===1?'':'ين أو أكثر' %></option><% } %>
+            </select>
+          </div>
+          <div class="lbb-total" id="totalBox" style="display:none">
+            <div class="lbb-total__row">
+              <span id="nightsLbl">— ليلة</span>
+              <span id="nightsPrice">—</span>
+            </div>
+            <div class="lbb-total__sum">
+              <span>الإجمالي</span>
+              <span class="c-gold" id="totalPrice">—</span>
+            </div>
+          </div>
+        </div>
+
+        <a id="bookBtn" href="/book/<%= listing._id %>?type=<%= listing.type==='annual'?'annual':'daily' %>" class="btn btn-gold" style="width:100%;justify-content:center;padding:14px;font-size:1rem;font-weight:700;margin-top:16px;border-radius:12px;">
+          احجز الآن
+        </a>
+        <a href="https://wa.me/966590561057?text=أهلاً، أريد الاستفسار عن شقة <%= encodeURIComponent(listing.title) %>" target="_blank" class="lbb-wa">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+          تواصل عبر واتساب
+        </a>
+        <p style="font-size:11px;color:var(--text3);text-align:center;margin-top:8px;">لن يُطلب منك الدفع الآن</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="site-footer-new">
+  <div class="page-container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-brand__logo">
+          <div class="nav-logo-icon">FS</div>
+          <div><div class="nav-logo-name">Finsight</div><div class="nav-logo-sub">Real Estate</div></div>
+        </div>
+        <p class="footer-brand__desc">شركة رائدة في إدارة الأملاك والوساطة العقارية بالمدينة المنورة.</p>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col__title">روابط سريعة</div>
+        <a href="/">الرئيسية</a><a href="/about">من نحن</a>
+        <a href="/listings">عقاراتنا</a><a href="/inquiry">تواصل معنا</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col__title">المجمعات</div>
+        <a href="/listings?building=المنارا">مجمع المنارا</a>
+        <a href="/listings?building=جوان ان">مجمع جوان إن</a>
+        <a href="/listings?building=الماسة">مجمع الماسة</a>
+        <a href="/listings?building=الواحة">مجمع الواحة</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col__title">تواصل معنا</div>
+        <a href="https://wa.me/966590561057">0590561057</a>
+        <a href="mailto:realstate@barezz.com">realstate@barezz.com</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 Finsight Real Estate — جميع الحقوق محفوظة</p>
+      <a href="/login" class="footer-bottom__admin">لوحة التحكم</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+function toggleNav() {
+  document.getElementById('navLinks').classList.toggle('open');
+  document.getElementById('hamburger').classList.toggle('active');
+}
+function setPhoto(src, el) {
+  document.getElementById('mainImg').src = src;
+  document.querySelectorAll('.listing-gallery__thumb').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+const priceDaily = <%= listing.price_daily || 0 %>;
+const priceAnnual = <%= listing.price_annual || 0 %>;
+let currentType = '<%= listing.type==="annual"?"annual":"daily" %>';
+
+function setType(type, btn) {
+  currentType = type;
+  document.querySelectorAll('.lbb-toggle__btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('dailyFields').style.display = type === 'daily' ? 'block' : 'none';
+  document.getElementById('bookBtn').href = '/book/<%= listing._id %>?type=' + type;
+  calcNights();
+}
+
+function calcNights() {
+  if (currentType !== 'daily') return;
+  const ci = document.getElementById('checkIn').value;
+  const co = document.getElementById('checkOut').value;
+  if (!ci || !co) { document.getElementById('totalBox').style.display = 'none'; return; }
+  const d1 = new Date(ci), d2 = new Date(co);
+  const nights = Math.max(1, Math.round((d2 - d1) / 86400000));
+  if (nights <= 0) { document.getElementById('totalBox').style.display = 'none'; return; }
+  const total = nights * priceDaily;
+  document.getElementById('nightsLbl').textContent = nights + ' ليلة × ' + priceDaily.toLocaleString('ar-SA') + ' ريال';
+  document.getElementById('nightsPrice').textContent = (nights * priceDaily).toLocaleString('ar-SA') + ' ريال';
+  document.getElementById('totalPrice').textContent = total.toLocaleString('ar-SA') + ' ريال';
+  document.getElementById('totalBox').style.display = 'block';
+
+  const btn = document.getElementById('bookBtn');
+  btn.href = '/book/<%= listing._id %>?type=daily&checkin=' + ci + '&checkout=' + co + '&guests=' + document.getElementById('guests').value;
+}
+
+// Set min dates
+const today = new Date().toISOString().split('T')[0];
+const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+document.getElementById('checkIn') && (document.getElementById('checkIn').min = today, document.getElementById('checkIn').value = today);
+document.getElementById('checkOut') && (document.getElementById('checkOut').min = tomorrow, document.getElementById('checkOut').value = tomorrow);
+calcNights();
+</script>
+</body>
+</html>

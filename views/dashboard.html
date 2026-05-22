@@ -247,6 +247,9 @@ tbody td{padding:7px 5px;font-size:11px;}
     <button id="nav-performance" class="ni" onclick="go('performance',this)"><span class="ni-ico">📈</span>الأداء</button>
     <button id="nav-sources" class="ni" onclick="go('sources',this)"><span class="ni-ico">📊</span>المصادر</button>
     <button id="nav-reports" class="ni" onclick="go('reports',this)"><span class="ni-ico">📅</span>التقارير</button>
+    <div style="height:1px;background:rgba(184,134,11,.15);margin:6px 8px;"></div>
+    <button id="nav-listings" class="ni" onclick="go('listings',this)"><span class="ni-ico">🏠</span>الإعلانات<span class="ni-badge" id="nb-listings">—</span></button>
+    <button id="nav-bookings" class="ni" onclick="go('bookings',this)"><span class="ni-ico">📅</span>الحجوزات<span class="ni-badge" id="nb-bookings">—</span></button>
   </nav>
   <div class="sb-user">
     <div class="user-row"><div class="user-av" id="user-av">ع</div><div><div class="user-name" id="user-name">عبد الملك</div><div class="user-role" id="user-role">مساعد إداري · Finsight</div></div></div>
@@ -289,6 +292,8 @@ tbody td{padding:7px 5px;font-size:11px;}
     <button id="tab-nav-performance" class="tab" onclick="st('performance',this)">📈 الأداء</button>
     <button id="tab-nav-sources" class="tab" onclick="st('sources',this)">📊 المصادر</button>
     <button id="tab-nav-reports" class="tab" onclick="st('reports',this)">📅 التقارير</button>
+    <button id="tab-nav-listings" class="tab" onclick="st('listings',this)">🏠 الإعلانات</button>
+    <button id="tab-nav-bookings" class="tab" onclick="st('bookings',this)">📅 الحجوزات</button>
   </div>
   <div class="tc active" id="tab-dashboard">
     <div class="kpi-grid">
@@ -422,8 +427,74 @@ tbody td{padding:7px 5px;font-size:11px;}
       <div class="card"><div class="card-hd"><div class="card-title">إجمالي القيمة</div></div><div id="src-value"></div></div>
     </div>
   </div>
+
+  <!-- ═══════════════════════════════════ LISTINGS TAB ═══ -->
+  <div class="tc" id="tab-listings">
+    <div class="topbar" style="margin-bottom:12px;">
+      <div><div class="page-title">إدارة <span>الإعلانات</span></div><div style="font-size:10px;color:var(--t3);">الشقق المعلنة للإيجار على الموقع</div></div>
+      <div class="topbar-right">
+        <a href="/listings" target="_blank" class="btn" style="font-size:10px;">🌐 عرض الصفحة</a>
+        <button class="btn btn-gold" onclick="openListingForm(null)" style="font-size:10px;">+ إضافة إعلان</button>
+      </div>
+    </div>
+    <div id="listings-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;"></div>
+  </div>
+
+  <!-- ═══════════════════════════════════ BOOKINGS TAB ═══ -->
+  <div class="tc" id="tab-bookings">
+    <div class="topbar" style="margin-bottom:12px;">
+      <div><div class="page-title">طلبات <span>الحجز</span></div><div style="font-size:10px;color:var(--t3);">طلبات الحجز الواردة من الموقع</div></div>
+      <div class="topbar-right">
+        <div class="ec" style="margin:0;gap:8px;">
+          <div class="ecb u" style="padding:6px 12px;"><div class="ecl">جديد</div><div class="ecv" id="bk-pending" style="font-size:16px;">—</div></div>
+          <div class="ecb s" style="padding:6px 12px;"><div class="ecl">مؤكد</div><div class="ecv" id="bk-confirmed" style="font-size:16px;">—</div></div>
+          <div class="ecb o" style="padding:6px 12px;"><div class="ecl">الكل</div><div class="ecv" id="bk-total" style="font-size:16px;">—</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="tbl-wrap"><table>
+        <thead><tr>
+          <th>الوحدة</th><th>المجمع</th><th>العميل</th><th>الهاتف</th>
+          <th>النوع</th><th>التاريخ</th><th>الإجمالي</th><th>الحالة</th><th>إجراء</th>
+        </tr></thead>
+        <tbody id="bookings-tbody"></tbody>
+      </table></div>
+    </div>
+  </div>
 </div>
 </div>
+<!-- LISTING MODAL -->
+<div class="overlay" id="listingOverlay" style="display:none;">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-hd"><div class="modal-title" id="listingFormTitle">+ إعلان جديد</div><button class="modal-close" onclick="closeListingForm()">×</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div><label class="form-lbl">المبنى *</label><select class="form-inp" id="lf-building"><option>المنارا</option><option>جوان ان</option><option>الماسة</option><option>الواحة</option></select></div>
+        <div><label class="form-lbl">رقم الشقة *</label><input class="form-inp" id="lf-apt" type="text" placeholder="101"></div>
+        <div><label class="form-lbl">الدور</label><input class="form-inp" id="lf-floor" type="text" placeholder="الأول"></div>
+        <div><label class="form-lbl">نوع الإيجار</label><select class="form-inp" id="lf-type"><option value="both">يومي + سنوي</option><option value="daily">يومي فقط</option><option value="annual">سنوي فقط</option></select></div>
+        <div class="form-full"><label class="form-lbl">العنوان *</label><input class="form-inp" id="lf-title" type="text" placeholder="شقة عائلية مفروشة في المنارا"></div>
+        <div class="form-full"><label class="form-lbl">الوصف</label><textarea class="form-inp" id="lf-desc" rows="2" style="resize:vertical" placeholder="وصف الشقة..."></textarea></div>
+        <div><label class="form-lbl">السعر اليومي (ريال/ليلة)</label><input class="form-inp" id="lf-price-daily" type="number" placeholder="0"></div>
+        <div><label class="form-lbl">السعر السنوي (ريال/سنة)</label><input class="form-inp" id="lf-price-annual" type="number" placeholder="0"></div>
+        <div><label class="form-lbl">غرف النوم</label><input class="form-inp" id="lf-beds" type="number" value="1" min="1"></div>
+        <div><label class="form-lbl">الحمامات</label><input class="form-inp" id="lf-baths" type="number" value="1" min="1"></div>
+        <div><label class="form-lbl">المساحة (م²)</label><input class="form-inp" id="lf-area" type="number" placeholder="0"></div>
+        <div><label class="form-lbl">الحد الأقصى للضيوف</label><input class="form-inp" id="lf-guests" type="number" value="4" min="1"></div>
+        <div class="form-full"><label class="form-lbl">روابط الصور (كل رابط في سطر)</label><textarea class="form-inp" id="lf-photos" rows="3" style="resize:vertical;direction:ltr;" placeholder="https://example.com/photo1.jpg&#10;https://example.com/photo2.jpg"></textarea></div>
+        <div class="form-full"><label class="form-lbl">المرافق (كل ميزة في سطر)</label><textarea class="form-inp" id="lf-amenities" rows="3" style="resize:vertical;" placeholder="واي فاي&#10;مكيف&#10;مطبخ مجهز&#10;موقف سيارة"></textarea></div>
+        <div><label class="form-lbl">الحالة</label><select class="form-inp" id="lf-available"><option value="true">متاح ✅</option><option value="false">غير متاح ❌</option></select></div>
+        <div><label class="form-lbl">مميز؟</label><select class="form-inp" id="lf-featured"><option value="false">عادي</option><option value="true">⭐ مميز</option></select></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end;">
+        <button class="btn" onclick="closeListingForm()">إلغاء</button>
+        <button class="btn btn-gold" onclick="saveListing()">💾 حفظ الإعلان</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- OVERLAYS -->
 <div class="overlay" id="formOverlay" style="display:none;">
   <div class="modal">
@@ -739,7 +810,7 @@ async function confirmDelete(){
   showToast('🗑️ تم الحذف — جاري المزامنة...');if(c)await syncToSheet('deleteContract',c);
 }
 
-const titles={dashboard:'لوحة <span>التحكم</span>',contracts:'<span>العقود</span>',commissions:'<span>العمولات</span>',collection:'<span>التحصيل</span>',expiry:'العقود <span>المنتهية</span>',map:'خريطة <span>الشقق</span>',performance:'تحليل <span>الأداء</span>',sources:'تحليل <span>المصادر</span>',reports:'<span>التقارير</span> الشهرية'};
+const titles={dashboard:'لوحة <span>التحكم</span>',contracts:'<span>العقود</span>',commissions:'<span>العمولات</span>',collection:'<span>التحصيل</span>',expiry:'العقود <span>المنتهية</span>',map:'خريطة <span>الشقق</span>',performance:'تحليل <span>الأداء</span>',sources:'تحليل <span>المصادر</span>',reports:'<span>التقارير</span> الشهرية',listings:'إدارة <span>الإعلانات</span>',bookings:'طلبات <span>الحجز</span>'};
 async function loadUser(){
   try{
     const res=await fetch('/api/me');
@@ -761,12 +832,14 @@ async function loadUser(){
 }
 
 function go(id,el){
-  if(currentUser&&!currentUser.allowed.includes(id)){showToast('⛔ ليس لديك صلاحية لعرض هذا القسم');return;}
+  if(currentUser&&!currentUser.allowed.includes(id)&&!['listings','bookings'].includes(id)){showToast('⛔ ليس لديك صلاحية لعرض هذا القسم');return;}
   document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));el?.classList.add('active');showTabById(id);set('pageTitle',titles[id]||id);document.getElementById('addBtn').style.display=id==='contracts'?'flex':'none';
+  if(id==='listings')loadListings();if(id==='bookings')loadBookings();
 }
 function st(id,el){
-  if(currentUser&&!currentUser.allowed.includes(id)){showToast('⛔ ليس لديك صلاحية لعرض هذا القسم');return;}
+  if(currentUser&&!currentUser.allowed.includes(id)&&!['listings','bookings'].includes(id)){showToast('⛔ ليس لديك صلاحية لعرض هذا القسم');return;}
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el?.classList.add('active');showTabById(id);set('pageTitle',titles[id]||id);document.getElementById('addBtn').style.display=id==='contracts'?'flex':'none';
+  if(id==='listings')loadListings();if(id==='bookings')loadBookings();
 }
 function showTabById(id){document.querySelectorAll('.tc').forEach(t=>t.classList.remove('active'));document.getElementById('tab-'+id)?.classList.add('active');}
 
@@ -784,6 +857,169 @@ async function sendAI(){
 }
 function addMsg(text,cls){const msgs=document.getElementById('aiMsgs'),div=document.createElement('div');div.className='msg '+cls;div.innerHTML=text.replace(/\n/g,'<br>');msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;}
 function removeLastBot(){const bots=document.querySelectorAll('#aiMsgs .msg.bot');if(bots.length)bots[bots.length-1].remove();}
+
+// ═══════════════════════════════════ LISTINGS & BOOKINGS ═══
+
+let allListings=[], allBookings=[], editListingId=null;
+
+async function loadListings(){
+  try{
+    const r=await fetch('/api/listings');
+    if(!r.ok)return;
+    allListings=await r.json();
+    const nb=document.getElementById('nb-listings');
+    if(nb)nb.textContent=allListings.length||'—';
+    renderListings();
+  }catch(e){}
+}
+
+function renderListings(){
+  const grid=document.getElementById('listings-grid');
+  if(!grid)return;
+  if(!allListings.length){grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--t3);">لا توجد إعلانات — ابدأ بإضافة أول إعلان</div>';return;}
+  grid.innerHTML=allListings.map(l=>`
+    <div style="background:var(--s);border:1px solid var(--b);border-radius:12px;overflow:hidden;">
+      <div style="aspect-ratio:16/9;background:var(--s2);display:flex;align-items:center;justify-content:center;font-size:2rem;position:relative;overflow:hidden;">
+        ${l.photos&&l.photos.length?`<img src="${l.photos[0]}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">`:'🏢'}
+        ${!l.available?'<div style="position:absolute;top:6px;right:6px;background:var(--red);color:#fff;font-size:9px;padding:2px 7px;border-radius:20px;font-weight:600;">غير متاح</div>':''}
+        ${l.featured?'<div style="position:absolute;top:6px;left:6px;background:var(--gold);color:#fff;font-size:9px;padding:2px 7px;border-radius:20px;font-weight:600;">⭐ مميز</div>':''}
+      </div>
+      <div style="padding:10px 12px;">
+        <div style="font-size:9px;color:var(--gold);font-weight:700;text-transform:uppercase;margin-bottom:3px;">${l.building} — شقة ${l.apt}</div>
+        <div style="font-size:12px;font-weight:600;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${l.title}</div>
+        <div style="font-size:10px;color:var(--t3);margin-bottom:8px;">
+          ${l.type==='daily'?'🌙 يومي':l.type==='annual'?'📋 سنوي':'🌙📋 يومي + سنوي'}
+          ${l.price_daily?` • ${l.price_daily.toLocaleString()} ﷼/ليلة`:''}
+          ${l.price_annual?` • ${l.price_annual.toLocaleString()} ﷼/سنة`:''}
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn" style="flex:1;font-size:10px;" onclick="openListingForm('${l._id}')">✏️ تعديل</button>
+          <a href="/listings/${l._id}" target="_blank" class="btn" style="font-size:10px;">🌐</a>
+          <button class="btn" style="font-size:10px;color:var(--red);border-color:var(--rb);" onclick="deleteListing('${l._id}')">🗑️</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function openListingForm(id){
+  editListingId=id;
+  const l=id?allListings.find(x=>x._id===id):null;
+  document.getElementById('listingFormTitle').textContent=l?'✏️ تعديل الإعلان':'+ إعلان جديد';
+  document.getElementById('lf-building').value=l?.building||'المنارا';
+  document.getElementById('lf-apt').value=l?.apt||'';
+  document.getElementById('lf-floor').value=l?.floor||'';
+  document.getElementById('lf-type').value=l?.type||'both';
+  document.getElementById('lf-title').value=l?.title||'';
+  document.getElementById('lf-desc').value=l?.description||'';
+  document.getElementById('lf-price-daily').value=l?.price_daily||0;
+  document.getElementById('lf-price-annual').value=l?.price_annual||0;
+  document.getElementById('lf-beds').value=l?.bedrooms||1;
+  document.getElementById('lf-baths').value=l?.bathrooms||1;
+  document.getElementById('lf-area').value=l?.area||0;
+  document.getElementById('lf-guests').value=l?.maxGuests||4;
+  document.getElementById('lf-photos').value=(l?.photos||[]).join('\n');
+  document.getElementById('lf-amenities').value=(l?.amenities||[]).join('\n');
+  document.getElementById('lf-available').value=l?.available===false?'false':'true';
+  document.getElementById('lf-featured').value=l?.featured?'true':'false';
+  document.getElementById('listingOverlay').style.display='flex';
+}
+function closeListingForm(){document.getElementById('listingOverlay').style.display='none';}
+
+async function saveListing(){
+  const title=document.getElementById('lf-title').value.trim();
+  const apt=document.getElementById('lf-apt').value.trim();
+  if(!title||!apt){showToast('⚠️ أدخل العنوان ورقم الشقة');return;}
+  const data={
+    building:document.getElementById('lf-building').value,
+    apt,floor:document.getElementById('lf-floor').value.trim(),
+    type:document.getElementById('lf-type').value,
+    title,description:document.getElementById('lf-desc').value.trim(),
+    price_daily:parseFloat(document.getElementById('lf-price-daily').value)||0,
+    price_annual:parseFloat(document.getElementById('lf-price-annual').value)||0,
+    bedrooms:parseInt(document.getElementById('lf-beds').value)||1,
+    bathrooms:parseInt(document.getElementById('lf-baths').value)||1,
+    area:parseFloat(document.getElementById('lf-area').value)||0,
+    maxGuests:parseInt(document.getElementById('lf-guests').value)||4,
+    photos:document.getElementById('lf-photos').value.split('\n').map(s=>s.trim()).filter(Boolean),
+    amenities:document.getElementById('lf-amenities').value.split('\n').map(s=>s.trim()).filter(Boolean),
+    available:document.getElementById('lf-available').value==='true',
+    featured:document.getElementById('lf-featured').value==='true',
+  };
+  try{
+    const url=editListingId?`/api/listings/${editListingId}`:'/api/listings';
+    const method=editListingId?'PUT':'POST';
+    const r=await fetch(url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    if(!r.ok)throw new Error();
+    showToast('✅ تم الحفظ');
+    closeListingForm();
+    loadListings();
+  }catch(e){showToast('❌ حدث خطأ');}
+}
+
+async function deleteListing(id){
+  if(!confirm('حذف هذا الإعلان؟'))return;
+  try{
+    await fetch(`/api/listings/${id}`,{method:'DELETE'});
+    showToast('🗑️ تم الحذف');
+    loadListings();
+  }catch(e){showToast('❌ حدث خطأ');}
+}
+
+async function loadBookings(){
+  try{
+    const r=await fetch('/api/bookings');
+    if(!r.ok)return;
+    allBookings=await r.json();
+    const pending=allBookings.filter(b=>b.status==='pending').length;
+    const confirmed=allBookings.filter(b=>b.status==='confirmed').length;
+    const nb=document.getElementById('nb-bookings');
+    if(nb)nb.textContent=pending||'—';
+    const ep=document.getElementById('bk-pending');if(ep)ep.textContent=pending;
+    const ec=document.getElementById('bk-confirmed');if(ec)ec.textContent=confirmed;
+    const et=document.getElementById('bk-total');if(et)et.textContent=allBookings.length;
+    renderBookings();
+  }catch(e){}
+}
+
+function renderBookings(){
+  const tbody=document.getElementById('bookings-tbody');
+  if(!tbody)return;
+  if(!allBookings.length){tbody.innerHTML='<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--t3);">لا توجد حجوزات بعد</td></tr>';return;}
+  const statusColors={pending:'pm',confirmed:'pj',cancelled:'pcl'};
+  const statusLabels={pending:'جديد',confirmed:'مؤكد',cancelled:'ملغي'};
+  tbody.innerHTML=allBookings.map(b=>`<tr>
+    <td style="font-weight:600;">${b.apt||'—'}</td>
+    <td>${b.building||'—'}</td>
+    <td>${b.name}</td>
+    <td><a href="https://wa.me/${b.phone.replace(/^0/,'966')}" target="_blank" style="color:var(--green);">${b.phone}</a></td>
+    <td>${b.bookingType==='daily'?'🌙 يومي':'📋 سنوي'}</td>
+    <td style="font-size:10px;">${b.checkIn?new Date(b.checkIn).toLocaleDateString('ar-SA'):'—'}${b.checkOut&&b.bookingType==='daily'?' ← '+new Date(b.checkOut).toLocaleDateString('ar-SA'):''}</td>
+    <td>${b.totalPrice?b.totalPrice.toLocaleString()+' ﷼':'—'}</td>
+    <td><span class="pill ${statusColors[b.status]||''}">${statusLabels[b.status]||b.status}</span></td>
+    <td style="display:flex;gap:4px;">
+      ${b.status==='pending'?`<button class="btn btn-gold" style="font-size:9px;padding:3px 8px;" onclick="updateBookingStatus('${b._id}','confirmed')">تأكيد</button>`:''}
+      ${b.status!=='cancelled'?`<button class="btn" style="font-size:9px;padding:3px 8px;color:var(--red);" onclick="updateBookingStatus('${b._id}','cancelled')">إلغاء</button>`:''}
+      <button class="btn" style="font-size:9px;padding:3px 8px;color:var(--red);border-color:var(--rb);" onclick="deleteBooking('${b._id}')">🗑️</button>
+    </td>
+  </tr>`).join('');
+}
+
+async function updateBookingStatus(id,status){
+  try{
+    await fetch(`/api/bookings/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({status})});
+    showToast(status==='confirmed'?'✅ تم التأكيد':'❌ تم الإلغاء');
+    loadBookings();
+  }catch(e){}
+}
+
+async function deleteBooking(id){
+  if(!confirm('حذف هذا الطلب نهائياً؟'))return;
+  try{
+    await fetch(`/api/bookings/${id}`,{method:'DELETE'});
+    showToast('🗑️ تم الحذف');
+    loadBookings();
+  }catch(e){}
+}
 
 
 function renderReports(){
@@ -1007,7 +1243,7 @@ function getInitialComm(){return[
 {id:'c037',m:'جود',c:'اسرار باموسى',sh:'الواحة',d:'21/4/2026',a:40},
 ];}
 
-window.addEventListener('load',()=>{loadUser();loadData();setInterval(loadData,60000);});
+window.addEventListener('load',()=>{loadUser();loadData();loadListings();loadBookings();setInterval(loadData,60000);});
 </script>
 </body>
 </html>
