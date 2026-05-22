@@ -98,7 +98,7 @@ router.post('/inquiry', async (req, res) => {
             <p><b>الرسالة:</b> ${message || '—'}</p>
           </div>`
         })
-      }).catch(() => {});
+      }).then(r => r.json()).then(d => console.log('Resend:', JSON.stringify(d))).catch(e => console.log('Resend error:', e.message));
     }
 
     res.render('inquiry', { building: '', apartment: '', success: true, buildings: Object.keys(BUILDINGS) });
