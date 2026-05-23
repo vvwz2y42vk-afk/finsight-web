@@ -77,16 +77,7 @@
       </div>
       <% } %>
 
-      <div class="lf-group">
-        <label class="lf-lbl">السعر (ريال)</label>
-        <div style="display:flex;align-items:center;gap:6px;">
-          <input type="number" name="min_price" class="lf-select" style="width:100px;" placeholder="من" value="<%= q.min_price||'' %>">
-          <span style="color:var(--text3);font-size:12px;">—</span>
-          <input type="number" name="max_price" class="lf-select" style="width:100px;" placeholder="إلى" value="<%= q.max_price||'' %>">
-        </div>
-      </div>
-
-      <div class="lf-group">
+<div class="lf-group">
         <label class="lf-lbl">الترتيب</label>
         <select name="sort" class="lf-select">
           <option value="newest"     <%= (!q.sort||q.sort==='newest')   ?'selected':'' %>>الأحدث</option>
@@ -98,7 +89,7 @@
 
       <button type="submit" class="btn btn-gold btn-sm" style="align-self:flex-end;margin-bottom:1px;">تصفية</button>
 
-      <% if (q.min_price||q.max_price||q.sort&&q.sort!=='newest'||(q.type&&q.type!=='all')||q.building) { %>
+      <% if ((q.sort&&q.sort!=='newest')||(q.type&&q.type!=='all')||q.building) { %>
       <a href="/listings?cat=<%= cat %>" class="btn btn-sm" style="align-self:flex-end;color:var(--text3);border:1px solid var(--border);">مسح الفلاتر</a>
       <% } %>
 
