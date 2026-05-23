@@ -925,7 +925,7 @@ function toggleListingFields(){
   const cat=document.getElementById('lf-category').value;
   const isApt=cat==='rental_apartment', isSaleApt=cat==='sale_apartment', isLand=cat==='sale_land', isComm=cat==='rental_commercial';
   const s=(id,v)=>{const el=document.getElementById(id);if(el)el.style.display=v?'':'none';};
-  s('lf-apt-group',    isApt||isSaleApt);
+  s('lf-apt-group',    isApt);
   s('lf-aptnum-group', isApt||isSaleApt);
   s('lf-renttype-group', isApt);
   s('lf-beds-group',   isApt||isSaleApt);
@@ -1015,7 +1015,7 @@ async function saveListing(){
   const cat=document.getElementById('lf-category').value;
   const data={
     category:cat,
-    building:(cat==='rental_apartment'||cat==='sale_apartment')?document.getElementById('lf-building').value:'',
+    building:cat==='rental_apartment'?document.getElementById('lf-building').value:'',
     apt:(cat==='rental_apartment'||cat==='sale_apartment')?apt:'',
     floor:document.getElementById('lf-floor').value.trim(),
     location:document.getElementById('lf-location').value.trim(),
