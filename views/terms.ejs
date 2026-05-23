@@ -38,7 +38,12 @@
     </div>
     <div class="csb-divider"></div>
     <a href="/search" class="csb-lnk"><span class="csb-ico">🔍</span><span>بحث</span></a>
-    <a href="/about" class="csb-lnk"><span class="csb-ico">ℹ️</span><span>من نحن</span></a>
+    <% if (typeof customer !== 'undefined' && customer) { %>
+    <a href="/account" class="csb-lnk"><span class="csb-ico">👤</span><span><%= customer.name %></span></a>
+    <% } else { %>
+    <a href="/account/login" class="csb-lnk"><span class="csb-ico">👤</span><span>حسابي</span></a>
+    <% } %>
+    <a href="/about" class="csb-lnk"><span class="csb-ico">℩️</span><span>من نحن</span></a>
     <a href="/inquiry" class="csb-lnk"><span class="csb-ico">💬</span><span>تواصل معنا</span></a>
   </nav>
   <div class="csb-foot">

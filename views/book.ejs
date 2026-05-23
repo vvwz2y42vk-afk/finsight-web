@@ -26,6 +26,12 @@
       <a href="/listings?cat=sale_apartment" class="csb-sublnk">🏠 شقق للبيع</a>
     </div>
     <div class="csb-divider"></div>
+    <a href="/search" class="csb-lnk"><span class="csb-ico">🔍</span><span>بحث</span></a>
+    <% if (typeof customer !== 'undefined' && customer) { %>
+    <a href="/account" class="csb-lnk"><span class="csb-ico">👤</span><span><%= customer.name %></span></a>
+    <% } else { %>
+    <a href="/account/login" class="csb-lnk"><span class="csb-ico">👤</span><span>حسابي</span></a>
+    <% } %>
     <a href="/about" class="csb-lnk"><span class="csb-ico">ℹ️</span><span>من نحن</span></a>
     <a href="/inquiry" class="csb-lnk"><span class="csb-ico">💬</span><span>تواصل معنا</span></a>
   </nav>
@@ -158,18 +164,29 @@
         <div class="book-divider"></div>
 
         <!-- PERSONAL INFO -->
+        <% if (!customer) { %>
+        <div style="background:var(--light);border:1px solid var(--border);border-radius:12px;padding:12px 16px;margin-bottom:16px;font-size:13px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <span style="color:var(--text3);">لديك حساب؟ سجّل دخولك لملء بياناتك تلقائياً</span>
+          <a href="/account/login?next=<%= encodeURIComponent('/book/' + listing._id) %>" class="btn btn-gold" style="font-size:12px;padding:6px 14px;white-space:nowrap;">دخول ←</a>
+        </div>
+        <% } else { %>
+        <div style="background:rgba(212,175,55,.08);border:1px solid rgba(212,175,55,.3);border-radius:12px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--text2);display:flex;align-items:center;gap:10px;">
+          <span style="font-size:20px;">👤</span>
+          <span>مرحباً <strong><%= customer.name %></strong> — بياناتك ستُرسل مع الحجز</span>
+        </div>
+        <% } %>
         <div class="book-form-grid">
           <div>
             <label class="form-lbl">الاسم الكامل <span style="color:var(--red)">*</span></label>
-            <input type="text" name="name" class="form-inp" placeholder="اسمك الكامل" required>
+            <input type="text" name="name" class="form-inp" placeholder="اسمك الكامل" required value="<%= customer ? customer.name : '' %>">
           </div>
           <div>
             <label class="form-lbl">رقم الهاتف <span style="color:var(--red)">*</span></label>
-            <input type="tel" name="phone" class="form-inp" placeholder="05xxxxxxxx" required>
+            <input type="tel" name="phone" class="form-inp" placeholder="05xxxxxxxx" required value="<%= customer ? customer.phone : '' %>">
           </div>
           <div class="book-full">
             <label class="form-lbl">البريد الإلكتروني <span style="color:var(--text3);font-size:11px;">(اختياري)</span></label>
-            <input type="email" name="email" class="form-inp" placeholder="email@example.com">
+            <input type="email" name="email" class="form-inp" placeholder="email@example.com" value="<%= customer ? (customer.email || '') : '' %>">
           </div>
           <div class="book-full">
             <label class="form-lbl">ملاحظات <span style="color:var(--text3);font-size:11px;">(اختياري)</span></label>
@@ -209,7 +226,7 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <p>© 2026 Finsight Real Estate — جميع الحقوق محفوظة <p>© 2026 Finsight Real Estate — جميع الحقوق محفوظة</p>nbsp;·<p>© 2026 Finsight Real Estate — جميع الحقوق محفوظة</p>nbsp; <a href="/terms" style="color:inherit;opacity:.6;">الشروط والأحكام</a></p>
+      <p>© 2026 Finsight Real Estate — جميع الحقوق محفوظة &nbsp;·&nbsp; <a href="/terms" style="color:inherit;opacity:.6;">الشروط والأحكام</a></p>
     </div>
   </div>
 </footer>

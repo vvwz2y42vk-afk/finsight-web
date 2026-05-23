@@ -251,6 +251,15 @@ router.delete('/bookings/:id', auth, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ─── Customers ───────────────────────────────────────────
+router.get('/customers', auth, async (req, res) => {
+  try {
+    const Customer = require('../models/Customer');
+    const customers = await Customer.find().sort({ createdAt: -1 }).select('-password').lean();
+    res.json(customers);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // ─── AI Chat (Gemini) ─────────────────────────────────────
 router.post('/ai/chat', auth, async (req, res) => {
   try {

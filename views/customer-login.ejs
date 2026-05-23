@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تسجيل الدخول — Finsight Real Estate</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/client.css">
+<style>
+.auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--light);padding:40px 16px;}
+.auth-card{background:#fff;border-radius:20px;padding:40px 36px;width:100%;max-width:420px;box-shadow:0 4px 40px rgba(0,0,0,.07);}
+.auth-logo{text-align:center;margin-bottom:28px;}
+.auth-logo__icon{width:52px;height:52px;border-radius:14px;background:var(--gold);color:#fff;font-size:20px;font-weight:900;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;}
+.auth-logo__name{font-size:1.3rem;font-weight:900;letter-spacing:1px;}
+.auth-logo__sub{font-size:11px;color:var(--text3);letter-spacing:3px;}
+.auth-title{font-size:1.4rem;font-weight:800;margin-bottom:6px;}
+.auth-sub{font-size:13px;color:var(--text3);margin-bottom:28px;}
+.auth-err{background:rgba(192,57,43,.08);border:1px solid rgba(192,57,43,.3);border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:13px;color:#c0392b;font-weight:600;}
+.auth-group{margin-bottom:18px;}
+.auth-lbl{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--text2);}
+.auth-inp{width:100%;padding:11px 14px;border-radius:10px;border:1px solid var(--border);font-family:inherit;font-size:14px;outline:none;transition:border .2s;background:#fff;}
+.auth-inp:focus{border-color:var(--gold);}
+.auth-btn{width:100%;padding:13px;background:var(--gold);border:none;border-radius:12px;color:#fff;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer;transition:opacity .2s;margin-top:8px;}
+.auth-btn:hover{opacity:.9;}
+.auth-foot{text-align:center;margin-top:20px;font-size:13px;color:var(--text3);}
+.auth-foot a{color:var(--gold);font-weight:600;text-decoration:none;}
+</style>
+</head>
+<body style="background:var(--light);">
+
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="auth-logo__icon">FS</div>
+      <div class="auth-logo__name">Finsight</div>
+      <div class="auth-logo__sub">REAL ESTATE</div>
+    </div>
+
+    <h2 class="auth-title">تسجيل الدخول</h2>
+    <p class="auth-sub">أدخل بيانات حسابك للمتابعة</p>
+
+    <% if (error) { %>
+    <div class="auth-err">⚠️ <%= error %></div>
+    <% } %>
+
+    <form method="POST" action="/account/login">
+      <input type="hidden" name="next" value="<%= next %>">
+
+      <div class="auth-group">
+        <label class="auth-lbl">رقم الجوال</label>
+        <input type="tel" name="phone" class="auth-inp" placeholder="05xxxxxxxx" required autocomplete="tel">
+      </div>
+
+      <div class="auth-group">
+        <label class="auth-lbl">كلمة المرور</label>
+        <input type="password" name="password" class="auth-inp" placeholder="كلمة المرور" required autocomplete="current-password">
+      </div>
+
+      <button type="submit" class="auth-btn">دخول ←</button>
+    </form>
+
+    <div class="auth-foot">
+      ليس لديك حساب؟ <a href="/account/register">إنشاء حساب جديد</a>
+    </div>
+    <div class="auth-foot" style="margin-top:8px;">
+      <a href="/" style="color:var(--text3);">← العودة للموقع</a>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

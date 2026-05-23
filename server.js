@@ -2,11 +2,10 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
-const crypto = require('crypto');
 const path = require('path');
+const { createToken, verifyToken } = require('./utils/auth');
 
 const app = express();
-const SECRET = process.env.SESSION_SECRET || 'finsight_2026';
 
 // ── MongoDB ──────────────────────────────────────────────
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/finsight';
@@ -28,22 +27,6 @@ async function dbMiddleware(req, res, next) {
 }
 
 // ── Cookie Auth ──────────────────────────────────────────
-function createToken(user) {
-  const data = Buffer.from(JSON.stringify(user)).toString('base64');
-  const sig = crypto.createHmac('sha256', SECRET).update(data).digest('hex');
-  return `${data}.${sig}`;
-}
-function verifyToken(token) {
-  if (!token) return null;
-  const dot = token.lastIndexOf('.');
-  if (dot === -1) return null;
-  const data = token.slice(0, dot);
-  const sig = token.slice(dot + 1);
-  const expected = crypto.createHmac('sha256', SECRET).update(data).digest('hex');
-  if (sig !== expected) return null;
-  try { return JSON.parse(Buffer.from(data, 'base64').toString()); }
-  catch { return null; }
-}
 function requireAuth(req, res, next) {
   req.user = verifyToken(req.cookies?.fs_auth);
   if (!req.user) return res.status(401).json({ error: 'غير مخوّل' });
@@ -80,12 +63,20 @@ const USERS = [
   }
 ];
 
+// ── Customer middleware ──────────────────────────────────
+function customerMiddleware(req, res, next) {
+  req.customer = verifyToken(req.cookies?.fs_cust) || null;
+  res.locals.customer = req.customer;
+  next();
+}
+
 // ── Routes ───────────────────────────────────────────────
 app.use('/api', dbMiddleware, (req, res, next) => {
   req.user = verifyToken(req.cookies?.fs_auth);
   next();
 });
-app.use('/', dbMiddleware, require('./routes/client'));
+app.use('/account', dbMiddleware, customerMiddleware, require('./routes/account'));
+app.use('/', dbMiddleware, customerMiddleware, require('./routes/client'));
 app.use('/api', require('./routes/api'));
 
 // ── Dashboard ────────────────────────────────────────────

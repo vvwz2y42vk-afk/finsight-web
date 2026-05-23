@@ -155,6 +155,7 @@ router.get('/book/:id', async (req, res) => {
         checkOut: req.query.checkout || tomorrow,
       },
       error: req.query.error || null,
+      customer: req.customer || null,
     });
   } catch (e) { res.redirect('/listings'); }
 });
@@ -192,6 +193,7 @@ router.post('/book/:id', async (req, res) => {
       checkIn: checkIn ? new Date(checkIn) : undefined,
       checkOut: checkOut ? new Date(checkOut) : undefined,
       guests: parseInt(guests) || 1, nights, totalPrice, notes,
+      customer: req.customer?.id || undefined,
     }).save();
 
     sendEmail(

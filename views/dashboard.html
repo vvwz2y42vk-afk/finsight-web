@@ -252,6 +252,7 @@ tbody td{padding:7px 5px;font-size:11px;}
     <div style="height:1px;background:rgba(184,134,11,.15);margin:6px 8px;"></div>
     <button id="nav-listings" class="ni" onclick="go('listings',this)"><span class="ni-ico">🏠</span>الإعلانات<span class="ni-badge" id="nb-listings">—</span></button>
     <button id="nav-bookings" class="ni" onclick="go('bookings',this)"><span class="ni-ico">📅</span>الحجوزات<span class="ni-badge" id="nb-bookings">—</span></button>
+    <button id="nav-customers" class="ni" onclick="go('customers',this)"><span class="ni-ico">👥</span>العملاء<span class="ni-badge" id="nb-customers">—</span></button>
   </nav>
   <div class="sb-user">
     <div class="user-row"><div class="user-av" id="user-av">ع</div><div><div class="user-name" id="user-name">عبد الملك</div><div class="user-role" id="user-role">مساعد إداري · Finsight</div></div></div>
@@ -464,6 +465,31 @@ tbody td{padding:7px 5px;font-size:11px;}
       </table></div>
     </div>
   </div>
+
+  <!-- ═══════════════════════════════════ CUSTOMERS TAB ═══ -->
+  <div class="tc" id="tab-customers">
+    <div class="topbar" style="margin-bottom:12px;">
+      <div><div class="page-title">العملاء <span>المسجلون</span></div><div style="font-size:10px;color:var(--t3);">حسابات العملاء المسجلين على الموقع</div></div>
+      <div class="topbar-right">
+        <div class="ec" style="margin:0;gap:8px;">
+          <div class="ecb u" style="padding:6px 12px;"><div class="ecl">الكل</div><div class="ecv" id="cust-total" style="font-size:16px;">—</div></div>
+          <div class="ecb s" style="padding:6px 12px;"><div class="ecl">سعودي</div><div class="ecv" id="cust-sa" style="font-size:16px;">—</div></div>
+          <div class="ecb o" style="padding:6px 12px;"><div class="ecl">غير سعودي</div><div class="ecv" id="cust-non" style="font-size:16px;">—</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th>الاسم</th><th>الجوال</th><th>البريد</th><th>رقم الهوية</th><th>الجنسية</th><th>تاريخ التسجيل</th>
+          </tr></thead>
+          <tbody id="customers-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
 </div>
 </div>
 <!-- LISTING MODAL -->
@@ -899,7 +925,7 @@ async function confirmDelete(){
   showToast('🗑️ تم الحذف — جاري المزامنة...');if(c)await syncToSheet('deleteContract',c);
 }
 
-const titles={dashboard:'لوحة <span>التحكم</span>',contracts:'<span>العقود</span>',commissions:'<span>العمولات</span>',collection:'<span>التحصيل</span>',expiry:'العقود <span>المنتهية</span>',map:'خريطة <span>الشقق</span>',performance:'تحليل <span>الأداء</span>',sources:'تحليل <span>المصادر</span>',reports:'<span>التقارير</span> الشهرية',listings:'إدارة <span>الإعلانات</span>',bookings:'طلبات <span>الحجز</span>'};
+const titles={dashboard:'لوحة <span>التحكم</span>',contracts:'<span>العقود</span>',commissions:'<span>العمولات</span>',collection:'<span>التحصيل</span>',expiry:'العقود <span>المنتهية</span>',map:'خريطة <span>الشقق</span>',performance:'تحليل <span>الأداء</span>',sources:'تحليل <span>المصادر</span>',reports:'<span>التقارير</span> الشهرية',listings:'إدارة <span>الإعلانات</span>',bookings:'طلبات <span>الحجز</span>',customers:'العملاء <span>المسجلون</span>'};
 async function loadUser(){
   try{
     const res=await fetch('/api/me');
@@ -921,14 +947,14 @@ async function loadUser(){
 }
 
 function go(id,el){
-  if(currentUser&&!currentUser.allowed.includes(id)&&!['listings','bookings'].includes(id)){showToast('⛔ ليس لديك صلاحية لعرض هذا القسم');return;}
+  if(currentUser&&!currentUser.allowed.includes(id)&&!['listings','bookings','customers'].includes(id)){showToast('⛔ ليس لديك صلاحية لعرض هذا القسم');return;}
   document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));el?.classList.add('active');showTabById(id);set('pageTitle',titles[id]||id);document.getElementById('addBtn').style.display=id==='contracts'?'flex':'none';
-  if(id==='listings')loadListings();if(id==='bookings')loadBookings();
+  if(id==='listings')loadListings();if(id==='bookings')loadBookings();if(id==='customers')loadCustomers();
 }
 function st(id,el){
-  if(currentUser&&!currentUser.allowed.includes(id)&&!['listings','bookings'].includes(id)){showToast('⛔ ليس لديك صلاحية لعرض هذا القسم');return;}
+  if(currentUser&&!currentUser.allowed.includes(id)&&!['listings','bookings','customers'].includes(id)){showToast('⛔ ليس لديك صلاحية لعرض هذا القسم');return;}
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el?.classList.add('active');showTabById(id);set('pageTitle',titles[id]||id);document.getElementById('addBtn').style.display=id==='contracts'?'flex':'none';
-  if(id==='listings')loadListings();if(id==='bookings')loadBookings();
+  if(id==='listings')loadListings();if(id==='bookings')loadBookings();if(id==='customers')loadCustomers();
 }
 function showTabById(id){document.querySelectorAll('.tc').forEach(t=>t.classList.remove('active'));document.getElementById('tab-'+id)?.classList.add('active');}
 
@@ -1486,6 +1512,33 @@ function getInitialComm(){return[
 {id:'c036',m:'جود',c:'محمد رمضان',sh:'الواحة',d:'18/4/2026',a:40},
 {id:'c037',m:'جود',c:'اسرار باموسى',sh:'الواحة',d:'21/4/2026',a:40},
 ];}
+
+let allCustomers=[];
+async function loadCustomers(){
+  try{
+    const r=await fetch('/api/customers');
+    if(!r.ok)return;
+    allCustomers=await r.json();
+    const nb=document.getElementById('nb-customers');
+    if(nb)nb.textContent=allCustomers.length||'—';
+    const sa=allCustomers.filter(c=>c.nationality==='سعودي').length;
+    const non=allCustomers.length-sa;
+    const ct=document.getElementById('cust-total');if(ct)ct.textContent=allCustomers.length;
+    const cs=document.getElementById('cust-sa');if(cs)cs.textContent=sa;
+    const cn=document.getElementById('cust-non');if(cn)cn.textContent=non;
+    const tbody=document.getElementById('customers-tbody');
+    if(!tbody)return;
+    if(!allCustomers.length){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--t3);">لا يوجد عملاء مسجلون بعد</td></tr>';return;}
+    tbody.innerHTML=allCustomers.map(c=>`<tr>
+      <td style="font-weight:600;">${c.name}</td>
+      <td><a href="tel:${c.phone}" style="color:var(--blue);">${c.phone}</a></td>
+      <td style="font-size:11px;color:var(--t3);">${c.email||'—'}</td>
+      <td style="font-size:11px;color:var(--t3);">${c.nationalId||'—'}</td>
+      <td><span class="pill ${c.nationality==='سعودي'?'pop':'pm'}">${c.nationality||'—'}</span></td>
+      <td style="font-size:10px;color:var(--t3);">${new Date(c.createdAt).toLocaleDateString('ar-SA')}</td>
+    </tr>`).join('');
+  }catch(e){}
+}
 
 window.addEventListener('load',()=>{loadUser();loadData();loadListings();loadBookings();setInterval(loadData,60000);});
 </script>
