@@ -680,3 +680,173 @@ h3 { font-size: 1.15rem; font-weight: 700; }
   color: var(--gold);
   flex-shrink: 0;
 }
+
+/* ══════════════════════════════════════════════
+   CLIENT SIDEBAR LAYOUT
+══════════════════════════════════════════════ */
+body.csb-layout {
+  display: flex;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+.client-sidebar {
+  width: 232px;
+  flex-shrink: 0;
+  background: #0f0a02;
+  border-left: 1px solid rgba(212,175,55,.16);
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  z-index: 100;
+}
+.csb-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 22px 18px 18px;
+  border-bottom: 1px solid rgba(212,175,55,.1);
+  flex-shrink: 0;
+}
+.csb-logo .nav-logo-sub { color: rgba(255,255,255,.35); }
+.csb-nav {
+  flex: 1;
+  padding: 14px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-y: auto;
+}
+.csb-lnk {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 13px;
+  border-radius: 10px;
+  color: rgba(255,255,255,.6);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all .15s;
+  border-right: 3px solid transparent;
+}
+.csb-lnk:hover { background: rgba(212,175,55,.08); color: rgba(255,255,255,.9); }
+.csb-lnk.active { background: rgba(212,175,55,.13); color: #D4AF37; border-right-color: #D4AF37; }
+.csb-ico { font-size: 16px; width: 22px; text-align: center; flex-shrink: 0; }
+.csb-divider { height: 1px; background: rgba(212,175,55,.1); margin: 6px 8px; }
+.csb-sub {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding-right: 44px;
+  margin-bottom: 4px;
+}
+.csb-sublnk {
+  color: rgba(255,255,255,.4);
+  font-size: 12px;
+  font-weight: 500;
+  text-decoration: none;
+  padding: 5px 10px;
+  border-radius: 8px;
+  transition: all .15s;
+  display: block;
+}
+.csb-sublnk:hover { color: rgba(212,175,55,.85); background: rgba(212,175,55,.06); }
+.csb-sublnk.active { color: var(--gold); }
+.csb-foot {
+  padding: 14px;
+  border-top: 1px solid rgba(212,175,55,.1);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.csb-wa {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(37,211,102,.1);
+  border: 1px solid rgba(37,211,102,.25);
+  color: #25D366;
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background .15s;
+  direction: ltr;
+}
+.csb-wa:hover { background: rgba(37,211,102,.18); }
+.csb-admin {
+  text-align: center;
+  color: rgba(255,255,255,.25);
+  font-size: 11px;
+  text-decoration: none;
+  padding: 5px;
+  display: block;
+  transition: color .15s;
+}
+.csb-admin:hover { color: rgba(255,255,255,.5); }
+.csb-content { flex: 1; min-width: 0; }
+
+/* Mobile hamburger */
+.csb-ham {
+  display: none;
+  position: fixed;
+  top: 14px;
+  right: 14px;
+  z-index: 201;
+  width: 44px;
+  height: 44px;
+  background: #0f0a02;
+  border: 1px solid rgba(212,175,55,.35);
+  border-radius: 10px;
+  cursor: pointer;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 0;
+}
+.csb-ham span {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: #D4AF37;
+  border-radius: 2px;
+  transition: all .25s;
+}
+.csb-ham.active span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.csb-ham.active span:nth-child(2) { opacity: 0; }
+.csb-ham.active span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+.csb-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  z-index: 140;
+}
+.csb-overlay.open { display: block; }
+
+@media (max-width: 900px) {
+  body.csb-layout { display: block; }
+  .client-sidebar {
+    position: fixed;
+    right: 0;
+    top: 0;
+    height: 100vh;
+    transform: translateX(110%);
+    transition: transform .3s ease;
+    z-index: 150;
+    box-shadow: -8px 0 40px rgba(0,0,0,.4);
+  }
+  .client-sidebar.open { transform: translateX(0); }
+  .csb-ham { display: flex; }
+  .csb-content { width: 100%; }
+}
+
+/* Adjust sticky booking box (no top navbar) */
+.listing-book-box { top: 24px; }
