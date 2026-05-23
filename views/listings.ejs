@@ -167,23 +167,6 @@
           <% } %>
 
           <div class="listing-card__footer">
-            <div class="listing-card__price">
-              <% if (cat==='sale_land' || cat==='sale_apartment') { %>
-              <span class="lcp-num"><%= l.price_sale.toLocaleString() %></span>
-              <span class="lcp-unit"> ريال</span>
-              <% } else if (cat==='rental_commercial') { %>
-              <span class="lcp-num"><%= l.price_annual.toLocaleString() %></span>
-              <span class="lcp-unit"> ريال / شهر</span>
-              <% } else { %>
-              <% if (l.type==='daily'||l.type==='both') { %>
-              <span class="lcp-num"><%= l.price_daily.toLocaleString() %></span>
-              <span class="lcp-unit"> ريال / ليلة</span>
-              <% } else { %>
-              <span class="lcp-num"><%= l.price_annual.toLocaleString() %></span>
-              <span class="lcp-unit"> ريال / شهر</span>
-              <% } %>
-              <% } %>
-            </div>
             <span class="listing-card__cta">تفاصيل ←</span>
           </div>
         </div>
