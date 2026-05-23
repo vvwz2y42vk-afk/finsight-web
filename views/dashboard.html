@@ -472,7 +472,13 @@ tbody td{padding:7px 5px;font-size:11px;}
       <div class="form-grid">
         <div class="form-full"><label class="form-lbl">نوع العقار *</label><select class="form-inp" id="lf-category" onchange="toggleListingFields()"><option value="rental_apartment">🏠 شقة للإيجار</option><option value="rental_commercial">🏪 معرض للإيجار</option><option value="sale_land">🌍 أرض للبيع</option><option value="sale_apartment">🏠 شقة للبيع</option></select></div>
         <div class="form-full"><label class="form-lbl">العنوان *</label><input class="form-inp" id="lf-title" type="text" placeholder="مثال: أرض تجارية في حي الإسكان"></div>
-        <div class="form-full"><label class="form-lbl">الوصف</label><textarea class="form-inp" id="lf-desc" rows="2" style="resize:vertical" placeholder="وصف العقار..."></textarea></div>
+        <div class="form-full">
+          <label class="form-lbl" style="display:flex;align-items:center;justify-content:space-between;">
+            <span>الوصف</span>
+            <button type="button" class="btn btn-gold" style="padding:2px 10px;font-size:12px;" onclick="generateDesc()">✨ اكتب بالذكاء الاصطناعي</button>
+          </label>
+          <textarea class="form-inp" id="lf-desc" rows="3" style="resize:vertical" placeholder="وصف العقار..."></textarea>
+        </div>
 
         <!-- شقق فقط -->
         <div id="lf-apt-group"><label class="form-lbl">المبنى</label><select class="form-inp" id="lf-building"><option>المنارا</option><option>جوان ان</option><option>الماسة</option><option>الواحة</option></select></div>
@@ -1007,6 +1013,49 @@ function openListingForm(id){
   document.getElementById('listingOverlay').style.display='flex';
 }
 function closeListingForm(){document.getElementById('listingOverlay').style.display='none';}
+
+async function generateDesc(){
+  const cat = document.getElementById('lf-category').value;
+  const catLabel = {'rental_apartment':'شقة للإيجار','rental_commercial':'معرض للإيجار','sale_land':'أرض للبيع','sale_apartment':'شقة للبيع'}[cat]||cat;
+  const title    = document.getElementById('lf-title').value.trim();
+  const location = document.getElementById('lf-location').value.trim();
+  const floor    = document.getElementById('lf-floor').value.trim();
+  const area     = document.getElementById('lf-area').value;
+  const beds     = document.getElementById('lf-beds')?.value;
+  const baths    = document.getElementById('lf-baths')?.value;
+  const guests   = document.getElementById('lf-guests')?.value;
+  const pDaily   = document.getElementById('lf-price-daily')?.value;
+  const pAnnual  = document.getElementById('lf-price-annual')?.value;
+  const pSale    = document.getElementById('lf-price-sale')?.value;
+  const amenities= document.getElementById('lf-amenities').value.trim();
+  const frontage = document.getElementById('lf-frontage')?.value;
+
+  const parts = [`نوع العقار: ${catLabel}`];
+  if(title)    parts.push(`العنوان: ${title}`);
+  if(location) parts.push(`الموقع: ${location}`);
+  if(floor)    parts.push(`الدور: ${floor}`);
+  if(area>0)   parts.push(`المساحة: ${area} م²`);
+  if(beds>0)   parts.push(`غرف النوم: ${beds}`);
+  if(baths>0)  parts.push(`دورات المياه: ${baths}`);
+  if(guests>0) parts.push(`الحد الأقصى للضيوف: ${guests}`);
+  if(pDaily>0) parts.push(`السعر اليومي: ${pDaily} ريال`);
+  if(pAnnual>0)parts.push(`السعر الشهري: ${pAnnual} ريال`);
+  if(pSale>0)  parts.push(`سعر البيع: ${pSale} ريال`);
+  if(frontage>0)parts.push(`الواجهة: ${frontage} م`);
+  if(amenities)parts.push(`المرافق: ${amenities.replace(/\n/g,'، ')}`);
+
+  const prompt = `اكتب وصفاً تسويقياً احترافياً وجذاباً لهذا العقار بالعربية، بأسلوب مقنع ومختصر (3-4 جمل فقط)، بدون عناوين أو نقاط:\n${parts.join('\n')}`;
+
+  const btn = event.target;
+  btn.disabled = true; btn.textContent = '⏳ جاري الكتابة...';
+  try{
+    const r = await fetch('/api/ai/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:prompt,context:''})});
+    const d = await r.json();
+    if(d.text) document.getElementById('lf-desc').value = d.text;
+    else showToast('❌ لم يصل رد');
+  }catch(e){ showToast('❌ خطأ في الاتصال'); }
+  btn.disabled = false; btn.textContent = '✨ اكتب بالذكاء الاصطناعي';
+}
 
 async function saveListing(){
   const title=document.getElementById('lf-title').value.trim();
