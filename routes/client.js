@@ -65,6 +65,10 @@ router.get('/about', (req, res) => {
   res.render('about');
 });
 
+router.get('/terms', (req, res) => {
+  res.render('terms');
+});
+
 // ─── Listings Marketplace ─────────────────────────────────
 router.get('/listings', async (req, res) => {
   try {
