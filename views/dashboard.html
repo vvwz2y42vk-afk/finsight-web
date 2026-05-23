@@ -477,12 +477,12 @@ tbody td{padding:7px 5px;font-size:11px;}
         <!-- شقق فقط -->
         <div id="lf-apt-group"><label class="form-lbl">المبنى</label><select class="form-inp" id="lf-building"><option>المنارا</option><option>جوان ان</option><option>الماسة</option><option>الواحة</option></select></div>
         <div id="lf-aptnum-group"><label class="form-lbl">رقم الشقة</label><input class="form-inp" id="lf-apt" type="text" placeholder="101"></div>
-        <div id="lf-renttype-group"><label class="form-lbl">نوع الإيجار</label><select class="form-inp" id="lf-type"><option value="both">يومي + سنوي</option><option value="daily">يومي فقط</option><option value="annual">سنوي فقط</option></select></div>
+        <div id="lf-renttype-group"><label class="form-lbl">نوع الإيجار</label><select class="form-inp" id="lf-type"><option value="both">يومي + شهري</option><option value="daily">يومي فقط</option><option value="annual">شهري فقط</option></select></div>
         <div id="lf-beds-group"><label class="form-lbl">غرف النوم</label><input class="form-inp" id="lf-beds" type="number" value="1" min="1"></div>
         <div id="lf-baths-group"><label class="form-lbl">الحمامات</label><input class="form-inp" id="lf-baths" type="number" value="1" min="1"></div>
         <div id="lf-guests-group"><label class="form-lbl">الحد الأقصى للضيوف</label><input class="form-inp" id="lf-guests" type="number" value="4" min="1"></div>
         <div id="lf-pdaily-group"><label class="form-lbl">السعر اليومي (ريال/ليلة)</label><input class="form-inp" id="lf-price-daily" type="number" placeholder="0"></div>
-        <div id="lf-pannual-group"><label class="form-lbl">السعر السنوي (ريال/سنة)</label><input class="form-inp" id="lf-price-annual" type="number" placeholder="0"></div>
+        <div id="lf-pannual-group"><label class="form-lbl">السعر الشهري (ريال/شهر)</label><input class="form-inp" id="lf-price-annual" type="number" placeholder="0"></div>
 
         <!-- أراضي فقط -->
         <div id="lf-psale-group" style="display:none"><label class="form-lbl">سعر البيع (ريال)</label><input class="form-inp" id="lf-price-sale" type="number" placeholder="0"></div>
@@ -898,7 +898,7 @@ function renderListings(){
         <div style="font-size:9px;color:var(--gold);font-weight:700;text-transform:uppercase;margin-bottom:3px;">${l.building} — شقة ${l.apt}</div>
         <div style="font-size:12px;font-weight:600;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${l.title}</div>
         <div style="font-size:10px;color:var(--t3);margin-bottom:8px;">
-          ${l.type==='daily'?'🌙 يومي':l.type==='annual'?'📋 سنوي':'🌙📋 يومي + سنوي'}
+          ${l.type==='daily'?'🌙 يومي':l.type==='annual'?'📋 شهري':'🌙📋 يومي + شهري'}
           ${l.price_daily?` • ${l.price_daily.toLocaleString()} ﷼/ليلة`:''}
           ${l.price_annual?` • ${l.price_annual.toLocaleString()} ﷼/سنة`:''}
         </div>
@@ -1029,7 +1029,7 @@ function renderBookings(){
     <td>${b.building||'—'}</td>
     <td>${b.name}</td>
     <td><a href="https://wa.me/${b.phone.replace(/^0/,'966')}" target="_blank" style="color:var(--green);">${b.phone}</a></td>
-    <td>${b.bookingType==='daily'?'🌙 يومي':'📋 سنوي'}</td>
+    <td>${b.bookingType==='daily'?'🌙 يومي':'📋 شهري'}</td>
     <td style="font-size:10px;">${b.checkIn?new Date(b.checkIn).toLocaleDateString('ar-SA'):'—'}${b.checkOut&&b.bookingType==='daily'?' ← '+new Date(b.checkOut).toLocaleDateString('ar-SA'):''}</td>
     <td>${b.totalPrice?b.totalPrice.toLocaleString()+' ﷼':'—'}</td>
     <td><span class="pill ${statusColors[b.status]||''}">${statusLabels[b.status]||b.status}</span></td>

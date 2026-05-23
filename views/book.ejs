@@ -60,7 +60,7 @@
         <% if (listing.category==='rental_apartment') { %>
         <div style="font-size:13px;color:var(--text3);">🛏 <%= listing.bedrooms %> غرف | 🚿 <%= listing.bathrooms %> حمام<% if(listing.area) { %> | 📐 <%= listing.area %> م²<% } %></div>
         <% } else { %>
-        <div style="font-size:13px;color:var(--text3);"><% if(listing.area) { %>📐 <%= listing.area %> م²<% } %><% if(listing.category==='sale_land'&&listing.price_sale) { %> | 💰 <%= listing.price_sale.toLocaleString() %> ريال<% } else if(listing.price_annual) { %> | 💰 <%= listing.price_annual.toLocaleString() %> ريال/سنة<% } %></div>
+        <div style="font-size:13px;color:var(--text3);"><% if(listing.area) { %>📐 <%= listing.area %> م²<% } %><% if(listing.category==='sale_land'&&listing.price_sale) { %> | 💰 <%= listing.price_sale.toLocaleString() %> ريال<% } else if(listing.price_annual) { %> | 💰 <%= listing.price_annual.toLocaleString() %> ريال/شهر<% } %></div>
         <% } %>
       </div>
       <span style="color:var(--text3);font-size:12px;margin-right:auto;white-space:nowrap;">← تفاصيل</span>
@@ -112,8 +112,8 @@
               <span class="book-type-opt__label">
                 <span class="book-type-opt__ico">📋</span>
                 <span>
-                  <strong>سنوي</strong>
-                  <small><%= listing.price_annual.toLocaleString() %> ريال/سنة</small>
+                  <strong>شهري</strong>
+                  <small><%= listing.price_annual.toLocaleString() %> ريال/شهر</small>
                 </span>
               </span>
             </label>

@@ -72,7 +72,7 @@
         <div class="lf-tabs">
           <a href="/listings?cat=rental_apartment<%= q.building?'&building='+encodeURIComponent(q.building):'' %>&sort=<%= q.sort||'newest' %>" class="lf-tab <%= !q.type||q.type==='all'?'active':'' %>">الكل</a>
           <a href="/listings?cat=rental_apartment<%= q.building?'&building='+encodeURIComponent(q.building):'' %>&type=daily&sort=<%= q.sort||'newest' %>" class="lf-tab <%= q.type==='daily'?'active':'' %>">يومي</a>
-          <a href="/listings?cat=rental_apartment<%= q.building?'&building='+encodeURIComponent(q.building):'' %>&type=annual&sort=<%= q.sort||'newest' %>" class="lf-tab <%= q.type==='annual'?'active':'' %>">سنوي</a>
+          <a href="/listings?cat=rental_apartment<%= q.building?'&building='+encodeURIComponent(q.building):'' %>&type=annual&sort=<%= q.sort||'newest' %>" class="lf-tab <%= q.type==='annual'?'active':'' %>">شهري</a>
         </div>
       </div>
       <% } %>
@@ -129,7 +129,7 @@
             <% if (l.featured) { %><span class="lc-badge lc-badge--featured">⭐ مميز</span><% } %>
             <% if (cat==='rental_apartment') { %>
             <span class="lc-badge lc-badge--type">
-              <%= l.type==='daily'?'يومي':l.type==='annual'?'سنوي':'يومي + سنوي' %>
+              <%= l.type==='daily'?'يومي':l.type==='annual'?'شهري':'يومي + شهري' %>
             </span>
             <% } else if (cat==='rental_commercial') { %>
             <span class="lc-badge lc-badge--type">للإيجار</span>
@@ -173,14 +173,14 @@
               <span class="lcp-unit"> ريال</span>
               <% } else if (cat==='rental_commercial') { %>
               <span class="lcp-num"><%= l.price_annual.toLocaleString() %></span>
-              <span class="lcp-unit"> ريال / سنة</span>
+              <span class="lcp-unit"> ريال / شهر</span>
               <% } else { %>
               <% if (l.type==='daily'||l.type==='both') { %>
               <span class="lcp-num"><%= l.price_daily.toLocaleString() %></span>
               <span class="lcp-unit"> ريال / ليلة</span>
               <% } else { %>
               <span class="lcp-num"><%= l.price_annual.toLocaleString() %></span>
-              <span class="lcp-unit"> ريال / سنة</span>
+              <span class="lcp-unit"> ريال / شهر</span>
               <% } %>
               <% } %>
             </div>

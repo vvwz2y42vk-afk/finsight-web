@@ -92,7 +92,7 @@
         <% const isApt = listing.category==='rental_apartment'; const isComm = listing.category==='rental_commercial'; const isLand = listing.category==='sale_land'; const isSaleApt = listing.category==='sale_apartment'; %>
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
           <% if (isApt) { %>
-          <span class="lc-badge lc-badge--type" style="font-size:12px;"><%= listing.type==='daily'?'يومي':listing.type==='annual'?'سنوي':'يومي + سنوي' %></span>
+          <span class="lc-badge lc-badge--type" style="font-size:12px;"><%= listing.type==='daily'?'يومي':listing.type==='annual'?'شهري':'يومي + شهري' %></span>
           <% } else if (isComm) { %>
           <span class="lc-badge lc-badge--type" style="font-size:12px;">معرض للإيجار</span>
           <% } else if (isSaleApt) { %>
@@ -126,7 +126,7 @@
             <div class="listing-stat__val" style="font-size:1rem;">
               <%= (isLand||isSaleApt)?(listing.price_sale||0).toLocaleString():(listing.price_annual||0).toLocaleString() %>
             </div>
-            <div class="listing-stat__lbl">ريال <%= (isLand||isSaleApt)?'سعر البيع':'/سنة' %></div>
+            <div class="listing-stat__lbl">ريال <%= (isLand||isSaleApt)?'سعر البيع':'/شهر' %></div>
           </div>
           <% } %>
         </div>
@@ -177,7 +177,7 @@
         <% if (listing.type==='both') { %>
         <div class="lbb-toggle" id="typeToggle">
           <button class="lbb-toggle__btn active" onclick="setType('daily',this)">يومي</button>
-          <button class="lbb-toggle__btn" onclick="setType('annual',this)">سنوي</button>
+          <button class="lbb-toggle__btn" onclick="setType('annual',this)">شهري</button>
         </div>
         <% } %>
         <div id="dailyFields" style="<%= listing.type==='annual'?'display:none':'display:block' %>">
