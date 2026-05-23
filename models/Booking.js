@@ -8,7 +8,7 @@ const bookingSchema = new mongoose.Schema({
   name:         { type: String, required: true },
   phone:        { type: String, required: true },
   email:        String,
-  bookingType:  { type: String, enum: ['daily','annual'], required: true },
+  bookingType:  { type: String, enum: ['daily','annual','inquiry'], required: true },
   checkIn:      Date,
   checkOut:     Date,
   guests:       { type: Number, default: 1 },

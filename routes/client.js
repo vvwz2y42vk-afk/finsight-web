@@ -70,14 +70,24 @@ router.get('/listings', async (req, res) => {
   try {
     const Listing = require('../models/Listing');
     const filter = { available: true };
-    if (req.query.building) filter.building = req.query.building;
-    if (req.query.type && req.query.type !== 'all') {
-      filter.$or = [{ type: req.query.type }, { type: 'both' }];
+    const cat = req.query.cat || 'rental_apartment';
+    filter.category = cat;
+    if (cat === 'rental_apartment') {
+      if (req.query.building) filter.building = req.query.building;
+      if (req.query.type && req.query.type !== 'all') {
+        filter.$or = [{ type: req.query.type }, { type: 'both' }];
+      }
     }
     const listings = await Listing.find(filter).sort({ featured: -1, createdAt: -1 }).lean();
-    res.render('listings', { listings, buildings: Object.keys(BUILDINGS), q: req.query });
+    const counts = await Listing.aggregate([
+      { $match: { available: true } },
+      { $group: { _id: '$category', count: { $sum: 1 } } },
+    ]);
+    const catCounts = {};
+    counts.forEach(c => { catCounts[c._id] = c.count; });
+    res.render('listings', { listings, buildings: Object.keys(BUILDINGS), q: req.query, cat, catCounts });
   } catch (e) {
-    res.render('listings', { listings: [], buildings: Object.keys(BUILDINGS), q: req.query });
+    res.render('listings', { listings: [], buildings: Object.keys(BUILDINGS), q: req.query, cat: req.query.cat||'rental_apartment', catCounts: {} });
   }
 });
 
@@ -97,10 +107,11 @@ router.get('/book/:id', async (req, res) => {
     if (!listing) return res.redirect('/listings');
     const today = new Date().toISOString().split('T')[0];
     const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+    const isRentalApt = listing.category === 'rental_apartment';
     res.render('book', {
       listing,
       prefill: {
-        type: req.query.type || (listing.type === 'daily' ? 'daily' : 'annual'),
+        type: isRentalApt ? (req.query.type || (listing.type === 'daily' ? 'daily' : 'annual')) : 'inquiry',
         checkIn: req.query.checkin || today,
         checkOut: req.query.checkout || tomorrow,
       }
@@ -123,6 +134,8 @@ router.post('/book/:id', async (req, res) => {
       totalPrice = nights * (listing.price_daily || 0);
     } else if (bookingType === 'annual') {
       totalPrice = listing.price_annual || 0;
+    } else if (bookingType === 'inquiry') {
+      totalPrice = listing.price_sale || listing.price_annual || 0;
     }
 
     const booking = await new Booking({

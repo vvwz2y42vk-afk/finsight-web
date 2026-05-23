@@ -498,6 +498,21 @@ h3 { font-size: 1.15rem; font-weight: 700; }
   .buildings-grid { grid-template-columns: 1fr; }
 }
 
+/* ── Category Tabs ────────────────────────────────────────── */
+.cat-tabs-bar { background:var(--dark);padding:0; }
+.cat-tabs { display:flex;gap:0; }
+.cat-tab { display:flex;align-items:center;gap:10px;padding:20px 28px;text-decoration:none;color:rgba(255,255,255,.5);font-size:14px;font-weight:600;border-bottom:3px solid transparent;transition:all .2s;flex:1;justify-content:center; }
+.cat-tab:hover { color:rgba(255,255,255,.85);background:rgba(255,255,255,.04); }
+.cat-tab.active { color:#fff;border-bottom-color:var(--gold);background:rgba(212,175,55,.08); }
+.cat-tab__ico { font-size:1.3rem; }
+.cat-tab__lbl { font-weight:700; }
+.cat-tab__count { background:rgba(255,255,255,.12);color:rgba(255,255,255,.6);font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600; }
+.cat-tab.active .cat-tab__count { background:rgba(212,175,55,.25);color:var(--gold); }
+@media (max-width:600px) {
+  .cat-tab { padding:14px 12px;flex-direction:column;gap:4px;font-size:12px; }
+  .cat-tab__ico { font-size:1.1rem; }
+}
+
 /* ── Listings Marketplace ─────────────────────────────────── */
 .listings-filter-bar { background:#fff;border-bottom:1px solid var(--border);padding:16px 0;position:sticky;top:72px;z-index:90; }
 .listings-filter-form { display:flex;align-items:center;gap:24px;flex-wrap:wrap; }

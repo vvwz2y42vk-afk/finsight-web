@@ -75,23 +75,41 @@
 
       <!-- LEFT: INFO -->
       <div class="listing-info">
+        <% const isApt = listing.category==='rental_apartment'; const isComm = listing.category==='rental_commercial'; const isLand = listing.category==='sale_land'; %>
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-          <span class="lc-badge lc-badge--type" style="font-size:12px;">
-            <%= listing.type==='daily'?'يومي':listing.type==='annual'?'سنوي':'يومي + سنوي' %>
-          </span>
+          <% if (isApt) { %>
+          <span class="lc-badge lc-badge--type" style="font-size:12px;"><%= listing.type==='daily'?'يومي':listing.type==='annual'?'سنوي':'يومي + سنوي' %></span>
+          <% } else if (isComm) { %>
+          <span class="lc-badge lc-badge--type" style="font-size:12px;">معرض للإيجار</span>
+          <% } else { %>
+          <span class="lc-badge lc-badge--type" style="font-size:12px;background:rgba(212,175,55,.9);">أرض للبيع</span>
+          <% } %>
           <% if (listing.featured) { %><span class="lc-badge lc-badge--featured" style="font-size:12px;">⭐ مميز</span><% } %>
         </div>
         <h1 style="font-size:clamp(1.5rem,3vw,2rem);font-weight:800;line-height:1.3;margin-bottom:8px;"><%= listing.title %></h1>
         <p style="color:var(--text3);font-size:14px;margin-bottom:24px;">
-          📍 <%= listing.building %> — شقة <%= listing.apt %><% if(listing.floor){ %> | الدور <%= listing.floor %><% } %>
+          <% if (isApt && listing.building) { %>📍 <%= listing.building %><% if(listing.apt){ %> — شقة <%= listing.apt %><% } %><% if(listing.floor){ %> | الدور <%= listing.floor %><% } %>
+          <% } else if (listing.location) { %>📍 <%= listing.location %>
+          <% } %>
         </p>
 
         <!-- STATS -->
         <div class="listing-stats">
+          <% if (isApt) { %>
           <div class="listing-stat"><div class="listing-stat__val"><%= listing.maxGuests %></div><div class="listing-stat__lbl">ضيوف</div></div>
-          <div class="listing-stat"><div class="listing-stat__val"><%= listing.bedrooms %></div><div class="listing-stat__lbl"><%= listing.bedrooms===1?'غرفة نوم':'غرف نوم' %></div></div>
-          <div class="listing-stat"><div class="listing-stat__val"><%= listing.bathrooms %></div><div class="listing-stat__lbl"><%= listing.bathrooms===1?'حمام':'حمامات' %></div></div>
+          <div class="listing-stat"><div class="listing-stat__val"><%= listing.bedrooms %></div><div class="listing-stat__lbl"><%= listing.bedrooms===1?'غرفة':'غرف' %></div></div>
+          <div class="listing-stat"><div class="listing-stat__val"><%= listing.bathrooms %></div><div class="listing-stat__lbl">حمام</div></div>
+          <% } %>
           <% if (listing.area) { %><div class="listing-stat"><div class="listing-stat__val"><%= listing.area %></div><div class="listing-stat__lbl">م²</div></div><% } %>
+          <% if (isLand && listing.frontage) { %><div class="listing-stat"><div class="listing-stat__val"><%= listing.frontage %></div><div class="listing-stat__lbl">م واجهة</div></div><% } %>
+          <% if (!isApt) { %>
+          <div class="listing-stat">
+            <div class="listing-stat__val" style="font-size:1rem;">
+              <%= isLand?(listing.price_sale||0).toLocaleString():(listing.price_annual||0).toLocaleString() %>
+            </div>
+            <div class="listing-stat__lbl">ريال <%= isLand?'سعر البيع':'/سنة' %></div>
+          </div>
+          <% } %>
         </div>
 
         <div class="listing-divider"></div>
@@ -99,7 +117,7 @@
         <!-- DESCRIPTION -->
         <% if (listing.description) { %>
         <div style="margin-bottom:32px;">
-          <h3 style="font-size:1.1rem;font-weight:700;margin-bottom:12px;">عن الوحدة</h3>
+          <h3 style="font-size:1.1rem;font-weight:700;margin-bottom:12px;"><%= isLand?'عن الأرض':isComm?'عن المعرض':'عن الوحدة' %></h3>
           <p style="color:var(--text2);line-height:2;font-size:15px;"><%= listing.description %></p>
         </div>
         <% } %>
@@ -123,6 +141,9 @@
 
       <!-- RIGHT: BOOKING BOX -->
       <div class="listing-book-box" id="bookBox">
+
+        <% if (listing.category === 'rental_apartment') { %>
+        <!-- APARTMENT BOOKING BOX -->
         <div class="lbb-price">
           <% if (listing.type==='daily'||listing.type==='both') { %>
           <span class="lbb-price__num"><%= listing.price_daily.toLocaleString() %></span>
@@ -134,45 +155,52 @@
           <span class="lbb-price__unit"> ريال / سنة</span>
           <% } %>
         </div>
-
         <% if (listing.type==='both') { %>
         <div class="lbb-toggle" id="typeToggle">
           <button class="lbb-toggle__btn active" onclick="setType('daily',this)">يومي</button>
           <button class="lbb-toggle__btn" onclick="setType('annual',this)">سنوي</button>
         </div>
         <% } %>
-
         <div id="dailyFields" style="<%= listing.type==='annual'?'display:none':'display:block' %>">
-          <div class="lbb-row">
-            <label class="lbb-lbl">تاريخ الوصول</label>
-            <input type="date" class="lbb-inp" id="checkIn" onchange="calcNights()">
-          </div>
-          <div class="lbb-row">
-            <label class="lbb-lbl">تاريخ المغادرة</label>
-            <input type="date" class="lbb-inp" id="checkOut" onchange="calcNights()">
-          </div>
-          <div class="lbb-row">
-            <label class="lbb-lbl">عدد الضيوف</label>
-            <select class="lbb-inp" id="guests">
-              <% for(let i=1;i<=listing.maxGuests;i++) { %><option value="<%= i %>"><%= i %> ضيف<%= i===1?'':'ين أو أكثر' %></option><% } %>
-            </select>
+          <div class="lbb-row"><label class="lbb-lbl">تاريخ الوصول</label><input type="date" class="lbb-inp" id="checkIn" onchange="calcNights()"></div>
+          <div class="lbb-row"><label class="lbb-lbl">تاريخ المغادرة</label><input type="date" class="lbb-inp" id="checkOut" onchange="calcNights()"></div>
+          <div class="lbb-row"><label class="lbb-lbl">عدد الضيوف</label>
+            <select class="lbb-inp" id="guests"><% for(let i=1;i<=listing.maxGuests;i++) { %><option value="<%= i %>"><%= i %> ضيف</option><% } %></select>
           </div>
           <div class="lbb-total" id="totalBox" style="display:none">
-            <div class="lbb-total__row">
-              <span id="nightsLbl">— ليلة</span>
-              <span id="nightsPrice">—</span>
-            </div>
-            <div class="lbb-total__sum">
-              <span>الإجمالي</span>
-              <span class="c-gold" id="totalPrice">—</span>
-            </div>
+            <div class="lbb-total__row"><span id="nightsLbl">—</span><span id="nightsPrice">—</span></div>
+            <div class="lbb-total__sum"><span>الإجمالي</span><span class="c-gold" id="totalPrice">—</span></div>
           </div>
         </div>
+        <a id="bookBtn" href="/book/<%= listing._id %>?type=<%= listing.type==='annual'?'annual':'daily' %>" class="btn btn-gold" style="width:100%;justify-content:center;padding:14px;font-size:1rem;font-weight:700;margin-top:16px;border-radius:12px;">احجز الآن</a>
 
-        <a id="bookBtn" href="/book/<%= listing._id %>?type=<%= listing.type==='annual'?'annual':'daily' %>" class="btn btn-gold" style="width:100%;justify-content:center;padding:14px;font-size:1rem;font-weight:700;margin-top:16px;border-radius:12px;">
-          احجز الآن
-        </a>
-        <a href="https://wa.me/966590561057?text=أهلاً، أريد الاستفسار عن شقة <%= encodeURIComponent(listing.title) %>" target="_blank" class="lbb-wa">
+        <% } else if (listing.category === 'rental_commercial') { %>
+        <!-- COMMERCIAL INQUIRY BOX -->
+        <div class="lbb-price">
+          <span class="lbb-price__num"><%= (listing.price_annual||0).toLocaleString() %></span>
+          <span class="lbb-price__unit"> ريال / سنة</span>
+        </div>
+        <div style="background:var(--light);border-radius:10px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:var(--text3);line-height:1.8;">
+          <% if (listing.area) { %><div>📐 المساحة: <strong style="color:var(--dark);"><%= listing.area %> م²</strong></div><% } %>
+          <% if (listing.floor) { %><div>🏢 الدور: <strong style="color:var(--dark);"><%= listing.floor %></strong></div><% } %>
+        </div>
+        <a href="/book/<%= listing._id %>" class="btn btn-gold" style="width:100%;justify-content:center;padding:14px;font-size:1rem;font-weight:700;border-radius:12px;">أرسل استفساراً</a>
+
+        <% } else { %>
+        <!-- LAND INQUIRY BOX -->
+        <div class="lbb-price">
+          <span class="lbb-price__num"><%= (listing.price_sale||0).toLocaleString() %></span>
+          <span class="lbb-price__unit"> ريال</span>
+        </div>
+        <div style="background:var(--light);border-radius:10px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:var(--text3);line-height:1.8;">
+          <% if (listing.area) { %><div>📐 المساحة: <strong style="color:var(--dark);"><%= listing.area %> م²</strong></div><% } %>
+          <% if (listing.frontage) { %><div>↔️ الواجهة: <strong style="color:var(--dark);"><%= listing.frontage %> م</strong></div><% } %>
+          <% if (listing.area && listing.price_sale) { %><div>💰 السعر/م²: <strong style="color:var(--gold);"><%= Math.round(listing.price_sale/listing.area).toLocaleString() %> ريال</strong></div><% } %>
+        </div>
+        <a href="/book/<%= listing._id %>" class="btn btn-gold" style="width:100%;justify-content:center;padding:14px;font-size:1rem;font-weight:700;border-radius:12px;">أرسل استفساراً</a>
+        <% } %>
+
+        <a href="https://wa.me/966590561057?text=أهلاً، أريد الاستفسار عن: <%= encodeURIComponent(listing.title) %>" target="_blank" class="lbb-wa">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
           تواصل عبر واتساب
         </a>

@@ -43,18 +43,31 @@
       <div class="book-listing-preview__info">
         <div style="font-size:12px;color:var(--gold);font-weight:700;"><%= listing.building %></div>
         <div style="font-size:1rem;font-weight:700;margin:4px 0;"><%= listing.title %></div>
+        <% if (listing.category==='rental_apartment') { %>
         <div style="font-size:13px;color:var(--text3);">🛏 <%= listing.bedrooms %> غرف | 🚿 <%= listing.bathrooms %> حمام<% if(listing.area) { %> | 📐 <%= listing.area %> م²<% } %></div>
+        <% } else { %>
+        <div style="font-size:13px;color:var(--text3);"><% if(listing.area) { %>📐 <%= listing.area %> م²<% } %><% if(listing.category==='sale_land'&&listing.price_sale) { %> | 💰 <%= listing.price_sale.toLocaleString() %> ريال<% } else if(listing.price_annual) { %> | 💰 <%= listing.price_annual.toLocaleString() %> ريال/سنة<% } %></div>
+        <% } %>
       </div>
       <span style="color:var(--text3);font-size:12px;margin-right:auto;white-space:nowrap;">← تفاصيل</span>
     </a>
 
     <!-- FORM CARD -->
     <div class="book-form-card">
+      <% if (listing.category !== 'rental_apartment') { %>
+      <h2 style="font-size:1.4rem;font-weight:800;margin-bottom:4px;">إرسال استفسار</h2>
+      <p style="color:var(--text3);font-size:13px;margin-bottom:28px;">أدخل بياناتك وسيتواصل معك فريقنا في أقرب وقت</p>
+      <% } else { %>
       <h2 style="font-size:1.4rem;font-weight:800;margin-bottom:4px;">تأكيد الحجز</h2>
       <p style="color:var(--text3);font-size:13px;margin-bottom:28px;">أدخل بياناتك وسيتواصل معك فريقنا لتأكيد الحجز</p>
+      <% } %>
 
       <form method="POST" action="/book/<%= listing._id %>">
 
+        <% if (listing.category !== 'rental_apartment') { %>
+        <!-- INQUIRY FORM (non-apartment) -->
+        <input type="hidden" name="bookingType" value="inquiry">
+        <% } else { %>
         <!-- RENTAL TYPE -->
         <div style="margin-bottom:20px;">
           <div class="form-lbl">نوع الإيجار</div>
@@ -120,6 +133,7 @@
             <input type="hidden" name="checkOut">
           </div>
         </div>
+        <% } %>
 
         <div class="book-divider"></div>
 

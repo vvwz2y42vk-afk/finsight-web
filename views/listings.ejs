@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>وحداتنا للإيجار — Finsight Real Estate</title>
+<title>عقاراتنا — Finsight Real Estate</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/client.css">
 </head>
@@ -29,18 +29,43 @@
 </nav>
 
 <!-- HERO -->
-<section class="about-hero" style="min-height:320px;">
+<section class="about-hero" style="min-height:280px;">
   <div class="about-hero__content">
-    <div class="sec-tag">وحداتنا</div>
-    <h1 class="about-hero__title">شقق للإيجار في <span class="c-gold">المدينة المنورة</span></h1>
-    <p class="about-hero__sub">يومي وسنوي — اختر الوحدة المناسبة واحجزها مباشرة</p>
+    <div class="sec-tag">Finsight Real Estate</div>
+    <h1 class="about-hero__title">عقاراتنا في <span class="c-gold">المدينة المنورة</span></h1>
+    <p class="about-hero__sub">شقق للإيجار • معارض تجارية • أراضي للبيع</p>
   </div>
 </section>
 
-<!-- FILTER BAR -->
-<div class="listings-filter-bar">
+<!-- CATEGORY TABS -->
+<div class="cat-tabs-bar">
+  <div class="page-container">
+    <div class="cat-tabs">
+      <a href="/listings?cat=rental_apartment" class="cat-tab <%= cat==='rental_apartment'?'active':'' %>">
+        <span class="cat-tab__ico">🏠</span>
+        <span class="cat-tab__lbl">شقق للإيجار</span>
+        <span class="cat-tab__count"><%= catCounts.rental_apartment||0 %></span>
+      </a>
+      <a href="/listings?cat=rental_commercial" class="cat-tab <%= cat==='rental_commercial'?'active':'' %>">
+        <span class="cat-tab__ico">🏪</span>
+        <span class="cat-tab__lbl">معارض للإيجار</span>
+        <span class="cat-tab__count"><%= catCounts.rental_commercial||0 %></span>
+      </a>
+      <a href="/listings?cat=sale_land" class="cat-tab <%= cat==='sale_land'?'active':'' %>">
+        <span class="cat-tab__ico">🌍</span>
+        <span class="cat-tab__lbl">أراضي للبيع</span>
+        <span class="cat-tab__count"><%= catCounts.sale_land||0 %></span>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- SUB FILTER (apartments only) -->
+<% if (cat === 'rental_apartment') { %>
+<div class="listings-filter-bar" style="position:static;top:unset;">
   <div class="page-container">
     <form method="GET" action="/listings" class="listings-filter-form">
+      <input type="hidden" name="cat" value="rental_apartment">
       <div class="lf-group">
         <label class="lf-lbl">المجمع</label>
         <select name="building" class="lf-select" onchange="this.form.submit()">
@@ -53,9 +78,9 @@
       <div class="lf-group">
         <label class="lf-lbl">نوع الإيجار</label>
         <div class="lf-tabs">
-          <a href="/listings?<%= q.building?'building='+q.building+'&':'' %>type=all" class="lf-tab <%= !q.type||q.type==='all'?'active':'' %>">الكل</a>
-          <a href="/listings?<%= q.building?'building='+q.building+'&':'' %>type=daily" class="lf-tab <%= q.type==='daily'?'active':'' %>">يومي</a>
-          <a href="/listings?<%= q.building?'building='+q.building+'&':'' %>type=annual" class="lf-tab <%= q.type==='annual'?'active':'' %>">سنوي</a>
+          <a href="/listings?cat=rental_apartment<%= q.building?'&building='+q.building:'' %>&type=all" class="lf-tab <%= !q.type||q.type==='all'?'active':'' %>">الكل</a>
+          <a href="/listings?cat=rental_apartment<%= q.building?'&building='+q.building:'' %>&type=daily" class="lf-tab <%= q.type==='daily'?'active':'' %>">يومي</a>
+          <a href="/listings?cat=rental_apartment<%= q.building?'&building='+q.building:'' %>&type=annual" class="lf-tab <%= q.type==='annual'?'active':'' %>">سنوي</a>
         </div>
       </div>
       <div class="lf-count">
@@ -65,16 +90,28 @@
     </form>
   </div>
 </div>
+<% } else { %>
+<div style="background:var(--light);padding:12px 0;border-bottom:1px solid var(--border);">
+  <div class="page-container">
+    <span class="c-gold" style="font-weight:700;font-size:1.1rem;"><%= listings.length %></span>
+    <span style="color:var(--text3);font-size:13px;">
+      <%= cat==='rental_commercial' ? ' معرض متاح' : ' أرضية متاحة' %>
+    </span>
+  </div>
+</div>
+<% } %>
 
 <!-- LISTINGS GRID -->
-<section style="padding:56px 0 80px;background:var(--light);">
+<section style="padding:48px 0 80px;background:<%= cat==='rental_apartment'?'var(--light)':'#fff' %>;">
   <div class="page-container">
     <% if (listings.length === 0) { %>
     <div style="text-align:center;padding:80px 0;">
-      <div style="font-size:3rem;margin-bottom:16px;">🏠</div>
-      <h3 style="font-size:1.4rem;font-weight:700;margin-bottom:8px;">لا توجد وحدات متاحة حالياً</h3>
-      <p style="color:var(--text3);">تواصل معنا مباشرة لمعرفة ما هو متاح</p>
-      <a href="/inquiry" class="btn btn-gold" style="margin-top:20px;display:inline-flex;">تواصل معنا</a>
+      <div style="font-size:3.5rem;margin-bottom:16px;"><%= cat==='rental_apartment'?'🏠':cat==='rental_commercial'?'🏪':'🌍' %></div>
+      <h3 style="font-size:1.4rem;font-weight:700;margin-bottom:8px;">
+        لا يوجد <%= cat==='rental_apartment'?'شقق للإيجار':cat==='rental_commercial'?'معارض للإيجار':'أراضي للبيع' %> حالياً
+      </h3>
+      <p style="color:var(--text3);margin-bottom:20px;">تواصل معنا مباشرة للاستفسار</p>
+      <a href="/inquiry" class="btn btn-gold" style="display:inline-flex;">تواصل معنا</a>
     </div>
     <% } else { %>
     <div class="listing-grid">
@@ -84,31 +121,65 @@
           <% if (l.photos && l.photos.length) { %>
           <img src="<%= l.photos[0] %>" alt="<%= l.title %>" loading="lazy">
           <% } else { %>
-          <div class="listing-card__photo-ph">🏢</div>
+          <div class="listing-card__photo-ph">
+            <%= cat==='rental_apartment'?'🏢':cat==='rental_commercial'?'🏪':'🌍' %>
+          </div>
           <% } %>
           <div class="listing-card__badges">
             <% if (l.featured) { %><span class="lc-badge lc-badge--featured">⭐ مميز</span><% } %>
+            <% if (cat==='rental_apartment') { %>
             <span class="lc-badge lc-badge--type">
               <%= l.type==='daily'?'يومي':l.type==='annual'?'سنوي':'يومي + سنوي' %>
             </span>
+            <% } else if (cat==='rental_commercial') { %>
+            <span class="lc-badge lc-badge--type">للإيجار</span>
+            <% } else { %>
+            <span class="lc-badge lc-badge--type" style="background:rgba(212,175,55,.9);">للبيع</span>
+            <% } %>
           </div>
         </div>
         <div class="listing-card__body">
+          <% if (cat==='rental_apartment' && l.building) { %>
           <div class="listing-card__building"><%= l.building %></div>
+          <% } else if (l.location) { %>
+          <div class="listing-card__building">📍 <%= l.location %></div>
+          <% } %>
           <div class="listing-card__title"><%= l.title %></div>
+
+          <% if (cat==='rental_apartment') { %>
           <div class="listing-card__meta">
             <span>🛏 <%= l.bedrooms %> <%= l.bedrooms===1?'غرفة':'غرف' %></span>
             <span>🚿 <%= l.bathrooms %> حمام</span>
             <% if (l.area) { %><span>📐 <%= l.area %> م²</span><% } %>
           </div>
+          <% } else if (cat==='rental_commercial') { %>
+          <div class="listing-card__meta">
+            <% if (l.area) { %><span>📐 المساحة: <%= l.area %> م²</span><% } %>
+            <% if (l.floor) { %><span>🏢 الدور <%= l.floor %></span><% } %>
+          </div>
+          <% } else { %>
+          <div class="listing-card__meta">
+            <% if (l.area) { %><span>📐 المساحة: <%= l.area %> م²</span><% } %>
+            <% if (l.frontage) { %><span>↔️ الواجهة: <%= l.frontage %> م</span><% } %>
+          </div>
+          <% } %>
+
           <div class="listing-card__footer">
             <div class="listing-card__price">
+              <% if (cat==='sale_land') { %>
+              <span class="lcp-num"><%= l.price_sale.toLocaleString() %></span>
+              <span class="lcp-unit"> ريال</span>
+              <% } else if (cat==='rental_commercial') { %>
+              <span class="lcp-num"><%= l.price_annual.toLocaleString() %></span>
+              <span class="lcp-unit"> ريال / سنة</span>
+              <% } else { %>
               <% if (l.type==='daily'||l.type==='both') { %>
               <span class="lcp-num"><%= l.price_daily.toLocaleString() %></span>
               <span class="lcp-unit"> ريال / ليلة</span>
               <% } else { %>
               <span class="lcp-num"><%= l.price_annual.toLocaleString() %></span>
               <span class="lcp-unit"> ريال / سنة</span>
+              <% } %>
               <% } %>
             </div>
             <span class="listing-card__cta">تفاصيل ←</span>
@@ -133,18 +204,16 @@
         <p class="footer-brand__desc">شركة رائدة في إدارة الأملاك والوساطة العقارية بالمدينة المنورة.</p>
       </div>
       <div class="footer-col">
+        <div class="footer-col__title">الأقسام</div>
+        <a href="/listings?cat=rental_apartment">🏠 شقق للإيجار</a>
+        <a href="/listings?cat=rental_commercial">🏪 معارض للإيجار</a>
+        <a href="/listings?cat=sale_land">🌍 أراضي للبيع</a>
+      </div>
+      <div class="footer-col">
         <div class="footer-col__title">روابط سريعة</div>
         <a href="/">الرئيسية</a>
         <a href="/about">من نحن</a>
-        <a href="/listings">عقاراتنا</a>
         <a href="/inquiry">تواصل معنا</a>
-      </div>
-      <div class="footer-col">
-        <div class="footer-col__title">المجمعات</div>
-        <a href="/listings?building=المنارا">مجمع المنارا</a>
-        <a href="/listings?building=جوان ان">مجمع جوان إن</a>
-        <a href="/listings?building=الماسة">مجمع الماسة</a>
-        <a href="/listings?building=الواحة">مجمع الواحة</a>
       </div>
       <div class="footer-col">
         <div class="footer-col__title">تواصل معنا</div>
