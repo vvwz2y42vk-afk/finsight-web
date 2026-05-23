@@ -115,11 +115,35 @@ router.get('/apartments/available', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+async function sendEmail(subject, html) {
+  if (!process.env.RESEND_API_KEY) return;
+  try {
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from: 'Finsight <onboarding@resend.dev>', to: ['assisting@finsight-sa.com'], subject, html }),
+    });
+  } catch(e) {}
+}
+
 // ─── Inquiries ────────────────────────────────────────────
 router.post('/inquiries', async (req, res) => {
   try {
     const inquiry = new Inquiry(req.body);
     await inquiry.save();
+    const { name, phone, email, subject, message, listing } = req.body;
+    sendEmail(
+      `💬 استفسار — ${subject || listing || 'استفسار عقاري'}`,
+      `<div dir="rtl" style="font-family:Arial;line-height:2;">
+        <h2 style="color:#d4af37;">استفسار جديد</h2>
+        <p><b>الاسم:</b> ${name}</p>
+        <p><b>الهاتف:</b> <a href="https://wa.me/${(phone||'').replace(/^0/,'966')}">${phone}</a></p>
+        ${email ? `<p><b>الإيميل:</b> ${email}</p>` : ''}
+        ${listing ? `<p><b>العقار:</b> ${listing}</p>` : ''}
+        ${message ? `<p><b>الرسالة:</b> ${message}</p>` : ''}
+        <hr><a href="https://finsight-web-xi.vercel.app/dashboard" style="color:#d4af37;">فتح الداشبورد</a>
+      </div>`
+    );
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });

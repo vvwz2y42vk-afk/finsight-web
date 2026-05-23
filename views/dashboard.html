@@ -22,6 +22,7 @@ body{font-family:'IBM Plex Sans Arabic',sans-serif;background:var(--bg);directio
 .ni.active::before{content:'';position:absolute;left:0;top:20%;height:60%;width:2px;background:var(--gold);border-radius:2px;}
 .ni-ico{font-size:13px;width:16px;text-align:center;}
 .ni-badge{margin-right:auto;background:var(--gl);color:var(--gold);font-size:9px;padding:1px 5px;border-radius:20px;font-weight:600;}
+.ni-badge.red{background:var(--rg);color:var(--red);}
 .sb-user{padding:10px;border-top:1px solid var(--b);}
 .user-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:var(--s2);}
 .user-av{width:28px;height:28px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;color:#fff;flex-shrink:0;}
@@ -195,6 +196,7 @@ tbody td{padding:7px 5px;font-size:11px;}
 .ni.active{background:rgba(184,134,11,.18);color:#DAA520;font-weight:600;}
 .ni.active::before{background:#DAA520;}
 .ni-badge{background:rgba(184,134,11,.25);color:#DAA520;}
+.ni-badge.red{background:rgba(220,38,38,.25);color:#f87171;}
 .ni-ico{opacity:.7;}
 .ni.active .ni-ico{opacity:1;}
 .sb-user{border-top:1px solid rgba(184,134,11,.18);padding:10px 12px;}
@@ -698,8 +700,69 @@ function renderAll(){
 function renderContracts(){
   const q=(document.getElementById('cSearch')?.value||'').trim(),sh=document.getElementById('cSheet')?.value||'',st=document.getElementById('cStatus')?.value||'';
   const d=allC.filter(c=>c.n&&(!q||c.n.includes(q)||c.a.includes(q))&&(!sh||c.sheet===sh)&&(!st||c.st===st));
-  set('contracts-tbody',d.map(c=>`<tr><td style="font-weight:600;">${c.n}</td><td><span class="pill ${SP[c.sheet]||''}">${c.sheet}</span></td><td>${c.a}</td><td>${fmt(c.v)} ﷼</td><td style="color:var(--green);">${fmt(c.p)} ﷼</td><td style="color:${c.r>0?'var(--red)':'var(--t4)'};">${c.r>0?fmt(c.r)+' ﷼':'—'}</td><td style="color:var(--t3);font-size:10px;">${c.en||'—'}</td><td style="color:var(--t3);font-size:10px;">${c.ex||'—'}</td><td><span class="pill ${c.st==='مفتوح'?'pop':'pcl'}">${c.st}</span></td><td><span class="pill ${c.py==='تم السداد'?'pp':'pup'}">${c.py}</span></td><td style="color:var(--blue);font-size:10px;">${c.ej>0?fmt(c.ej)+' ﷼':'—'}</td><td style="font-size:10px;color:var(--t3);">${c.pm||'—'}</td><td style="white-space:nowrap;"><button onclick="openEdit('${c.id}')" style="background:var(--gl);border:1px solid var(--gb);color:var(--gold);padding:2px 7px;border-radius:4px;cursor:pointer;font-size:9px;font-family:inherit;margin-left:3px;">✏️</button><button onclick="openConfirm('${c.id}')" style="background:var(--rg);border:1px solid var(--rb);color:var(--red);padding:2px 7px;border-radius:4px;cursor:pointer;font-size:9px;font-family:inherit;">🗑️</button></td></tr>`).join(''));
+  set('contracts-tbody',d.map(c=>`<tr><td style="font-weight:600;">${c.n}</td><td><span class="pill ${SP[c.sheet]||''}">${c.sheet}</span></td><td>${c.a}</td><td>${fmt(c.v)} ﷼</td><td style="color:var(--green);">${fmt(c.p)} ﷼</td><td style="color:${c.r>0?'var(--red)':'var(--t4)'};">${c.r>0?fmt(c.r)+' ﷼':'—'}</td><td style="color:var(--t3);font-size:10px;">${c.en||'—'}</td><td style="color:var(--t3);font-size:10px;">${c.ex||'—'}</td><td><span class="pill ${c.st==='مفتوح'?'pop':'pcl'}">${c.st}</span></td><td><span class="pill ${c.py==='تم السداد'?'pp':'pup'}">${c.py}</span></td><td style="color:var(--blue);font-size:10px;">${c.ej>0?fmt(c.ej)+' ﷼':'—'}</td><td style="font-size:10px;color:var(--t3);">${c.pm||'—'}</td><td style="white-space:nowrap;"><button onclick="openEdit('${c.id}')" style="background:var(--gl);border:1px solid var(--gb);color:var(--gold);padding:2px 7px;border-radius:4px;cursor:pointer;font-size:9px;font-family:inherit;margin-left:3px;">✏️</button><button onclick="printContract('${c.id}')" style="background:#e8f4fd;border:1px solid #90caf9;color:#1565c0;padding:2px 7px;border-radius:4px;cursor:pointer;font-size:9px;font-family:inherit;margin-left:3px;">🖨️</button><button onclick="openConfirm('${c.id}')" style="background:var(--rg);border:1px solid var(--rb);color:var(--red);padding:2px 7px;border-radius:4px;cursor:pointer;font-size:9px;font-family:inherit;">🗑️</button></td></tr>`).join(''));
   set('c-count',`إجمالي: ${toAr(d.length)} عقد`);
+}
+
+function printContract(id){
+  const c=allC.find(x=>x.id===id);
+  if(!c)return;
+  const w=window.open('','_blank','width=800,height=700');
+  w.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><title>عقد — ${c.n}</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:Arial,sans-serif;padding:40px;color:#111;direction:rtl;}
+    .header{text-align:center;margin-bottom:32px;border-bottom:2px solid #b8860b;padding-bottom:20px;}
+    .logo{font-size:24px;font-weight:900;color:#b8860b;letter-spacing:2px;}
+    .logo-sub{font-size:11px;color:#888;letter-spacing:4px;}
+    h2{font-size:18px;margin-top:8px;color:#333;}
+    .section{margin-bottom:24px;}
+    .section-title{font-size:13px;font-weight:700;color:#b8860b;border-bottom:1px solid #e5c97e;padding-bottom:4px;margin-bottom:12px;letter-spacing:.5px;}
+    .row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0f0f0;font-size:13px;}
+    .row .lbl{color:#666;font-weight:600;}
+    .row .val{font-weight:700;}
+    .val.green{color:#2e7d32;} .val.red{color:#c62828;}
+    .footer{margin-top:40px;text-align:center;font-size:11px;color:#aaa;}
+    .sig{display:flex;justify-content:space-between;margin-top:60px;}
+    .sig-box{text-align:center;width:200px;}
+    .sig-line{border-top:1px solid #333;margin-top:40px;padding-top:6px;font-size:12px;color:#666;}
+    @media print{body{padding:20px;}}
+  </style></head><body>
+  <div class="header">
+    <div class="logo">FINSIGHT</div>
+    <div class="logo-sub">REAL ESTATE</div>
+    <h2>عقد إيجار</h2>
+    <div style="font-size:11px;color:#888;margin-top:4px;">تاريخ الطباعة: ${new Date().toLocaleDateString('ar-SA')}</div>
+  </div>
+  <div class="section">
+    <div class="section-title">بيانات العميل</div>
+    <div class="row"><span class="lbl">اسم العميل</span><span class="val">${c.n}</span></div>
+    ${c.ph?`<div class="row"><span class="lbl">رقم الهاتف</span><span class="val">${c.ph}</span></div>`:''}
+  </div>
+  <div class="section">
+    <div class="section-title">بيانات الوحدة</div>
+    <div class="row"><span class="lbl">المبنى</span><span class="val">${c.sheet}</span></div>
+    <div class="row"><span class="lbl">رقم الشقة</span><span class="val">${c.a}</span></div>
+    ${c.en?`<div class="row"><span class="lbl">تاريخ الدخول</span><span class="val">${c.en}</span></div>`:''}
+    ${c.ex?`<div class="row"><span class="lbl">تاريخ الخروج</span><span class="val">${c.ex}</span></div>`:''}
+    <div class="row"><span class="lbl">حالة العقد</span><span class="val">${c.st}</span></div>
+  </div>
+  <div class="section">
+    <div class="section-title">بيانات مالية</div>
+    <div class="row"><span class="lbl">قيمة العقد</span><span class="val">${c.v.toLocaleString()} ريال</span></div>
+    <div class="row"><span class="lbl">المبلغ المدفوع</span><span class="val green">${c.p.toLocaleString()} ريال</span></div>
+    <div class="row"><span class="lbl">المبلغ المتبقي</span><span class="val ${c.r>0?'red':''}">${c.r>0?c.r.toLocaleString()+' ريال':'مكتمل'}</span></div>
+    ${c.pm?`<div class="row"><span class="lbl">طريقة الدفع</span><span class="val">${c.pm}</span></div>`:''}
+    <div class="row"><span class="lbl">حالة السداد</span><span class="val">${c.py}</span></div>
+  </div>
+  <div class="sig">
+    <div class="sig-box"><div class="sig-line">توقيع المستأجر</div></div>
+    <div class="sig-box"><div class="sig-line">ختم الشركة</div></div>
+  </div>
+  <div class="footer">Finsight Real Estate — المدينة المنورة</div>
+  <script>window.onload=()=>{window.print();}<\/script>
+  </body></html>`);
+  w.document.close();
 }
 
 function renderCommissions(){
@@ -1154,7 +1217,7 @@ async function loadBookings(){
     const pending=allBookings.filter(b=>b.status==='pending').length;
     const confirmed=allBookings.filter(b=>b.status==='confirmed').length;
     const nb=document.getElementById('nb-bookings');
-    if(nb)nb.textContent=pending||'—';
+    if(nb){nb.textContent=pending||'—';nb.className=pending>0?'ni-badge red':'ni-badge';}
     const ep=document.getElementById('bk-pending');if(ep)ep.textContent=pending;
     const ec=document.getElementById('bk-confirmed');if(ec)ec.textContent=confirmed;
     const et=document.getElementById('bk-total');if(et)et.textContent=allBookings.length;

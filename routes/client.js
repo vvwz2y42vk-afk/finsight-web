@@ -2,6 +2,21 @@ const express = require('express');
 const router = express.Router();
 const Contract = require('../models/Contract');
 
+async function sendEmail(subject, html) {
+  if (!process.env.RESEND_API_KEY) return;
+  try {
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from: 'Finsight <onboarding@resend.dev>',
+        to: ['assisting@finsight-sa.com'],
+        subject, html,
+      }),
+    });
+  } catch(e) {}
+}
+
 const BUILDINGS = {
   'المنارا':  { floors: [{l:'أرضي',r:['001','002']},{l:'الأول',r:['101','102','103','104','105','106']},{l:'الثاني',r:['201','202','203','204','205','206']},{l:'الثالث',r:['301','302','303','304','305','306']},{l:'الرابع',r:['401','402','403','404','405','406']},{l:'الخامس',r:['501','502','503','504']}] },
   'جوان ان': { floors: [{l:'أرضي',r:['001','002','003','004']},{l:'الأول',r:['101','102','103','104','105']},{l:'الثاني',r:['201','202','203','204','205']},{l:'الثالث',r:['301','302','303','304','305','306']},{l:'الرابع',r:['401','402']}] },
@@ -179,6 +194,21 @@ router.post('/book/:id', async (req, res) => {
       guests: parseInt(guests) || 1, nights, totalPrice, notes,
     }).save();
 
+    sendEmail(
+      `🏠 حجز جديد — ${listing.title}`,
+      `<div dir="rtl" style="font-family:Arial;line-height:2;">
+        <h2 style="color:#d4af37;">طلب حجز جديد</h2>
+        <p><b>العقار:</b> ${listing.title}</p>
+        <p><b>الاسم:</b> ${name}</p>
+        <p><b>الهاتف:</b> <a href="https://wa.me/${phone.replace(/^0/,'966')}">${phone}</a></p>
+        <p><b>نوع الحجز:</b> ${bookingType === 'daily' ? 'يومي' : bookingType === 'annual' ? 'شهري' : 'استفسار'}</p>
+        ${checkIn ? `<p><b>الوصول:</b> ${checkIn}</p>` : ''}
+        ${checkOut ? `<p><b>المغادرة:</b> ${checkOut}</p>` : ''}
+        ${totalPrice ? `<p><b>الإجمالي:</b> ${totalPrice.toLocaleString()} ريال</p>` : ''}
+        ${notes ? `<p><b>ملاحظات:</b> ${notes}</p>` : ''}
+        <hr><a href="https://finsight-web-xi.vercel.app/dashboard" style="color:#d4af37;">فتح الداشبورد</a>
+      </div>`
+    );
     res.redirect(`/booking/success?id=${booking._id}&name=${encodeURIComponent(name)}&listing=${encodeURIComponent(listing.title)}`);
   } catch (e) { res.redirect('/listings'); }
 });
@@ -204,11 +234,41 @@ router.post('/inquiry', async (req, res) => {
   try {
     const Inquiry = require('../models/Inquiry');
     await new Inquiry(req.body).save();
-
-res.render('inquiry', { building: '', apartment: '', success: true, buildings: Object.keys(BUILDINGS) });
+    const { name, phone, email, subject, message } = req.body;
+    sendEmail(
+      `💬 استفسار جديد — ${subject || 'استفسار عقاري'}`,
+      `<div dir="rtl" style="font-family:Arial;line-height:2;">
+        <h2 style="color:#d4af37;">استفسار جديد</h2>
+        <p><b>الاسم:</b> ${name}</p>
+        <p><b>الهاتف:</b> <a href="https://wa.me/${(phone||'').replace(/^0/,'966')}">${phone}</a></p>
+        ${email ? `<p><b>الإيميل:</b> ${email}</p>` : ''}
+        ${subject ? `<p><b>الموضوع:</b> ${subject}</p>` : ''}
+        ${message ? `<p><b>الرسالة:</b> ${message}</p>` : ''}
+        <hr><a href="https://finsight-web-xi.vercel.app/dashboard" style="color:#d4af37;">فتح الداشبورد</a>
+      </div>`
+    );
+    res.render('inquiry', { building: '', apartment: '', success: true, buildings: Object.keys(BUILDINGS) });
   } catch (e) {
     res.render('inquiry', { building: '', apartment: '', success: false, buildings: Object.keys(BUILDINGS), error: 'حدث خطأ، حاول مجدداً' });
   }
+});
+
+router.get('/search', async (req, res) => {
+  const q = (req.query.q || '').trim();
+  const Listing = require('../models/Listing');
+  let listings = [];
+  if (q) {
+    listings = await Listing.find({
+      available: true,
+      $or: [
+        { title: { $regex: q, $options: 'i' } },
+        { description: { $regex: q, $options: 'i' } },
+        { location: { $regex: q, $options: 'i' } },
+        { building: { $regex: q, $options: 'i' } },
+      ]
+    }).sort({ featured: -1, createdAt: -1 }).limit(24).lean();
+  }
+  res.render('search', { listings, q });
 });
 
 module.exports = router;
