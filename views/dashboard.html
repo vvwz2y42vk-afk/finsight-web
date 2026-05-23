@@ -494,7 +494,17 @@ tbody td{padding:7px 5px;font-size:11px;}
         <div><label class="form-lbl">المساحة (م²)</label><input class="form-inp" id="lf-area" type="number" placeholder="0"></div>
         <div><label class="form-lbl">الحالة</label><select class="form-inp" id="lf-available"><option value="true">متاح ✅</option><option value="false">غير متاح ❌</option></select></div>
         <div><label class="form-lbl">مميز؟</label><select class="form-inp" id="lf-featured"><option value="false">عادي</option><option value="true">⭐ مميز</option></select></div>
-        <div class="form-full"><label class="form-lbl">روابط الصور (كل رابط في سطر)</label><textarea class="form-inp" id="lf-photos" rows="3" style="resize:vertical;direction:ltr;" placeholder="https://example.com/photo1.jpg"></textarea></div>
+        <div class="form-full">
+          <label class="form-lbl">صور العقار</label>
+          <div id="lf-photos-preview" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;min-height:0;"></div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <label class="btn" style="cursor:pointer;margin:0;">
+              📁 اختر صور
+              <input type="file" id="lf-photos-input" accept="image/*" multiple style="display:none" onchange="handlePhotoFiles(this.files)">
+            </label>
+            <span id="lf-photos-status" style="font-size:12px;color:#aaa;"></span>
+          </div>
+        </div>
         <div class="form-full"><label class="form-lbl">المرافق / المميزات (كل ميزة في سطر)</label><textarea class="form-inp" id="lf-amenities" rows="3" style="resize:vertical;" placeholder="واي فاي&#10;مكيف&#10;موقف سيارة"></textarea></div>
       </div>
       <div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end;">
@@ -927,6 +937,46 @@ function toggleListingFields(){
   s('lf-frontage-group',isLand);
 }
 
+const CLOUDINARY_CLOUD = 'dsy6vqaia';
+const CLOUDINARY_PRESET = 'finsight_upload';
+
+window._uploadedPhotos = [];
+function renderPhotoPreview(){
+  const grid = document.getElementById('lf-photos-preview');
+  if(!grid) return;
+  grid.innerHTML = window._uploadedPhotos.map((url,i)=>`
+    <div style="position:relative;width:80px;height:80px;flex-shrink:0;">
+      <img src="${url}" style="width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid #333;">
+      <button onclick="removePhoto(${i})" style="position:absolute;top:2px;right:2px;background:#c00;color:#fff;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:14px;line-height:18px;padding:0;">×</button>
+    </div>`).join('');
+}
+function removePhoto(i){
+  window._uploadedPhotos.splice(i,1);
+  renderPhotoPreview();
+  document.getElementById('lf-photos-status').textContent = window._uploadedPhotos.length ? window._uploadedPhotos.length + ' صورة' : '';
+}
+async function handlePhotoFiles(files){
+  const status = document.getElementById('lf-photos-status');
+  const input = document.getElementById('lf-photos-input');
+  const arr = Array.from(files);
+  let done = 0;
+  status.textContent = 'جاري الرفع...';
+  for(const file of arr){
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('upload_preset', CLOUDINARY_PRESET);
+    try{
+      const r = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, {method:'POST', body:fd});
+      const d = await r.json();
+      if(d.secure_url) { window._uploadedPhotos.push(d.secure_url); done++; }
+      else showToast('❌ فشل رفع: ' + file.name);
+    }catch(e){ showToast('❌ خطأ في الرفع: ' + file.name); }
+  }
+  input.value = '';
+  renderPhotoPreview();
+  status.textContent = window._uploadedPhotos.length + ' صورة';
+}
+
 function openListingForm(id){
   editListingId=id;
   const l=id?allListings.find(x=>x._id===id):null;
@@ -947,7 +997,9 @@ function openListingForm(id){
   document.getElementById('lf-area').value=l?.area||0;
   document.getElementById('lf-frontage').value=l?.frontage||0;
   document.getElementById('lf-guests').value=l?.maxGuests||4;
-  document.getElementById('lf-photos').value=(l?.photos||[]).join('\n');
+  window._uploadedPhotos = l?.photos ? [...l.photos] : [];
+  renderPhotoPreview();
+  document.getElementById('lf-photos-status').textContent = window._uploadedPhotos.length ? window._uploadedPhotos.length + ' صورة' : '';
   document.getElementById('lf-amenities').value=(l?.amenities||[]).join('\n');
   document.getElementById('lf-available').value=l?.available===false?'false':'true';
   document.getElementById('lf-featured').value=l?.featured?'true':'false';
@@ -977,7 +1029,7 @@ async function saveListing(){
     area:parseFloat(document.getElementById('lf-area').value)||0,
     frontage:cat==='sale_land'?parseFloat(document.getElementById('lf-frontage').value)||0:0,
     maxGuests:cat==='rental_apartment'?parseInt(document.getElementById('lf-guests').value)||4:0,
-    photos:document.getElementById('lf-photos').value.split('\n').map(s=>s.trim()).filter(Boolean),
+    photos:window._uploadedPhotos||[],
     amenities:document.getElementById('lf-amenities').value.split('\n').map(s=>s.trim()).filter(Boolean),
     available:document.getElementById('lf-available').value==='true',
     featured:document.getElementById('lf-featured').value==='true',
