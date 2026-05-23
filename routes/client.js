@@ -70,8 +70,8 @@ router.get('/listings', async (req, res) => {
   try {
     const Listing = require('../models/Listing');
     const filter = { available: true };
-    const cat = req.query.cat || 'rental_apartment';
-    filter.category = cat;
+    const cat = req.query.cat || '';
+    if (cat) filter.category = cat;
 
     if (cat === 'rental_apartment' || cat === 'sale_apartment') {
       if (req.query.building) filter.building = req.query.building;
@@ -107,7 +107,7 @@ router.get('/listings', async (req, res) => {
     counts.forEach(c => { catCounts[c._id] = c.count; });
     res.render('listings', { listings, buildings: Object.keys(BUILDINGS), q: req.query, cat, catCounts });
   } catch (e) {
-    res.render('listings', { listings: [], buildings: Object.keys(BUILDINGS), q: req.query, cat: req.query.cat||'rental_apartment', catCounts: {} });
+    res.render('listings', { listings: [], buildings: Object.keys(BUILDINGS), q: req.query, cat: req.query.cat||'', catCounts: {} });
   }
 });
 
