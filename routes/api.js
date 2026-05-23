@@ -218,22 +218,26 @@ router.put('/bookings/:id', auth, async (req, res) => {
     await Booking.findByIdAndUpdate(req.params.id, req.body);
 
     if (booking.listing && newStatus && newStatus !== prevStatus) {
-      if (newStatus === 'confirmed') {
+      // Block dates/unit when payment confirmed (awaiting_checkin)
+      if (newStatus === 'awaiting_checkin') {
         if (booking.bookingType === 'daily' && booking.checkIn && booking.checkOut) {
-          // block those dates on the listing
           await Listing.findByIdAndUpdate(booking.listing, {
             $push: { blockedRanges: { checkIn: booking.checkIn, checkOut: booking.checkOut, bookingId: booking._id } }
           });
         } else {
-          // annual / inquiry → mark listing unavailable
           await Listing.findByIdAndUpdate(booking.listing, { available: false });
         }
+      // Free up unit when checkout or cancelled
+      } else if (newStatus === 'checkout') {
+        if (booking.bookingType !== 'daily') {
+          await Listing.findByIdAndUpdate(booking.listing, { available: true });
+        }
       } else if (newStatus === 'cancelled') {
-        if (booking.bookingType === 'daily') {
+        if (booking.bookingType === 'daily' && ['awaiting_checkin','active'].includes(prevStatus)) {
           await Listing.findByIdAndUpdate(booking.listing, {
             $pull: { blockedRanges: { bookingId: booking._id } }
           });
-        } else {
+        } else if (booking.bookingType !== 'daily' && ['awaiting_checkin','active'].includes(prevStatus)) {
           await Listing.findByIdAndUpdate(booking.listing, { available: true });
         }
       }

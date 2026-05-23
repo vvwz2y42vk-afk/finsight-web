@@ -450,7 +450,9 @@ tbody td{padding:7px 5px;font-size:11px;}
       <div class="topbar-right">
         <div class="ec" style="margin:0;gap:8px;">
           <div class="ecb u" style="padding:6px 12px;"><div class="ecl">جديد</div><div class="ecv" id="bk-pending" style="font-size:16px;">—</div></div>
-          <div class="ecb s" style="padding:6px 12px;"><div class="ecl">مؤكد</div><div class="ecv" id="bk-confirmed" style="font-size:16px;">—</div></div>
+          <div class="ecb" style="padding:6px 12px;background:rgba(52,152,219,.08);border:1px solid rgba(52,152,219,.25);border-radius:8px;"><div class="ecl">انتظار الدفع</div><div class="ecv" id="bk-awaiting_payment" style="font-size:16px;color:#2980b9;">—</div></div>
+          <div class="ecb" style="padding:6px 12px;background:rgba(230,126,34,.08);border:1px solid rgba(230,126,34,.25);border-radius:8px;"><div class="ecl">انتظار دخول</div><div class="ecv" id="bk-awaiting_checkin" style="font-size:16px;color:#e67e22;">—</div></div>
+          <div class="ecb s" style="padding:6px 12px;"><div class="ecl">مفتوح</div><div class="ecv" id="bk-active" style="font-size:16px;">—</div></div>
           <div class="ecb o" style="padding:6px 12px;"><div class="ecl">الكل</div><div class="ecv" id="bk-total" style="font-size:16px;">—</div></div>
         </div>
       </div>
@@ -1241,11 +1243,15 @@ async function loadBookings(){
     if(!r.ok)return;
     allBookings=await r.json();
     const pending=allBookings.filter(b=>b.status==='pending').length;
-    const confirmed=allBookings.filter(b=>b.status==='confirmed').length;
+    const awaiting_payment=allBookings.filter(b=>b.status==='awaiting_payment').length;
+    const awaiting_checkin=allBookings.filter(b=>b.status==='awaiting_checkin').length;
+    const active=allBookings.filter(b=>b.status==='active').length;
     const nb=document.getElementById('nb-bookings');
-    if(nb){nb.textContent=pending||'—';nb.className=pending>0?'ni-badge red':'ni-badge';}
+    if(nb){nb.textContent=(pending+awaiting_payment)||'—';nb.className=(pending+awaiting_payment)>0?'ni-badge red':'ni-badge';}
     const ep=document.getElementById('bk-pending');if(ep)ep.textContent=pending;
-    const ec=document.getElementById('bk-confirmed');if(ec)ec.textContent=confirmed;
+    const eap=document.getElementById('bk-awaiting_payment');if(eap)eap.textContent=awaiting_payment;
+    const eac=document.getElementById('bk-awaiting_checkin');if(eac)eac.textContent=awaiting_checkin;
+    const ea=document.getElementById('bk-active');if(ea)ea.textContent=active;
     const et=document.getElementById('bk-total');if(et)et.textContent=allBookings.length;
     renderBookings();
   }catch(e){}
@@ -1255,20 +1261,23 @@ function renderBookings(){
   const tbody=document.getElementById('bookings-tbody');
   if(!tbody)return;
   if(!allBookings.length){tbody.innerHTML='<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--t3);">لا توجد حجوزات بعد</td></tr>';return;}
-  const statusColors={pending:'pm',confirmed:'pj',cancelled:'pcl'};
-  const statusLabels={pending:'جديد',confirmed:'مؤكد',cancelled:'ملغي'};
+  const statusColors={pending:'pm',awaiting_payment:'pa',awaiting_checkin:'pw',active:'pj',checkout:'pp',cancelled:'pcl'};
+  const statusLabels={pending:'جديد',awaiting_payment:'انتظار الدفع',awaiting_checkin:'انتظار دخول العميل',active:'العقد مفتوح الآن',checkout:'خروج',cancelled:'ملغي'};
+  const statusFlow={pending:'awaiting_payment',awaiting_payment:'awaiting_checkin',awaiting_checkin:'active',active:'checkout'};
+  const statusNextLabel={pending:'انتظار الدفع →',awaiting_payment:'تأكيد الدفع →',awaiting_checkin:'دخول العميل →',active:'خروج العميل ✓'};
+  const statusNextStyle={pending:'background:rgba(52,152,219,.15);border:1px solid rgba(52,152,219,.4);color:#2980b9;',awaiting_payment:'background:rgba(230,126,34,.15);border:1px solid rgba(230,126,34,.4);color:#e67e22;',awaiting_checkin:'background:var(--gl);border:1px solid var(--gb);color:var(--gold);',active:'background:rgba(39,174,96,.2);border:1px solid rgba(39,174,96,.5);color:#1e8449;'};
   tbody.innerHTML=allBookings.map(b=>`<tr>
     <td style="font-weight:600;">${b.apt||'—'}</td>
     <td>${b.building||'—'}</td>
     <td>${b.name}</td>
     <td><a href="https://wa.me/${b.phone.replace(/^0/,'966')}" target="_blank" style="color:var(--green);">${b.phone}</a></td>
-    <td>${b.bookingType==='daily'?'🌙 يومي':'📋 شهري'}</td>
+    <td>${b.bookingType==='daily'?'🌙 يومي':b.bookingType==='annual'?'📋 شهري':'💬 استفسار'}</td>
     <td style="font-size:10px;">${b.checkIn?new Date(b.checkIn).toLocaleDateString('ar-SA'):'—'}${b.checkOut&&b.bookingType==='daily'?' ← '+new Date(b.checkOut).toLocaleDateString('ar-SA'):''}</td>
     <td>${b.totalPrice?b.totalPrice.toLocaleString()+' ﷼':'—'}</td>
-    <td><span class="pill ${statusColors[b.status]||''}">${statusLabels[b.status]||b.status}</span></td>
-    <td style="display:flex;gap:4px;">
-      ${b.status==='pending'?`<button class="btn btn-gold" style="font-size:9px;padding:3px 8px;" onclick="updateBookingStatus('${b._id}','confirmed')">تأكيد</button>`:''}
-      ${b.status!=='cancelled'?`<button class="btn" style="font-size:9px;padding:3px 8px;color:var(--red);" onclick="updateBookingStatus('${b._id}','cancelled')">إلغاء</button>`:''}
+    <td><span class="pill ${statusColors[b.status]||'pm'}">${statusLabels[b.status]||b.status}</span></td>
+    <td style="display:flex;gap:4px;flex-wrap:wrap;">
+      ${statusFlow[b.status]?`<button class="btn" style="font-size:9px;padding:3px 8px;${statusNextStyle[b.status]}" onclick="updateBookingStatus('${b._id}','${statusFlow[b.status]}')">${statusNextLabel[b.status]}</button>`:''}
+      ${!['cancelled','completed'].includes(b.status)?`<button class="btn" style="font-size:9px;padding:3px 8px;color:var(--red);" onclick="updateBookingStatus('${b._id}','cancelled')">إلغاء</button>`:''}
       <button class="btn" style="font-size:9px;padding:3px 8px;color:var(--red);border-color:var(--rb);" onclick="deleteBooking('${b._id}')">🗑️</button>
     </td>
   </tr>`).join('');

@@ -122,7 +122,7 @@ router.post('/change-password', requireCustomer, async (req, res) => {
 router.post('/cancel/:bookingId', requireCustomer, async (req, res) => {
   try {
     const booking = await Booking.findOne({ _id: req.params.bookingId, customer: req.customer.id }).lean();
-    if (!booking || booking.status === 'confirmed') return res.redirect('/account');
+    if (!booking || ['active','checkout','cancelled'].includes(booking.status)) return res.redirect('/account');
     await Booking.findByIdAndUpdate(req.params.bookingId, { status: 'cancelled' });
     if (booking.listing) {
       if (booking.bookingType === 'daily') {
