@@ -936,7 +936,7 @@ function renderListings(){
 
   let html='';
   groups.forEach(g=>{
-    const items=allListings.filter(l=>l.category===g.key);
+    const items=allListings.filter(l=>g.key==='rental_apartment'?(!l.category||l.category===g.key):l.category===g.key);
     if(!items.length)return;
     html+=`<div style="grid-column:1/-1;display:flex;align-items:center;gap:10px;margin-top:8px;">
       <span style="font-size:14px;font-weight:700;color:var(--gold);">${g.label}</span>
