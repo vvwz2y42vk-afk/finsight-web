@@ -50,76 +50,65 @@
   </div>
 </section>
 
-<!-- CATEGORY TABS -->
-<div class="cat-tabs-bar">
+<!-- FILTER BAR -->
+<div class="listings-filter-bar" style="position:static;">
   <div class="page-container">
-    <div class="cat-tabs">
-      <a href="/listings?cat=rental_apartment" class="cat-tab <%= cat==='rental_apartment'?'active':'' %>">
-        <span class="cat-tab__ico">🏠</span>
-        <span class="cat-tab__lbl">شقق للإيجار</span>
-        <span class="cat-tab__count"><%= catCounts.rental_apartment||0 %></span>
-      </a>
-      <a href="/listings?cat=rental_commercial" class="cat-tab <%= cat==='rental_commercial'?'active':'' %>">
-        <span class="cat-tab__ico">🏪</span>
-        <span class="cat-tab__lbl">معارض للإيجار</span>
-        <span class="cat-tab__count"><%= catCounts.rental_commercial||0 %></span>
-      </a>
-      <a href="/listings?cat=sale_land" class="cat-tab <%= cat==='sale_land'?'active':'' %>">
-        <span class="cat-tab__ico">🌍</span>
-        <span class="cat-tab__lbl">أراضي للبيع</span>
-        <span class="cat-tab__count"><%= catCounts.sale_land||0 %></span>
-      </a>
-      <a href="/listings?cat=sale_apartment" class="cat-tab <%= cat==='sale_apartment'?'active':'' %>">
-        <span class="cat-tab__ico">🏠</span>
-        <span class="cat-tab__lbl">شقق للبيع</span>
-        <span class="cat-tab__count"><%= catCounts.sale_apartment||0 %></span>
-      </a>
-    </div>
-  </div>
-</div>
-
-<!-- SUB FILTER (apartments) -->
-<% if (cat === 'rental_apartment' || cat === 'sale_apartment') { %>
-<div class="listings-filter-bar" style="position:static;top:unset;">
-  <div class="page-container">
-    <form method="GET" action="/listings" class="listings-filter-form">
+    <form method="GET" action="/listings" class="listings-filter-form" style="flex-wrap:wrap;gap:12px;">
       <input type="hidden" name="cat" value="<%= cat %>">
+
+      <% if (cat==='rental_apartment' || cat==='sale_apartment') { %>
       <div class="lf-group">
         <label class="lf-lbl">المجمع</label>
-        <select name="building" class="lf-select" onchange="this.form.submit()">
+        <select name="building" class="lf-select">
           <option value="">الكل</option>
-          <% buildings.forEach(b => { %>
-          <option value="<%= b %>" <%= q.building===b?'selected':'' %>><%= b %></option>
-          <% }); %>
+          <% buildings.forEach(b => { %><option value="<%= b %>" <%= q.building===b?'selected':'' %>><%= b %></option><% }); %>
         </select>
       </div>
-      <% if (cat === 'rental_apartment') { %>
+      <% } %>
+
+      <% if (cat==='rental_apartment') { %>
       <div class="lf-group">
         <label class="lf-lbl">نوع الإيجار</label>
         <div class="lf-tabs">
-          <a href="/listings?cat=rental_apartment<%= q.building?'&building='+q.building:'' %>&type=all" class="lf-tab <%= !q.type||q.type==='all'?'active':'' %>">الكل</a>
-          <a href="/listings?cat=rental_apartment<%= q.building?'&building='+q.building:'' %>&type=daily" class="lf-tab <%= q.type==='daily'?'active':'' %>">يومي</a>
-          <a href="/listings?cat=rental_apartment<%= q.building?'&building='+q.building:'' %>&type=annual" class="lf-tab <%= q.type==='annual'?'active':'' %>">سنوي</a>
+          <a href="/listings?cat=rental_apartment<%= q.building?'&building='+encodeURIComponent(q.building):'' %>&sort=<%= q.sort||'newest' %>" class="lf-tab <%= !q.type||q.type==='all'?'active':'' %>">الكل</a>
+          <a href="/listings?cat=rental_apartment<%= q.building?'&building='+encodeURIComponent(q.building):'' %>&type=daily&sort=<%= q.sort||'newest' %>" class="lf-tab <%= q.type==='daily'?'active':'' %>">يومي</a>
+          <a href="/listings?cat=rental_apartment<%= q.building?'&building='+encodeURIComponent(q.building):'' %>&type=annual&sort=<%= q.sort||'newest' %>" class="lf-tab <%= q.type==='annual'?'active':'' %>">سنوي</a>
         </div>
       </div>
       <% } %>
-      <div class="lf-count">
+
+      <div class="lf-group">
+        <label class="lf-lbl">السعر (ريال)</label>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <input type="number" name="min_price" class="lf-select" style="width:100px;" placeholder="من" value="<%= q.min_price||'' %>">
+          <span style="color:var(--text3);font-size:12px;">—</span>
+          <input type="number" name="max_price" class="lf-select" style="width:100px;" placeholder="إلى" value="<%= q.max_price||'' %>">
+        </div>
+      </div>
+
+      <div class="lf-group">
+        <label class="lf-lbl">الترتيب</label>
+        <select name="sort" class="lf-select">
+          <option value="newest"     <%= (!q.sort||q.sort==='newest')   ?'selected':'' %>>الأحدث</option>
+          <option value="featured"   <%= q.sort==='featured'            ?'selected':'' %>>المميزة أولاً</option>
+          <option value="price_asc"  <%= q.sort==='price_asc'           ?'selected':'' %>>السعر: من الأقل</option>
+          <option value="price_desc" <%= q.sort==='price_desc'          ?'selected':'' %>>السعر: من الأعلى</option>
+        </select>
+      </div>
+
+      <button type="submit" class="btn btn-gold btn-sm" style="align-self:flex-end;margin-bottom:1px;">تصفية</button>
+
+      <% if (q.min_price||q.max_price||q.sort&&q.sort!=='newest'||(q.type&&q.type!=='all')||q.building) { %>
+      <a href="/listings?cat=<%= cat %>" class="btn btn-sm" style="align-self:flex-end;color:var(--text3);border:1px solid var(--border);">مسح الفلاتر</a>
+      <% } %>
+
+      <div class="lf-count" style="margin-right:auto;">
         <span class="c-gold" style="font-weight:700;font-size:1.1rem;"><%= listings.length %></span>
-        <span style="color:var(--text3);font-size:13px;"> وحدة متاحة</span>
+        <span style="color:var(--text3);font-size:13px;"> نتيجة</span>
       </div>
     </form>
   </div>
 </div>
-<% } else { %>
-<div style="background:var(--light);padding:12px 0;border-bottom:1px solid var(--border);">
-  <div class="page-container">
-    <span class="c-gold" style="font-weight:700;font-size:1.1rem;"><%= listings.length %></span>
-    <span style="color:var(--text3);font-size:13px;">
-      <%= cat==='rental_commercial' ? ' معرض متاح' : cat==='sale_apartment' ? ' شقة للبيع' : ' أرضية متاحة' %>
-    </span>
-  </div>
-</div>
-<% } %>
 
 <!-- LISTINGS GRID -->
 <section style="padding:48px 0 80px;background:<%= (cat==='rental_apartment'||cat==='sale_apartment')?'var(--light)':'#fff' %>;">

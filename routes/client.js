@@ -72,13 +72,33 @@ router.get('/listings', async (req, res) => {
     const filter = { available: true };
     const cat = req.query.cat || 'rental_apartment';
     filter.category = cat;
+
     if (cat === 'rental_apartment' || cat === 'sale_apartment') {
       if (req.query.building) filter.building = req.query.building;
       if (cat === 'rental_apartment' && req.query.type && req.query.type !== 'all') {
         filter.$or = [{ type: req.query.type }, { type: 'both' }];
       }
     }
-    const listings = await Listing.find(filter).sort({ featured: -1, createdAt: -1 }).lean();
+
+    // Price field per category
+    const priceField = (cat === 'sale_land' || cat === 'sale_apartment') ? 'price_sale'
+      : cat === 'rental_commercial' ? 'price_annual' : 'price_daily';
+
+    // Price range filter
+    if (req.query.min_price || req.query.max_price) {
+      filter[priceField] = {};
+      if (req.query.min_price) filter[priceField].$gte = parseInt(req.query.min_price) || 0;
+      if (req.query.max_price) filter[priceField].$lte = parseInt(req.query.max_price) || 999999999;
+    }
+
+    // Sort
+    const sort = req.query.sort || 'newest';
+    let sortObj = { featured: -1, createdAt: -1 };
+    if (sort === 'price_asc')  sortObj = { featured: -1, [priceField]: 1 };
+    if (sort === 'price_desc') sortObj = { featured: -1, [priceField]: -1 };
+    if (sort === 'featured')   sortObj = { featured: -1, createdAt: -1 };
+
+    const listings = await Listing.find(filter).sort(sortObj).lean();
     const counts = await Listing.aggregate([
       { $match: { available: true } },
       { $group: { _id: '$category', count: { $sum: 1 } } },

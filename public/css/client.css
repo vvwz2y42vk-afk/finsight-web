@@ -523,7 +523,10 @@ h3 { font-size: 1.15rem; font-weight: 700; }
 .lf-tabs { display:flex;gap:4px; }
 .lf-tab { padding:7px 16px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;color:var(--text3);background:var(--light);border:1px solid var(--border);transition:all .15s; }
 .lf-tab.active { background:var(--gold);color:#fff;border-color:var(--gold); }
-.lf-count { margin-right:auto;padding:8px 0; }
+.lf-count { padding:8px 0; }
+input[type="number"].lf-select { -moz-appearance:textfield; }
+input[type="number"].lf-select::-webkit-outer-spin-button,
+input[type="number"].lf-select::-webkit-inner-spin-button { -webkit-appearance:none; }
 
 .listing-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:24px; }
 .listing-card { background:#fff;border:1px solid var(--border);border-radius:16px;overflow:hidden;text-decoration:none;color:inherit;transition:box-shadow .2s,transform .2s;display:flex;flex-direction:column; }
