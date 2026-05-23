@@ -183,7 +183,38 @@ router.get('/bookings', auth, async (req, res) => {
 router.put('/bookings/:id', auth, async (req, res) => {
   try {
     const Booking = require('../models/Booking');
+    const Listing = require('../models/Listing');
+
+    const booking = await Booking.findById(req.params.id).lean();
+    if (!booking) return res.status(404).json({ error: 'الحجز غير موجود' });
+
+    const prevStatus = booking.status;
+    const newStatus  = req.body.status;
+
     await Booking.findByIdAndUpdate(req.params.id, req.body);
+
+    if (booking.listing && newStatus && newStatus !== prevStatus) {
+      if (newStatus === 'confirmed') {
+        if (booking.bookingType === 'daily' && booking.checkIn && booking.checkOut) {
+          // block those dates on the listing
+          await Listing.findByIdAndUpdate(booking.listing, {
+            $push: { blockedRanges: { checkIn: booking.checkIn, checkOut: booking.checkOut, bookingId: booking._id } }
+          });
+        } else {
+          // annual / inquiry → mark listing unavailable
+          await Listing.findByIdAndUpdate(booking.listing, { available: false });
+        }
+      } else if (newStatus === 'cancelled') {
+        if (booking.bookingType === 'daily') {
+          await Listing.findByIdAndUpdate(booking.listing, {
+            $pull: { blockedRanges: { bookingId: booking._id } }
+          });
+        } else {
+          await Listing.findByIdAndUpdate(booking.listing, { available: true });
+        }
+      }
+    }
+
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });

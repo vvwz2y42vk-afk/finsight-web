@@ -21,6 +21,11 @@ const listingSchema = new mongoose.Schema({
   photos:       [String],
   available:    { type: Boolean, default: true },
   featured:     { type: Boolean, default: false },
+  blockedRanges: [{
+    checkIn:   Date,
+    checkOut:  Date,
+    bookingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Booking' },
+  }],
 }, { timestamps: true });
 
 module.exports = mongoose.model('Listing', listingSchema);

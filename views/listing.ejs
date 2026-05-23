@@ -6,6 +6,7 @@
 <title><%= listing.title %> — Finsight Real Estate</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/client.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 </head>
 <body class="home-page">
 
@@ -162,8 +163,8 @@
         </div>
         <% } %>
         <div id="dailyFields" style="<%= listing.type==='annual'?'display:none':'display:block' %>">
-          <div class="lbb-row"><label class="lbb-lbl">تاريخ الوصول</label><input type="date" class="lbb-inp" id="checkIn" onchange="calcNights()"></div>
-          <div class="lbb-row"><label class="lbb-lbl">تاريخ المغادرة</label><input type="date" class="lbb-inp" id="checkOut" onchange="calcNights()"></div>
+          <div class="lbb-row"><label class="lbb-lbl">تاريخ الوصول</label><input type="text" class="lbb-inp" id="checkIn" placeholder="اختر التاريخ" readonly></div>
+          <div class="lbb-row"><label class="lbb-lbl">تاريخ المغادرة</label><input type="text" class="lbb-inp" id="checkOut" placeholder="اختر التاريخ" readonly></div>
           <div class="lbb-row"><label class="lbb-lbl">عدد الضيوف</label>
             <select class="lbb-inp" id="guests"><% for(let i=1;i<=listing.maxGuests;i++) { %><option value="<%= i %>"><%= i %> ضيف</option><% } %></select>
           </div>
@@ -289,12 +290,16 @@ function calcNights() {
   btn.href = '/book/<%= listing._id %>?type=daily&checkin=' + ci + '&checkout=' + co + '&guests=' + document.getElementById('guests').value;
 }
 
-// Set min dates
-const today = new Date().toISOString().split('T')[0];
-const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
-document.getElementById('checkIn') && (document.getElementById('checkIn').min = today, document.getElementById('checkIn').value = today);
-document.getElementById('checkOut') && (document.getElementById('checkOut').min = tomorrow, document.getElementById('checkOut').value = tomorrow);
-calcNights();
+// Init Flatpickr if apartment booking box is present
+if (document.getElementById('checkIn')) {
+  const today = new Date().toISOString().split('T')[0];
+  const blockedRanges = <%- JSON.stringify((listing.blockedRanges||[]).map(r=>({from:new Date(r.checkIn).toISOString().split('T')[0],to:new Date(r.checkOut).toISOString().split('T')[0]}))) %>;
+  const fpOpts = { locale: 'ar', minDate: today, dateFormat: 'Y-m-d', disable: blockedRanges, onChange: calcNights };
+  const fpOut = flatpickr('#checkOut', { ...fpOpts, minDate: new Date(Date.now()+86400000) });
+  flatpickr('#checkIn', { ...fpOpts, onClose: d => { if (d[0]) fpOut.set('minDate', d[0]); } });
+}
 </script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ar.js"></script>
 </body>
 </html>

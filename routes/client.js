@@ -114,7 +114,8 @@ router.get('/book/:id', async (req, res) => {
         type: isRentalApt ? (req.query.type || (listing.type === 'daily' ? 'daily' : 'annual')) : 'inquiry',
         checkIn: req.query.checkin || today,
         checkOut: req.query.checkout || tomorrow,
-      }
+      },
+      error: req.query.error || null,
     });
   } catch (e) { res.redirect('/listings'); }
 });
@@ -127,6 +128,13 @@ router.post('/book/:id', async (req, res) => {
     if (!listing) return res.redirect('/listings');
 
     const { name, phone, email, bookingType, checkIn, checkOut, guests, notes } = req.body;
+    // Validate daily: check for overlap with blocked ranges
+    if (bookingType === 'daily' && checkIn && checkOut) {
+      const d1 = new Date(checkIn), d2 = new Date(checkOut);
+      const overlap = (listing.blockedRanges || []).some(r => d1 < new Date(r.checkOut) && d2 > new Date(r.checkIn));
+      if (overlap) return res.redirect(`/book/${req.params.id}?error=overlap`);
+    }
+
     let nights = 0, totalPrice = 0;
     if (bookingType === 'daily' && checkIn && checkOut) {
       const d1 = new Date(checkIn), d2 = new Date(checkOut);

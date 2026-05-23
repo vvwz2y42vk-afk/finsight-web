@@ -6,6 +6,7 @@
 <title>حجز — <%= listing.title %> — Finsight</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/client.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 </head>
 <body class="home-page">
 
@@ -62,6 +63,12 @@
       <p style="color:var(--text3);font-size:13px;margin-bottom:28px;">أدخل بياناتك وسيتواصل معك فريقنا لتأكيد الحجز</p>
       <% } %>
 
+      <% if (error === 'overlap') { %>
+      <div style="background:rgba(192,57,43,.08);border:1px solid rgba(192,57,43,.3);border-radius:12px;padding:14px 16px;margin-bottom:20px;font-size:14px;color:#c0392b;font-weight:600;">
+        ⚠️ التواريخ المختارة محجوزة. اختر تواريخ أخرى.
+      </div>
+      <% } %>
+
       <form method="POST" action="/book/<%= listing._id %>">
 
         <% if (listing.category !== 'rental_apartment') { %>
@@ -106,11 +113,11 @@
           <div class="book-form-grid">
             <div>
               <label class="form-lbl">تاريخ الوصول</label>
-              <input type="date" name="checkIn" class="form-inp" value="<%= prefill.checkIn %>" min="<%= new Date().toISOString().split('T')[0] %>" onchange="calcTotal()">
+              <input type="text" name="checkIn" id="fp-checkin" class="form-inp" placeholder="اختر تاريخ الوصول" readonly>
             </div>
             <div>
               <label class="form-lbl">تاريخ المغادرة</label>
-              <input type="date" name="checkOut" class="form-inp" value="<%= prefill.checkOut %>" onchange="calcTotal()">
+              <input type="text" name="checkOut" id="fp-checkout" class="form-inp" placeholder="اختر تاريخ المغادرة" readonly>
             </div>
           </div>
           <div style="margin-bottom:20px;">
@@ -194,21 +201,22 @@
   </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ar.js"></script>
 <script>
 function toggleNav() {
   document.getElementById('navLinks').classList.toggle('open');
   document.getElementById('hamburger').classList.toggle('active');
 }
 const priceDaily = <%= listing.price_daily || 0 %>;
+const blockedRanges = <%- JSON.stringify((listing.blockedRanges||[]).map(r=>({from:new Date(r.checkIn).toISOString().split('T')[0],to:new Date(r.checkOut).toISOString().split('T')[0]}))) %>;
+const today = new Date().toISOString().split('T')[0];
 
-function toggleType(type) {
-  document.getElementById('dailySection').style.display = type === 'daily' ? 'block' : 'none';
-  document.getElementById('annualSection').style.display = type === 'annual' ? 'block' : 'none';
-}
+let fpIn, fpOut;
 
 function calcTotal() {
-  const ci = document.querySelector('[name=checkIn]').value;
-  const co = document.querySelector('[name=checkOut]').value;
+  const ci = document.getElementById('fp-checkin')?.value;
+  const co = document.getElementById('fp-checkout')?.value;
   if (!ci || !co) return;
   const n = Math.max(1, Math.round((new Date(co) - new Date(ci)) / 86400000));
   document.getElementById('totalNights').textContent = n + ' ليلة × ' + priceDaily.toLocaleString('ar-SA') + ' ريال';
@@ -216,7 +224,23 @@ function calcTotal() {
   document.getElementById('totalFinal').textContent = (n * priceDaily).toLocaleString('ar-SA') + ' ريال';
   document.getElementById('totalBox').style.display = 'block';
 }
-calcTotal();
+}
+
+function toggleType(type) {
+  document.getElementById('dailySection').style.display = type === 'daily' ? 'block' : 'none';
+  document.getElementById('annualSection').style.display = type === 'annual' ? 'block' : 'none';
+}
+
+// Init Flatpickr date pickers with blocked ranges
+const fpOpts = {
+  locale: 'ar',
+  minDate: today,
+  dateFormat: 'Y-m-d',
+  disable: blockedRanges,
+  onChange: calcTotal,
+};
+fpIn  = flatpickr('#fp-checkin',  { ...fpOpts, onClose: d => { if(fpOut) fpOut.set('minDate', d[0] || today); } });
+fpOut = flatpickr('#fp-checkout', { ...fpOpts, minDate: new Date(Date.now()+86400000) });
 </script>
 </body>
 </html>
