@@ -282,7 +282,7 @@ tbody td{padding:7px 5px;font-size:11px;}
       <button class="btn btn-gold" id="addBtn" onclick="openAdd()" style="display:none">+ إضافة عقد</button>
     </div>
   </div>
-  <div class="tabs">
+  <div class="tabs" style="display:none;">
     <button id="tab-nav-dashboard" class="tab active" onclick="st('dashboard',this)">⬡ الرئيسية</button>
     <button id="tab-nav-contracts" class="tab" onclick="st('contracts',this)">📋 العقود</button>
     <button id="tab-nav-commissions" class="tab" onclick="st('commissions',this)">💰 العمولات</button>
@@ -905,11 +905,12 @@ function renderListings(){
   if(!allListings.length){grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--t3);">لا توجد إعلانات — ابدأ بإضافة أول إعلان</div>';return;}
 
   const groups=[
-    {key:'rental_apartment', label:'🏠 شقق للإيجار'},
+    {key:'rental_apartment', label:'🏠 شقق للإيجار', buildings:['الكل','المنارا','جوان ان','الماسة','الواحة']},
     {key:'rental_commercial',label:'🏪 معارض للإيجار'},
     {key:'sale_apartment',   label:'🏠 شقق للبيع'},
     {key:'sale_land',        label:'🌍 أراضي للبيع'},
   ];
+  if(!window._bldFilter) window._bldFilter='الكل';
 
   function cardInfo(l){
     const cat=l.category||'rental_apartment';
@@ -936,14 +937,19 @@ function renderListings(){
 
   let html='';
   groups.forEach(g=>{
-    const items=allListings.filter(l=>g.key==='rental_apartment'?(!l.category||l.category===g.key):l.category===g.key);
+    let items=allListings.filter(l=>g.key==='rental_apartment'?(!l.category||l.category===g.key):l.category===g.key);
     if(!items.length)return;
-    html+=`<div style="grid-column:1/-1;display:flex;align-items:center;gap:10px;margin-top:8px;">
+    const filteredItems = (g.buildings && window._bldFilter!=='الكل')
+      ? items.filter(l=>l.building===window._bldFilter) : items;
+    const bldPills = g.buildings ? g.buildings.map(b=>`
+      <button onclick="window._bldFilter='${b}';renderListings();" style="padding:2px 10px;font-size:10px;border-radius:20px;border:1px solid var(--b);background:${window._bldFilter===b?'var(--gold)':'var(--s2)'};color:${window._bldFilter===b?'#fff':'var(--t2)'};cursor:pointer;">${b}</button>`).join('') : '';
+    html+=`<div style="grid-column:1/-1;display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap;">
       <span style="font-size:14px;font-weight:700;color:var(--gold);">${g.label}</span>
-      <span style="font-size:11px;color:var(--t3);">(${items.length})</span>
-      <div style="flex:1;height:1px;background:var(--b);"></div>
+      <span style="font-size:11px;color:var(--t3);">(${filteredItems.length}/${items.length})</span>
+      ${bldPills}
+      <div style="flex:1;height:1px;background:var(--b);min-width:20px;"></div>
     </div>`;
-    html+=items.map(l=>`
+    html+=filteredItems.map(l=>`
     <div style="background:var(--s);border:1px solid var(--b);border-radius:12px;overflow:hidden;">
       <div style="aspect-ratio:16/9;background:var(--s2);display:flex;align-items:center;justify-content:center;font-size:2rem;position:relative;overflow:hidden;">
         ${l.photos&&l.photos.length?`<img src="${l.photos[0]}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">`:'🏢'}
