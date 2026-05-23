@@ -171,7 +171,7 @@
           <% if (listing.type==='annual'||listing.type==='both') { %>
           <% if(listing.type==='both') { %><div style="font-size:12px;color:var(--text3);margin-top:4px;">أو</div><% } %>
           <span class="lbb-price__num" style="<%= listing.type==='both'?'font-size:1.2rem;':'' %>"><%= listing.price_annual.toLocaleString() %></span>
-          <span class="lbb-price__unit"> ريال / سنة</span>
+          <span class="lbb-price__unit"> ريال / شهر</span>
           <% } %>
         </div>
         <% if (listing.type==='both') { %>
@@ -197,7 +197,7 @@
         <!-- COMMERCIAL INQUIRY BOX -->
         <div class="lbb-price">
           <span class="lbb-price__num"><%= (listing.price_annual||0).toLocaleString() %></span>
-          <span class="lbb-price__unit"> ريال / سنة</span>
+          <span class="lbb-price__unit"> ريال / شهر</span>
         </div>
         <div style="background:var(--light);border-radius:10px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:var(--text3);line-height:1.8;">
           <% if (listing.area) { %><div>📐 المساحة: <strong style="color:var(--dark);"><%= listing.area %> م²</strong></div><% } %>
