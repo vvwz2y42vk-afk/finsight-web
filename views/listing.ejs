@@ -23,6 +23,7 @@
       <a href="/listings?cat=rental_apartment" class="csb-sublnk">🛏 شقق للإيجار</a>
       <a href="/listings?cat=rental_commercial" class="csb-sublnk">🏪 معارض للإيجار</a>
       <a href="/listings?cat=sale_land" class="csb-sublnk">🌍 أراضي للبيع</a>
+      <a href="/listings?cat=sale_apartment" class="csb-sublnk">🏠 شقق للبيع</a>
     </div>
     <div class="csb-divider"></div>
     <a href="/about" class="csb-lnk"><span class="csb-ico">ℹ️</span><span>من نحن</span></a>
@@ -88,12 +89,14 @@
 
       <!-- LEFT: INFO -->
       <div class="listing-info">
-        <% const isApt = listing.category==='rental_apartment'; const isComm = listing.category==='rental_commercial'; const isLand = listing.category==='sale_land'; %>
+        <% const isApt = listing.category==='rental_apartment'; const isComm = listing.category==='rental_commercial'; const isLand = listing.category==='sale_land'; const isSaleApt = listing.category==='sale_apartment'; %>
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
           <% if (isApt) { %>
           <span class="lc-badge lc-badge--type" style="font-size:12px;"><%= listing.type==='daily'?'يومي':listing.type==='annual'?'سنوي':'يومي + سنوي' %></span>
           <% } else if (isComm) { %>
           <span class="lc-badge lc-badge--type" style="font-size:12px;">معرض للإيجار</span>
+          <% } else if (isSaleApt) { %>
+          <span class="lc-badge lc-badge--type" style="font-size:12px;background:rgba(212,175,55,.9);">شقة للبيع</span>
           <% } else { %>
           <span class="lc-badge lc-badge--type" style="font-size:12px;background:rgba(212,175,55,.9);">أرض للبيع</span>
           <% } %>
@@ -101,7 +104,7 @@
         </div>
         <h1 style="font-size:clamp(1.5rem,3vw,2rem);font-weight:800;line-height:1.3;margin-bottom:8px;"><%= listing.title %></h1>
         <p style="color:var(--text3);font-size:14px;margin-bottom:24px;">
-          <% if (isApt && listing.building) { %>📍 <%= listing.building %><% if(listing.apt){ %> — شقة <%= listing.apt %><% } %><% if(listing.floor){ %> | الدور <%= listing.floor %><% } %>
+          <% if ((isApt || isSaleApt) && listing.building) { %>📍 <%= listing.building %><% if(listing.apt){ %> — شقة <%= listing.apt %><% } %><% if(listing.floor){ %> | الدور <%= listing.floor %><% } %>
           <% } else if (listing.location) { %>📍 <%= listing.location %>
           <% } %>
         </p>
@@ -112,15 +115,18 @@
           <div class="listing-stat"><div class="listing-stat__val"><%= listing.maxGuests %></div><div class="listing-stat__lbl">ضيوف</div></div>
           <div class="listing-stat"><div class="listing-stat__val"><%= listing.bedrooms %></div><div class="listing-stat__lbl"><%= listing.bedrooms===1?'غرفة':'غرف' %></div></div>
           <div class="listing-stat"><div class="listing-stat__val"><%= listing.bathrooms %></div><div class="listing-stat__lbl">حمام</div></div>
+          <% } else if (isSaleApt) { %>
+          <div class="listing-stat"><div class="listing-stat__val"><%= listing.bedrooms %></div><div class="listing-stat__lbl"><%= listing.bedrooms===1?'غرفة':'غرف' %></div></div>
+          <div class="listing-stat"><div class="listing-stat__val"><%= listing.bathrooms %></div><div class="listing-stat__lbl">حمام</div></div>
           <% } %>
           <% if (listing.area) { %><div class="listing-stat"><div class="listing-stat__val"><%= listing.area %></div><div class="listing-stat__lbl">م²</div></div><% } %>
           <% if (isLand && listing.frontage) { %><div class="listing-stat"><div class="listing-stat__val"><%= listing.frontage %></div><div class="listing-stat__lbl">م واجهة</div></div><% } %>
           <% if (!isApt) { %>
           <div class="listing-stat">
             <div class="listing-stat__val" style="font-size:1rem;">
-              <%= isLand?(listing.price_sale||0).toLocaleString():(listing.price_annual||0).toLocaleString() %>
+              <%= (isLand||isSaleApt)?(listing.price_sale||0).toLocaleString():(listing.price_annual||0).toLocaleString() %>
             </div>
-            <div class="listing-stat__lbl">ريال <%= isLand?'سعر البيع':'/سنة' %></div>
+            <div class="listing-stat__lbl">ريال <%= (isLand||isSaleApt)?'سعر البيع':'/سنة' %></div>
           </div>
           <% } %>
         </div>
@@ -196,6 +202,20 @@
         <div style="background:var(--light);border-radius:10px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:var(--text3);line-height:1.8;">
           <% if (listing.area) { %><div>📐 المساحة: <strong style="color:var(--dark);"><%= listing.area %> م²</strong></div><% } %>
           <% if (listing.floor) { %><div>🏢 الدور: <strong style="color:var(--dark);"><%= listing.floor %></strong></div><% } %>
+        </div>
+        <a href="/book/<%= listing._id %>" class="btn btn-gold" style="width:100%;justify-content:center;padding:14px;font-size:1rem;font-weight:700;border-radius:12px;">أرسل استفساراً</a>
+
+        <% } else if (isSaleApt) { %>
+        <!-- SALE APARTMENT INQUIRY BOX -->
+        <div class="lbb-price">
+          <span class="lbb-price__num"><%= (listing.price_sale||0).toLocaleString() %></span>
+          <span class="lbb-price__unit"> ريال</span>
+        </div>
+        <div style="background:var(--light);border-radius:10px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:var(--text3);line-height:1.8;">
+          <% if (listing.bedrooms) { %><div>🛏 الغرف: <strong style="color:var(--dark);"><%= listing.bedrooms %> <%= listing.bedrooms===1?'غرفة':'غرف' %></strong></div><% } %>
+          <% if (listing.bathrooms) { %><div>🚿 الحمامات: <strong style="color:var(--dark);"><%= listing.bathrooms %></strong></div><% } %>
+          <% if (listing.area) { %><div>📐 المساحة: <strong style="color:var(--dark);"><%= listing.area %> م²</strong></div><% } %>
+          <% if (listing.area && listing.price_sale) { %><div>💰 السعر/م²: <strong style="color:var(--gold);"><%= Math.round(listing.price_sale/listing.area).toLocaleString() %> ريال</strong></div><% } %>
         </div>
         <a href="/book/<%= listing._id %>" class="btn btn-gold" style="width:100%;justify-content:center;padding:14px;font-size:1rem;font-weight:700;border-radius:12px;">أرسل استفساراً</a>
 

@@ -72,9 +72,9 @@ router.get('/listings', async (req, res) => {
     const filter = { available: true };
     const cat = req.query.cat || 'rental_apartment';
     filter.category = cat;
-    if (cat === 'rental_apartment') {
+    if (cat === 'rental_apartment' || cat === 'sale_apartment') {
       if (req.query.building) filter.building = req.query.building;
-      if (req.query.type && req.query.type !== 'all') {
+      if (cat === 'rental_apartment' && req.query.type && req.query.type !== 'all') {
         filter.$or = [{ type: req.query.type }, { type: 'both' }];
       }
     }

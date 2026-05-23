@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const listingSchema = new mongoose.Schema({
-  category:     { type: String, enum: ['rental_apartment','rental_commercial','sale_land'], default: 'rental_apartment' },
+  category:     { type: String, enum: ['rental_apartment','rental_commercial','sale_land','sale_apartment'], default: 'rental_apartment' },
   building:     String,
   apt:          String,
   floor:        String,

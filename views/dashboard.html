@@ -470,7 +470,7 @@ tbody td{padding:7px 5px;font-size:11px;}
     <div class="modal-hd"><div class="modal-title" id="listingFormTitle">+ إعلان جديد</div><button class="modal-close" onclick="closeListingForm()">×</button></div>
     <div class="modal-body">
       <div class="form-grid">
-        <div class="form-full"><label class="form-lbl">نوع العقار *</label><select class="form-inp" id="lf-category" onchange="toggleListingFields()"><option value="rental_apartment">🏠 شقة للإيجار</option><option value="rental_commercial">🏪 معرض للإيجار</option><option value="sale_land">🌍 أرض للبيع</option></select></div>
+        <div class="form-full"><label class="form-lbl">نوع العقار *</label><select class="form-inp" id="lf-category" onchange="toggleListingFields()"><option value="rental_apartment">🏠 شقة للإيجار</option><option value="rental_commercial">🏪 معرض للإيجار</option><option value="sale_land">🌍 أرض للبيع</option><option value="sale_apartment">🏠 شقة للبيع</option></select></div>
         <div class="form-full"><label class="form-lbl">العنوان *</label><input class="form-inp" id="lf-title" type="text" placeholder="مثال: أرض تجارية في حي الإسكان"></div>
         <div class="form-full"><label class="form-lbl">الوصف</label><textarea class="form-inp" id="lf-desc" rows="2" style="resize:vertical" placeholder="وصف العقار..."></textarea></div>
 
@@ -913,12 +913,18 @@ function renderListings(){
 
 function toggleListingFields(){
   const cat=document.getElementById('lf-category').value;
-  const aptOnly=['lf-apt-group','lf-aptnum-group','lf-renttype-group','lf-beds-group','lf-baths-group','lf-guests-group','lf-pdaily-group','lf-pannual-group'];
-  const landOnly=['lf-psale-group','lf-frontage-group'];
-  const commOnly=['lf-pannual-group'];
-  aptOnly.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display=cat==='rental_apartment'?'':'none';});
-  landOnly.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display=cat==='sale_land'?'':'none';});
-  if(cat==='rental_commercial'){const el=document.getElementById('lf-pannual-group');if(el)el.style.display='';}
+  const isApt=cat==='rental_apartment', isSaleApt=cat==='sale_apartment', isLand=cat==='sale_land', isComm=cat==='rental_commercial';
+  const s=(id,v)=>{const el=document.getElementById(id);if(el)el.style.display=v?'':'none';};
+  s('lf-apt-group',    isApt||isSaleApt);
+  s('lf-aptnum-group', isApt||isSaleApt);
+  s('lf-renttype-group', isApt);
+  s('lf-beds-group',   isApt||isSaleApt);
+  s('lf-baths-group',  isApt||isSaleApt);
+  s('lf-guests-group', isApt);
+  s('lf-pdaily-group', isApt);
+  s('lf-pannual-group',isApt||isComm);
+  s('lf-psale-group',  isLand||isSaleApt);
+  s('lf-frontage-group',isLand);
 }
 
 function openListingForm(id){
@@ -957,17 +963,17 @@ async function saveListing(){
   const cat=document.getElementById('lf-category').value;
   const data={
     category:cat,
-    building:cat==='rental_apartment'?document.getElementById('lf-building').value:'',
-    apt:cat==='rental_apartment'?apt:'',
+    building:(cat==='rental_apartment'||cat==='sale_apartment')?document.getElementById('lf-building').value:'',
+    apt:(cat==='rental_apartment'||cat==='sale_apartment')?apt:'',
     floor:document.getElementById('lf-floor').value.trim(),
     location:document.getElementById('lf-location').value.trim(),
     type:cat==='rental_apartment'?document.getElementById('lf-type').value:'annual',
     title,description:document.getElementById('lf-desc').value.trim(),
     price_daily:cat==='rental_apartment'?parseFloat(document.getElementById('lf-price-daily').value)||0:0,
-    price_annual:cat!=='sale_land'?parseFloat(document.getElementById('lf-price-annual').value)||0:0,
-    price_sale:cat==='sale_land'?parseFloat(document.getElementById('lf-price-sale').value)||0:0,
-    bedrooms:cat==='rental_apartment'?parseInt(document.getElementById('lf-beds').value)||1:0,
-    bathrooms:cat==='rental_apartment'?parseInt(document.getElementById('lf-baths').value)||1:0,
+    price_annual:(cat==='rental_apartment'||cat==='rental_commercial')?parseFloat(document.getElementById('lf-price-annual').value)||0:0,
+    price_sale:(cat==='sale_land'||cat==='sale_apartment')?parseFloat(document.getElementById('lf-price-sale').value)||0:0,
+    bedrooms:(cat==='rental_apartment'||cat==='sale_apartment')?parseInt(document.getElementById('lf-beds').value)||1:0,
+    bathrooms:(cat==='rental_apartment'||cat==='sale_apartment')?parseInt(document.getElementById('lf-baths').value)||1:0,
     area:parseFloat(document.getElementById('lf-area').value)||0,
     frontage:cat==='sale_land'?parseFloat(document.getElementById('lf-frontage').value)||0:0,
     maxGuests:cat==='rental_apartment'?parseInt(document.getElementById('lf-guests').value)||4:0,
