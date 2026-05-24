@@ -159,11 +159,21 @@
           <span class="bk-date">طُلب: <%= new Date(b.createdAt).toLocaleDateString('ar-SA') %></span>
         </div>
       </div>
-      <% if (!['active','checkout','cancelled'].includes(b.status)) { %>
-      <form method="POST" action="/account/cancel/<%= b._id %>" onsubmit="return confirm('هل تريد إلغاء هذا الحجز؟')">
-        <button type="submit" class="bk-cancel-btn">إلغاء</button>
-      </form>
-      <% } %>
+      <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
+        <% if (b.status === 'awaiting_payment' && b.totalPrice) { %>
+        <a href="/account/pay/<%= b._id %>" style="display:inline-flex;align-items:center;gap:6px;padding:9px 18px;background:linear-gradient(135deg,#DAA520,#f0c040);border-radius:10px;color:#111;font-family:'Cairo',sans-serif;font-size:13px;font-weight:800;text-decoration:none;white-space:nowrap;">
+          💳 ادفع الآن
+        </a>
+        <% } %>
+        <% if (!['active','checkout','cancelled'].includes(b.status)) { %>
+        <form method="POST" action="/account/cancel/<%= b._id %>" onsubmit="return confirm('هل تريد إلغاء هذا الحجز؟')">
+          <button type="submit" class="bk-cancel-btn">إلغاء</button>
+        </form>
+        <% } %>
+        <% if (b.paidAt) { %>
+        <span style="font-size:10px;color:var(--green, #1a7340);font-weight:600;">✅ مدفوع</span>
+        <% } %>
+      </div>
     </div>
     <% }); %>
     <% } %>

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>إتمام الدفع — Finsight Real Estate</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.moyasar.com/mpf/1.14.0/moyasar.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Cairo',sans-serif;background:linear-gradient(135deg,#0f0f1a 0%,#1a1a2e 100%);min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:40px 16px 80px;}
+.wrap{width:100%;max-width:520px;}
+
+/* Header */
+.pay-header{text-align:center;margin-bottom:28px;}
+.pay-logo{display:inline-flex;align-items:center;gap:10px;margin-bottom:20px;text-decoration:none;}
+.pay-logo-icon{width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#DAA520,#f0c040);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#111;}
+.pay-logo-name{font-size:1.1rem;font-weight:900;color:#fff;letter-spacing:1px;}
+.pay-logo-sub{font-size:9px;color:rgba(218,165,32,.6);letter-spacing:2px;text-transform:uppercase;}
+
+/* Booking summary card */
+.booking-card{background:rgba(255,255,255,.04);border:1px solid rgba(218,165,32,.2);border-radius:16px;padding:20px 24px;margin-bottom:20px;}
+.bk-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:13px;}
+.bk-row:last-child{border-bottom:none;}
+.bk-lbl{color:rgba(255,255,255,.45);}
+.bk-val{color:#fff;font-weight:600;}
+.bk-total{margin-top:8px;padding-top:14px;border-top:1px solid rgba(218,165,32,.2);display:flex;justify-content:space-between;align-items:center;}
+.bk-total-lbl{font-size:13px;color:rgba(218,165,32,.7);font-weight:700;}
+.bk-total-val{font-size:1.5rem;font-weight:900;color:#DAA520;}
+
+/* Payment form override */
+.pay-form-wrap{background:rgba(255,255,255,.04);border:1px solid rgba(218,165,32,.15);border-radius:16px;padding:24px;margin-bottom:16px;}
+.pay-form-title{font-size:14px;font-weight:700;color:#fff;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.pay-form-title span{font-size:18px;}
+
+/* Moyasar form RTL fix */
+.mysr-form{direction:ltr;text-align:left;}
+.mysr-form input,.mysr-form select{font-family:'Cairo',sans-serif!important;}
+
+/* Secure badge */
+.secure-badge{text-align:center;font-size:11px;color:rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;gap:6px;margin-top:10px;}
+
+/* Error */
+.pay-err{background:rgba(231,76,60,.1);border:1px solid rgba(231,76,60,.3);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:#e74c3c;font-weight:600;}
+
+/* No-key dev banner */
+.dev-banner{background:rgba(52,152,219,.1);border:1px solid rgba(52,152,219,.3);border-radius:12px;padding:16px 20px;text-align:center;color:rgba(52,152,219,.9);font-size:13px;line-height:1.9;}
+.dev-banner strong{display:block;font-size:14px;margin-bottom:4px;}
+
+/* Back link */
+.back-link{display:block;text-align:center;margin-top:16px;color:rgba(255,255,255,.3);font-size:13px;text-decoration:none;}
+.back-link:hover{color:rgba(218,165,32,.7);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Logo -->
+  <div class="pay-header">
+    <a href="/" class="pay-logo">
+      <div class="pay-logo-icon">FS</div>
+      <div>
+        <div class="pay-logo-name">Finsight</div>
+        <div class="pay-logo-sub">REAL ESTATE</div>
+      </div>
+    </a>
+  </div>
+
+  <!-- Error -->
+  <% if (error) { %>
+  <div class="pay-err">⚠️ <%= error %></div>
+  <% } %>
+
+  <!-- Booking summary -->
+  <div class="booking-card">
+    <% if (booking.listing?.photos?.[0]) { %>
+    <img src="<%= booking.listing.photos[0] %>" alt="" style="width:100%;height:140px;object-fit:cover;border-radius:10px;margin-bottom:14px;">
+    <% } %>
+    <div class="bk-row">
+      <span class="bk-lbl">العقار</span>
+      <span class="bk-val"><%= booking.listingTitle || 'عقار' %></span>
+    </div>
+    <% if (booking.building) { %>
+    <div class="bk-row">
+      <span class="bk-lbl">المجمع</span>
+      <span class="bk-val"><%= booking.building %></span>
+    </div>
+    <% } %>
+    <% if (booking.checkIn) { %>
+    <div class="bk-row">
+      <span class="bk-lbl">تاريخ الدخول</span>
+      <span class="bk-val"><%= new Date(booking.checkIn).toLocaleDateString('ar-SA') %></span>
+    </div>
+    <% } %>
+    <% if (booking.checkOut && booking.bookingType === 'daily') { %>
+    <div class="bk-row">
+      <span class="bk-lbl">تاريخ الخروج</span>
+      <span class="bk-val"><%= new Date(booking.checkOut).toLocaleDateString('ar-SA') %></span>
+    </div>
+    <div class="bk-row">
+      <span class="bk-lbl">عدد الليالي</span>
+      <span class="bk-val"><%= booking.nights || 1 %> ليلة</span>
+    </div>
+    <% } %>
+    <div class="bk-row">
+      <span class="bk-lbl">الاسم</span>
+      <span class="bk-val"><%= booking.name %></span>
+    </div>
+    <div class="bk-total">
+      <span class="bk-total-lbl">المبلغ المستحق</span>
+      <span class="bk-total-val"><%= (booking.totalPrice || 0).toLocaleString('ar-SA') %> ريال</span>
+    </div>
+  </div>
+
+  <!-- Payment form -->
+  <% if (!publishableKey) { %>
+  <div class="dev-banner">
+    <strong>⚙️ وضع التطوير</strong>
+    لم يتم إعداد مفتاح Moyasar بعد.<br>
+    أضف <code>MOYASAR_PUBLISHABLE_KEY</code> و <code>MOYASAR_SECRET_KEY</code> في متغيرات البيئة على Vercel.
+  </div>
+  <% } else { %>
+  <div class="pay-form-wrap">
+    <div class="pay-form-title"><span>💳</span> تفاصيل الدفع</div>
+    <div class="mysr-form"></div>
+  </div>
+  <div class="secure-badge">
+    🔒 الدفع مؤمّن بواسطة Moyasar — بيانات بطاقتك مشفّرة بالكامل
+  </div>
+  <% } %>
+
+  <a href="/account" class="back-link">← العودة لحسابي</a>
+
+</div>
+
+<% if (publishableKey) { %>
+<script src="https://polyfill.io/v3/polyfill.min.js?features=fetch"></script>
+<script src="https://cdn.moyasar.com/mpf/1.14.0/moyasar.js"></script>
+<script>
+Moyasar.init({
+  element: '.mysr-form',
+  amount: <%= Math.round((booking.totalPrice || 0) * 100) %>,
+  currency: 'SAR',
+  description: '<%= (booking.listingTitle || "حجز عقار").replace(/'/g, "\\'") %> — Finsight',
+  publishable_api_key: '<%= publishableKey %>',
+  callback_url: '<%= baseUrl %>/account/pay/<%= booking._id %>/callback',
+  methods: ['creditcard', 'applepay', 'stcpay'],
+  apple_pay: {
+    country: 'SA',
+    label: 'Finsight Real Estate',
+    validate_merchant_url: 'https://api.moyasar.com/v1/applepay/initiate',
+  },
+  on_initiating: function() {},
+  on_completed: function(payment) { console.log('payment', payment); }
+});
+</script>
+<% } %>
+</body>
+</html>

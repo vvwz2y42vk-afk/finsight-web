@@ -118,6 +118,63 @@ router.post('/change-password', requireCustomer, async (req, res) => {
   }
 });
 
+// ─── Payment page ────────────────────────────────────────
+router.get('/pay/:bookingId', async (req, res) => {
+  try {
+    const booking = await Booking.findById(req.params.bookingId).populate('listing','title photos').lean();
+    if (!booking) return res.redirect('/account');
+    if (booking.status !== 'awaiting_payment') {
+      const msg = booking.status === 'awaiting_checkin' ? 'تم الدفع مسبقاً' : 'هذا الحجز غير متاح للدفع';
+      return res.redirect('/account?success=' + encodeURIComponent(msg));
+    }
+    const baseUrl = process.env.BASE_URL || `https://${req.headers.host}`;
+    res.render('pay', {
+      booking,
+      baseUrl,
+      publishableKey: process.env.MOYASAR_PUBLISHABLE_KEY || '',
+      error: req.query.error || null,
+    });
+  } catch (e) { res.redirect('/account'); }
+});
+
+// ─── Payment callback ─────────────────────────────────────
+router.get('/pay/:bookingId/callback', async (req, res) => {
+  try {
+    const { id: paymentId, status, message } = req.query;
+    const booking = await Booking.findById(req.params.bookingId).lean();
+    if (!booking || booking.status !== 'awaiting_payment') return res.redirect('/account');
+
+    if (status === 'paid' && paymentId) {
+      // Verify with Moyasar API
+      const secretKey = process.env.MOYASAR_SECRET_KEY || '';
+      let verified = false;
+      if (secretKey) {
+        try {
+          const r = await fetch(`https://api.moyasar.com/v1/payments/${paymentId}`, {
+            headers: { 'Authorization': 'Basic ' + Buffer.from(secretKey + ':').toString('base64') }
+          });
+          const data = await r.json();
+          verified = data.status === 'paid' && data.amount === Math.round((booking.totalPrice || 0) * 100);
+        } catch (e) {}
+      } else {
+        verified = true; // dev mode: no secret key, trust Moyasar redirect
+      }
+
+      if (verified) {
+        await Booking.findByIdAndUpdate(booking._id, {
+          status: 'awaiting_checkin',
+          paymentId,
+          paidAt: new Date(),
+        });
+        return res.redirect('/account?success=' + encodeURIComponent('✅ تم الدفع بنجاح! سيتم التواصل معك لتنسيق الدخول'));
+      }
+    }
+
+    const errMsg = status === 'failed' ? 'فشلت عملية الدفع، حاول مرة أخرى' : 'تم إلغاء الدفع';
+    res.redirect(`/account/pay/${req.params.bookingId}?error=` + encodeURIComponent(errMsg));
+  } catch (e) { res.redirect('/account'); }
+});
+
 // ─── Cancel booking ──────────────────────────────────────
 router.post('/cancel/:bookingId', requireCustomer, async (req, res) => {
   try {

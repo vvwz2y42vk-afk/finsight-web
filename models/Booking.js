@@ -17,6 +17,8 @@ const bookingSchema = new mongoose.Schema({
   totalPrice:   Number,
   status:       { type: String, enum: ['pending','awaiting_payment','awaiting_checkin','active','checkout','cancelled'], default: 'pending' },
   notes:        String,
+  paymentId:    String,
+  paidAt:       Date,
 }, { timestamps: true });
 
 module.exports = mongoose.model('Booking', bookingSchema);
