@@ -4,6 +4,7 @@ const Customer = require('../models/Customer');
 const Booking = require('../models/Booking');
 const Listing = require('../models/Listing');
 const { createToken } = require('../utils/auth');
+const Review = require('../models/Review');
 
 const COOKIE_OPTS = { httpOnly: true, maxAge: 30 * 24 * 60 * 60 * 1000, sameSite: 'lax' };
 
@@ -189,6 +190,42 @@ router.post('/cancel/:bookingId', requireCustomer, async (req, res) => {
       }
     }
     res.redirect('/account?success=تم+إلغاء+الحجز');
+  } catch (e) {
+    res.redirect('/account');
+  }
+});
+
+// ─── Submit review ────────────────────────────────────────
+router.post('/review/:bookingId', requireCustomer, async (req, res) => {
+  try {
+    const booking = await Booking.findOne({ _id: req.params.bookingId, customer: req.customer.id }).lean();
+    if (!booking || booking.status !== 'checkout') return res.redirect('/account');
+    if (!booking.listing) return res.redirect('/account');
+
+    const existing = await Review.findOne({ booking: booking._id });
+    if (existing) return res.redirect('/account?success=' + encodeURIComponent('سبق أن قيّمت هذا الحجز'));
+
+    const rating = Math.min(5, Math.max(1, parseInt(req.body.rating) || 5));
+    const comment = (req.body.comment || '').trim().slice(0, 600);
+
+    await new Review({
+      listing: booking.listing,
+      booking: booking._id,
+      customer: req.customer.id,
+      customerName: req.customer.name,
+      rating,
+      comment,
+    }).save();
+
+    // Update listing avg rating
+    const reviews = await Review.find({ listing: booking.listing });
+    const avg = reviews.reduce((s, r) => s + r.rating, 0) / reviews.length;
+    await Listing.findByIdAndUpdate(booking.listing, {
+      avgRating: Math.round(avg * 10) / 10,
+      reviewCount: reviews.length,
+    });
+
+    res.redirect('/account?success=' + encodeURIComponent('✅ شكراً! تم إرسال تقييمك'));
   } catch (e) {
     res.redirect('/account');
   }

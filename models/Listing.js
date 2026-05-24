@@ -34,6 +34,8 @@ const listingSchema = new mongoose.Schema({
   checkOutTime:       { type: String, default: '11:00' },
   cancellationPolicy: { type: String, enum: ['flexible','moderate','strict'], default: 'moderate' },
   minNights:          { type: Number, default: 1 },
+  avgRating:          { type: Number, default: 0 },
+  reviewCount:        { type: Number, default: 0 },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Listing', listingSchema);

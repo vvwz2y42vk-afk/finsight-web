@@ -133,9 +133,11 @@ router.get('/listings', async (req, res) => {
 router.get('/listings/:id', async (req, res) => {
   try {
     const Listing = require('../models/Listing');
+    const Review  = require('../models/Review');
     const listing = await Listing.findById(req.params.id).lean();
     if (!listing) return res.redirect('/listings');
-    res.render('listing', { listing });
+    const reviews = await Review.find({ listing: req.params.id }).sort({ createdAt: -1 }).limit(20).lean();
+    res.render('listing', { listing, reviews });
   } catch (e) { res.redirect('/listings'); }
 });
 
