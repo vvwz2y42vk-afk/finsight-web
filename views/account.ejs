@@ -55,7 +55,26 @@
 .acc-empty__ico{font-size:3rem;margin-bottom:12px;}
 .acc-success{background:rgba(39,174,96,.08);border:1px solid rgba(39,174,96,.3);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:#27ae60;font-weight:600;}
 .acc-err{background:rgba(192,57,43,.08);border:1px solid rgba(192,57,43,.3);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:#c0392b;font-weight:600;}
-@media(max-width:600px){.acc-form-row{grid-template-columns:1fr;}.acc-header{flex-direction:column;text-align:center;}.bk-card{flex-direction:column;}.bk-photo{width:100%;height:120px;}}
+.msg-layout{display:grid;grid-template-columns:250px 1fr;border:1px solid var(--border);border-radius:14px;overflow:hidden;background:#fff;min-height:400px;}
+.msg-list{border-left:1px solid var(--border);overflow-y:auto;max-height:520px;}
+.msg-conv-item{padding:12px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;}
+.msg-conv-item:hover{background:var(--light);}
+.msg-conv-item.active{background:rgba(212,175,55,.07);border-right:3px solid var(--gold);}
+.msg-conv-subject{font-size:13px;font-weight:700;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.msg-conv-badge{background:var(--gold);color:#fff;font-size:10px;font-weight:900;padding:2px 7px;border-radius:10px;flex-shrink:0;}
+.msg-chat{display:flex;flex-direction:column;max-height:520px;}
+.msg-chat-hd{padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px;}
+.msg-chat-body{flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:8px;}
+.msg-bubble{max-width:76%;padding:8px 14px;border-radius:14px;font-size:13px;line-height:1.6;word-break:break-word;}
+.msg-bubble.from-customer{background:var(--gold);color:#fff;align-self:flex-end;border-bottom-right-radius:4px;}
+.msg-bubble.from-admin{background:var(--light);color:var(--text1);align-self:flex-start;border-bottom-left-radius:4px;}
+.msg-bubble-time{font-size:10px;opacity:.65;margin-top:4px;}
+.msg-chat-foot{padding:10px 14px;border-top:1px solid var(--border);}
+.msg-chat-ta{width:100%;padding:9px 12px;border-radius:10px;border:1px solid var(--border);font-family:inherit;font-size:13px;resize:none;outline:none;}
+.msg-chat-ta:focus{border-color:var(--gold);}
+.msg-send-btn{padding:7px 18px;background:var(--gold);border:none;border-radius:10px;color:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;margin-top:6px;}
+.msg-empty-chat{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;color:var(--text3);gap:8px;font-size:13px;padding:40px;}
+@media(max-width:640px){.acc-form-row{grid-template-columns:1fr;}.acc-header{flex-direction:column;text-align:center;}.bk-card{flex-direction:column;}.bk-photo{width:100%;height:120px;}.msg-layout{grid-template-columns:1fr;}.msg-list{border-left:none;border-bottom:1px solid var(--border);max-height:200px;}}
 </style>
 </head>
 <body class="home-page csb-layout">
@@ -114,6 +133,7 @@
   <!-- TABS -->
   <div class="acc-tabs">
     <button class="acc-tab active" onclick="switchTab('bookings',this)">📅 حجوزاتي (<%= bookings.length %>)</button>
+    <button class="acc-tab" onclick="switchTab('messages',this)" id="tab-btn-messages">💬 رسائلي</button>
     <button class="acc-tab" onclick="switchTab('profile',this)">👤 بياناتي</button>
     <button class="acc-tab" onclick="switchTab('password',this)">🔒 كلمة المرور</button>
   </div>
@@ -199,6 +219,38 @@
     </div>
     <% }); %>
     <% } %>
+  </div>
+
+  <!-- PANEL: MESSAGES -->
+  <div class="acc-panel" id="panel-messages">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div style="font-size:14px;font-weight:700;color:var(--text2);">محادثاتي مع فريق Finsight</div>
+      <button class="acc-save-btn" style="font-size:12px;padding:7px 16px;" onclick="toggleNewConv()">✏️ محادثة جديدة</button>
+    </div>
+    <div id="msgNewForm" style="display:none;background:#fff;border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:14px;">
+      <div style="font-size:13px;font-weight:700;margin-bottom:12px;">محادثة جديدة</div>
+      <div style="margin-bottom:10px;">
+        <label class="acc-lbl">الموضوع</label>
+        <input type="text" class="acc-inp" id="msgNewSubject" placeholder="استفسار عام" maxlength="120">
+      </div>
+      <div style="margin-bottom:12px;">
+        <label class="acc-lbl">الرسالة *</label>
+        <textarea class="bk-review-ta" id="msgNewBody" rows="4" placeholder="اكتب رسالتك هنا..." maxlength="2000"></textarea>
+      </div>
+      <button onclick="sendNewConv()" class="acc-save-btn" style="font-size:13px;">إرسال</button>
+      <button onclick="toggleNewConv()" style="margin-right:8px;padding:7px 14px;border:1px solid var(--border);border-radius:10px;background:none;font-family:inherit;font-size:13px;cursor:pointer;color:var(--text3);">إلغاء</button>
+    </div>
+    <div class="msg-layout">
+      <div class="msg-list" id="msgConvList">
+        <div style="padding:24px;text-align:center;color:var(--text3);font-size:13px;">جاري التحميل...</div>
+      </div>
+      <div class="msg-chat" id="msgChatArea">
+        <div class="msg-empty-chat">
+          <span style="font-size:2.5rem;">💬</span>
+          <span>اختر محادثة أو ابدأ محادثة جديدة</span>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- PANEL: PROFILE -->
@@ -309,6 +361,122 @@ function switchTab(id, btn) {
   document.querySelectorAll('.acc-panel').forEach(p => p.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById('panel-' + id).classList.add('active');
+  if (id === 'messages') loadConvs();
+}
+
+// ─── Messaging ────────────────────────────────────────────
+let activeConvId = null, msgPollTimer = null;
+
+async function loadConvs() {
+  try {
+    const r = await fetch('/account/messages');
+    const convs = await r.json();
+    const el = document.getElementById('msgConvList');
+    if (!convs.length) {
+      el.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text3);font-size:13px;">لا توجد محادثات<br><small style="font-size:11px;">ابدأ محادثة جديدة</small></div>';
+      return;
+    }
+    el.innerHTML = convs.map(c => `
+      <div class="msg-conv-item${c._id===activeConvId?' active':''}" onclick="openConv('${c._id}')">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div class="msg-conv-subject" style="flex:1;">${esc(c.subject)}</div>
+          ${c.unreadCustomer>0?`<span class="msg-conv-badge">${c.unreadCustomer}</span>`:''}
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:3px;">
+          <span style="font-size:11px;color:var(--text3);">${new Date(c.lastAt).toLocaleDateString('ar-SA')}</span>
+          <span style="font-size:10px;padding:1px 7px;border-radius:8px;${c.status==='open'?'background:rgba(39,174,96,.1);color:#27ae60':'background:var(--light);color:var(--text3)'};">${c.status==='open'?'مفتوحة':'مغلقة'}</span>
+        </div>
+      </div>`).join('');
+    const unreadTotal = convs.reduce((s,c)=>s+(c.unreadCustomer||0),0);
+    const btn = document.getElementById('tab-btn-messages');
+    if (btn) btn.textContent = '💬 رسائلي' + (unreadTotal>0?` (${unreadTotal})`:'');
+  } catch (e) {}
+}
+
+async function openConv(id) {
+  activeConvId = id;
+  clearInterval(msgPollTimer);
+  try {
+    const r = await fetch('/account/messages/' + id);
+    const { conv, messages } = await r.json();
+    renderChat(conv, messages);
+    loadConvs();
+    msgPollTimer = setInterval(async () => {
+      if (activeConvId !== id) return clearInterval(msgPollTimer);
+      try {
+        const rp = await fetch('/account/messages/' + id);
+        const d  = await rp.json();
+        renderChatMsgs(d.messages);
+      } catch(e) {}
+    }, 8000);
+  } catch (e) {}
+}
+
+function esc(s) { return String(s).replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function renderChat(conv, messages) {
+  const area = document.getElementById('msgChatArea');
+  const isOpen = conv.status === 'open';
+  area.innerHTML = `
+    <div class="msg-chat-hd">
+      <span>💬</span><span style="flex:1;">${esc(conv.subject)}</span>
+      <span style="font-size:10px;padding:2px 8px;border-radius:8px;${isOpen?'background:rgba(39,174,96,.1);color:#27ae60':'background:var(--light);color:var(--text3)'};">${isOpen?'مفتوحة':'مغلقة'}</span>
+    </div>
+    <div class="msg-chat-body" id="msgChatBody"></div>
+    ${isOpen?`<div class="msg-chat-foot">
+      <textarea class="msg-chat-ta" id="msgReplyBody" rows="2" placeholder="اكتب ردك هنا..." maxlength="2000"></textarea>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button onclick="sendReply('${conv._id}')" class="msg-send-btn">إرسال ←</button>
+      </div>
+    </div>`:'<div style="padding:10px 16px;text-align:center;font-size:12px;color:var(--text3);">هذه المحادثة مغلقة</div>'}`;
+  renderChatMsgs(messages);
+}
+
+function renderChatMsgs(messages) {
+  const body = document.getElementById('msgChatBody');
+  if (!body) return;
+  if (!messages.length) { body.innerHTML = '<div style="text-align:center;color:var(--text3);font-size:12px;padding:20px;">لا توجد رسائل بعد</div>'; return; }
+  body.innerHTML = messages.map(m => `
+    <div style="display:flex;flex-direction:column;align-items:${m.from==='customer'?'flex-end':'flex-start'};">
+      <div class="msg-bubble from-${m.from}">
+        ${esc(m.body).replace(/\n/g,'<br>')}
+        <div class="msg-bubble-time">${new Date(m.createdAt).toLocaleString('ar-SA',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'short'})}</div>
+      </div>
+    </div>`).join('');
+  body.scrollTop = body.scrollHeight;
+}
+
+async function sendReply(id) {
+  const ta = document.getElementById('msgReplyBody');
+  const body = ta?.value.trim();
+  if (!body) return;
+  ta.disabled = true;
+  try {
+    await fetch('/account/messages/' + id + '/reply', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ body }) });
+    ta.value = '';
+    openConv(id);
+  } catch(e) {}
+  ta.disabled = false;
+}
+
+function toggleNewConv() {
+  const f = document.getElementById('msgNewForm');
+  f.style.display = f.style.display === 'none' ? 'block' : 'none';
+}
+
+async function sendNewConv() {
+  const subject = document.getElementById('msgNewSubject').value.trim();
+  const body    = document.getElementById('msgNewBody').value.trim();
+  if (!body) return alert('الرجاء كتابة رسالة');
+  try {
+    const r = await fetch('/account/messages', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ subject, body }) });
+    const data = await r.json();
+    document.getElementById('msgNewSubject').value = '';
+    document.getElementById('msgNewBody').value = '';
+    document.getElementById('msgNewForm').style.display = 'none';
+    if (data.conv) openConv(data.conv._id);
+    else loadConvs();
+  } catch(e) {}
 }
 
 document.querySelector('form[action="/account/change-password"]')?.addEventListener('submit', function(e) {

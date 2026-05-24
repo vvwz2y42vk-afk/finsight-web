@@ -254,6 +254,7 @@ tbody td{padding:7px 5px;font-size:11px;}
     <button id="nav-bookings" class="ni" onclick="go('bookings',this)"><span class="ni-ico">📅</span>الحجوزات<span class="ni-badge" id="nb-bookings">—</span></button>
     <button id="nav-customers" class="ni" onclick="go('customers',this)"><span class="ni-ico">👥</span>العملاء<span class="ni-badge" id="nb-customers">—</span></button>
     <button id="nav-hosts" class="ni" onclick="go('hosts',this)"><span class="ni-ico">🏡</span>المضيفون<span class="ni-badge" id="nb-hosts">—</span></button>
+    <button id="nav-msgs" class="ni" onclick="go('msgs',this)"><span class="ni-ico">💬</span>الرسائل<span class="ni-badge" id="nb-msgs">—</span></button>
   </nav>
   <div class="sb-user">
     <div class="user-row"><div class="user-av" id="user-av">ع</div><div><div class="user-name" id="user-name">عبد الملك</div><div class="user-role" id="user-role">مساعد إداري · Finsight</div></div></div>
@@ -299,6 +300,7 @@ tbody td{padding:7px 5px;font-size:11px;}
     <button id="tab-nav-listings" class="tab" onclick="st('listings',this)">🏠 الإعلانات</button>
     <button id="tab-nav-bookings" class="tab" onclick="st('bookings',this)">📅 الحجوزات</button>
     <button id="tab-nav-hosts" class="tab" onclick="st('hosts',this)">🏡 المضيفون</button>
+    <button id="tab-nav-msgs" class="tab" onclick="st('msgs',this)">💬 الرسائل</button>
   </div>
   <div class="tc active" id="tab-dashboard">
     <div class="kpi-grid">
@@ -495,6 +497,22 @@ tbody td{padding:7px 5px;font-size:11px;}
   </div>
 
   <!-- ════════════════════════════════════ HOSTS TAB ═══ -->
+  <div class="tc" id="tab-msgs">
+    <div class="topbar" style="margin-bottom:12px;">
+      <div><div class="page-title">الرسائل <span>والمحادثات</span></div><div style="font-size:10px;color:var(--t3);">محادثات العملاء مع فريق Finsight</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:280px 1fr;gap:0;border:1px solid var(--br);border-radius:12px;overflow:hidden;background:var(--card);min-height:460px;">
+      <div style="border-left:1px solid var(--br);overflow-y:auto;max-height:560px;" id="adminMsgList">
+        <div style="padding:20px;text-align:center;color:var(--t3);font-size:13px;">جاري التحميل...</div>
+      </div>
+      <div id="adminChatArea" style="display:flex;flex-direction:column;max-height:560px;">
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;color:var(--t3);gap:10px;padding:40px;font-size:13px;">
+          <span style="font-size:2.5rem;">💬</span><span>اختر محادثة للرد عليها</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="tc" id="tab-hosts">
     <div class="topbar" style="margin-bottom:12px;">
       <div><div class="page-title">المضيفون <span>الخارجيون</span></div><div style="font-size:10px;color:var(--t3);">حسابات المضيفين المسجلين على المنصة</div></div>
@@ -953,7 +971,7 @@ async function confirmDelete(){
   showToast('🗑️ تم الحذف — جاري المزامنة...');if(c)await syncToSheet('deleteContract',c);
 }
 
-const titles={dashboard:'لوحة <span>التحكم</span>',contracts:'<span>العقود</span>',commissions:'<span>العمولات</span>',collection:'<span>التحصيل</span>',expiry:'العقود <span>المنتهية</span>',map:'خريطة <span>الشقق</span>',performance:'تحليل <span>الأداء</span>',sources:'تحليل <span>المصادر</span>',reports:'<span>التقارير</span> الشهرية',listings:'إدارة <span>الإعلانات</span>',bookings:'طلبات <span>الحجز</span>',customers:'العملاء <span>المسجلون</span>',hosts:'المضيفون <span>الخارجيون</span>'};
+const titles={dashboard:'لوحة <span>التحكم</span>',contracts:'<span>العقود</span>',commissions:'<span>العمولات</span>',collection:'<span>التحصيل</span>',expiry:'العقود <span>المنتهية</span>',map:'خريطة <span>الشقق</span>',performance:'تحليل <span>الأداء</span>',sources:'تحليل <span>المصادر</span>',reports:'<span>التقارير</span> الشهرية',listings:'إدارة <span>الإعلانات</span>',bookings:'طلبات <span>الحجز</span>',customers:'العملاء <span>المسجلون</span>',hosts:'المضيفون <span>الخارجيون</span>',msgs:'الرسائل <span>والمحادثات</span>'};
 async function loadUser(){
   try{
     const res=await fetch('/api/me');
@@ -975,14 +993,14 @@ async function loadUser(){
 }
 
 function go(id,el){
-  if(currentUser&&!currentUser.allowed.includes(id)&&!['listings','bookings','customers','hosts'].includes(id)){showToast('⛔ ليس لديك صلاحية لعرض هذا القسم');return;}
+  if(currentUser&&!currentUser.allowed.includes(id)&&!['listings','bookings','customers','hosts','msgs'].includes(id)){showToast('⛔ ليس لديك صلاحية لعرض هذا القسم');return;}
   document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));el?.classList.add('active');showTabById(id);set('pageTitle',titles[id]||id);document.getElementById('addBtn').style.display=id==='contracts'?'flex':'none';
-  if(id==='listings')loadListings();if(id==='bookings')loadBookings();if(id==='customers')loadCustomers();if(id==='hosts')loadHosts();
+  if(id==='listings')loadListings();if(id==='bookings')loadBookings();if(id==='customers')loadCustomers();if(id==='hosts')loadHosts();if(id==='msgs')loadMessages();
 }
 function st(id,el){
-  if(currentUser&&!currentUser.allowed.includes(id)&&!['listings','bookings','customers','hosts'].includes(id)){showToast('⛔ ليس لديك صلاحية لعرض هذا القسم');return;}
+  if(currentUser&&!currentUser.allowed.includes(id)&&!['listings','bookings','customers','hosts','msgs'].includes(id)){showToast('⛔ ليس لديك صلاحية لعرض هذا القسم');return;}
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el?.classList.add('active');showTabById(id);set('pageTitle',titles[id]||id);document.getElementById('addBtn').style.display=id==='contracts'?'flex':'none';
-  if(id==='listings')loadListings();if(id==='bookings')loadBookings();if(id==='customers')loadCustomers();if(id==='hosts')loadHosts();
+  if(id==='listings')loadListings();if(id==='bookings')loadBookings();if(id==='customers')loadCustomers();if(id==='hosts')loadHosts();if(id==='msgs')loadMessages();
 }
 function showTabById(id){document.querySelectorAll('.tc').forEach(t=>t.classList.remove('active'));document.getElementById('tab-'+id)?.classList.add('active');}
 
@@ -1646,7 +1664,99 @@ async function suspendHost(id){
   }catch(e){showToast('❌ حدث خطأ');}
 }
 
-window.addEventListener('load',()=>{loadUser();loadData();loadListings();loadBookings();loadHosts();setInterval(loadData,60000);});
+let adminActiveConvId=null,adminMsgTimer=null;
+function dEsc(s){return String(s).replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+async function loadMessages(){
+  try{
+    const r=await fetch('/api/conversations');
+    const convs=await r.json();
+    const el=document.getElementById('adminMsgList');
+    const unread=convs.reduce((s,c)=>s+(c.unreadAdmin||0),0);
+    const nb=document.getElementById('nb-msgs');if(nb)nb.textContent=unread||'—';
+    if(nb&&unread>0)nb.style.color='#e74c3c';else if(nb)nb.style.color='';
+    if(!convs.length){el.innerHTML='<div style="padding:24px;text-align:center;color:var(--t3);font-size:13px;">لا توجد محادثات</div>';return;}
+    el.innerHTML=convs.map(c=>`
+      <div onclick="adminOpenConv('${c._id}')" style="padding:12px 14px;border-bottom:1px solid var(--br);cursor:pointer;transition:background .15s;${c._id===adminActiveConvId?'background:rgba(212,175,55,.1);border-right:3px solid var(--gold);':''}" onmouseover="this.style.background='rgba(212,175,55,.05)'" onmouseout="this.style.background='${c._id===adminActiveConvId?'rgba(212,175,55,.1)':''}'" >
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div style="font-size:13px;font-weight:700;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${dEsc(c.subject)}</div>
+          ${c.unreadAdmin>0?`<span style="background:#e74c3c;color:#fff;font-size:10px;font-weight:900;padding:2px 7px;border-radius:10px;">${c.unreadAdmin}</span>`:''}
+        </div>
+        <div style="font-size:11px;color:var(--t3);margin-top:3px;">${dEsc(c.customerName||'')} · ${new Date(c.lastAt).toLocaleDateString('ar-SA')}</div>
+        <div style="font-size:10px;padding:1px 7px;border-radius:8px;display:inline-block;margin-top:3px;${c.status==='open'?'background:rgba(39,174,96,.1);color:#27ae60':'background:var(--br);color:var(--t3)'};">${c.status==='open'?'مفتوحة':'مغلقة'}</div>
+      </div>`).join('');
+  }catch(e){}
+}
+
+async function adminOpenConv(id){
+  adminActiveConvId=id;
+  clearInterval(adminMsgTimer);
+  try{
+    const r=await fetch('/api/conversations/'+id);
+    const {conv,messages}=await r.json();
+    adminRenderChat(conv,messages);
+    loadMessages();
+    adminMsgTimer=setInterval(async()=>{
+      if(adminActiveConvId!==id)return clearInterval(adminMsgTimer);
+      try{const rp=await fetch('/api/conversations/'+id);const d=await rp.json();adminRenderMsgs(d.messages);}catch(e){}
+    },8000);
+  }catch(e){}
+}
+
+function adminRenderChat(conv,messages){
+  const area=document.getElementById('adminChatArea');
+  const isOpen=conv.status==='open';
+  area.innerHTML=`
+    <div style="padding:12px 16px;border-bottom:1px solid var(--br);font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px;">
+      <span>💬</span><span style="flex:1;">${dEsc(conv.subject)}</span>
+      <span style="font-size:11px;color:var(--t3);">${dEsc(conv.customerName||'')} · ${dEsc(conv.customerPhone||'')}</span>
+      ${isOpen?`<button onclick="adminCloseConv('${conv._id}')" style="padding:3px 10px;border-radius:7px;border:1px solid var(--br);background:none;font-size:11px;font-family:inherit;cursor:pointer;color:var(--t3);">إغلاق</button>`:'<span style="font-size:10px;padding:2px 8px;border-radius:8px;background:var(--br);color:var(--t3);">مغلقة</span>'}
+    </div>
+    <div id="adminChatBody" style="flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:8px;"></div>
+    ${isOpen?`<div style="padding:10px 14px;border-top:1px solid var(--br);">
+      <textarea id="adminReplyBody" style="width:100%;padding:9px 12px;border-radius:10px;border:1px solid var(--br);font-family:inherit;font-size:13px;resize:none;outline:none;background:var(--card);color:var(--t1);" rows="2" placeholder="اكتب ردك..." maxlength="2000"></textarea>
+      <button onclick="adminSendReply('${conv._id}')" style="margin-top:6px;padding:7px 18px;background:linear-gradient(135deg,#DAA520,#f0c040);border:none;border-radius:10px;color:#111;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;">إرسال ←</button>
+    </div>`:'<div style="padding:10px 16px;text-align:center;font-size:12px;color:var(--t3);">هذه المحادثة مغلقة</div>'}`;
+  adminRenderMsgs(messages);
+}
+
+function adminRenderMsgs(messages){
+  const body=document.getElementById('adminChatBody');
+  if(!body)return;
+  if(!messages.length){body.innerHTML='<div style="text-align:center;color:var(--t3);font-size:12px;padding:20px;">لا توجد رسائل</div>';return;}
+  body.innerHTML=messages.map(m=>`
+    <div style="display:flex;flex-direction:column;align-items:${m.from==='admin'?'flex-end':'flex-start'};">
+      <div style="max-width:76%;padding:8px 14px;border-radius:14px;font-size:13px;line-height:1.6;word-break:break-word;${m.from==='admin'?'background:linear-gradient(135deg,#DAA520,#f0c040);color:#111;border-bottom-right-radius:4px':'background:rgba(255,255,255,.06);border:1px solid var(--br);border-bottom-left-radius:4px;'}">
+        ${dEsc(m.body).replace(/\n/g,'<br>')}
+        <div style="font-size:10px;opacity:.65;margin-top:4px;">${new Date(m.createdAt).toLocaleString('ar-SA',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'short'})}</div>
+      </div>
+    </div>`).join('');
+  body.scrollTop=body.scrollHeight;
+}
+
+async function adminSendReply(id){
+  const ta=document.getElementById('adminReplyBody');
+  const body=ta?.value.trim();
+  if(!body)return;
+  ta.disabled=true;
+  try{
+    await fetch('/api/conversations/'+id+'/reply',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({body})});
+    ta.value='';
+    adminOpenConv(id);
+  }catch(e){}
+  ta.disabled=false;
+}
+
+async function adminCloseConv(id){
+  try{
+    await fetch('/api/conversations/'+id+'/close',{method:'POST'});
+    showToast('🔒 تم إغلاق المحادثة');
+    adminOpenConv(id);
+    loadMessages();
+  }catch(e){}
+}
+
+window.addEventListener('load',()=>{loadUser();loadData();loadListings();loadBookings();loadHosts();loadMessages();setInterval(loadData,60000);setInterval(loadMessages,30000);});
 </script>
 </body>
 </html>

@@ -451,6 +451,49 @@ router.put('/hosts/:id/suspend', auth, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ─── Messaging (admin) ───────────────────────────────────
+router.get('/conversations', auth, async (req, res) => {
+  try {
+    const Conversation = require('../models/Conversation');
+    const convs = await Conversation.find().sort({ lastAt: -1 }).lean();
+    res.json(convs);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.get('/conversations/:id', auth, async (req, res) => {
+  try {
+    const Conversation = require('../models/Conversation');
+    const Message = require('../models/Message');
+    const conv = await Conversation.findById(req.params.id).lean();
+    if (!conv) return res.status(404).json({ error: 'غير موجود' });
+    const messages = await Message.find({ conversation: conv._id }).sort({ createdAt: 1 }).lean();
+    await Conversation.findByIdAndUpdate(conv._id, { unreadAdmin: 0 });
+    res.json({ conv, messages });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.post('/conversations/:id/reply', auth, async (req, res) => {
+  try {
+    const Conversation = require('../models/Conversation');
+    const Message = require('../models/Message');
+    const conv = await Conversation.findById(req.params.id);
+    if (!conv) return res.status(404).json({ error: 'غير موجود' });
+    const body = req.body.body?.trim();
+    if (!body) return res.status(400).json({ error: 'الرسالة فارغة' });
+    await new Message({ conversation: conv._id, from: 'admin', senderName: 'Finsight', body: body.slice(0, 2000) }).save();
+    await Conversation.findByIdAndUpdate(conv._id, { lastAt: new Date(), $inc: { unreadCustomer: 1 }, status: 'open' });
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.post('/conversations/:id/close', auth, async (req, res) => {
+  try {
+    const Conversation = require('../models/Conversation');
+    await Conversation.findByIdAndUpdate(req.params.id, { status: 'closed' });
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // ─── AI Chat (Gemini) ─────────────────────────────────────
 router.post('/ai/chat', auth, async (req, res) => {
   try {

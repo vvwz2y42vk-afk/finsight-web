@@ -195,6 +195,74 @@ router.post('/cancel/:bookingId', requireCustomer, async (req, res) => {
   }
 });
 
+function sendMsgEmail(subject, html) {
+  if (!process.env.RESEND_API_KEY) return;
+  fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ from: 'Finsight <onboarding@resend.dev>', to: ['assisting@finsight-sa.com'], subject, html }),
+  }).catch(() => {});
+}
+
+// ─── Messaging ────────────────────────────────────────────
+router.get('/messages', requireCustomer, async (req, res) => {
+  try {
+    const Conversation = require('../models/Conversation');
+    const convs = await Conversation.find({ customer: req.customer.id }).sort({ lastAt: -1 }).lean();
+    res.json(convs);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.get('/messages/:id', requireCustomer, async (req, res) => {
+  try {
+    const Conversation = require('../models/Conversation');
+    const Message = require('../models/Message');
+    const conv = await Conversation.findOne({ _id: req.params.id, customer: req.customer.id }).lean();
+    if (!conv) return res.status(404).json({ error: 'غير موجود' });
+    const messages = await Message.find({ conversation: conv._id }).sort({ createdAt: 1 }).lean();
+    await Conversation.findByIdAndUpdate(conv._id, { unreadCustomer: 0 });
+    res.json({ conv, messages });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.post('/messages', requireCustomer, async (req, res) => {
+  try {
+    const Conversation = require('../models/Conversation');
+    const Message = require('../models/Message');
+    const { subject, body, listingTitle } = req.body;
+    if (!body?.trim()) return res.status(400).json({ error: 'الرسالة فارغة' });
+    const conv = await new Conversation({
+      customer: req.customer.id,
+      customerName: req.customer.name,
+      customerPhone: req.customer.phone,
+      listingTitle: listingTitle?.trim() || '',
+      subject: (subject?.trim() || 'استفسار عام').slice(0, 120),
+      unreadAdmin: 1,
+      lastAt: new Date(),
+    }).save();
+    await new Message({ conversation: conv._id, from: 'customer', senderName: req.customer.name, body: body.trim().slice(0, 2000) }).save();
+    sendMsgEmail(
+      `💬 رسالة جديدة — ${conv.subject}`,
+      `<div dir="rtl" style="font-family:Arial;line-height:2;"><h2 style="color:#d4af37;">رسالة جديدة</h2><p><b>من:</b> ${req.customer.name} — ${req.customer.phone}</p><p><b>الموضوع:</b> ${conv.subject}</p><p><b>الرسالة:</b> ${body.trim()}</p><hr><a href="https://finsight-web-xi.vercel.app/dashboard" style="color:#d4af37;">فتح الداشبورد</a></div>`
+    );
+    res.json({ success: true, conv });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.post('/messages/:id/reply', requireCustomer, async (req, res) => {
+  try {
+    const Conversation = require('../models/Conversation');
+    const Message = require('../models/Message');
+    const conv = await Conversation.findOne({ _id: req.params.id, customer: req.customer.id });
+    if (!conv) return res.status(404).json({ error: 'غير موجود' });
+    const body = req.body.body?.trim();
+    if (!body) return res.status(400).json({ error: 'الرسالة فارغة' });
+    await new Message({ conversation: conv._id, from: 'customer', senderName: req.customer.name, body: body.slice(0, 2000) }).save();
+    await Conversation.findByIdAndUpdate(conv._id, { lastAt: new Date(), $inc: { unreadAdmin: 1 } });
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // ─── Submit review ────────────────────────────────────────
 router.post('/review/:bookingId', requireCustomer, async (req, res) => {
   try {
