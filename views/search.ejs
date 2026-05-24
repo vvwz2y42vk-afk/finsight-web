@@ -3,9 +3,62 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title><%= q ? 'نتائج: ' + q : 'البحث' %> — Finsight Real Estate</title>
+<title><%= q ? 'نتائج: ' + q : 'بحث متقدم' %> — Finsight Real Estate</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/client.css">
+<style>
+.sf-hero{background:linear-gradient(135deg,#0f0f1a 0%,#1a1a2e 100%);padding:60px 0 0;position:relative;overflow:hidden;}
+.sf-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 30% 50%,rgba(218,165,32,.08) 0%,transparent 60%);}
+.sf-hero__inner{position:relative;z-index:1;text-align:center;padding:0 16px 40px;}
+.sf-hero__tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:2px;color:rgba(218,165,32,.7);text-transform:uppercase;margin-bottom:14px;}
+.sf-hero__title{font-size:clamp(1.6rem,4vw,2.4rem);font-weight:900;color:#fff;margin-bottom:8px;}
+.sf-hero__title span{color:#DAA520;}
+.sf-hero__sub{font-size:14px;color:rgba(255,255,255,.45);margin-bottom:32px;}
+
+/* ── Search box ── */
+.sf-box{background:rgba(255,255,255,.05);border:1px solid rgba(218,165,32,.2);border-radius:20px;padding:20px 24px;max-width:860px;margin:0 auto;backdrop-filter:blur(10px);}
+.sf-row{display:flex;gap:10px;flex-wrap:wrap;}
+.sf-main{display:flex;gap:10px;width:100%;margin-bottom:14px;}
+.sf-inp{flex:1;padding:13px 18px;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.07);color:#fff;font-family:'Cairo',sans-serif;font-size:15px;outline:none;min-width:0;}
+.sf-inp::placeholder{color:rgba(255,255,255,.3);}
+.sf-inp:focus{border-color:rgba(218,165,32,.5);}
+.sf-inp option{background:#1a1a2e;color:#fff;}
+.sf-btn{padding:13px 28px;border-radius:12px;background:linear-gradient(135deg,#DAA520,#f0c040);border:none;color:#111;font-family:'Cairo',sans-serif;font-size:15px;font-weight:800;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+.sf-btn:hover{opacity:.9;}
+
+.sf-filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.sf-filter{display:flex;flex-direction:column;gap:4px;flex:1;min-width:110px;}
+.sf-filter label{font-size:10px;font-weight:700;color:rgba(218,165,32,.7);letter-spacing:.5px;text-transform:uppercase;}
+.sf-select,.sf-num{width:100%;padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.07);color:#fff;font-family:'Cairo',sans-serif;font-size:12px;outline:none;}
+.sf-select option{background:#1a1a2e;}
+.sf-num{-moz-appearance:textfield;}
+.sf-num::-webkit-outer-spin-button,.sf-num::-webkit-inner-spin-button{-webkit-appearance:none;}
+.sf-divider{width:1px;background:rgba(255,255,255,.1);align-self:stretch;margin:0 4px;}
+.sf-clear{color:rgba(255,255,255,.35);font-size:12px;text-decoration:none;white-space:nowrap;padding:4px 0;align-self:center;}
+.sf-clear:hover{color:#DAA520;}
+
+/* ── Cat tabs ── */
+.sf-cats{display:flex;gap:6px;justify-content:center;padding:18px 16px 0;flex-wrap:wrap;}
+.sf-cat{padding:7px 18px;border-radius:20px;border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.5);font-family:'Cairo',sans-serif;font-size:12px;font-weight:600;cursor:pointer;text-decoration:none;transition:all .15s;}
+.sf-cat:hover{border-color:rgba(218,165,32,.4);color:rgba(218,165,32,.8);}
+.sf-cat.active{background:rgba(218,165,32,.15);border-color:rgba(218,165,32,.5);color:#DAA520;}
+
+/* ── Results ── */
+.sr-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:8px;}
+.sr-count{font-size:14px;color:var(--text3);}
+.sr-count strong{color:var(--dark);}
+.sr-count .c-gold{font-weight:700;}
+.sr-sort{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text3);}
+.sr-sort select{border:1px solid var(--border);border-radius:8px;padding:5px 10px;font-family:'Cairo',sans-serif;font-size:12px;color:var(--dark);background:#fff;outline:none;}
+
+.price-tag{font-size:11px;font-weight:700;color:var(--gold);margin-top:4px;}
+
+@media(max-width:600px){
+  .sf-filters{gap:6px;}
+  .sf-filter{min-width:calc(50% - 6px);}
+  .sf-main{flex-wrap:wrap;}
+}
+</style>
 </head>
 <body class="home-page csb-layout">
 
@@ -46,62 +99,161 @@
 
 <div class="csb-content">
 
-<!-- SEARCH HERO -->
-<section class="about-hero" style="min-height:200px;">
-  <div class="about-hero__content">
-    <div class="sec-tag">Finsight Real Estate</div>
-    <h1 class="about-hero__title">البحث في <span class="c-gold">عقاراتنا</span></h1>
+<!-- ═══════════ HERO + SEARCH BOX ═══════════ -->
+<section class="sf-hero">
+  <div class="sf-hero__inner">
+    <div class="sf-hero__tag">Finsight Real Estate</div>
+    <h1 class="sf-hero__title">ابحث عن <span>عقارك المثالي</span></h1>
+    <p class="sf-hero__sub">شقق إيجار يومي وشهري • معارض تجارية • أراضي وشقق للبيع</p>
+
+    <form method="GET" action="/search" id="searchForm">
+      <div class="sf-box">
+        <!-- Main search + submit -->
+        <div class="sf-main">
+          <input class="sf-inp" type="text" name="q" value="<%= q %>" placeholder="🔍  ابحث بالاسم أو الموقع أو المجمع...">
+          <button type="submit" class="sf-btn">بحث</button>
+        </div>
+
+        <!-- Filters row -->
+        <div class="sf-filters">
+          <!-- Type -->
+          <div class="sf-filter">
+            <label>نوع العقار</label>
+            <select class="sf-select" name="cat" onchange="toggleTypeFilter()">
+              <option value="" <%=!cat?'selected':''%>>الكل</option>
+              <option value="rental_apartment" <%=cat==='rental_apartment'?'selected':''%>>🛏 شقق إيجار</option>
+              <option value="rental_commercial" <%=cat==='rental_commercial'?'selected':''%>>🏪 معارض إيجار</option>
+              <option value="sale_apartment" <%=cat==='sale_apartment'?'selected':''%>>🏠 شقق للبيع</option>
+              <option value="sale_land" <%=cat==='sale_land'?'selected':''%>>🌍 أراضي للبيع</option>
+            </select>
+          </div>
+
+          <!-- Rental type (daily/monthly) — shown only for rental_apartment -->
+          <div class="sf-filter" id="sf-type-filter" style="<%= cat==='rental_apartment'||!cat?'':'display:none' %>">
+            <label>طريقة الإيجار</label>
+            <select class="sf-select" name="type">
+              <option value=""    <%=!type||type==='all'?'selected':''%>>الكل</option>
+              <option value="daily"  <%=type==='daily'?'selected':''%>>🌙 يومي</option>
+              <option value="annual" <%=type==='annual'?'selected':''%>>📋 شهري</option>
+            </select>
+          </div>
+
+          <!-- Bedrooms — shown for apartment categories -->
+          <div class="sf-filter" id="sf-beds-filter" style="<%= cat==='rental_apartment'||cat==='sale_apartment'||!cat?'':'display:none' %>">
+            <label>الغرف</label>
+            <select class="sf-select" name="beds">
+              <option value="" <%=!beds?'selected':''%>>أي عدد</option>
+              <option value="1" <%=beds===1?'selected':''%>>1+</option>
+              <option value="2" <%=beds===2?'selected':''%>>2+</option>
+              <option value="3" <%=beds===3?'selected':''%>>3+</option>
+              <option value="4" <%=beds===4?'selected':''%>>4+</option>
+            </select>
+          </div>
+
+          <div class="sf-divider"></div>
+
+          <!-- Price from -->
+          <div class="sf-filter" style="min-width:90px;">
+            <label>السعر من</label>
+            <input class="sf-num sf-inp" type="number" name="min_price" value="<%= minPrice||'' %>" placeholder="0" min="0">
+          </div>
+
+          <!-- Price to -->
+          <div class="sf-filter" style="min-width:90px;">
+            <label>السعر إلى</label>
+            <input class="sf-num sf-inp" type="number" name="max_price" value="<%= maxPrice||'' %>" placeholder="∞" min="0">
+          </div>
+
+          <!-- Sort -->
+          <div class="sf-filter">
+            <label>الترتيب</label>
+            <select class="sf-select" name="sort">
+              <option value="newest"     <%=sort==='newest'?'selected':''%>>الأحدث</option>
+              <option value="price_asc"  <%=sort==='price_asc'?'selected':''%>>السعر: الأقل</option>
+              <option value="price_desc" <%=sort==='price_desc'?'selected':''%>>السعر: الأعلى</option>
+            </select>
+          </div>
+
+          <% if (hasFilters) { %>
+          <a href="/search" class="sf-clear">× مسح</a>
+          <% } %>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Category quick-tabs -->
+  <div class="sf-cats">
+    <a href="/search" class="sf-cat <%=!cat?'active':''%>">الكل</a>
+    <a href="/search?cat=rental_apartment" class="sf-cat <%=cat==='rental_apartment'?'active':''%>">🛏 شقق إيجار</a>
+    <a href="/search?cat=rental_commercial" class="sf-cat <%=cat==='rental_commercial'?'active':''%>">🏪 معارض</a>
+    <a href="/search?cat=sale_apartment" class="sf-cat <%=cat==='sale_apartment'?'active':''%>">🏠 شقق بيع</a>
+    <a href="/search?cat=sale_land" class="sf-cat <%=cat==='sale_land'?'active':''%>">🌍 أراضي</a>
   </div>
 </section>
 
-<!-- SEARCH BAR -->
-<div style="background:#fff;border-bottom:1px solid var(--border);padding:20px 0;">
-  <div class="page-container">
-    <form method="GET" action="/search" style="display:flex;gap:10px;max-width:600px;">
-      <input type="text" name="q" value="<%= q %>" placeholder="ابحث عن عقار، موقع، مبنى..." autocomplete="off"
-        style="flex:1;padding:12px 16px;border-radius:10px;border:1px solid var(--border);font-family:inherit;font-size:15px;outline:none;background:var(--light);">
-      <button type="submit" class="btn btn-gold" style="padding:12px 20px;font-size:14px;">بحث</button>
-    </form>
-  </div>
-</div>
-
-<!-- RESULTS -->
+<!-- ═══════════ RESULTS ═══════════ -->
 <section style="padding:40px 0 80px;background:var(--light);">
   <div class="page-container">
-    <% if (!q) { %>
-    <div style="text-align:center;padding:60px 0;">
-      <div style="font-size:3rem;margin-bottom:16px;">🔍</div>
-      <p style="color:var(--text3);font-size:16px;">اكتب ما تبحث عنه في الحقل أعلاه</p>
+
+    <% if (!hasFilters) { %>
+    <!-- Idle state -->
+    <div style="text-align:center;padding:70px 0;">
+      <div style="font-size:3.5rem;margin-bottom:16px;">🔍</div>
+      <h3 style="font-size:1.3rem;font-weight:700;margin-bottom:8px;">ابدأ بالبحث أو اختر فئة</h3>
+      <p style="color:var(--text3);margin-bottom:28px;">ابحث بالاسم، الموقع، أو استخدم الفلاتر لتضييق النتائج</p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+        <a href="/search?cat=rental_apartment" class="btn btn-gold" style="display:inline-flex;">🛏 شقق إيجار</a>
+        <a href="/search?cat=sale_land"        class="btn"          style="display:inline-flex;">🌍 أراضي للبيع</a>
+        <a href="/search?cat=rental_commercial" class="btn"         style="display:inline-flex;">🏪 معارض</a>
+      </div>
     </div>
+
     <% } else if (listings.length === 0) { %>
-    <div style="text-align:center;padding:60px 0;">
-      <div style="font-size:3rem;margin-bottom:16px;">😔</div>
-      <h3 style="font-size:1.3rem;font-weight:700;margin-bottom:8px;">لا توجد نتائج لـ "<%= q %>"</h3>
-      <p style="color:var(--text3);margin-bottom:24px;">جرّب كلمات مختلفة أو تصفح عقاراتنا</p>
-      <a href="/listings" class="btn btn-gold" style="display:inline-flex;">عرض كل العقارات</a>
+    <!-- No results -->
+    <div style="text-align:center;padding:70px 0;">
+      <div style="font-size:3.5rem;margin-bottom:16px;">😔</div>
+      <h3 style="font-size:1.3rem;font-weight:700;margin-bottom:8px;">لا توجد نتائج</h3>
+      <p style="color:var(--text3);margin-bottom:24px;">جرّب تغيير الفلاتر أو توسيع نطاق السعر</p>
+      <a href="/search" class="btn btn-gold" style="display:inline-flex;">مسح الفلاتر</a>
     </div>
+
     <% } else { %>
-    <div style="margin-bottom:20px;font-size:14px;color:var(--text3);">
-      نتائج البحث عن "<strong style="color:var(--dark);"><%= q %></strong>":
-      <span class="c-gold" style="font-weight:700;"> <%= listings.length %> نتيجة</span>
+    <!-- Results bar -->
+    <div class="sr-bar">
+      <div class="sr-count">
+        <% if (q) { %>نتائج "<strong><%= q %></strong>":<% } else { %>النتائج:<% } %>
+        <span class="c-gold"> <%= listings.length %> عقار</span>
+      </div>
+      <div class="sr-sort">
+        <span>الترتيب:</span>
+        <select onchange="changeSortURL(this.value)">
+          <option value="newest"     <%=sort==='newest'?'selected':''%>>الأحدث</option>
+          <option value="price_asc"  <%=sort==='price_asc'?'selected':''%>>السعر: الأقل</option>
+          <option value="price_desc" <%=sort==='price_desc'?'selected':''%>>السعر: الأعلى</option>
+        </select>
+      </div>
     </div>
+
+    <!-- Cards -->
     <div class="listing-grid">
-      <% listings.forEach(l => { %>
-      <% const cat = l.category || 'rental_apartment'; %>
+      <% listings.forEach(l => {
+        const lcat = l.category || 'rental_apartment';
+        const catEmoji = lcat==='rental_apartment'?'🏢':lcat==='rental_commercial'?'🏪':lcat==='sale_apartment'?'🏠':'🌍';
+        const catLabel = lcat==='rental_apartment'?(l.type==='daily'?'يومي':l.type==='annual'?'شهري':'يومي + شهري'):lcat==='rental_commercial'?'للإيجار':lcat==='sale_apartment'?'شقة للبيع':'أرض للبيع';
+        const priceNum  = (lcat==='sale_land'||lcat==='sale_apartment')?l.price_sale:lcat==='rental_commercial'?l.price_annual:l.price_daily;
+        const priceUnit = (lcat==='sale_land'||lcat==='sale_apartment')?'﷼':lcat==='rental_commercial'?'﷼/شهر':'﷼/ليلة';
+      %>
       <a href="/listings/<%= l._id %>" class="listing-card">
         <div class="listing-card__photo">
           <% if (l.photos && l.photos.length) { %>
           <img src="<%= l.photos[0] %>" alt="<%= l.title %>" loading="lazy">
           <% } else { %>
-          <div class="listing-card__photo-ph">
-            <%= cat==='rental_apartment'?'🏢':cat==='rental_commercial'?'🏪':cat==='sale_apartment'?'🏠':'🌍' %>
-          </div>
+          <div class="listing-card__photo-ph"><%= catEmoji %></div>
           <% } %>
           <div class="listing-card__badges">
             <% if (l.featured) { %><span class="lc-badge lc-badge--featured">⭐ مميز</span><% } %>
-            <span class="lc-badge lc-badge--type">
-              <%= cat==='rental_apartment'?(l.type==='daily'?'يومي':l.type==='annual'?'شهري':'يومي + شهري'):cat==='rental_commercial'?'للإيجار':cat==='sale_apartment'?'شقة للبيع':'أرض للبيع' %>
-            </span>
+            <span class="lc-badge lc-badge--type"><%= catLabel %></span>
           </div>
         </div>
         <div class="listing-card__body">
@@ -111,16 +263,14 @@
           <div class="listing-card__building">📍 <%= l.location %></div>
           <% } %>
           <div class="listing-card__title"><%= l.title %></div>
-          <% if (cat==='rental_apartment' || cat==='sale_apartment') { %>
           <div class="listing-card__meta">
-            <span>🛏 <%= l.bedrooms %> <%= l.bedrooms===1?'غرفة':'غرف' %></span>
-            <span>🚿 <%= l.bathrooms %> حمام</span>
+            <% if ((lcat==='rental_apartment'||lcat==='sale_apartment') && l.bedrooms) { %>
+            <span>🛏 <%= l.bedrooms %> غرف</span>
+            <% } %>
             <% if (l.area) { %><span>📐 <%= l.area %> م²</span><% } %>
           </div>
-          <% } else { %>
-          <div class="listing-card__meta">
-            <% if (l.area) { %><span>📐 المساحة: <%= l.area %> م²</span><% } %>
-          </div>
+          <% if (priceNum) { %>
+          <div class="price-tag"><%= priceNum.toLocaleString('ar-SA') %> <%= priceUnit %></div>
           <% } %>
           <div class="listing-card__footer">
             <span class="listing-card__cta">تفاصيل ←</span>
@@ -130,6 +280,7 @@
       <% }); %>
     </div>
     <% } %>
+
   </div>
 </section>
 
@@ -172,6 +323,22 @@
 <script>
 function toggleSidebar(){document.getElementById('clientSidebar').classList.toggle('open');document.getElementById('csbOverlay').classList.toggle('open');document.getElementById('csbHam').classList.toggle('active');}
 function closeSidebar(){document.getElementById('clientSidebar').classList.remove('open');document.getElementById('csbOverlay').classList.remove('open');document.getElementById('csbHam').classList.remove('active');}
+
+function toggleTypeFilter(){
+  const cat = document.querySelector('[name="cat"]').value;
+  const isApt  = cat==='rental_apartment'||cat==='';
+  const hasBeds = cat==='rental_apartment'||cat==='sale_apartment'||cat==='';
+  const tf = document.getElementById('sf-type-filter');
+  const bf = document.getElementById('sf-beds-filter');
+  if(tf) tf.style.display = isApt ? '' : 'none';
+  if(bf) bf.style.display = hasBeds ? '' : 'none';
+}
+
+function changeSortURL(val){
+  const url = new URL(window.location.href);
+  url.searchParams.set('sort', val);
+  window.location.href = url.toString();
+}
 </script>
 </body>
 </html>

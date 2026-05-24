@@ -256,21 +256,65 @@ router.post('/inquiry', async (req, res) => {
 });
 
 router.get('/search', async (req, res) => {
-  const q = (req.query.q || '').trim();
+  const q          = (req.query.q || '').trim();
+  const cat        = req.query.cat   || '';
+  const type       = req.query.type  || '';
+  const minPrice   = parseInt(req.query.min_price) || 0;
+  const maxPrice   = parseInt(req.query.max_price) || 0;
+  const beds       = parseInt(req.query.beds)      || 0;
+  const sort       = req.query.sort  || 'newest';
+
   const Listing = require('../models/Listing');
-  let listings = [];
-  if (q) {
-    listings = await Listing.find({
-      available: true,
-      $or: [
-        { title: { $regex: q, $options: 'i' } },
-        { description: { $regex: q, $options: 'i' } },
-        { location: { $regex: q, $options: 'i' } },
-        { building: { $regex: q, $options: 'i' } },
-      ]
-    }).sort({ featured: -1, createdAt: -1 }).limit(24).lean();
+  const filter = { available: true };
+
+  if (cat) filter.category = cat;
+
+  // type filter: daily / annual (only meaningful for rental_apartment)
+  if (type && type !== 'all') {
+    filter.$or = [{ type }, { type: 'both' }];
   }
-  res.render('search', { listings, q });
+
+  // bedrooms
+  if (beds) filter.bedrooms = { $gte: beds };
+
+  // price range — pick field based on category
+  if (minPrice || maxPrice) {
+    const pf = (cat === 'sale_land' || cat === 'sale_apartment') ? 'price_sale'
+             : cat === 'rental_commercial'                        ? 'price_annual'
+             :                                                      'price_daily';
+    filter[pf] = {};
+    if (minPrice) filter[pf].$gte = minPrice;
+    if (maxPrice) filter[pf].$lte = maxPrice;
+  }
+
+  // text search — must not conflict with existing $or from type filter
+  if (q) {
+    const textOr = [
+      { title:       { $regex: q, $options: 'i' } },
+      { description: { $regex: q, $options: 'i' } },
+      { location:    { $regex: q, $options: 'i' } },
+      { building:    { $regex: q, $options: 'i' } },
+    ];
+    if (filter.$or) {
+      // combine: must match type AND (text)
+      filter.$and = [{ $or: filter.$or }, { $or: textOr }];
+      delete filter.$or;
+    } else {
+      filter.$or = textOr;
+    }
+  }
+
+  let sortObj = { featured: -1, createdAt: -1 };
+  if (sort === 'price_asc')  sortObj = { featured: -1, price_daily: 1,  price_annual: 1,  price_sale: 1  };
+  if (sort === 'price_desc') sortObj = { featured: -1, price_daily: -1, price_annual: -1, price_sale: -1 };
+
+  let listings = [];
+  const hasFilters = q || cat || type || minPrice || maxPrice || beds;
+  if (hasFilters) {
+    listings = await Listing.find(filter).sort(sortObj).limit(36).lean();
+  }
+
+  res.render('search', { listings, q, cat, type, minPrice, maxPrice, beds, sort, hasFilters: !!hasFilters });
 });
 
 module.exports = router;
