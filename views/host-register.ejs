@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>أصبح مضيفاً — Finsight Real Estate</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Cairo',sans-serif;background:linear-gradient(135deg,#0f0f1a 0%,#1a1a2e 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 16px;}
+.wrap{width:100%;max-width:560px;}
+.card{background:rgba(255,255,255,.04);border:1px solid rgba(218,165,32,.2);border-radius:24px;padding:40px 36px;backdrop-filter:blur(10px);}
+.logo{text-align:center;margin-bottom:32px;}
+.logo-icon{width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#DAA520,#f0c040);color:#0f0f1a;font-size:22px;font-weight:900;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;box-shadow:0 8px 24px rgba(218,165,32,.3);}
+.logo-name{font-size:1.4rem;font-weight:900;color:#fff;letter-spacing:1px;}
+.logo-sub{font-size:11px;color:rgba(218,165,32,.7);letter-spacing:3px;margin-top:2px;}
+.badge{display:inline-flex;align-items:center;gap:6px;background:rgba(218,165,32,.12);border:1px solid rgba(218,165,32,.3);color:#DAA520;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;margin-top:12px;}
+h2{font-size:1.5rem;font-weight:800;color:#fff;margin-bottom:6px;}
+.sub{font-size:13px;color:rgba(255,255,255,.45);margin-bottom:28px;}
+.err{background:rgba(231,76,60,.1);border:1px solid rgba(231,76,60,.3);border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:13px;color:#e74c3c;font-weight:600;}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.grp{margin-bottom:18px;}
+.lbl{display:block;font-size:12px;font-weight:700;margin-bottom:6px;color:rgba(255,255,255,.6);letter-spacing:.3px;}
+.lbl span{color:rgba(255,255,255,.3);font-weight:400;}
+.inp{width:100%;padding:11px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);color:#fff;font-family:'Cairo',sans-serif;font-size:14px;outline:none;transition:border .2s;}
+.inp::placeholder{color:rgba(255,255,255,.2);}
+.inp:focus{border-color:rgba(218,165,32,.5);}
+select.inp option{background:#1a1a2e;color:#fff;}
+.divider{height:1px;background:rgba(255,255,255,.08);margin:20px 0;}
+.divider-lbl{text-align:center;font-size:11px;color:rgba(255,255,255,.3);font-weight:700;letter-spacing:1px;margin:-10px auto;background:rgba(255,255,255,.0);position:relative;display:table;padding:0 12px;}
+.btn{width:100%;padding:14px;background:linear-gradient(135deg,#DAA520,#f0c040);border:none;border-radius:12px;color:#0f0f1a;font-family:'Cairo',sans-serif;font-size:1rem;font-weight:800;cursor:pointer;transition:opacity .2s;margin-top:8px;box-shadow:0 6px 20px rgba(218,165,32,.3);}
+.btn:hover{opacity:.9;}
+.foot{text-align:center;margin-top:20px;font-size:13px;color:rgba(255,255,255,.35);}
+.foot a{color:#DAA520;font-weight:600;text-decoration:none;}
+.notice{background:rgba(218,165,32,.08);border:1px solid rgba(218,165,32,.2);border-radius:12px;padding:14px 16px;margin-bottom:24px;font-size:13px;color:rgba(218,165,32,.85);line-height:1.9;}
+@media(max-width:520px){.row{grid-template-columns:1fr;}.card{padding:28px 20px;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <div class="logo">
+      <div class="logo-icon">FS</div>
+      <div class="logo-name">Finsight</div>
+      <div class="logo-sub">REAL ESTATE</div>
+      <div class="badge">🏠 أصبح مضيفاً</div>
+    </div>
+
+    <h2>إنشاء حساب مضيف</h2>
+    <p class="sub">سجّل عقاراتك وابدأ في استقبال الحجوزات</p>
+
+    <div class="notice">
+      ⏳ بعد التسجيل، سيتم مراجعة حسابك من قِبل فريق Finsight خلال 24 ساعة. ستتلقى إشعاراً عند الموافقة.
+    </div>
+
+    <% if (error) { %>
+    <div class="err">⚠️ <%= error %></div>
+    <% } %>
+
+    <form method="POST" action="/host/register">
+      <div class="row">
+        <div class="grp">
+          <label class="lbl">الاسم الكامل <span>*</span></label>
+          <input type="text" name="name" class="inp" placeholder="اسمك الكامل" required>
+        </div>
+        <div class="grp">
+          <label class="lbl">رقم الجوال <span>*</span></label>
+          <input type="tel" name="phone" class="inp" placeholder="05xxxxxxxx" required>
+        </div>
+      </div>
+
+      <div class="grp">
+        <label class="lbl">البريد الإلكتروني <span>(اختياري)</span></label>
+        <input type="email" name="email" class="inp" placeholder="example@email.com">
+      </div>
+
+      <div class="row">
+        <div class="grp">
+          <label class="lbl">رقم الهوية / الإقامة</label>
+          <input type="text" name="nationalId" class="inp" placeholder="10xxxxxxxxx">
+        </div>
+        <div class="grp">
+          <label class="lbl">الجنسية</label>
+          <select name="nationality" class="inp">
+            <option value="سعودي">سعودي</option>
+            <option value="غير سعودي">غير سعودي</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="divider"><span class="divider-lbl">كلمة المرور</span></div>
+
+      <div class="row" style="margin-top:20px;">
+        <div class="grp">
+          <label class="lbl">كلمة المرور <span>*</span></label>
+          <input type="password" name="password" id="pw1" class="inp" placeholder="6 أحرف على الأقل" required minlength="6">
+        </div>
+        <div class="grp">
+          <label class="lbl">تأكيد كلمة المرور <span>*</span></label>
+          <input type="password" name="confirmPassword" id="pw2" class="inp" placeholder="أعد كتابتها" required>
+        </div>
+      </div>
+
+      <button type="submit" class="btn">إنشاء الحساب والبدء ←</button>
+    </form>
+
+    <div class="foot" style="margin-top:16px;">
+      لديك حساب بالفعل؟ <a href="/host/login">تسجيل الدخول</a>
+    </div>
+    <div class="foot" style="margin-top:8px;">
+      <a href="/" style="color:rgba(255,255,255,.3);">← العودة للموقع</a>
+    </div>
+  </div>
+</div>
+<script>
+document.querySelector('form').addEventListener('submit', function(e) {
+  if (document.getElementById('pw1').value !== document.getElementById('pw2').value) {
+    e.preventDefault(); alert('كلمتا المرور غير متطابقتين');
+  }
+});
+</script>
+</body>
+</html>

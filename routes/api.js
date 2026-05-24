@@ -3,10 +3,17 @@ const router = express.Router();
 const Contract = require('../models/Contract');
 const Inquiry = require('../models/Inquiry');
 const CommissionHistory = require('../models/CommissionHistory');
+const { verifyToken } = require('../utils/auth');
 
 const auth = (req, res, next) => {
   if (req.user) return next();
   res.status(401).json({ error: 'غير مخوّل' });
+};
+
+const hostAuth = (req, res, next) => {
+  req.hostAccount = verifyToken(req.cookies?.fs_host) || null;
+  if (!req.hostAccount) return res.status(401).json({ error: 'غير مخوّل' });
+  next();
 };
 
 // ─── Auto-close expired contracts ────────────────────────
@@ -261,6 +268,186 @@ router.get('/customers', auth, async (req, res) => {
     const Customer = require('../models/Customer');
     const customers = await Customer.find().sort({ createdAt: -1 }).select('-password').lean();
     res.json(customers);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ─── Host API ─────────────────────────────────────────────
+router.get('/host/me', hostAuth, async (req, res) => {
+  try {
+    const Host = require('../models/Host');
+    const host = await Host.findById(req.hostAccount.id).select('-password').lean();
+    if (!host) return res.status(404).json({ error: 'غير موجود' });
+    res.json(host);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.put('/host/profile', hostAuth, async (req, res) => {
+  try {
+    const Host = require('../models/Host');
+    const { name, email, bio, iban, bankName } = req.body;
+    const host = await Host.findByIdAndUpdate(
+      req.hostAccount.id,
+      { name: name?.trim(), email: email?.trim(), bio: bio?.trim(), iban: iban?.trim(), bankName: bankName?.trim() },
+      { new: true }
+    ).select('-password').lean();
+    res.json({ success: true, host });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.post('/host/change-password', hostAuth, async (req, res) => {
+  try {
+    const Host = require('../models/Host');
+    const { currentPassword, newPassword } = req.body;
+    const host = await Host.findById(req.hostAccount.id);
+    if (!host || !(await host.comparePassword(currentPassword))) return res.status(400).json({ error: 'كلمة المرور الحالية غير صحيحة' });
+    if (!newPassword || newPassword.length < 6) return res.status(400).json({ error: 'كلمة المرور الجديدة 6 أحرف على الأقل' });
+    host.password = newPassword;
+    await host.save();
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.get('/host/listings', hostAuth, async (req, res) => {
+  try {
+    const Listing = require('../models/Listing');
+    const listings = await Listing.find({ host: req.hostAccount.id }).sort({ createdAt: -1 }).lean();
+    res.json(listings);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.post('/host/listings', hostAuth, async (req, res) => {
+  try {
+    const Host = require('../models/Host');
+    const host = await Host.findById(req.hostAccount.id).lean();
+    if (!host || host.status !== 'approved') return res.status(403).json({ error: 'حسابك قيد المراجعة' });
+    const Listing = require('../models/Listing');
+    const listing = await new Listing({ ...req.body, host: req.hostAccount.id }).save();
+    res.json({ success: true, listing });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.put('/host/listings/:id', hostAuth, async (req, res) => {
+  try {
+    const Listing = require('../models/Listing');
+    const listing = await Listing.findOne({ _id: req.params.id, host: req.hostAccount.id });
+    if (!listing) return res.status(404).json({ error: 'غير موجود' });
+    await Listing.findByIdAndUpdate(req.params.id, req.body);
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.delete('/host/listings/:id', hostAuth, async (req, res) => {
+  try {
+    const Listing = require('../models/Listing');
+    await Listing.findOneAndDelete({ _id: req.params.id, host: req.hostAccount.id });
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.get('/host/bookings', hostAuth, async (req, res) => {
+  try {
+    const Listing = require('../models/Listing');
+    const Booking = require('../models/Booking');
+    const listings = await Listing.find({ host: req.hostAccount.id }, '_id').lean();
+    const ids = listings.map(l => l._id);
+    const bookings = await Booking.find({ listing: { $in: ids } })
+      .sort({ createdAt: -1 }).populate('listing', 'title photos').lean();
+    res.json(bookings);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.put('/host/bookings/:id/status', hostAuth, async (req, res) => {
+  try {
+    const Listing = require('../models/Listing');
+    const Booking = require('../models/Booking');
+    const { status } = req.body;
+    // Verify this booking belongs to host
+    const listing = await Listing.findOne({ host: req.hostAccount.id });
+    if (!listing) return res.status(403).json({ error: 'غير مسموح' });
+    const booking = await Booking.findOne({ _id: req.params.id, listing: { $in: (await Listing.find({ host: req.hostAccount.id }, '_id').lean()).map(l => l._id) } }).lean();
+    if (!booking) return res.status(404).json({ error: 'الحجز غير موجود' });
+
+    const prevStatus = booking.status;
+    await Booking.findByIdAndUpdate(req.params.id, { status });
+
+    // Handle listing availability
+    if (booking.listing && status !== prevStatus) {
+      if (status === 'awaiting_checkin') {
+        if (booking.bookingType === 'daily' && booking.checkIn && booking.checkOut) {
+          await Listing.findByIdAndUpdate(booking.listing, { $push: { blockedRanges: { checkIn: booking.checkIn, checkOut: booking.checkOut, bookingId: booking._id } } });
+        } else {
+          await Listing.findByIdAndUpdate(booking.listing, { available: false });
+        }
+      } else if (status === 'checkout' && booking.bookingType !== 'daily') {
+        await Listing.findByIdAndUpdate(booking.listing, { available: true });
+      } else if (status === 'cancelled' && ['awaiting_checkin','active'].includes(prevStatus)) {
+        if (booking.bookingType === 'daily') {
+          await Listing.findByIdAndUpdate(booking.listing, { $pull: { blockedRanges: { bookingId: booking._id } } });
+        } else {
+          await Listing.findByIdAndUpdate(booking.listing, { available: true });
+        }
+      }
+    }
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.get('/host/stats', hostAuth, async (req, res) => {
+  try {
+    const Listing = require('../models/Listing');
+    const Booking = require('../models/Booking');
+    const listings = await Listing.find({ host: req.hostAccount.id }, '_id').lean();
+    const ids = listings.map(l => l._id);
+    const bookings = await Booking.find({ listing: { $in: ids } }).lean();
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const thisMonthEarnings = bookings
+      .filter(b => new Date(b.createdAt) >= startOfMonth && !['cancelled'].includes(b.status))
+      .reduce((s, b) => s + (b.totalPrice || 0), 0);
+    const totalEarnings = bookings
+      .filter(b => b.status === 'checkout')
+      .reduce((s, b) => s + (b.totalPrice || 0), 0);
+    res.json({
+      totalListings: listings.length,
+      activeListings: (await Listing.countDocuments({ host: req.hostAccount.id, available: true })),
+      pendingBookings: bookings.filter(b => b.status === 'pending').length,
+      activeBookings: bookings.filter(b => b.status === 'active').length,
+      thisMonthEarnings,
+      totalEarnings,
+    });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ─── Admin: Hosts management ──────────────────────────────
+router.get('/hosts', auth, async (req, res) => {
+  try {
+    const Host = require('../models/Host');
+    const hosts = await Host.find().sort({ createdAt: -1 }).select('-password').lean();
+    res.json(hosts);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.put('/hosts/:id/approve', auth, async (req, res) => {
+  try {
+    const Host = require('../models/Host');
+    await Host.findByIdAndUpdate(req.params.id, { status: 'approved', rejectionReason: '' });
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.put('/hosts/:id/reject', auth, async (req, res) => {
+  try {
+    const Host = require('../models/Host');
+    await Host.findByIdAndUpdate(req.params.id, { status: 'rejected', rejectionReason: req.body.reason || '' });
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.put('/hosts/:id/suspend', auth, async (req, res) => {
+  try {
+    const Host = require('../models/Host');
+    await Host.findByIdAndUpdate(req.params.id, { status: 'suspended' });
+    res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 

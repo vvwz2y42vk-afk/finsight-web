@@ -70,12 +70,20 @@ function customerMiddleware(req, res, next) {
   next();
 }
 
+// ── Host middleware ──────────────────────────────────────
+function hostMiddleware(req, res, next) {
+  req.hostAccount = verifyToken(req.cookies?.fs_host) || null;
+  res.locals.hostAccount = req.hostAccount;
+  next();
+}
+
 // ── Routes ───────────────────────────────────────────────
 app.use('/api', dbMiddleware, (req, res, next) => {
   req.user = verifyToken(req.cookies?.fs_auth);
   next();
 });
 app.use('/account', dbMiddleware, customerMiddleware, require('./routes/account'));
+app.use('/host', dbMiddleware, hostMiddleware, require('./routes/host'));
 app.use('/', dbMiddleware, customerMiddleware, require('./routes/client'));
 app.use('/api', require('./routes/api'));
 

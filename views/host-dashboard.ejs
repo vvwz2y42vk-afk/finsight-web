@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة المضيف — Finsight</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0f0f1a;--sb:#13131f;--s2:#1a1a2e;--s3:#1f1f35;
+  --gold:#DAA520;--gl:rgba(218,165,32,.15);--gb:rgba(218,165,32,.3);--gb2:rgba(218,165,32,.15);
+  --green:#2ecc71;--gg:rgba(46,204,113,.12);--gb3:rgba(46,204,113,.3);
+  --red:#e74c3c;--rg:rgba(231,76,60,.1);--rb:rgba(231,76,60,.3);
+  --blue:#3498db;--bg2:rgba(52,152,219,.12);
+  --orange:#e67e22;--og:rgba(230,126,34,.12);
+  --t:#f0f0f0;--t2:rgba(240,240,240,.7);--t3:rgba(240,240,240,.4);--t4:rgba(240,240,240,.2);
+  --b:rgba(255,255,255,.07);--b2:rgba(255,255,255,.12);
+  --card:rgba(255,255,255,.03);--radius:14px;
+}
+body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--t);display:flex;min-height:100vh;font-size:13px;}
+
+/* ── Sidebar ─────────────────────────────────── */
+.sb{width:220px;min-height:100vh;background:var(--sb);border-left:1px solid var(--b);display:flex;flex-direction:column;flex-shrink:0;position:fixed;right:0;top:0;bottom:0;z-index:100;transition:transform .25s;}
+.sb-logo{padding:20px 16px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--b);}
+.sb-logo-icon{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--gold),#f0c040);color:#0f0f1a;font-weight:900;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.sb-logo-name{font-size:14px;font-weight:900;letter-spacing:.5px;}
+.sb-logo-sub{font-size:9px;color:var(--t3);letter-spacing:2px;}
+.nav{padding:12px 8px;flex:1;overflow-y:auto;}
+.ni{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:8px;cursor:pointer;font-family:'Cairo',sans-serif;font-size:12px;font-weight:600;color:var(--t3);background:none;border:none;width:100%;text-align:right;transition:all .15s;position:relative;}
+.ni:hover{background:var(--gl);color:rgba(240,240,240,.8);}
+.ni.active{background:rgba(218,165,32,.18);color:var(--gold);font-weight:700;}
+.ni.active::before{content:'';position:absolute;left:0;top:20%;height:60%;width:2px;background:var(--gold);border-radius:2px;}
+.ni-ico{font-size:13px;width:16px;text-align:center;}
+.ni-badge{margin-right:auto;background:var(--rg);color:var(--red);border:1px solid var(--rb);font-size:9px;padding:1px 5px;border-radius:20px;font-weight:700;}
+.ni-badge.gold{background:var(--gl);color:var(--gold);border-color:var(--gb);}
+.sb-divider{height:1px;background:var(--b);margin:6px 8px;}
+.sb-user{padding:12px 10px;border-top:1px solid var(--b);}
+.sb-user-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:var(--s2);}
+.sb-av{width:30px;height:30px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;color:#0f0f1a;flex-shrink:0;}
+.sb-name{font-size:12px;font-weight:700;color:var(--t);}
+.sb-role{font-size:9px;color:var(--gold);font-weight:600;}
+
+/* ── Main ────────────────────────────────────── */
+.main{margin-right:220px;flex:1;display:flex;flex-direction:column;min-height:100vh;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 8px;flex-wrap:wrap;gap:8px;}
+.page-title{font-size:16px;font-weight:800;color:var(--t);}
+.page-title span{color:var(--gold);}
+.page-sub{font-size:10px;color:var(--t3);margin-top:2px;}
+.topbar-r{display:flex;align-items:center;gap:8px;}
+.content{padding:0 20px 40px;flex:1;}
+
+/* ── Status Banner ───────────────────────────── */
+.status-banner{border-radius:12px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px;font-size:13px;font-weight:600;}
+.status-banner.pending{background:rgba(218,165,32,.1);border:1px solid var(--gb);}
+.status-banner.rejected{background:var(--rg);border:1px solid var(--rb);}
+.status-banner.suspended{background:var(--rg);border:1px solid var(--rb);}
+.status-banner.approved{display:none;}
+
+/* ── KPI Cards ───────────────────────────────── */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;}
+.kpi{background:var(--card);border:1px solid var(--b);border-radius:var(--radius);padding:16px;}
+.kpi-lbl{font-size:9px;color:var(--t3);letter-spacing:.8px;font-weight:700;text-transform:uppercase;margin-bottom:8px;}
+.kpi-val{font-size:22px;font-weight:800;color:var(--t);}
+.kpi-val.gold{color:var(--gold);}
+.kpi-val.green{color:var(--green);}
+.kpi-val.red{color:var(--red);}
+
+/* ── Cards ───────────────────────────────────── */
+.card{background:var(--card);border:1px solid var(--b);border-radius:var(--radius);padding:16px;margin-bottom:16px;}
+.card-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.card-title{font-size:13px;font-weight:700;color:var(--t);}
+.card-sub{font-size:10px;color:var(--t3);margin-top:2px;}
+
+/* ── Buttons ─────────────────────────────────── */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:8px;border:1px solid var(--b2);cursor:pointer;font-size:11px;font-weight:600;font-family:'Cairo',sans-serif;background:var(--s2);color:var(--t);transition:all .15s;}
+.btn:hover{background:var(--s3);}
+.btn-gold{background:var(--gold);color:#0f0f1a;border-color:var(--gold);}
+.btn-gold:hover{opacity:.9;}
+.btn-red{background:var(--rg);color:var(--red);border-color:var(--rb);}
+.btn-green{background:var(--gg);color:var(--green);border-color:var(--gb3);}
+.btn-sm{padding:4px 10px;font-size:10px;border-radius:6px;}
+
+/* ── Table ───────────────────────────────────── */
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+th{text-align:right;padding:8px 10px;font-size:10px;font-weight:700;color:var(--t3);border-bottom:1px solid var(--b);letter-spacing:.5px;}
+td{padding:9px 10px;border-bottom:1px solid var(--b);font-size:12px;vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(255,255,255,.02);}
+
+/* ── Pills ───────────────────────────────────── */
+.pill{font-size:9px;padding:3px 8px;border-radius:20px;font-weight:700;display:inline-block;}
+.p-pending{background:var(--gl);color:var(--gold);}
+.p-pay{background:var(--bg2);color:var(--blue);}
+.p-checkin{background:var(--og);color:var(--orange);}
+.p-active{background:var(--gg);color:var(--green);}
+.p-done{background:rgba(142,68,173,.12);color:#9b59b6;}
+.p-cancel{background:var(--s2);color:var(--t3);}
+
+/* ── Listing Cards ───────────────────────────── */
+.listing-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;}
+.lcard{background:var(--s2);border:1px solid var(--b);border-radius:12px;overflow:hidden;transition:border .2s;}
+.lcard:hover{border-color:var(--gb);}
+.lcard-photo{height:140px;background:var(--s3);position:relative;overflow:hidden;}
+.lcard-photo img{width:100%;height:100%;object-fit:cover;}
+.lcard-photo-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:2.5rem;color:var(--t4);}
+.lcard-avail{position:absolute;top:8px;right:8px;font-size:9px;font-weight:700;padding:3px 8px;border-radius:20px;}
+.lcard-avail.on{background:rgba(46,204,113,.85);color:#fff;}
+.lcard-avail.off{background:rgba(231,76,60,.85);color:#fff;}
+.lcard-body{padding:12px;}
+.lcard-title{font-size:12px;font-weight:700;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.lcard-price{font-size:11px;color:var(--gold);font-weight:600;margin-bottom:10px;}
+.lcard-actions{display:flex;gap:6px;}
+
+/* ── Modal ───────────────────────────────────── */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:center;justify-content:center;padding:20px;}
+.modal-bg.open{display:flex;}
+.modal{background:var(--sb);border:1px solid var(--b2);border-radius:20px;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--b);position:sticky;top:0;background:var(--sb);z-index:1;}
+.modal-title{font-size:15px;font-weight:800;}
+.modal-close{background:none;border:none;color:var(--t3);font-size:20px;cursor:pointer;padding:4px 8px;border-radius:6px;}
+.modal-close:hover{color:var(--t);}
+.modal-body{padding:20px;}
+
+/* ── Form ────────────────────────────────────── */
+.fg{margin-bottom:14px;}
+.fl{display:block;font-size:11px;font-weight:700;color:var(--t3);margin-bottom:5px;letter-spacing:.3px;}
+.fi{width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--b);background:rgba(255,255,255,.04);color:var(--t);font-family:'Cairo',sans-serif;font-size:13px;outline:none;transition:border .2s;}
+.fi::placeholder{color:var(--t4);}
+.fi:focus{border-color:var(--gb);}
+select.fi option{background:var(--sb);color:var(--t);}
+textarea.fi{resize:vertical;min-height:80px;}
+.f-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.f-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+
+/* ── Photo Upload ────────────────────────────── */
+.photo-wrap{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
+.photo-thumb{width:72px;height:72px;border-radius:8px;object-fit:cover;border:1px solid var(--b);position:relative;}
+.photo-del{position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.photo-add{width:72px;height:72px;border-radius:8px;border:1px dashed var(--b2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.4rem;color:var(--t4);transition:border .2s;}
+.photo-add:hover{border-color:var(--gb);color:var(--gold);}
+.upload-loading{font-size:10px;color:var(--gold);display:none;}
+
+/* ── Amenities ───────────────────────────────── */
+.amenities-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px;}
+.am-opt{display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:6px;border:1px solid var(--b);cursor:pointer;font-size:11px;font-weight:600;color:var(--t3);transition:all .15s;user-select:none;}
+.am-opt.sel{background:var(--gl);border-color:var(--gb);color:var(--gold);}
+
+/* ── Earnings ────────────────────────────────── */
+.earn-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;}
+.earn-card{background:var(--card);border:1px solid var(--b);border-radius:12px;padding:16px;text-align:center;}
+.earn-lbl{font-size:10px;color:var(--t3);font-weight:700;margin-bottom:8px;}
+.earn-val{font-size:1.5rem;font-weight:800;}
+
+/* ── Toast ───────────────────────────────────── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--s3);border:1px solid var(--b2);padding:10px 20px;border-radius:20px;font-size:12px;font-weight:700;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;}
+.toast.show{opacity:1;}
+
+/* ── Tabs inside section ─────────────────────── */
+.stabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
+.stab{padding:5px 14px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid var(--b);color:var(--t3);background:none;font-family:'Cairo',sans-serif;transition:all .15s;}
+.stab.active{background:var(--gl);border-color:var(--gb);color:var(--gold);}
+
+/* ── Responsive ──────────────────────────────── */
+.mob-tog{display:none;position:fixed;top:14px;left:14px;z-index:300;background:var(--sb);border:1px solid var(--b2);border-radius:8px;padding:8px;cursor:pointer;}
+@media(max-width:768px){
+  .sb{transform:translateX(100%);}.sb.open{transform:translateX(0);}
+  .main{margin-right:0;}.mob-tog{display:flex;}
+  .kpi-grid{grid-template-columns:1fr 1fr;}.earn-cards{grid-template-columns:1fr 1fr;}
+  .f-row,.f-row3{grid-template-columns:1fr;}.amenities-grid{grid-template-columns:1fr 1fr;}
+  .listing-grid{grid-template-columns:1fr 1fr;}
+}
+@media(max-width:480px){
+  .kpi-grid,.earn-cards,.listing-grid{grid-template-columns:1fr;}
+}
+.tc{display:none;}.tc.active{display:block;}
+</style>
+</head>
+<body>
+
+<!-- Mobile Toggle -->
+<button class="mob-tog" onclick="toggleSB()">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+</button>
+
+<!-- Sidebar -->
+<aside class="sb" id="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-icon">FS</div>
+    <div><div class="sb-logo-name">FINSIGHT</div><div class="sb-logo-sub">HOST PORTAL</div></div>
+  </div>
+  <nav class="nav">
+    <button class="ni active" id="ni-overview" onclick="goTab('overview',this)"><span class="ni-ico">⬡</span>نظرة عامة</button>
+    <button class="ni" id="ni-listings" onclick="goTab('listings',this)"><span class="ni-ico">🏠</span>عقاراتي<span class="ni-badge gold" id="nb-listings" style="display:none"></span></button>
+    <button class="ni" id="ni-bookings" onclick="goTab('bookings',this)"><span class="ni-ico">📅</span>الحجوزات<span class="ni-badge" id="nb-bookings" style="display:none"></span></button>
+    <div class="sb-divider"></div>
+    <button class="ni" id="ni-earnings" onclick="goTab('earnings',this)"><span class="ni-ico">💰</span>الأرباح</button>
+    <button class="ni" id="ni-profile" onclick="goTab('profile',this)"><span class="ni-ico">👤</span>حسابي</button>
+    <div class="sb-divider"></div>
+    <button class="ni" onclick="window.open('/','_blank')"><span class="ni-ico">🌐</span>الموقع</button>
+    <button class="ni" onclick="location.href='/host/logout'" style="color:var(--red);"><span class="ni-ico">🚪</span>خروج</button>
+  </nav>
+  <div class="sb-user">
+    <div class="sb-user-row">
+      <div class="sb-av" id="sb-av">م</div>
+      <div><div class="sb-name" id="sb-name">—</div><div class="sb-role" id="sb-status-lbl">قيد المراجعة</div></div>
+    </div>
+  </div>
+</aside>
+
+<!-- Main -->
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="page-title" id="pageTitle">نظرة <span>عامة</span></div>
+      <div class="page-sub" id="pageSub">مرحباً بك في لوحة المضيف</div>
+    </div>
+    <div class="topbar-r">
+      <div id="status-badge" style="font-size:11px;font-weight:700;padding:5px 12px;border-radius:20px;"></div>
+    </div>
+  </div>
+  <div class="content">
+
+    <!-- Status banner (shown when not approved) -->
+    <div class="status-banner pending" id="status-banner" style="display:none">
+      <span style="font-size:1.4rem;">⏳</span>
+      <div>
+        <div style="font-weight:700;color:var(--gold);" id="banner-title">حسابك قيد المراجعة</div>
+        <div style="font-size:12px;color:var(--t2);margin-top:2px;" id="banner-msg">سيتم مراجعة طلبك خلال 24 ساعة وستصلك إشعار عند الموافقة</div>
+      </div>
+    </div>
+
+    <!-- ══ OVERVIEW ══════════════════════════════ -->
+    <div class="tc active" id="tab-overview">
+      <div class="kpi-grid">
+        <div class="kpi"><div class="kpi-lbl">عقاراتي</div><div class="kpi-val gold" id="kpi-listings">—</div></div>
+        <div class="kpi"><div class="kpi-lbl">حجوزات جديدة</div><div class="kpi-val red" id="kpi-pending">—</div></div>
+        <div class="kpi"><div class="kpi-lbl">حجوزات نشطة</div><div class="kpi-val green" id="kpi-active">—</div></div>
+        <div class="kpi"><div class="kpi-lbl">أرباح الشهر</div><div class="kpi-val gold" id="kpi-month">—</div></div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><div><div class="card-title">📅 آخر الحجوزات</div></div><button class="btn btn-sm" onclick="goTab('bookings',document.getElementById('ni-bookings'))">عرض الكل</button></div>
+        <div class="tbl-wrap"><table><thead><tr><th>العقار</th><th>الاسم</th><th>الجوال</th><th>النوع</th><th>الإجمالي</th><th>الحالة</th></tr></thead><tbody id="recent-bookings"></tbody></table></div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><div><div class="card-title">🏠 عقاراتي الأخيرة</div></div><button class="btn btn-sm btn-gold" onclick="goTab('listings',document.getElementById('ni-listings'))">إدارة العقارات</button></div>
+        <div id="recent-listings-wrap"></div>
+      </div>
+    </div>
+
+    <!-- ══ LISTINGS ══════════════════════════════ -->
+    <div class="tc" id="tab-listings">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+        <div style="font-size:12px;color:var(--t3);">إدارة وإضافة عقاراتك</div>
+        <button class="btn btn-gold" onclick="openListingModal()">+ إضافة عقار</button>
+      </div>
+      <div class="listing-grid" id="listings-grid">
+        <div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--t4);">جاري التحميل...</div>
+      </div>
+    </div>
+
+    <!-- ══ BOOKINGS ══════════════════════════════ -->
+    <div class="tc" id="tab-bookings">
+      <div class="stabs" id="booking-filters">
+        <button class="stab active" onclick="filterBookings('all',this)">الكل</button>
+        <button class="stab" onclick="filterBookings('pending',this)">⏳ جديد</button>
+        <button class="stab" onclick="filterBookings('awaiting_payment',this)">💳 انتظار الدفع</button>
+        <button class="stab" onclick="filterBookings('awaiting_checkin',this)">🔑 انتظار دخول</button>
+        <button class="stab" onclick="filterBookings('active',this)">✅ نشط</button>
+        <button class="stab" onclick="filterBookings('checkout',this)">🏁 خروج</button>
+        <button class="stab" onclick="filterBookings('cancelled',this)">❌ ملغي</button>
+      </div>
+      <div class="card" style="margin-top:0;">
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>العقار</th><th>الاسم</th><th>الجوال</th><th>النوع</th><th>التواريخ</th><th>الإجمالي</th><th>الحالة</th><th>إجراء</th></tr></thead>
+          <tbody id="bookings-tbody"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ══ EARNINGS ══════════════════════════════ -->
+    <div class="tc" id="tab-earnings">
+      <div class="earn-cards">
+        <div class="earn-card"><div class="earn-lbl">إجمالي الأرباح</div><div class="earn-val gold" id="earn-total">—</div><div style="font-size:10px;color:var(--t3);margin-top:4px;">ريال سعودي</div></div>
+        <div class="earn-card"><div class="earn-lbl">هذا الشهر</div><div class="earn-val green" id="earn-month">—</div><div style="font-size:10px;color:var(--t3);margin-top:4px;">ريال سعودي</div></div>
+        <div class="earn-card"><div class="earn-lbl">في الانتظار</div><div class="earn-val" id="earn-pending" style="color:var(--orange);">—</div><div style="font-size:10px;color:var(--t3);margin-top:4px;">ريال سعودي</div></div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><div class="card-title">سجل الحجوزات المكتملة</div></div>
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>#</th><th>العقار</th><th>المستأجر</th><th>النوع</th><th>المبلغ</th><th>التاريخ</th></tr></thead>
+          <tbody id="earn-tbody"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ══ PROFILE ══════════════════════════════ -->
+    <div class="tc" id="tab-profile">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;" id="profile-grid">
+        <!-- Personal Info -->
+        <div class="card">
+          <div class="card-hd"><div class="card-title">👤 المعلومات الشخصية</div></div>
+          <form id="profile-form" onsubmit="saveProfile(event)">
+            <div class="fg"><label class="fl">الاسم الكامل</label><input name="name" class="fi" id="pf-name"></div>
+            <div class="fg"><label class="fl">البريد الإلكتروني</label><input name="email" type="email" class="fi" id="pf-email"></div>
+            <div class="fg"><label class="fl">نبذة عنك</label><textarea name="bio" class="fi" id="pf-bio" rows="3" placeholder="عرّف بنفسك للمستأجرين..."></textarea></div>
+            <div class="fg"><label class="fl">رقم الجوال</label><input class="fi" value="" id="pf-phone" disabled style="opacity:.5;"></div>
+            <button type="submit" class="btn btn-gold" style="width:100%;">حفظ التغييرات</button>
+          </form>
+        </div>
+        <!-- Bank & Password -->
+        <div>
+          <div class="card" style="margin-bottom:0;">
+            <div class="card-hd"><div class="card-title">🏦 معلومات الحساب البنكي</div><div class="card-sub">لتحويل أرباحك</div></div>
+            <form id="bank-form" onsubmit="saveBank(event)">
+              <div class="fg"><label class="fl">رقم الآيبان (IBAN)</label><input name="iban" class="fi" id="pf-iban" placeholder="SA00 0000 0000 0000 0000 0000" dir="ltr"></div>
+              <div class="fg"><label class="fl">اسم البنك</label><input name="bankName" class="fi" id="pf-bank" placeholder="البنك الأهلي، الراجحي..."></div>
+              <button type="submit" class="btn btn-gold" style="width:100%;">حفظ البنك</button>
+            </form>
+          </div>
+          <div class="card" style="margin-top:16px;">
+            <div class="card-hd"><div class="card-title">🔒 تغيير كلمة المرور</div></div>
+            <form id="pw-form" onsubmit="changePassword(event)">
+              <div class="fg"><label class="fl">كلمة المرور الحالية</label><input type="password" name="currentPassword" class="fi" required></div>
+              <div class="fg"><label class="fl">كلمة المرور الجديدة</label><input type="password" name="newPassword" class="fi" required minlength="6"></div>
+              <button type="submit" class="btn" style="width:100%;">تغيير كلمة المرور</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- ══ LISTING MODAL ═════════════════════════════ -->
+<div class="modal-bg" id="listing-modal">
+  <div class="modal">
+    <div class="modal-hd">
+      <span class="modal-title" id="modal-title">إضافة عقار جديد</span>
+      <button class="modal-close" onclick="closeListingModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <form id="listing-form" onsubmit="saveListing(event)">
+        <input type="hidden" id="lf-id">
+        <div class="f-row">
+          <div class="fg"><label class="fl">نوع العقار</label>
+            <select name="category" class="fi" id="lf-cat" onchange="toggleListingFields()">
+              <option value="rental_apartment">شقة للإيجار</option>
+              <option value="rental_commercial">معرض للإيجار</option>
+              <option value="sale_land">أرض للبيع</option>
+              <option value="sale_apartment">شقة للبيع</option>
+            </select>
+          </div>
+          <div class="fg"><label class="fl">عنوان العقار</label><input name="title" class="fi" id="lf-title" required placeholder="مثال: شقة فاخرة في المنارا"></div>
+        </div>
+        <div class="fg"><label class="fl">الموقع / العنوان</label><input name="location" class="fi" id="lf-location" placeholder="المدينة المنورة، حي النور..."></div>
+        <div class="f-row">
+          <div class="fg" id="lf-apt-grp"><label class="fl">المبنى / المجمع</label><input name="building" class="fi" id="lf-building" placeholder="مجمع المنارا"></div>
+          <div class="fg"><label class="fl">رقم الوحدة / الشقة</label><input name="apt" class="fi" id="lf-apt" placeholder="101"></div>
+        </div>
+        <div class="f-row3" id="lf-apt-details">
+          <div class="fg"><label class="fl">غرف النوم</label><input type="number" name="bedrooms" class="fi" id="lf-bed" value="1" min="0"></div>
+          <div class="fg"><label class="fl">الحمامات</label><input type="number" name="bathrooms" class="fi" id="lf-bath" value="1" min="0"></div>
+          <div class="fg"><label class="fl">أقصى ضيوف</label><input type="number" name="maxGuests" class="fi" id="lf-guests" value="4" min="1"></div>
+        </div>
+        <div class="f-row">
+          <div class="fg"><label class="fl">المساحة (م²)</label><input type="number" name="area" class="fi" id="lf-area" value="0" min="0"></div>
+          <div class="fg" id="lf-frontage-grp"><label class="fl">الواجهة (م)</label><input type="number" name="frontage" class="fi" id="lf-front" value="0" min="0"></div>
+        </div>
+        <div class="f-row" id="lf-rental-type">
+          <div class="fg"><label class="fl">نوع الإيجار</label>
+            <select name="type" class="fi" id="lf-type">
+              <option value="both">يومي + شهري</option>
+              <option value="daily">يومي فقط</option>
+              <option value="annual">شهري فقط</option>
+            </select>
+          </div>
+          <div class="fg"><label class="fl">الحد الأدنى للليالي</label><input type="number" name="minNights" class="fi" id="lf-min" value="1" min="1"></div>
+        </div>
+        <div class="f-row3">
+          <div class="fg" id="lf-daily-grp"><label class="fl">سعر الليلة (ريال)</label><input type="number" name="price_daily" class="fi" id="lf-pdaily" value="0" min="0"></div>
+          <div class="fg" id="lf-annual-grp"><label class="fl">السعر الشهري (ريال)</label><input type="number" name="price_annual" class="fi" id="lf-pannual" value="0" min="0"></div>
+          <div class="fg" id="lf-sale-grp"><label class="fl">سعر البيع (ريال)</label><input type="number" name="price_sale" class="fi" id="lf-psale" value="0" min="0"></div>
+        </div>
+        <div class="f-row">
+          <div class="fg"><label class="fl">وقت الدخول</label><input type="time" name="checkInTime" class="fi" id="lf-cin" value="15:00"></div>
+          <div class="fg"><label class="fl">وقت الخروج</label><input type="time" name="checkOutTime" class="fi" id="lf-cout" value="11:00"></div>
+        </div>
+        <div class="f-row">
+          <div class="fg"><label class="fl">سياسة الإلغاء</label>
+            <select name="cancellationPolicy" class="fi" id="lf-cancel">
+              <option value="flexible">مرنة — استرداد كامل قبل 24 ساعة</option>
+              <option value="moderate" selected>معتدلة — استرداد 50% قبل 5 أيام</option>
+              <option value="strict">صارمة — لا استرداد</option>
+            </select>
+          </div>
+          <div class="fg"><label class="fl">الحالة</label>
+            <select name="available" class="fi" id="lf-avail">
+              <option value="true">متاح للحجز</option>
+              <option value="false">غير متاح</option>
+            </select>
+          </div>
+        </div>
+        <div class="fg">
+          <label class="fl">الوصف</label>
+          <textarea name="description" class="fi" id="lf-desc" rows="3" placeholder="صف عقارك بالتفصيل..."></textarea>
+        </div>
+        <div class="fg">
+          <label class="fl">قواعد المنزل</label>
+          <textarea name="houseRules" class="fi" id="lf-rules" rows="2" placeholder="لا تدخين، لا حيوانات أليفة..."></textarea>
+        </div>
+        <div class="fg">
+          <label class="fl">المرافق والمميزات</label>
+          <div class="amenities-grid" id="amenities-grid">
+            <% ['واي فاي','مكيف','مطبخ مجهز','تلفزيون','غسالة','موقف سيارة','مصعد','حراسة 24 ساعة','مطل على الشارع','أثاث كامل','ثلاجة','تدفئة مركزية'].forEach(a => { %>
+            <div class="am-opt" data-am="<%= a %>" onclick="toggleAm(this)">
+              <%= {'واي فاي':'📶','مكيف':'❄️','مطبخ مجهز':'🍳','تلفزيون':'📺','غسالة':'🌀','موقف سيارة':'🚗','مصعد':'🛗','حراسة 24 ساعة':'🔒','مطل على الشارع':'🪟','أثاث كامل':'🛋️','ثلاجة':'🧊','تدفئة مركزية':'🌡️'}[a] || '✓' %> <%= a %>
+            </div>
+            <% }); %>
+          </div>
+        </div>
+        <div class="fg">
+          <label class="fl">صور العقار</label>
+          <div class="photo-wrap" id="photo-wrap">
+            <div class="photo-add" onclick="document.getElementById('photo-file').click()">+</div>
+          </div>
+          <input type="file" id="photo-file" accept="image/*" multiple style="display:none" onchange="handlePhotos(this.files)">
+          <div class="upload-loading" id="upload-loading">⏳ جاري الرفع...</div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:8px;">
+          <button type="submit" class="btn btn-gold" style="flex:1;padding:12px;font-size:13px;">حفظ العقار</button>
+          <button type="button" class="btn" onclick="closeListingModal()" style="padding:12px;">إلغاء</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+const CLOUDINARY_CLOUD = 'dsy6vqaia';
+const CLOUDINARY_PRESET = 'finsight_upload';
+let allListings = [], allBookings = [], hostData = null, currentBookingFilter = 'all';
+let editingListingId = null;
+let uploadedPhotos = [];
+
+// ── Init ──────────────────────────────────────
+async function init() {
+  await Promise.all([loadHost(), loadListings(), loadBookings(), loadStats()]);
+}
+
+async function loadHost() {
+  try {
+    const r = await fetch('/api/host/me');
+    if (!r.ok) { location.href = '/host/login'; return; }
+    hostData = await r.json();
+    document.getElementById('sb-name').textContent = hostData.name;
+    document.getElementById('sb-av').textContent = hostData.name?.[0] || 'م';
+    document.getElementById('pf-name').value = hostData.name || '';
+    document.getElementById('pf-email').value = hostData.email || '';
+    document.getElementById('pf-bio').value = hostData.bio || '';
+    document.getElementById('pf-phone').value = hostData.phone || '';
+    document.getElementById('pf-iban').value = hostData.iban || '';
+    document.getElementById('pf-bank').value = hostData.bankName || '';
+
+    const statusMap = {
+      pending: { lbl: 'قيد المراجعة', color: 'var(--gold)', bg: 'var(--gl)', border: 'var(--gb)' },
+      approved: { lbl: '✅ معتمد', color: 'var(--green)', bg: 'var(--gg)', border: 'var(--gb3)' },
+      rejected: { lbl: '❌ مرفوض', color: 'var(--red)', bg: 'var(--rg)', border: 'var(--rb)' },
+      suspended: { lbl: '⛔ موقوف', color: 'var(--red)', bg: 'var(--rg)', border: 'var(--rb)' },
+    };
+    const s = statusMap[hostData.status] || statusMap.pending;
+    document.getElementById('sb-status-lbl').textContent = s.lbl;
+    document.getElementById('sb-status-lbl').style.color = s.color;
+    const badge = document.getElementById('status-badge');
+    badge.textContent = s.lbl;
+    badge.style.cssText = `font-size:11px;font-weight:700;padding:5px 12px;border-radius:20px;background:${s.bg};color:${s.color};border:1px solid ${s.border};`;
+
+    const banner = document.getElementById('status-banner');
+    if (hostData.status !== 'approved') {
+      banner.style.display = 'flex';
+      if (hostData.status === 'rejected') {
+        banner.className = 'status-banner rejected';
+        banner.querySelector('#banner-title').textContent = 'تم رفض طلبك';
+        banner.querySelector('#banner-msg').textContent = (hostData.rejectionReason || '') + ' — يمكنك التواصل مع الدعم لمزيد من المعلومات';
+        banner.querySelector('span').textContent = '❌';
+      } else if (hostData.status === 'suspended') {
+        banner.className = 'status-banner suspended';
+        banner.querySelector('#banner-title').textContent = 'تم إيقاف حسابك';
+        banner.querySelector('#banner-msg').textContent = 'تواصل مع فريق Finsight لمزيد من المعلومات';
+        banner.querySelector('span').textContent = '⛔';
+      }
+    }
+  } catch(e) { console.error(e); }
+}
+
+async function loadStats() {
+  try {
+    const r = await fetch('/api/host/stats');
+    if (!r.ok) return;
+    const s = await r.json();
+    document.getElementById('kpi-listings').textContent = s.totalListings;
+    document.getElementById('kpi-pending').textContent = s.pendingBookings;
+    document.getElementById('kpi-active').textContent = s.activeBookings;
+    document.getElementById('kpi-month').textContent = s.thisMonthEarnings.toLocaleString('ar-SA') + ' ﷼';
+    document.getElementById('earn-total').textContent = s.totalEarnings.toLocaleString('ar-SA');
+    document.getElementById('earn-month').textContent = s.thisMonthEarnings.toLocaleString('ar-SA');
+    const pendingEarn = allBookings.filter(b => ['awaiting_checkin','active'].includes(b.status)).reduce((a,b) => a + (b.totalPrice||0), 0);
+    document.getElementById('earn-pending').textContent = pendingEarn.toLocaleString('ar-SA');
+  } catch(e) {}
+}
+
+async function loadListings() {
+  try {
+    const r = await fetch('/api/host/listings');
+    if (!r.ok) return;
+    allListings = await r.json();
+    const nb = document.getElementById('nb-listings');
+    if (allListings.length > 0) { nb.style.display = ''; nb.textContent = allListings.length; nb.className = 'ni-badge gold'; }
+    renderListings(allListings);
+    renderRecentListings();
+  } catch(e) {}
+}
+
+async function loadBookings() {
+  try {
+    const r = await fetch('/api/host/bookings');
+    if (!r.ok) return;
+    allBookings = await r.json();
+    const pending = allBookings.filter(b => b.status === 'pending').length;
+    const nb = document.getElementById('nb-bookings');
+    if (pending > 0) { nb.style.display = ''; nb.textContent = pending; }
+    renderBookings();
+    renderRecentBookings();
+    renderEarnings();
+  } catch(e) {}
+}
+
+// ── Listings Render ───────────────────────────
+const catLabel = { rental_apartment:'شقة إيجار', rental_commercial:'معرض إيجار', sale_land:'أرض للبيع', sale_apartment:'شقة للبيع' };
+const catIcon  = { rental_apartment:'🛏️', rental_commercial:'🏪', sale_land:'🌍', sale_apartment:'🏠' };
+
+function renderListings(list) {
+  const g = document.getElementById('listings-grid');
+  if (!list.length) { g.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--t4);font-size:1.5rem;">🏠<br><br>لا توجد عقارات بعد<br><span style="font-size:12px;">أضف عقارك الأول!</span></div>'; return; }
+  g.innerHTML = list.map(l => `
+    <div class="lcard">
+      <div class="lcard-photo">
+        ${l.photos?.length ? `<img src="${l.photos[0]}" alt="">` : `<div class="lcard-photo-ph">${catIcon[l.category]||'🏠'}</div>`}
+        <span class="lcard-avail ${l.available?'on':'off'}">${l.available?'متاح':'غير متاح'}</span>
+      </div>
+      <div class="lcard-body">
+        <div class="lcard-title">${l.title}</div>
+        <div class="lcard-price">${l.price_daily>0?l.price_daily.toLocaleString()+' ﷼/ليلة':l.price_annual>0?l.price_annual.toLocaleString()+' ﷼/شهر':l.price_sale>0?l.price_sale.toLocaleString()+' ﷼':'—'}</div>
+        <div class="lcard-actions">
+          <button class="btn btn-sm" style="flex:1;" onclick="editListing('${l._id}')">✏️ تعديل</button>
+          <button class="btn btn-sm btn-red" onclick="deleteListing('${l._id}')">🗑️</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function renderRecentListings() {
+  const w = document.getElementById('recent-listings-wrap');
+  const list = allListings.slice(0,4);
+  if (!list.length) { w.innerHTML = '<div style="text-align:center;padding:24px;color:var(--t4);">لا توجد عقارات</div>'; return; }
+  w.innerHTML = `<div class="listing-grid">${list.map(l => `
+    <div class="lcard">
+      <div class="lcard-photo">
+        ${l.photos?.length ? `<img src="${l.photos[0]}" alt="">` : `<div class="lcard-photo-ph">${catIcon[l.category]||'🏠'}</div>`}
+        <span class="lcard-avail ${l.available?'on':'off'}">${l.available?'متاح':'غير متاح'}</span>
+      </div>
+      <div class="lcard-body">
+        <div class="lcard-title">${l.title}</div>
+        <div class="lcard-price">${l.price_daily>0?l.price_daily.toLocaleString()+' ﷼/ليلة':l.price_annual>0?l.price_annual.toLocaleString()+' ﷼/شهر':l.price_sale>0?l.price_sale.toLocaleString()+' ﷼':'—'}</div>
+      </div>
+    </div>`).join('')}</div>`;
+}
+
+// ── Bookings Render ───────────────────────────
+const stColors = { pending:'p-pending', awaiting_payment:'p-pay', awaiting_checkin:'p-checkin', active:'p-active', checkout:'p-done', cancelled:'p-cancel' };
+const stLabels = { pending:'⏳ جديد', awaiting_payment:'💳 انتظار الدفع', awaiting_checkin:'🔑 انتظار دخول', active:'✅ نشط', checkout:'🏁 خروج', cancelled:'❌ ملغي' };
+const stNext   = { pending: ['awaiting_checkin','قبول الحجز ←','btn-gold'], awaiting_checkin: ['active','دخول العميل ←','btn-green'], active: ['checkout','خروج العميل ✓','btn-green'] };
+
+function renderBookings() {
+  const tbody = document.getElementById('bookings-tbody');
+  const list = currentBookingFilter === 'all' ? allBookings : allBookings.filter(b => b.status === currentBookingFilter);
+  if (!list.length) { tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--t4);">لا توجد حجوزات${currentBookingFilter!=='all'?' في هذه الحالة':''}</td></tr>`; return; }
+  tbody.innerHTML = list.map(b => {
+    const next = stNext[b.status];
+    const ci = b.checkIn ? new Date(b.checkIn).toLocaleDateString('ar-SA') : '—';
+    const co = b.checkOut && b.bookingType==='daily' ? ' ← ' + new Date(b.checkOut).toLocaleDateString('ar-SA') : '';
+    return `<tr>
+      <td style="font-weight:700;">${b.listing?.title || b.listingTitle || '—'}</td>
+      <td>${b.name}</td>
+      <td><a href="https://wa.me/${b.phone.replace(/^0/,'966')}" target="_blank" style="color:var(--green);">${b.phone}</a></td>
+      <td>${b.bookingType==='daily'?'🌙 يومي':b.bookingType==='annual'?'📋 شهري':'💬 استفسار'}</td>
+      <td style="font-size:10px;color:var(--t3);">${ci}${co}</td>
+      <td style="font-weight:700;color:var(--gold);">${b.totalPrice?b.totalPrice.toLocaleString()+' ﷼':'—'}</td>
+      <td><span class="pill ${stColors[b.status]||'p-pending'}">${stLabels[b.status]||b.status}</span></td>
+      <td style="display:flex;gap:4px;flex-wrap:wrap;">
+        ${next ? `<button class="btn btn-sm ${next[2]}" onclick="updateBookingStatus('${b._id}','${next[0]}')">${next[1]}</button>` : ''}
+        ${!['checkout','cancelled'].includes(b.status) ? `<button class="btn btn-sm btn-red" onclick="updateBookingStatus('${b._id}','cancelled')">رفض</button>` : ''}
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function renderRecentBookings() {
+  const tbody = document.getElementById('recent-bookings');
+  const list = allBookings.slice(0, 6);
+  if (!list.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--t4);">لا توجد حجوزات بعد</td></tr>'; return; }
+  tbody.innerHTML = list.map(b => `<tr>
+    <td style="font-weight:700;">${b.listing?.title || b.listingTitle || '—'}</td>
+    <td>${b.name}</td>
+    <td style="color:var(--green);">${b.phone}</td>
+    <td>${b.bookingType==='daily'?'🌙 يومي':b.bookingType==='annual'?'📋 شهري':'💬'}</td>
+    <td>${b.totalPrice?b.totalPrice.toLocaleString()+' ﷼':'—'}</td>
+    <td><span class="pill ${stColors[b.status]||'p-pending'}">${stLabels[b.status]||b.status}</span></td>
+  </tr>`).join('');
+}
+
+function renderEarnings() {
+  const tbody = document.getElementById('earn-tbody');
+  const done = allBookings.filter(b => b.status === 'checkout');
+  const pending = allBookings.filter(b => ['awaiting_checkin','active'].includes(b.status)).reduce((a,b) => a + (b.totalPrice||0), 0);
+  document.getElementById('earn-pending').textContent = pending.toLocaleString('ar-SA');
+  if (!done.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--t4);">لا توجد حجوزات مكتملة</td></tr>'; return; }
+  tbody.innerHTML = done.map((b,i) => `<tr>
+    <td style="color:var(--t3);">${i+1}</td>
+    <td>${b.listing?.title || b.listingTitle || '—'}</td>
+    <td>${b.name}</td>
+    <td>${b.bookingType==='daily'?'يومي':'شهري'}</td>
+    <td style="color:var(--gold);font-weight:700;">${(b.totalPrice||0).toLocaleString()} ﷼</td>
+    <td style="color:var(--t3);font-size:10px;">${new Date(b.createdAt).toLocaleDateString('ar-SA')}</td>
+  </tr>`).join('');
+}
+
+function filterBookings(status, btn) {
+  currentBookingFilter = status;
+  document.querySelectorAll('.stab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderBookings();
+}
+
+// ── Booking Actions ───────────────────────────
+async function updateBookingStatus(id, status) {
+  try {
+    const r = await fetch(`/api/host/bookings/${id}/status`, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ status }) });
+    if (!r.ok) throw new Error();
+    showToast('✅ تم تحديث الحالة');
+    await loadBookings();
+    await loadStats();
+  } catch(e) { showToast('⚠️ حدث خطأ'); }
+}
+
+// ── Listing Modal ─────────────────────────────
+function openListingModal() {
+  editingListingId = null;
+  document.getElementById('modal-title').textContent = 'إضافة عقار جديد';
+  document.getElementById('listing-form').reset();
+  uploadedPhotos = [];
+  renderPhotoPreviews();
+  document.querySelectorAll('.am-opt').forEach(el => el.classList.remove('sel'));
+  toggleListingFields();
+  document.getElementById('listing-modal').classList.add('open');
+}
+
+function editListing(id) {
+  const l = allListings.find(x => x._id === id);
+  if (!l) return;
+  editingListingId = id;
+  document.getElementById('modal-title').textContent = 'تعديل العقار';
+  document.getElementById('lf-cat').value = l.category || 'rental_apartment';
+  document.getElementById('lf-title').value = l.title || '';
+  document.getElementById('lf-location').value = l.location || '';
+  document.getElementById('lf-building').value = l.building || '';
+  document.getElementById('lf-apt').value = l.apt || '';
+  document.getElementById('lf-bed').value = l.bedrooms || 1;
+  document.getElementById('lf-bath').value = l.bathrooms || 1;
+  document.getElementById('lf-guests').value = l.maxGuests || 4;
+  document.getElementById('lf-area').value = l.area || 0;
+  document.getElementById('lf-front').value = l.frontage || 0;
+  document.getElementById('lf-type').value = l.type || 'both';
+  document.getElementById('lf-min').value = l.minNights || 1;
+  document.getElementById('lf-pdaily').value = l.price_daily || 0;
+  document.getElementById('lf-pannual').value = l.price_annual || 0;
+  document.getElementById('lf-psale').value = l.price_sale || 0;
+  document.getElementById('lf-cin').value = l.checkInTime || '15:00';
+  document.getElementById('lf-cout').value = l.checkOutTime || '11:00';
+  document.getElementById('lf-cancel').value = l.cancellationPolicy || 'moderate';
+  document.getElementById('lf-avail').value = String(l.available !== false);
+  document.getElementById('lf-desc').value = l.description || '';
+  document.getElementById('lf-rules').value = l.houseRules || '';
+  uploadedPhotos = l.photos ? [...l.photos] : [];
+  renderPhotoPreviews();
+  const ams = l.amenities || [];
+  document.querySelectorAll('.am-opt').forEach(el => { el.classList.toggle('sel', ams.includes(el.dataset.am)); });
+  toggleListingFields();
+  document.getElementById('listing-modal').classList.add('open');
+}
+
+function closeListingModal() { document.getElementById('listing-modal').classList.remove('open'); }
+
+function toggleListingFields() {
+  const cat = document.getElementById('lf-cat').value;
+  const isApt = cat === 'rental_apartment';
+  const isSale = cat === 'sale_apartment' || cat === 'sale_land';
+  const isLand = cat === 'sale_land';
+  const isRental = cat === 'rental_apartment' || cat === 'rental_commercial';
+  el('lf-apt-details').style.display = (isApt || cat==='sale_apartment') ? '' : 'none';
+  el('lf-frontage-grp').style.display = isLand ? '' : 'none';
+  el('lf-rental-type').style.display = isApt ? '' : 'none';
+  el('lf-daily-grp').style.display = isApt ? '' : 'none';
+  el('lf-annual-grp').style.display = isRental ? '' : 'none';
+  el('lf-sale-grp').style.display = isSale ? '' : 'none';
+}
+
+async function saveListing(e) {
+  e.preventDefault();
+  const cat = el('lf-cat').value;
+  const isApt = cat === 'rental_apartment';
+  const isSale = cat === 'sale_apartment' || cat === 'sale_land';
+  const isRental = cat === 'rental_apartment' || cat === 'rental_commercial';
+  const data = {
+    category: cat,
+    title: el('lf-title').value.trim(),
+    location: el('lf-location').value.trim(),
+    building: isApt ? el('lf-building').value.trim() : '',
+    apt: el('lf-apt').value.trim(),
+    bedrooms: parseInt(el('lf-bed').value)||1,
+    bathrooms: parseInt(el('lf-bath').value)||1,
+    maxGuests: parseInt(el('lf-guests').value)||4,
+    area: parseFloat(el('lf-area').value)||0,
+    frontage: parseFloat(el('lf-front').value)||0,
+    type: el('lf-type').value,
+    minNights: parseInt(el('lf-min').value)||1,
+    price_daily: parseFloat(el('lf-pdaily').value)||0,
+    price_annual: parseFloat(el('lf-pannual').value)||0,
+    price_sale: parseFloat(el('lf-psale').value)||0,
+    checkInTime: el('lf-cin').value,
+    checkOutTime: el('lf-cout').value,
+    cancellationPolicy: el('lf-cancel').value,
+    available: el('lf-avail').value === 'true',
+    description: el('lf-desc').value.trim(),
+    houseRules: el('lf-rules').value.trim(),
+    amenities: [...document.querySelectorAll('.am-opt.sel')].map(a => a.dataset.am),
+    photos: uploadedPhotos,
+  };
+  try {
+    const url = editingListingId ? `/api/host/listings/${editingListingId}` : '/api/host/listings';
+    const method = editingListingId ? 'PUT' : 'POST';
+    const r = await fetch(url, { method, headers:{'Content-Type':'application/json'}, body: JSON.stringify(data) });
+    const res = await r.json();
+    if (!r.ok) { showToast('⚠️ ' + (res.error||'خطأ')); return; }
+    showToast(editingListingId ? '✅ تم تحديث العقار' : '✅ تم إضافة العقار');
+    closeListingModal();
+    await loadListings();
+    await loadStats();
+  } catch(e) { showToast('⚠️ حدث خطأ'); }
+}
+
+async function deleteListing(id) {
+  if (!confirm('هل تريد حذف هذا العقار؟')) return;
+  try {
+    await fetch(`/api/host/listings/${id}`, { method: 'DELETE' });
+    showToast('🗑️ تم الحذف');
+    await loadListings();
+    await loadStats();
+  } catch(e) { showToast('⚠️ حدث خطأ'); }
+}
+
+// ── Photo Upload ──────────────────────────────
+function renderPhotoPreviews() {
+  const wrap = document.getElementById('photo-wrap');
+  wrap.innerHTML = uploadedPhotos.map((url, i) => `
+    <div style="position:relative;display:inline-block;">
+      <img src="${url}" class="photo-thumb" alt="">
+      <button class="photo-del" onclick="removePhoto(${i})">✕</button>
+    </div>`).join('') +
+    '<div class="photo-add" onclick="document.getElementById(\'photo-file\').click()">+</div>';
+}
+function removePhoto(i) { uploadedPhotos.splice(i,1); renderPhotoPreviews(); }
+async function handlePhotos(files) {
+  const loading = document.getElementById('upload-loading');
+  loading.style.display = 'block';
+  for (const file of files) {
+    try {
+      const fd = new FormData();
+      fd.append('file', file); fd.append('upload_preset', CLOUDINARY_PRESET);
+      const r = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, { method:'POST', body:fd });
+      const data = await r.json();
+      if (data.secure_url) uploadedPhotos.push(data.secure_url);
+    } catch(e) {}
+  }
+  loading.style.display = 'none';
+  renderPhotoPreviews();
+}
+function toggleAm(el) { el.classList.toggle('sel'); }
+
+// ── Profile ───────────────────────────────────
+async function saveProfile(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const data = Object.fromEntries(fd);
+  try {
+    const r = await fetch('/api/host/profile', { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data) });
+    const res = await r.json();
+    if (!r.ok) { showToast('⚠️ ' + (res.error||'خطأ')); return; }
+    showToast('✅ تم حفظ التغييرات');
+    document.getElementById('sb-name').textContent = data.name;
+  } catch(e) { showToast('⚠️ حدث خطأ'); }
+}
+async function saveBank(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const data = Object.fromEntries(fd);
+  try {
+    const r = await fetch('/api/host/profile', { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data) });
+    if (!r.ok) throw new Error();
+    showToast('✅ تم حفظ البيانات البنكية');
+  } catch(e) { showToast('⚠️ حدث خطأ'); }
+}
+async function changePassword(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const data = Object.fromEntries(fd);
+  try {
+    const r = await fetch('/api/host/change-password', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data) });
+    const res = await r.json();
+    if (!r.ok) { showToast('⚠️ ' + (res.error||'خطأ')); return; }
+    showToast('✅ تم تغيير كلمة المرور');
+    e.target.reset();
+  } catch(e) { showToast('⚠️ حدث خطأ'); }
+}
+
+// ── Navigation ────────────────────────────────
+const tabTitles = { overview: ['نظرة <span>عامة</span>','ملخص نشاطك'], listings: ['عقاراتي','إدارة وإضافة عقاراتك'], bookings: ['الحجوزات','طلبات الحجز الواردة'], earnings: ['الأرباح','ملخص أرباحك'], profile: ['حسابي','إعدادات حسابك وبياناتك'] };
+function goTab(id, btn) {
+  document.querySelectorAll('.tc').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.ni').forEach(n => n.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  const t = tabTitles[id] || [id,''];
+  document.getElementById('pageTitle').innerHTML = t[0];
+  document.getElementById('pageSub').textContent = t[1];
+  if (window.innerWidth <= 768) { document.getElementById('sidebar').classList.remove('open'); }
+}
+function toggleSB() { document.getElementById('sidebar').classList.toggle('open'); }
+function el(id) { return document.getElementById(id); }
+
+// ── Toast ─────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ── Start ─────────────────────────────────────
+init();
+</script>
+</body>
+</html>

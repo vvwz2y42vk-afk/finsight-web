@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>دخول المضيف — Finsight Real Estate</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Cairo',sans-serif;background:linear-gradient(135deg,#0f0f1a 0%,#1a1a2e 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 16px;}
+.wrap{width:100%;max-width:400px;}
+.card{background:rgba(255,255,255,.04);border:1px solid rgba(218,165,32,.2);border-radius:24px;padding:40px 36px;backdrop-filter:blur(10px);}
+.logo{text-align:center;margin-bottom:32px;}
+.logo-icon{width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#DAA520,#f0c040);color:#0f0f1a;font-size:22px;font-weight:900;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;box-shadow:0 8px 24px rgba(218,165,32,.3);}
+.logo-name{font-size:1.4rem;font-weight:900;color:#fff;letter-spacing:1px;}
+.logo-sub{font-size:11px;color:rgba(218,165,32,.7);letter-spacing:3px;margin-top:2px;}
+.badge{display:inline-flex;align-items:center;gap:6px;background:rgba(218,165,32,.12);border:1px solid rgba(218,165,32,.3);color:#DAA520;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;margin-top:12px;}
+h2{font-size:1.5rem;font-weight:800;color:#fff;margin-bottom:6px;}
+.sub{font-size:13px;color:rgba(255,255,255,.45);margin-bottom:28px;}
+.err{background:rgba(231,76,60,.1);border:1px solid rgba(231,76,60,.3);border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:13px;color:#e74c3c;font-weight:600;}
+.grp{margin-bottom:18px;}
+.lbl{display:block;font-size:12px;font-weight:700;margin-bottom:6px;color:rgba(255,255,255,.6);letter-spacing:.3px;}
+.inp{width:100%;padding:12px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);color:#fff;font-family:'Cairo',sans-serif;font-size:14px;outline:none;transition:border .2s;}
+.inp::placeholder{color:rgba(255,255,255,.2);}
+.inp:focus{border-color:rgba(218,165,32,.5);}
+.btn{width:100%;padding:14px;background:linear-gradient(135deg,#DAA520,#f0c040);border:none;border-radius:12px;color:#0f0f1a;font-family:'Cairo',sans-serif;font-size:1rem;font-weight:800;cursor:pointer;transition:opacity .2s;margin-top:8px;box-shadow:0 6px 20px rgba(218,165,32,.3);}
+.btn:hover{opacity:.9;}
+.foot{text-align:center;margin-top:16px;font-size:13px;color:rgba(255,255,255,.35);}
+.foot a{color:#DAA520;font-weight:600;text-decoration:none;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <div class="logo">
+      <div class="logo-icon">FS</div>
+      <div class="logo-name">Finsight</div>
+      <div class="logo-sub">REAL ESTATE</div>
+      <div class="badge">🏠 بوابة المضيف</div>
+    </div>
+
+    <h2>تسجيل الدخول</h2>
+    <p class="sub">أدر عقاراتك وحجوزاتك بسهولة</p>
+
+    <% if (error) { %>
+    <div class="err">⚠️ <%= error %></div>
+    <% } %>
+
+    <form method="POST" action="/host/login">
+      <input type="hidden" name="next" value="<%= next %>">
+      <div class="grp">
+        <label class="lbl">رقم الجوال</label>
+        <input type="tel" name="phone" class="inp" placeholder="05xxxxxxxx" required autofocus>
+      </div>
+      <div class="grp">
+        <label class="lbl">كلمة المرور</label>
+        <input type="password" name="password" class="inp" placeholder="••••••••" required>
+      </div>
+      <button type="submit" class="btn">دخول ←</button>
+    </form>
+
+    <div class="foot" style="margin-top:20px;">
+      ليس لديك حساب؟ <a href="/host/register">سجّل كمضيف</a>
+    </div>
+    <div class="foot" style="margin-top:8px;">
+      <a href="/" style="color:rgba(255,255,255,.3);">← العودة للموقع</a>
+    </div>
+    <div class="foot" style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,.06);">
+      أنت مستأجر؟ <a href="/account/login">دخول حساب العميل</a>
+    </div>
+  </div>
+</div>
+</body>
+</html>

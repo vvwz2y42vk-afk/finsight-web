@@ -26,6 +26,14 @@ const listingSchema = new mongoose.Schema({
     checkOut:  Date,
     bookingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Booking' },
   }],
+  // Host ownership (null = Finsight's own listing)
+  host:               { type: mongoose.Schema.Types.ObjectId, ref: 'Host', default: null },
+  // Extra details
+  houseRules:         String,
+  checkInTime:        { type: String, default: '15:00' },
+  checkOutTime:       { type: String, default: '11:00' },
+  cancellationPolicy: { type: String, enum: ['flexible','moderate','strict'], default: 'moderate' },
+  minNights:          { type: Number, default: 1 },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Listing', listingSchema);

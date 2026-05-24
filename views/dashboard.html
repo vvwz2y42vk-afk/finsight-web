@@ -253,6 +253,7 @@ tbody td{padding:7px 5px;font-size:11px;}
     <button id="nav-listings" class="ni" onclick="go('listings',this)"><span class="ni-ico">🏠</span>الإعلانات<span class="ni-badge" id="nb-listings">—</span></button>
     <button id="nav-bookings" class="ni" onclick="go('bookings',this)"><span class="ni-ico">📅</span>الحجوزات<span class="ni-badge" id="nb-bookings">—</span></button>
     <button id="nav-customers" class="ni" onclick="go('customers',this)"><span class="ni-ico">👥</span>العملاء<span class="ni-badge" id="nb-customers">—</span></button>
+    <button id="nav-hosts" class="ni" onclick="go('hosts',this)"><span class="ni-ico">🏡</span>المضيفون<span class="ni-badge" id="nb-hosts">—</span></button>
   </nav>
   <div class="sb-user">
     <div class="user-row"><div class="user-av" id="user-av">ع</div><div><div class="user-name" id="user-name">عبد الملك</div><div class="user-role" id="user-role">مساعد إداري · Finsight</div></div></div>
@@ -297,6 +298,7 @@ tbody td{padding:7px 5px;font-size:11px;}
     <button id="tab-nav-reports" class="tab" onclick="st('reports',this)">📅 التقارير</button>
     <button id="tab-nav-listings" class="tab" onclick="st('listings',this)">🏠 الإعلانات</button>
     <button id="tab-nav-bookings" class="tab" onclick="st('bookings',this)">📅 الحجوزات</button>
+    <button id="tab-nav-hosts" class="tab" onclick="st('hosts',this)">🏡 المضيفون</button>
   </div>
   <div class="tc active" id="tab-dashboard">
     <div class="kpi-grid">
@@ -487,6 +489,30 @@ tbody td{padding:7px 5px;font-size:11px;}
             <th>الاسم</th><th>الجوال</th><th>البريد</th><th>رقم الهوية</th><th>الجنسية</th><th>تاريخ التسجيل</th>
           </tr></thead>
           <tbody id="customers-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════ HOSTS TAB ═══ -->
+  <div class="tc" id="tab-hosts">
+    <div class="topbar" style="margin-bottom:12px;">
+      <div><div class="page-title">المضيفون <span>الخارجيون</span></div><div style="font-size:10px;color:var(--t3);">حسابات المضيفين المسجلين على المنصة</div></div>
+      <div class="topbar-right">
+        <div class="ec" style="margin:0;gap:8px;">
+          <div class="ecb u" style="padding:6px 12px;"><div class="ecl">بانتظار الموافقة</div><div class="ecv" id="hosts-pending" style="font-size:16px;">—</div></div>
+          <div class="ecb s" style="padding:6px 12px;"><div class="ecl">معتمد</div><div class="ecv" id="hosts-approved" style="font-size:16px;">—</div></div>
+          <div class="ecb o" style="padding:6px 12px;"><div class="ecl">الكل</div><div class="ecv" id="hosts-total" style="font-size:16px;">—</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th>الاسم</th><th>الجوال</th><th>البريد</th><th>رقم الهوية</th><th>الجنسية</th><th>الحالة</th><th>تاريخ التسجيل</th><th>إجراء</th>
+          </tr></thead>
+          <tbody id="hosts-tbody"></tbody>
         </table>
       </div>
     </div>
@@ -927,7 +953,7 @@ async function confirmDelete(){
   showToast('🗑️ تم الحذف — جاري المزامنة...');if(c)await syncToSheet('deleteContract',c);
 }
 
-const titles={dashboard:'لوحة <span>التحكم</span>',contracts:'<span>العقود</span>',commissions:'<span>العمولات</span>',collection:'<span>التحصيل</span>',expiry:'العقود <span>المنتهية</span>',map:'خريطة <span>الشقق</span>',performance:'تحليل <span>الأداء</span>',sources:'تحليل <span>المصادر</span>',reports:'<span>التقارير</span> الشهرية',listings:'إدارة <span>الإعلانات</span>',bookings:'طلبات <span>الحجز</span>',customers:'العملاء <span>المسجلون</span>'};
+const titles={dashboard:'لوحة <span>التحكم</span>',contracts:'<span>العقود</span>',commissions:'<span>العمولات</span>',collection:'<span>التحصيل</span>',expiry:'العقود <span>المنتهية</span>',map:'خريطة <span>الشقق</span>',performance:'تحليل <span>الأداء</span>',sources:'تحليل <span>المصادر</span>',reports:'<span>التقارير</span> الشهرية',listings:'إدارة <span>الإعلانات</span>',bookings:'طلبات <span>الحجز</span>',customers:'العملاء <span>المسجلون</span>',hosts:'المضيفون <span>الخارجيون</span>'};
 async function loadUser(){
   try{
     const res=await fetch('/api/me');
@@ -949,14 +975,14 @@ async function loadUser(){
 }
 
 function go(id,el){
-  if(currentUser&&!currentUser.allowed.includes(id)&&!['listings','bookings','customers'].includes(id)){showToast('⛔ ليس لديك صلاحية لعرض هذا القسم');return;}
+  if(currentUser&&!currentUser.allowed.includes(id)&&!['listings','bookings','customers','hosts'].includes(id)){showToast('⛔ ليس لديك صلاحية لعرض هذا القسم');return;}
   document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));el?.classList.add('active');showTabById(id);set('pageTitle',titles[id]||id);document.getElementById('addBtn').style.display=id==='contracts'?'flex':'none';
-  if(id==='listings')loadListings();if(id==='bookings')loadBookings();if(id==='customers')loadCustomers();
+  if(id==='listings')loadListings();if(id==='bookings')loadBookings();if(id==='customers')loadCustomers();if(id==='hosts')loadHosts();
 }
 function st(id,el){
-  if(currentUser&&!currentUser.allowed.includes(id)&&!['listings','bookings','customers'].includes(id)){showToast('⛔ ليس لديك صلاحية لعرض هذا القسم');return;}
+  if(currentUser&&!currentUser.allowed.includes(id)&&!['listings','bookings','customers','hosts'].includes(id)){showToast('⛔ ليس لديك صلاحية لعرض هذا القسم');return;}
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el?.classList.add('active');showTabById(id);set('pageTitle',titles[id]||id);document.getElementById('addBtn').style.display=id==='contracts'?'flex':'none';
-  if(id==='listings')loadListings();if(id==='bookings')loadBookings();if(id==='customers')loadCustomers();
+  if(id==='listings')loadListings();if(id==='bookings')loadBookings();if(id==='customers')loadCustomers();if(id==='hosts')loadHosts();
 }
 function showTabById(id){document.querySelectorAll('.tc').forEach(t=>t.classList.remove('active'));document.getElementById('tab-'+id)?.classList.add('active');}
 
@@ -1549,7 +1575,78 @@ async function loadCustomers(){
   }catch(e){}
 }
 
-window.addEventListener('load',()=>{loadUser();loadData();loadListings();loadBookings();setInterval(loadData,60000);});
+let allHosts=[];
+async function loadHosts(){
+  try{
+    const r=await fetch('/api/hosts');
+    if(!r.ok)return;
+    allHosts=await r.json();
+    const pending=allHosts.filter(h=>h.status==='pending').length;
+    const approved=allHosts.filter(h=>h.status==='approved').length;
+    const nb=document.getElementById('nb-hosts');
+    if(nb){nb.textContent=pending||'—';nb.className=pending>0?'ni-badge red':'ni-badge';}
+    const hp=document.getElementById('hosts-pending');if(hp)hp.textContent=pending;
+    const ha=document.getElementById('hosts-approved');if(ha)ha.textContent=approved;
+    const ht=document.getElementById('hosts-total');if(ht)ht.textContent=allHosts.length;
+    renderHosts();
+  }catch(e){}
+}
+
+function renderHosts(){
+  const tbody=document.getElementById('hosts-tbody');
+  if(!tbody)return;
+  if(!allHosts.length){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--t3);">لا يوجد مضيفون مسجلون بعد</td></tr>';return;}
+  const statusColors={pending:'pm',approved:'pj',rejected:'pcl',suspended:'pup'};
+  const statusLabels={pending:'بانتظار الموافقة',approved:'معتمد',rejected:'مرفوض',suspended:'موقوف'};
+  tbody.innerHTML=allHosts.map(h=>`<tr>
+    <td style="font-weight:600;">${h.name}</td>
+    <td><a href="tel:${h.phone}" style="color:var(--blue);">${h.phone}</a></td>
+    <td style="font-size:11px;color:var(--t3);">${h.email||'—'}</td>
+    <td style="font-size:11px;color:var(--t3);">${h.nationalId||'—'}</td>
+    <td><span class="pill ${h.nationality==='سعودي'?'pop':'pm'}">${h.nationality||'—'}</span></td>
+    <td><span class="pill ${statusColors[h.status]||'pm'}">${statusLabels[h.status]||h.status}</span></td>
+    <td style="font-size:10px;color:var(--t3);">${new Date(h.createdAt).toLocaleDateString('ar-SA')}</td>
+    <td style="white-space:nowrap;display:flex;gap:4px;flex-wrap:wrap;">
+      ${h.status==='pending'?`<button class="btn" style="font-size:9px;padding:3px 8px;background:rgba(39,174,96,.15);border:1px solid rgba(39,174,96,.4);color:#1e8449;" onclick="approveHost('${h._id}')">✅ قبول</button><button class="btn" style="font-size:9px;padding:3px 8px;color:var(--red);" onclick="rejectHostPrompt('${h._id}')">❌ رفض</button>`:''}
+      ${h.status==='approved'?`<button class="btn" style="font-size:9px;padding:3px 8px;color:var(--gold);" onclick="suspendHost('${h._id}')">⏸ تعليق</button>`:''}
+      ${h.status==='suspended'?`<button class="btn" style="font-size:9px;padding:3px 8px;background:rgba(39,174,96,.15);border:1px solid rgba(39,174,96,.4);color:#1e8449;" onclick="approveHost('${h._id}')">▶ إعادة تفعيل</button>`:''}
+      <a href="/host/dashboard" target="_blank" class="btn" style="font-size:9px;padding:3px 8px;">🔗</a>
+    </td>
+  </tr>`).join('');
+}
+
+async function approveHost(id){
+  try{
+    await fetch(`/api/hosts/${id}/approve`,{method:'PUT'});
+    showToast('✅ تم قبول المضيف');
+    loadHosts();
+  }catch(e){showToast('❌ حدث خطأ');}
+}
+
+function rejectHostPrompt(id){
+  const reason=prompt('سبب الرفض (اختياري):');
+  if(reason===null)return;
+  rejectHost(id,reason);
+}
+
+async function rejectHost(id,reason){
+  try{
+    await fetch(`/api/hosts/${id}/reject`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({reason})});
+    showToast('❌ تم رفض المضيف');
+    loadHosts();
+  }catch(e){showToast('❌ حدث خطأ');}
+}
+
+async function suspendHost(id){
+  if(!confirm('تعليق حساب هذا المضيف؟'))return;
+  try{
+    await fetch(`/api/hosts/${id}/suspend`,{method:'PUT'});
+    showToast('⏸ تم تعليق المضيف');
+    loadHosts();
+  }catch(e){showToast('❌ حدث خطأ');}
+}
+
+window.addEventListener('load',()=>{loadUser();loadData();loadListings();loadBookings();loadHosts();setInterval(loadData,60000);});
 </script>
 </body>
 </html>
