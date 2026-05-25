@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Finsight Pro — لوحة إدارة العقارات</title>
+<title>Barez Pro — لوحة إدارة العقارات</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--gold:#B8860B;--gold2:#DAA520;--gl:rgba(184,134,11,.1);--gb:rgba(184,134,11,.25);--green:#1A7340;--gg:rgba(26,115,64,.08);--gb2:rgba(26,115,64,.2);--red:#C0392B;--rg:rgba(192,57,43,.08);--rb:rgba(192,57,43,.2);--blue:#1A5276;--bg:#F8F6F0;--s:#fff;--s2:#FAFAF7;--b:#E8E4DA;--b2:#D4CFC0;--t:#1A1A1A;--t3:#777;--t4:#AAA;}
@@ -251,7 +251,7 @@ tbody td{padding:7px 5px;font-size:11px;}
       <rect x="4" y="4" width="14" height="60" fill="url(#lg1)"/>
       <path d="M4,40 L42,40 L42,52 L18,52 L4,62 Z" fill="url(#lg1)"/>
     </svg>
-    <div><div class="logo-name">FINSIGHT</div><div class="logo-sub">Real Estate Pro</div></div>
+    <div><div class="logo-name">BAREZ</div><div class="logo-sub">Pro</div></div>
   </div>
   <nav class="nav">
     <button id="nav-dashboard" class="ni active" onclick="go('dashboard',this)"><span class="ni-ico">⬡</span>لوحة التحكم</button>
@@ -273,7 +273,7 @@ tbody td{padding:7px 5px;font-size:11px;}
     <button id="nav-staff" class="ni" onclick="go('staff',this)"><span class="ni-ico">👤</span>الموظفون</button>
   </nav>
   <div class="sb-user">
-    <div class="user-row"><div class="user-av" id="user-av">ع</div><div><div class="user-name" id="user-name">عبد الملك</div><div class="user-role" id="user-role">مساعد إداري · Finsight</div></div></div>
+    <div class="user-row"><div class="user-av" id="user-av">ع</div><div><div class="user-name" id="user-name">عبد الملك</div><div class="user-role" id="user-role">مساعد إداري · BAREZ</div></div></div>
     <button onclick="document.getElementById('logoutOverlay').style.display='flex'" style="display:flex;align-items:center;gap:7px;margin-top:8px;padding:7px 10px;border-radius:8px;background:rgba(192,57,43,.12);border:1px solid rgba(192,57,43,.2);color:rgba(255,100,80,.85);font-size:11px;font-weight:600;cursor:pointer;width:100%;font-family:inherit;transition:all .15s;" onmouseover="this.style.background='rgba(192,57,43,.22)'" onmouseout="this.style.background='rgba(192,57,43,.12)'">
       <span>⎋</span> تسجيل الخروج
     </button>
@@ -541,7 +541,7 @@ tbody td{padding:7px 5px;font-size:11px;}
 
   <div class="tc" id="tab-msgs">
     <div class="topbar" style="margin-bottom:12px;">
-      <div><div class="page-title">الرسائل <span>والمحادثات</span></div><div style="font-size:10px;color:var(--t3);">محادثات العملاء مع فريق Finsight</div></div>
+      <div><div class="page-title">الرسائل <span>والمحادثات</span></div><div style="font-size:10px;color:var(--t3);">محادثات العملاء مع فريق BAREZ</div></div>
     </div>
     <div style="display:grid;grid-template-columns:280px 1fr;gap:0;border:1px solid var(--br);border-radius:12px;overflow:hidden;background:var(--card);min-height:460px;">
       <div style="border-left:1px solid var(--br);overflow-y:auto;max-height:560px;" id="adminMsgList">
@@ -738,7 +738,7 @@ tbody td{padding:7px 5px;font-size:11px;}
 </div>
 <div class="ai-wrap">
   <div class="ai-panel" id="aiPanel">
-    <div class="ai-hd"><div class="ai-hd-ico">🤖</div><div><div class="ai-hd-name">مساعد Finsight</div><div class="ai-hd-status">● متصل</div></div><button class="modal-close" style="margin-right:auto;" onclick="toggleAI()">×</button></div>
+    <div class="ai-hd"><div class="ai-hd-ico">🤖</div><div><div class="ai-hd-name">مساعد BAREZ</div><div class="ai-hd-status">● متصل</div></div><button class="modal-close" style="margin-right:auto;" onclick="toggleAI()">×</button></div>
     <div class="ai-qb">
       <button class="qb" onclick="quickQ('حلل أداء هذا الشهر')">📊 تحليل</button>
       <button class="qb" onclick="quickQ('من أكبر المدينين؟')">🚨 المدينون</button>
@@ -746,7 +746,7 @@ tbody td{padding:7px 5px;font-size:11px;}
       <button class="qb" onclick="quickQ('العقود التي تنتهي قريباً')">⏰ المنتهية</button>
       <button class="qb" onclick="quickQ('اكتب رسالة تحصيل')">✍️ رسالة</button>
     </div>
-    <div class="ai-msgs" id="aiMsgs"><div class="msg bot">مرحباً! أنا مساعدك في Finsight 👋</div></div>
+    <div class="ai-msgs" id="aiMsgs"><div class="msg bot">مرحباً! أنا مساعدك في BAREZ 👋</div></div>
     <div class="ai-inp-wrap"><input class="ai-inp" id="aiInput" placeholder="اسألني..." onkeydown="if(event.key==='Enter')sendAI()"><button class="ai-send" onclick="sendAI()">↑</button></div>
   </div>
   <button class="ai-btn" onclick="toggleAI()">🤖</button>
@@ -902,8 +902,8 @@ function printContract(id){
     @media print{body{padding:20px;}}
   </style></head><body>
   <div class="header">
-    <div class="logo">FINSIGHT</div>
-    <div class="logo-sub">REAL ESTATE</div>
+    <div class="logo">BAREZ</div>
+    <div class="logo-sub"></div>
     <h2>عقد إيجار</h2>
     <div style="font-size:11px;color:#888;margin-top:4px;">تاريخ الطباعة: ${new Date().toLocaleDateString('ar-SA')}</div>
   </div>
@@ -932,7 +932,7 @@ function printContract(id){
     <div class="sig-box"><div class="sig-line">توقيع المستأجر</div></div>
     <div class="sig-box"><div class="sig-line">ختم الشركة</div></div>
   </div>
-  <div class="footer">Finsight Real Estate — المدينة المنورة</div>
+  <div class="footer">Barez — المدينة المنورة</div>
   <script>window.onload=()=>{window.print();}<\/script>
   </body></html>`);
   w.document.close();
@@ -982,7 +982,7 @@ function renderCommissions(){
 function renderCollection(){
   const d=allC.filter(c=>c.r>0&&c.n).sort((a,b)=>b.r-a.r);
   set('total-debt-amt',fmt(d.reduce((a,c)=>a+c.r,0))+' ﷼');
-  set('debt-list',d.map(c=>`<div class="debt-item"><div class="debt-info"><div class="debt-name">${c.n}</div><div class="debt-meta">شقة ${c.a} · <span class="pill ${SP[c.sheet]||''}">${c.sheet}</span></div></div><div class="debt-amt">${fmt(c.r)} ﷼</div><a class="wa-btn" href="https://wa.me/${(c.ph||'').replace(/\D/g,'')}?text=${encodeURIComponent('السلام عليكم '+c.n+'، نود تذكيركم بالمبلغ المتبقي '+fmt(c.r)+' ﷼ لشقة رقم '+c.a+'. شكراً لتعاملكم مع Finsight.')}" target="_blank">📱 واتساب</a></div>`).join(''));
+  set('debt-list',d.map(c=>`<div class="debt-item"><div class="debt-info"><div class="debt-name">${c.n}</div><div class="debt-meta">شقة ${c.a} · <span class="pill ${SP[c.sheet]||''}">${c.sheet}</span></div></div><div class="debt-amt">${fmt(c.r)} ﷼</div><a class="wa-btn" href="https://wa.me/${(c.ph||'').replace(/\D/g,'')}?text=${encodeURIComponent('السلام عليكم '+c.n+'، نود تذكيركم بالمبلغ المتبقي '+fmt(c.r)+' ﷼ لشقة رقم '+c.a+'. شكراً لتعاملكم مع BAREZ.')}" target="_blank">📱 واتساب</a></div>`).join(''));
 }
 
 function renderExpiry(){
@@ -1024,7 +1024,7 @@ function showRoom(sheet,apt){
   const sc={occupied:'pup',free:'pp',waiting:'pm',empty:'pcl'};
   document.getElementById('roomHd').innerHTML=`<div><div class="modal-title">شقة ${apt} — ${sheet}</div><span class="pill ${sc[status]}">${sl[status]}</span></div><button class="modal-close" onclick="closeRoom()">×</button>`;
   if(!cs.length){document.getElementById('roomBody').innerHTML=`<div style="text-align:center;padding:16px;color:var(--t3);">لا يوجد عقد نشط</div>`;}
-  else{const c=cs[0];const days=daysTo(c.ex);document.getElementById('roomBody').innerHTML=`<div class="pop-row"><span class="pop-lbl">العميل</span><span class="pop-val">${c.n}</span></div><div class="pop-row"><span class="pop-lbl">قيمة العقد</span><span class="pop-val">${fmt(c.v)} ﷼</span></div><div class="pop-row"><span class="pop-lbl">المدفوع</span><span class="pop-val" style="color:var(--green);">${fmt(c.p)} ﷼</span></div><div class="pop-row"><span class="pop-lbl">الخروج</span><span class="pop-val">${c.ex||'—'}</span></div>${c.r>0?`<div class="pop-debt"><span style="font-size:11px;color:var(--red);">المبلغ المتبقي</span><span style="font-size:16px;font-weight:700;color:var(--red);">${fmt(c.r)} ﷼</span></div>`:''}<a class="wa-btn" style="margin-top:10px;display:flex;" href="https://wa.me/${(c.ph||'').replace(/\D/g,'')}?text=${encodeURIComponent('السلام عليكم '+c.n+' من Finsight.')}" target="_blank">📱 واتساب</a>`;}
+  else{const c=cs[0];const days=daysTo(c.ex);document.getElementById('roomBody').innerHTML=`<div class="pop-row"><span class="pop-lbl">العميل</span><span class="pop-val">${c.n}</span></div><div class="pop-row"><span class="pop-lbl">قيمة العقد</span><span class="pop-val">${fmt(c.v)} ﷼</span></div><div class="pop-row"><span class="pop-lbl">المدفوع</span><span class="pop-val" style="color:var(--green);">${fmt(c.p)} ﷼</span></div><div class="pop-row"><span class="pop-lbl">الخروج</span><span class="pop-val">${c.ex||'—'}</span></div>${c.r>0?`<div class="pop-debt"><span style="font-size:11px;color:var(--red);">المبلغ المتبقي</span><span style="font-size:16px;font-weight:700;color:var(--red);">${fmt(c.r)} ﷼</span></div>`:''}<a class="wa-btn" style="margin-top:10px;display:flex;" href="https://wa.me/${(c.ph||'').replace(/\D/g,'')}?text=${encodeURIComponent('السلام عليكم '+c.n+' من BAREZ.')}" target="_blank">📱 واتساب</a>`;}
   document.getElementById('roomOverlay').style.display='flex';
 }
 function closeRoom(){document.getElementById('roomOverlay').style.display='none';}
@@ -1080,7 +1080,7 @@ async function loadUser(){
     currentUser=await res.json();
     document.getElementById('user-av').textContent=currentUser.avatar||currentUser.name[0];
     document.getElementById('user-name').textContent=currentUser.name;
-    document.getElementById('user-role').textContent=currentUser.role==='admin'?'مدير · Finsight':'موظفة · Finsight';
+    document.getElementById('user-role').textContent=currentUser.role==='admin'?'مدير · BAREZ':'موظفة · BAREZ';
     ['dashboard','contracts','commissions','collection','expiry','map','performance','sources','reports'].forEach(s=>{
       if(!currentUser.allowed.includes(s)){
         const nb=document.getElementById('nav-'+s);if(nb)nb.style.display='none';
@@ -1113,7 +1113,7 @@ async function sendAI(){
   const amT=currComm.filter(c=>c.m==='عبدالملك').reduce((a,c)=>a+c.a,0),amN=currComm.filter(c=>c.m==='عبدالملك').length;
   const debtors=allC.filter(c=>c.r>0&&c.n).sort((a,b)=>b.r-a.r).slice(0,5);
   const expiring=allC.filter(c=>c.n&&c.st==='مفتوح'&&c.ex).map(c=>({...c,d:daysTo(c.ex)})).filter(c=>c.d>=0&&c.d<=30);
-  const context=`أنت مساعد إداري لشركة Finsight. المستخدم: عبد الملك. البيانات: ${allC.filter(c=>c.n).length} عقد — محصّل ${fmt(tp)} ﷼ (${Math.round(tp/(tv||1)*100)}٪) — متبقي ${fmt(tr)} ﷼ — عمولات عبدالملك ${fmt(amT)} ﷼ (${amN} عقد) — مدينون: ${debtors.map(c=>c.n+' '+fmt(c.r)+' ﷼').join('، ')} — تنتهي قريباً: ${expiring.length} عقد. أجب بالعربية بشكل مختصر.`;
+  const context=`أنت مساعد إداري لشركة BAREZ. المستخدم: عبد الملك. البيانات: ${allC.filter(c=>c.n).length} عقد — محصّل ${fmt(tp)} ﷼ (${Math.round(tp/(tv||1)*100)}٪) — متبقي ${fmt(tr)} ﷼ — عمولات عبدالملك ${fmt(amT)} ﷼ (${amN} عقد) — مدينون: ${debtors.map(c=>c.n+' '+fmt(c.r)+' ﷼').join('، ')} — تنتهي قريباً: ${expiring.length} عقد. أجب بالعربية بشكل مختصر.`;
   try{const res=await fetch('/api/ai/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:q,context})});const data=await res.json();removeLastBot();addMsg(data.text||'عذراً.','bot');}
   catch(e){removeLastBot();addMsg('عذراً، تعذّر الاتصال.','bot');}
 }
@@ -1223,7 +1223,7 @@ function toggleListingFields(){
 }
 
 const CLOUDINARY_CLOUD = 'dsy6vqaia';
-const CLOUDINARY_PRESET = 'finsight_upload';
+const CLOUDINARY_PRESET = 'BAREZ_upload';
 
 window._uploadedPhotos = [];
 function renderPhotoPreview(){
@@ -1491,8 +1491,8 @@ function renderReports(){
     <!-- هيدر التقرير -->
     <div style="background:var(--t);border-radius:14px;padding:20px 24px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;">
       <div>
-        <div style="font-size:20px;font-weight:700;color:#FFD700;letter-spacing:.5px;">Finsight</div>
-        <div style="font-size:11px;color:rgba(255,255,255,.5);letter-spacing:1px;text-transform:uppercase;margin-top:2px;">Real Estate Pro</div>
+        <div style="font-size:20px;font-weight:700;color:#FFD700;letter-spacing:.5px;">BAREZ</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.5);letter-spacing:1px;text-transform:uppercase;margin-top:2px;">Pro</div>
       </div>
       <div style="text-align:left;">
         <div style="font-size:16px;font-weight:700;color:#fff;">تقرير ${monthName} ${year}</div>
@@ -1551,7 +1551,7 @@ function printReport(){
   const ms=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
   const body=document.getElementById('printable-report')?.innerHTML||'';
   const w=window.open('','_blank');
-  w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>تقرير ${ms[month-1]} ${year} — Finsight</title>
+  w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>تقرير ${ms[month-1]} ${year} — BAREZ</title>
   <style>
   *{box-sizing:border-box;margin:0;padding:0;}
   body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;direction:rtl;background:#F8F6F0;color:#1A1A1A;padding:24px;}

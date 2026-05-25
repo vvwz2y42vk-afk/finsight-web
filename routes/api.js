@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const router = express.Router();
 const Contract = require('../models/Contract');
 const Inquiry = require('../models/Inquiry');
@@ -128,7 +128,7 @@ async function sendEmail(subject, html) {
     await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ from: 'Finsight <onboarding@resend.dev>', to: ['assisting@finsight-sa.com'], subject, html }),
+      body: JSON.stringify({ from: 'Barez <onboarding@resend.dev>', to: ['assisting@finsight-sa.com'], subject, html }),
     });
   } catch(e) {}
 }
@@ -534,7 +534,7 @@ router.post('/conversations/:id/reply', auth, async (req, res) => {
     if (!conv) return res.status(404).json({ error: 'غير موجود' });
     const body = req.body.body?.trim();
     if (!body) return res.status(400).json({ error: 'الرسالة فارغة' });
-    await new Message({ conversation: conv._id, from: 'admin', senderName: 'Finsight', body: body.slice(0, 2000) }).save();
+    await new Message({ conversation: conv._id, from: 'admin', senderName: 'Barez', body: body.slice(0, 2000) }).save();
     await Conversation.findByIdAndUpdate(conv._id, { lastAt: new Date(), $inc: { unreadCustomer: 1 }, status: 'open' });
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }

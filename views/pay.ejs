@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>إتمام الدفع — Finsight Real Estate</title>
+<title>إتمام الدفع — Barez</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.moyasar.com/mpf/1.14.0/moyasar.css">
 <style>
@@ -60,8 +60,8 @@ body{font-family:'Cairo',sans-serif;background:linear-gradient(135deg,#0f0f1a 0%
     <a href="/" class="pay-logo">
       <div class="pay-logo-icon">FS</div>
       <div>
-        <div class="pay-logo-name">Finsight</div>
-        <div class="pay-logo-sub">REAL ESTATE</div>
+        <div class="pay-logo-name">BAREZ</div>
+        <div class="pay-logo-sub"></div>
       </div>
     </a>
   </div>
@@ -141,13 +141,13 @@ Moyasar.init({
   element: '.mysr-form',
   amount: <%= Math.round((booking.totalPrice || 0) * 100) %>,
   currency: 'SAR',
-  description: '<%= (booking.listingTitle || "حجز عقار").replace(/'/g, "\\'") %> — Finsight',
+  description: '<%= (booking.listingTitle || "حجز عقار").replace(/'/g, "\\'") %> — BAREZ',
   publishable_api_key: '<%= publishableKey %>',
   callback_url: '<%= baseUrl %>/account/pay/<%= booking._id %>/callback',
   methods: ['creditcard', 'applepay', 'stcpay'],
   apple_pay: {
     country: 'SA',
-    label: 'Finsight Real Estate',
+    label: 'Barez',
     validate_merchant_url: 'https://api.moyasar.com/v1/applepay/initiate',
   },
   on_initiating: function() {},

@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const router = express.Router();
 const Contract = require('../models/Contract');
 
@@ -9,7 +9,7 @@ async function sendEmail(subject, html) {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        from: 'Finsight <onboarding@resend.dev>',
+        from: 'Barez <onboarding@resend.dev>',
         to: ['assisting@finsight-sa.com'],
         subject, html,
       }),

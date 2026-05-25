@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const router = express.Router();
 const Customer = require('../models/Customer');
 const Booking = require('../models/Booking');
@@ -200,7 +200,7 @@ function sendMsgEmail(subject, html) {
   fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from: 'Finsight <onboarding@resend.dev>', to: ['assisting@finsight-sa.com'], subject, html }),
+    body: JSON.stringify({ from: 'Barez <onboarding@resend.dev>', to: ['assisting@finsight-sa.com'], subject, html }),
   }).catch(() => {});
 }
 

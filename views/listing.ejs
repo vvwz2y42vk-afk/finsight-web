@@ -1,11 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title><%= listing.title %> — Finsight Real Estate</title>
+<title><%= listing.title %> — Barez</title>
 <meta name="description" content="<%= (listing.description||listing.title).substring(0,160) %>">
-<meta property="og:title" content="<%= listing.title %> — Finsight Real Estate">
+<meta property="og:title" content="<%= listing.title %> — Barez">
 <meta property="og:description" content="<%= (listing.description||listing.title).substring(0,160) %>">
 <% if(listing.photos && listing.photos.length){ %><meta property="og:image" content="<%= listing.photos[0] %>"><% } %>
 <meta property="og:type" content="website">
@@ -18,7 +18,7 @@
 <aside class="client-sidebar" id="clientSidebar">
   <div class="csb-logo">
     <div class="nav-logo-icon">FS</div>
-    <div><div class="nav-logo-name">Finsight</div><div class="nav-logo-sub">Real Estate</div></div>
+    <div><div class="nav-logo-name">BAREZ</div><div class="nav-logo-sub"></div></div>
   </div>
   <nav class="csb-nav">
     <a href="/" class="csb-lnk"><span class="csb-ico">⬡</span><span>الرئيسية</span></a>
@@ -270,7 +270,7 @@
         </a>
         <div style="display:flex;gap:8px;margin-top:10px;">
           <button onclick="copyListingLink()" id="copyBtn" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--light);color:var(--text2);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;">🔗 نسخ الرابط</button>
-          <a href="https://wa.me/?text=<%= encodeURIComponent(listing.title + ' — Finsight Real Estate\n') %>https://finsight-web-xi.vercel.app/listings/<%= listing._id %>" target="_blank" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--light);color:var(--text2);font-family:inherit;font-size:13px;font-weight:600;text-decoration:none;">📤 مشاركة</a>
+          <a href="https://wa.me/?text=<%= encodeURIComponent(listing.title + ' — Barez\n') %>https://BAREZ-web-xi.vercel.app/listings/<%= listing._id %>" target="_blank" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--light);color:var(--text2);font-family:inherit;font-size:13px;font-weight:600;text-decoration:none;">📤 مشاركة</a>
         </div>
         <p style="font-size:11px;color:var(--text3);text-align:center;margin-top:8px;">لن يُطلب منك الدفع الآن</p>
       </div>
@@ -338,7 +338,7 @@
       <div class="footer-brand">
         <div class="footer-brand__logo">
           <div class="nav-logo-icon">FS</div>
-          <div><div class="nav-logo-name">Finsight</div><div class="nav-logo-sub">Real Estate</div></div>
+          <div><div class="nav-logo-name">BAREZ</div><div class="nav-logo-sub"></div></div>
         </div>
         <p class="footer-brand__desc">شركة رائدة في إدارة الأملاك والوساطة العقارية بالمدينة المنورة.</p>
       </div>
@@ -361,7 +361,7 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <p>© 2026 Finsight Real Estate — جميع الحقوق محفوظة &nbsp;·&nbsp; <a href="/terms" style="color:inherit;opacity:.6;">الشروط والأحكام</a></p>
+      <p>© 2026 Barez — جميع الحقوق محفوظة &nbsp;·&nbsp; <a href="/terms" style="color:inherit;opacity:.6;">الشروط والأحكام</a></p>
       
     </div>
   </div>

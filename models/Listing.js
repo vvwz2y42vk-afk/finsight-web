@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+﻿const mongoose = require('mongoose');
 
 const listingSchema = new mongoose.Schema({
   category:     { type: String, enum: ['rental_apartment','rental_commercial','sale_land','sale_apartment'], default: 'rental_apartment' },
@@ -26,7 +26,7 @@ const listingSchema = new mongoose.Schema({
     checkOut:  Date,
     bookingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Booking' },
   }],
-  // Host ownership (null = Finsight's own listing)
+  // Host ownership (null = Barez's own listing)
   host:               { type: mongoose.Schema.Types.ObjectId, ref: 'Host', default: null },
   // Extra details
   houseRules:         String,

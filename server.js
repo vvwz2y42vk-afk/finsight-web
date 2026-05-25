@@ -1,4 +1,4 @@
-require('dotenv').config();
+﻿require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
@@ -125,5 +125,5 @@ app.get('/logout', (req, res) => {
 // ── Start ────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`🚀 Finsight شغّال على http://localhost:${PORT}`);
+  console.log(`🚀 Barez شغّال على http://localhost:${PORT}`);
 });

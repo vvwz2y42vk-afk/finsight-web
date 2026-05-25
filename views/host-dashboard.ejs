@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>لوحة المضيف — Finsight</title>
+<title>لوحة المضيف — BAREZ</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -188,7 +188,7 @@ textarea.fi{resize:vertical;min-height:80px;}
 <aside class="sb" id="sidebar">
   <div class="sb-logo">
     <div class="sb-logo-icon">FS</div>
-    <div><div class="sb-logo-name">FINSIGHT</div><div class="sb-logo-sub">HOST PORTAL</div></div>
+    <div><div class="sb-logo-name">BAREZ</div><div class="sb-logo-sub">HOST PORTAL</div></div>
   </div>
   <nav class="nav">
     <button class="ni active" id="ni-overview" onclick="goTab('overview',this)"><span class="ni-ico">⬡</span>نظرة عامة</button>
@@ -443,7 +443,7 @@ textarea.fi{resize:vertical;min-height:80px;}
 
 <script>
 const CLOUDINARY_CLOUD = 'dsy6vqaia';
-const CLOUDINARY_PRESET = 'finsight_upload';
+const CLOUDINARY_PRESET = 'BAREZ_upload';
 let allListings = [], allBookings = [], hostData = null, currentBookingFilter = 'all';
 let editingListingId = null;
 let uploadedPhotos = [];
@@ -491,7 +491,7 @@ async function loadHost() {
       } else if (hostData.status === 'suspended') {
         banner.className = 'status-banner suspended';
         banner.querySelector('#banner-title').textContent = 'تم إيقاف حسابك';
-        banner.querySelector('#banner-msg').textContent = 'تواصل مع فريق Finsight لمزيد من المعلومات';
+        banner.querySelector('#banner-msg').textContent = 'تواصل مع فريق BAREZ لمزيد من المعلومات';
         banner.querySelector('span').textContent = '⛔';
       }
     }

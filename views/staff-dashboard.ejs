@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
@@ -1163,7 +1163,7 @@ async function printVoucher(id){
         <div class="print-total-val">${((v.amount||0)+tax).toLocaleString()} ريال</div>
       </div>
       ${v.notes?`<div style="margin-top:14px;padding:10px;background:#f8fafc;border-radius:8px;font-size:12px;color:#475569;"><b>ملاحظات:</b> ${esc(v.notes)}</div>`:''}
-      <div class="print-footer"><div>Finsight — نظام إدارة الشقق الفندقية</div><div style="margin-top:4px;">هذه الوثيقة صادرة إلكترونياً وصالحة بدون توقيع</div></div>
+      <div class="print-footer"><div>BAREZ — نظام إدارة الشقق الفندقية</div><div style="margin-top:4px;">هذه الوثيقة صادرة إلكترونياً وصالحة بدون توقيع</div></div>
     </div>`;
     const area=document.getElementById('printArea');
     area.innerHTML=html; area.style.display='block';
@@ -1253,7 +1253,7 @@ function printDoc(type, bkId){
     ${b.notes?`<div style="margin-top:14px;padding:10px;background:#f8fafc;border-radius:8px;font-size:12px;color:#475569;"><b>ملاحظات:</b> ${esc(b.notes)}</div>`:''}
 
     <div class="print-footer">
-      <div>Finsight — نظام إدارة الشقق الفندقية</div>
+      <div>BAREZ — نظام إدارة الشقق الفندقية</div>
       <div style="margin-top:4px;">هذه الوثيقة صادرة إلكترونياً وصالحة بدون توقيع</div>
     </div>
   </div>`;
