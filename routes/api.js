@@ -451,6 +451,60 @@ router.put('/hosts/:id/suspend', auth, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ─── Apartments Grid ─────────────────────────────────────
+const GRID_BUILDINGS = {
+  'المنارا':  { floors: [{l:'أرضي',r:['001','002']},{l:'الأول',r:['101','102','103','104','105','106']},{l:'الثاني',r:['201','202','203','204','205','206']},{l:'الثالث',r:['301','302','303','304','305','306']},{l:'الرابع',r:['401','402','403','404','405','406']},{l:'الخامس',r:['501','502','503','504']}] },
+  'جوان ان': { floors: [{l:'أرضي',r:['001','002','003','004']},{l:'الأول',r:['101','102','103','104','105']},{l:'الثاني',r:['201','202','203','204','205']},{l:'الثالث',r:['301','302','303','304','305','306']},{l:'الرابع',r:['401','402']}] },
+  'الماسة':  { floors: [{l:'الأول',r:['101','102','103','104','105','106']},{l:'الثاني',r:['201','202','203','204']},{l:'الثالث',r:['301','302','303','304','305','306']}] },
+  'الواحة':  { floors: [{l:'أرضي',r:['001','002','003','004']},{l:'الأول',r:['101','102','103','104','105','106','107','108']},{l:'الثاني',r:['201','202','203','204','205','206','207','208']}] },
+};
+
+router.get('/apartments/grid', auth, async (req, res) => {
+  try {
+    const Booking = require('../models/Booking');
+    const today = new Date(); today.setHours(0,0,0,0);
+    const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
+
+    const bookings = await Booking.find({
+      status: { $in: ['awaiting_payment','awaiting_checkin','active'] },
+      building: { $exists: true, $ne: null },
+      apt: { $exists: true, $ne: null },
+    }).lean();
+
+    const map = {};
+    bookings.forEach(b => { if (b.building && b.apt) map[`${b.building}-${b.apt}`] = b; });
+
+    const result = {};
+    Object.entries(GRID_BUILDINGS).forEach(([bName, bData]) => {
+      let occupied = 0;
+      const floors = bData.floors.map(floor => ({
+        label: floor.l,
+        rooms: floor.r.map(apt => {
+          const b = map[`${bName}-${apt}`];
+          let status = 'vacant';
+          if (b) {
+            const cin  = b.checkIn  ? new Date(b.checkIn)  : null;
+            const cout = b.checkOut ? new Date(b.checkOut) : null;
+            if (b.status === 'active') {
+              occupied++;
+              status = (cout && cout >= today && cout < tomorrow) ? 'checkout_today' : 'occupied';
+            } else if (b.status === 'awaiting_checkin') {
+              occupied++;
+              status = (cin && cin >= today && cin < tomorrow) ? 'checkin_today' : 'awaiting';
+            } else if (b.status === 'awaiting_payment') {
+              status = 'awaiting_payment';
+            }
+          }
+          return { apt, status, bookingId: b?._id||null, name: b?.name||'', phone: b?.phone||'', checkIn: b?.checkIn||null, checkOut: b?.checkOut||null, bookingType: b?.bookingType||'' };
+        }),
+      }));
+      const total = bData.floors.reduce((s,f)=>s+f.r.length,0);
+      result[bName] = { floors, occupied, total };
+    });
+    res.json(result);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // ─── Messaging (admin) ───────────────────────────────────
 router.get('/conversations', auth, async (req, res) => {
   try {

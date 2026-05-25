@@ -74,6 +74,20 @@ tbody td{padding:7px 5px;font-size:11px;}
 .pa{background:rgba(26,82,118,.08);color:var(--blue);}.pw{background:rgba(160,64,0,.08);color:#A04000;}
 .pop{background:var(--gg);color:var(--green);}.pcl{background:var(--s2);color:var(--t3);}
 .pp{background:var(--gg);color:var(--green);}.pup{background:var(--rg);color:var(--red);}
+.af-btn{padding:5px 12px;border-radius:20px;border:1px solid var(--br);background:none;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;color:var(--t2);transition:all .15s;}
+.af-btn:hover{background:var(--s2);}
+.af-btn.active{background:var(--gold);border-color:var(--gold);color:#111;}
+.apt-card{width:84px;background:var(--card);border-radius:10px;padding:8px 6px;text-align:center;cursor:pointer;transition:opacity .15s;user-select:none;border:2px solid transparent;}
+.apt-card:hover{opacity:.82;}
+.apt-card.occ{background:#e74c3c;color:#fff;}
+.apt-card.vac{background:#27ae60;color:#fff;}
+.apt-card.cin{background:#2980b9;color:#fff;}
+.apt-card.cout{background:#e67e22;color:#fff;}
+.apt-card.awt{background:#8e44ad;color:#fff;}
+.apt-card.awp{background:#f39c12;color:#fff;}
+.apt-num{font-size:15px;font-weight:900;line-height:1;}
+.apt-lbl{font-size:9px;margin-top:2px;opacity:.9;}
+.apt-name{font-size:9px;margin-top:1px;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:76px;}
 .sr{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;}
 .si{background:var(--s);border:1px solid var(--b2);border-radius:8px;padding:6px 10px;color:var(--t);font-family:inherit;font-size:11px;outline:none;flex:1;min-width:100px;}
 .si:focus{border-color:var(--gold);}
@@ -255,6 +269,7 @@ tbody td{padding:7px 5px;font-size:11px;}
     <button id="nav-customers" class="ni" onclick="go('customers',this)"><span class="ni-ico">👥</span>العملاء<span class="ni-badge" id="nb-customers">—</span></button>
     <button id="nav-hosts" class="ni" onclick="go('hosts',this)"><span class="ni-ico">🏡</span>المضيفون<span class="ni-badge" id="nb-hosts">—</span></button>
     <button id="nav-msgs" class="ni" onclick="go('msgs',this)"><span class="ni-ico">💬</span>الرسائل<span class="ni-badge" id="nb-msgs">—</span></button>
+    <button id="nav-apts" class="ni" onclick="go('apts',this)"><span class="ni-ico">🏢</span>الشقق<span class="ni-badge" id="nb-apts">—</span></button>
   </nav>
   <div class="sb-user">
     <div class="user-row"><div class="user-av" id="user-av">ع</div><div><div class="user-name" id="user-name">عبد الملك</div><div class="user-role" id="user-role">مساعد إداري · Finsight</div></div></div>
@@ -301,6 +316,7 @@ tbody td{padding:7px 5px;font-size:11px;}
     <button id="tab-nav-bookings" class="tab" onclick="st('bookings',this)">📅 الحجوزات</button>
     <button id="tab-nav-hosts" class="tab" onclick="st('hosts',this)">🏡 المضيفون</button>
     <button id="tab-nav-msgs" class="tab" onclick="st('msgs',this)">💬 الرسائل</button>
+    <button id="tab-nav-apts" class="tab" onclick="st('apts',this)">🏢 الشقق</button>
   </div>
   <div class="tc active" id="tab-dashboard">
     <div class="kpi-grid">
@@ -497,6 +513,30 @@ tbody td{padding:7px 5px;font-size:11px;}
   </div>
 
   <!-- ════════════════════════════════════ HOSTS TAB ═══ -->
+  <div class="tc" id="tab-apts">
+    <div class="topbar" style="margin-bottom:12px;flex-wrap:wrap;gap:10px;">
+      <div><div class="page-title">الشقق <span>والتسكين</span></div><div style="font-size:10px;color:var(--t3);">حالة جميع الوحدات في الوقت الفعلي</div></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+        <button onclick="filterApts('all',this)" class="af-btn active">الكل</button>
+        <button onclick="filterApts('occupied',this)" class="af-btn" style="--ac:#e74c3c;">🔴 مؤجر <span id="ac-occupied">—</span></button>
+        <button onclick="filterApts('vacant',this)" class="af-btn" style="--ac:#27ae60;">🟢 شاغر <span id="ac-vacant">—</span></button>
+        <button onclick="filterApts('checkin_today',this)" class="af-btn" style="--ac:#2980b9;">🔵 وصول اليوم <span id="ac-checkin_today">—</span></button>
+        <button onclick="filterApts('checkout_today',this)" class="af-btn" style="--ac:#e67e22;">🟠 خروج اليوم <span id="ac-checkout_today">—</span></button>
+        <button onclick="filterApts('awaiting',this)" class="af-btn" style="--ac:#8e44ad;">🟣 انتظار <span id="ac-awaiting">—</span></button>
+      </div>
+      <div id="aptsOccRate" style="font-size:13px;font-weight:700;color:var(--t3);">—</div>
+    </div>
+    <div id="aptsGrid"></div>
+  </div>
+
+  <!-- APT DETAIL MODAL -->
+  <div class="overlay" id="aptOverlay" style="display:none;" onclick="if(event.target===this)closeAptModal()">
+    <div class="modal" style="max-width:400px;">
+      <div class="modal-hd"><div class="modal-title" id="aptModalTitle">تفاصيل الشقة</div><button class="modal-close" onclick="closeAptModal()">×</button></div>
+      <div class="modal-body" id="aptModalBody"></div>
+    </div>
+  </div>
+
   <div class="tc" id="tab-msgs">
     <div class="topbar" style="margin-bottom:12px;">
       <div><div class="page-title">الرسائل <span>والمحادثات</span></div><div style="font-size:10px;color:var(--t3);">محادثات العملاء مع فريق Finsight</div></div>
@@ -971,7 +1011,7 @@ async function confirmDelete(){
   showToast('🗑️ تم الحذف — جاري المزامنة...');if(c)await syncToSheet('deleteContract',c);
 }
 
-const titles={dashboard:'لوحة <span>التحكم</span>',contracts:'<span>العقود</span>',commissions:'<span>العمولات</span>',collection:'<span>التحصيل</span>',expiry:'العقود <span>المنتهية</span>',map:'خريطة <span>الشقق</span>',performance:'تحليل <span>الأداء</span>',sources:'تحليل <span>المصادر</span>',reports:'<span>التقارير</span> الشهرية',listings:'إدارة <span>الإعلانات</span>',bookings:'طلبات <span>الحجز</span>',customers:'العملاء <span>المسجلون</span>',hosts:'المضيفون <span>الخارجيون</span>',msgs:'الرسائل <span>والمحادثات</span>'};
+const titles={dashboard:'لوحة <span>التحكم</span>',contracts:'<span>العقود</span>',commissions:'<span>العمولات</span>',collection:'<span>التحصيل</span>',expiry:'العقود <span>المنتهية</span>',map:'خريطة <span>الشقق</span>',performance:'تحليل <span>الأداء</span>',sources:'تحليل <span>المصادر</span>',reports:'<span>التقارير</span> الشهرية',listings:'إدارة <span>الإعلانات</span>',bookings:'طلبات <span>الحجز</span>',customers:'العملاء <span>المسجلون</span>',hosts:'المضيفون <span>الخارجيون</span>',msgs:'الرسائل <span>والمحادثات</span>',apts:'الشقق <span>والتسكين</span>'};
 async function loadUser(){
   try{
     const res=await fetch('/api/me');
@@ -993,14 +1033,14 @@ async function loadUser(){
 }
 
 function go(id,el){
-  if(currentUser&&!currentUser.allowed.includes(id)&&!['listings','bookings','customers','hosts','msgs'].includes(id)){showToast('⛔ ليس لديك صلاحية لعرض هذا القسم');return;}
+  if(currentUser&&!currentUser.allowed.includes(id)&&!['listings','bookings','customers','hosts','msgs','apts'].includes(id)){showToast('⛔ ليس لديك صلاحية لعرض هذا القسم');return;}
   document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));el?.classList.add('active');showTabById(id);set('pageTitle',titles[id]||id);document.getElementById('addBtn').style.display=id==='contracts'?'flex':'none';
-  if(id==='listings')loadListings();if(id==='bookings')loadBookings();if(id==='customers')loadCustomers();if(id==='hosts')loadHosts();if(id==='msgs')loadMessages();
+  if(id==='listings')loadListings();if(id==='bookings')loadBookings();if(id==='customers')loadCustomers();if(id==='hosts')loadHosts();if(id==='msgs')loadMessages();if(id==='apts')loadApts();
 }
 function st(id,el){
-  if(currentUser&&!currentUser.allowed.includes(id)&&!['listings','bookings','customers','hosts','msgs'].includes(id)){showToast('⛔ ليس لديك صلاحية لعرض هذا القسم');return;}
+  if(currentUser&&!currentUser.allowed.includes(id)&&!['listings','bookings','customers','hosts','msgs','apts'].includes(id)){showToast('⛔ ليس لديك صلاحية لعرض هذا القسم');return;}
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el?.classList.add('active');showTabById(id);set('pageTitle',titles[id]||id);document.getElementById('addBtn').style.display=id==='contracts'?'flex':'none';
-  if(id==='listings')loadListings();if(id==='bookings')loadBookings();if(id==='customers')loadCustomers();if(id==='hosts')loadHosts();if(id==='msgs')loadMessages();
+  if(id==='listings')loadListings();if(id==='bookings')loadBookings();if(id==='customers')loadCustomers();if(id==='hosts')loadHosts();if(id==='msgs')loadMessages();if(id==='apts')loadApts();
 }
 function showTabById(id){document.querySelectorAll('.tc').forEach(t=>t.classList.remove('active'));document.getElementById('tab-'+id)?.classList.add('active');}
 
@@ -1664,6 +1704,119 @@ async function suspendHost(id){
   }catch(e){showToast('❌ حدث خطأ');}
 }
 
+// ─── Apartments Grid ──────────────────────────────────────
+let aptsData=null, aptsFilter='all';
+const APT_ST={
+  occupied:      {cls:'occ',lbl:'مؤجر'},
+  vacant:        {cls:'vac',lbl:'شاغر'},
+  checkin_today: {cls:'cin',lbl:'وصول اليوم'},
+  checkout_today:{cls:'cout',lbl:'خروج اليوم'},
+  awaiting:      {cls:'awt',lbl:'انتظار الدخول'},
+  awaiting_payment:{cls:'awp',lbl:'انتظار الدفع'},
+};
+
+async function loadApts(){
+  try{
+    const r=await fetch('/api/apartments/grid');
+    aptsData=await r.json();
+    renderAptsGrid();
+    updateAptsBadges();
+  }catch(e){}
+}
+
+function updateAptsBadges(){
+  if(!aptsData)return;
+  const c={occupied:0,vacant:0,checkin_today:0,checkout_today:0,awaiting:0,awaiting_payment:0};
+  let totOcc=0,totAll=0;
+  Object.values(aptsData).forEach(b=>{totOcc+=b.occupied;totAll+=b.total;b.floors.forEach(f=>f.rooms.forEach(r=>{c[r.status]=(c[r.status]||0)+1;}));});
+  Object.keys(c).forEach(k=>{const el=document.getElementById('ac-'+k);if(el)el.textContent=c[k]||0;});
+  const nb=document.getElementById('nb-apts');if(nb)nb.textContent=totOcc||'—';
+  const rate=totAll?Math.round(totOcc/totAll*100):0;
+  const ro=document.getElementById('aptsOccRate');
+  if(ro)ro.innerHTML=`نسبة الإشغال: <span style="color:var(--gold);font-size:16px;">${rate}%</span> <span style="font-weight:400;font-size:11px;">(${totOcc}/${totAll})</span>`;
+}
+
+function filterApts(f,btn){
+  aptsFilter=f;
+  document.querySelectorAll('.af-btn').forEach(b=>b.classList.remove('active'));
+  btn?.classList.add('active');
+  renderAptsGrid();
+}
+
+function renderAptsGrid(){
+  if(!aptsData)return;
+  const el=document.getElementById('aptsGrid');
+  let html='';
+  Object.entries(aptsData).forEach(([bName,bData])=>{
+    let floorsHtml='';
+    bData.floors.forEach(floor=>{
+      const rooms=floor.rooms.filter(r=>aptsFilter==='all'||r.status===aptsFilter);
+      if(!rooms.length)return;
+      floorsHtml+=`<div style="margin-bottom:12px;"><div style="font-size:11px;font-weight:700;color:var(--t3);margin-bottom:6px;padding-right:2px;">${floor.label}</div><div style="display:flex;flex-wrap:wrap;gap:6px;">`;
+      rooms.forEach(r=>{
+        const s=APT_ST[r.status]||{cls:'',lbl:r.status};
+        floorsHtml+=`<div class="apt-card ${s.cls}" onclick="openAptModal('${r.bookingId||''}','${r.apt}','${bName}','${r.status}')">
+          <div class="apt-num">${r.apt}</div>
+          <div class="apt-lbl">${s.lbl}</div>
+          ${r.name?`<div class="apt-name">${dEsc(r.name)}</div>`:''}
+        </div>`;
+      });
+      floorsHtml+='</div></div>';
+    });
+    if(!floorsHtml)return;
+    html+=`<div class="card" style="margin-bottom:12px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div style="font-size:15px;font-weight:800;">${bName}</div>
+        <div style="font-size:12px;color:var(--t3);">${bData.occupied}/${bData.total} مؤجر</div>
+      </div>${floorsHtml}</div>`;
+  });
+  el.innerHTML=html||'<div class="card" style="text-align:center;padding:30px;color:var(--t3);">لا توجد وحدات بهذه الحالة</div>';
+}
+
+function openAptModal(bookingId,apt,building,status){
+  if(!bookingId||status==='vacant'){
+    showToast(`🟢 الشقة ${apt} — ${building}: شاغرة`);return;
+  }
+  const s=APT_ST[status]||{lbl:status};
+  document.getElementById('aptModalTitle').textContent=`شقة ${apt} — ${building}`;
+  // find room data
+  let room=null;
+  if(aptsData&&aptsData[building]){
+    aptsData[building].floors.forEach(f=>f.rooms.forEach(r=>{if(r.apt===apt)room=r;}));
+  }
+  let body=`<div style="display:flex;flex-direction:column;gap:12px;font-size:13px;">`;
+  if(room){
+    body+=`<div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <span style="padding:4px 12px;border-radius:20px;font-weight:700;background:${status==='occupied'?'#e74c3c':status==='checkin_today'?'#2980b9':status==='checkout_today'?'#e67e22':'#8e44ad'};color:#fff;">${s.lbl}</span>
+    </div>`;
+    if(room.name)body+=`<div><b>النزيل:</b> ${dEsc(room.name)}</div>`;
+    if(room.phone)body+=`<div><b>الجوال:</b> <a href="https://wa.me/${room.phone.replace(/^0/,'966')}" style="color:var(--gold);">${room.phone}</a></div>`;
+    if(room.checkIn)body+=`<div><b>الوصول:</b> ${new Date(room.checkIn).toLocaleDateString('ar-SA')}</div>`;
+    if(room.checkOut)body+=`<div><b>المغادرة:</b> ${new Date(room.checkOut).toLocaleDateString('ar-SA')}</div>`;
+    body+=`<div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;">`;
+    if(status==='awaiting'||status==='checkin_today')
+      body+=`<button onclick="aptAction('${bookingId}','active')" style="flex:1;padding:10px;background:#27ae60;color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;">✅ تسجيل الدخول</button>`;
+    if(status==='occupied'||status==='checkout_today')
+      body+=`<button onclick="aptAction('${bookingId}','checkout')" style="flex:1;padding:10px;background:#e67e22;color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;">🚪 تسجيل الخروج</button>`;
+    body+=`</div>`;
+  }
+  body+=`</div>`;
+  document.getElementById('aptModalBody').innerHTML=body;
+  document.getElementById('aptOverlay').style.display='flex';
+}
+
+function closeAptModal(){document.getElementById('aptOverlay').style.display='none';}
+
+async function aptAction(bookingId,newStatus){
+  try{
+    await fetch(`/api/bookings/${bookingId}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:newStatus})});
+    showToast(newStatus==='active'?'✅ تم تسجيل الدخول':'🚪 تم تسجيل الخروج');
+    closeAptModal();
+    loadApts();
+  }catch(e){showToast('❌ حدث خطأ');}
+}
+
+// ─── Messaging ─────────────────────────────────────────────
 let adminActiveConvId=null,adminMsgTimer=null;
 function dEsc(s){return String(s).replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
@@ -1756,7 +1909,7 @@ async function adminCloseConv(id){
   }catch(e){}
 }
 
-window.addEventListener('load',()=>{loadUser();loadData();loadListings();loadBookings();loadHosts();loadMessages();setInterval(loadData,60000);setInterval(loadMessages,30000);});
+window.addEventListener('load',()=>{loadUser();loadData();loadListings();loadBookings();loadHosts();loadMessages();loadApts();setInterval(loadData,60000);setInterval(loadMessages,30000);setInterval(loadApts,60000);});
 </script>
 </body>
 </html>
