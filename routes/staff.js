@@ -286,4 +286,24 @@ router.get('/api/admin/staff', async (req,res) => {
   } catch(e){ res.status(500).json({error:e.message}); }
 });
 
+router.put('/api/admin/update', async (req,res) => {
+  try {
+    const adminToken = verifyToken(req.cookies?.fs_auth);
+    if(!adminToken) return res.status(401).json({error:'غير مصرح'});
+    const S = require('../models/StaffUser');
+    const { id, field, value } = req.body;
+    if(!id||!field) return res.status(400).json({error:'بيانات ناقصة'});
+    if(!['role','active','password'].includes(field)) return res.status(400).json({error:'حقل غير مسموح'});
+    if(field==='password'){
+      const u = await S.findById(id);
+      if(!u) return res.status(404).json({error:'الموظف غير موجود'});
+      u.password = value;
+      await u.save(); // triggers pre-save bcrypt hash
+    } else {
+      await S.findByIdAndUpdate(id, {[field]: value});
+    }
+    res.json({success:true});
+  } catch(e){ res.status(500).json({error:e.message}); }
+});
+
 module.exports = router;

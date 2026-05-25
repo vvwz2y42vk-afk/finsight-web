@@ -567,7 +567,7 @@ tbody td{padding:7px 5px;font-size:11px;}
       <div class="tbl-wrap">
         <table>
           <thead><tr>
-            <th>الاسم</th><th>اسم المستخدم</th><th>المبنى</th><th>الدور</th><th>الحالة</th><th>إجراء</th>
+            <th>الاسم</th><th>اسم المستخدم</th><th>المبنى</th><th>الدور</th><th>الحالة</th><th>الصلاحيات</th>
           </tr></thead>
           <tbody id="staff-tbody"><tr><td colspan="6" style="text-align:center;color:var(--t3);padding:20px;">جاري التحميل...</td></tr></tbody>
         </table>
@@ -1766,16 +1766,49 @@ async function loadStaff(){
 function renderStaff(){
   const tbody=document.getElementById('staff-tbody');
   if(!tbody)return;
-  if(!allStaff.length){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--t3);">لا يوجد موظفون مضافون بعد</td></tr>';return;}
+  if(!allStaff.length){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--t3);">لا يوجد موظفون مضافون بعد</td></tr>';return;}
   const roleL={receptionist:'موظف استقبال',manager:'مدير فرع'};
   tbody.innerHTML=allStaff.map(s=>`<tr>
     <td style="font-weight:600;">${s.name}</td>
-    <td style="font-family:monospace;">${s.username}</td>
+    <td style="font-family:monospace;font-size:11px;">${s.username}</td>
     <td><span class="pill pm">${s.building}</span></td>
-    <td>${roleL[s.role]||s.role}</td>
+    <td>
+      <select onchange="updateStaff('${s._id}','role',this.value)" style="font-size:10px;padding:2px 6px;border:1px solid var(--b2);border-radius:6px;font-family:inherit;background:var(--s);">
+        <option value="receptionist" ${s.role==='receptionist'?'selected':''}>موظف استقبال</option>
+        <option value="manager" ${s.role==='manager'?'selected':''}>مدير فرع</option>
+      </select>
+    </td>
     <td><span class="pill ${s.active!==false?'pj':'pcl'}">${s.active!==false?'نشط':'موقوف'}</span></td>
-    <td><a href="/staff/login" target="_blank" class="btn" style="font-size:9px;padding:3px 8px;">🔗 دخول</a></td>
+    <td style="white-space:nowrap;display:flex;gap:4px;flex-wrap:wrap;">
+      ${s.active!==false
+        ?`<button class="btn" style="font-size:9px;padding:3px 8px;color:var(--red);" onclick="updateStaff('${s._id}','active',false)">⏸ تعطيل</button>`
+        :`<button class="btn" style="font-size:9px;padding:3px 8px;background:rgba(39,174,96,.15);border:1px solid rgba(39,174,96,.4);color:#1e8449;" onclick="updateStaff('${s._id}','active',true)">▶ تفعيل</button>`
+      }
+      <button class="btn" style="font-size:9px;padding:3px 8px;color:var(--gold);" onclick="resetPassPrompt('${s._id}','${s.name}')">🔑 كلمة المرور</button>
+      <a href="/staff/login" target="_blank" class="btn" style="font-size:9px;padding:3px 8px;">🔗</a>
+    </td>
   </tr>`).join('');
+}
+async function updateStaff(id,field,value){
+  try{
+    const r=await fetch('/staff/api/admin/update',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,field,value})});
+    const d=await r.json();
+    if(d.success){showToast(field==='active'?(value?'✅ تم تفعيل الحساب':'⏸ تم تعطيل الحساب'):'✅ تم تحديث الدور');loadStaff();}
+    else showToast('❌ '+(d.error||'حدث خطأ'));
+  }catch(e){showToast('❌ حدث خطأ');}
+}
+function resetPassPrompt(id,name){
+  const pw=prompt(`كلمة المرور الجديدة للموظف "${name}":`);
+  if(!pw||!pw.trim())return;
+  resetPass(id,pw.trim());
+}
+async function resetPass(id,password){
+  try{
+    const r=await fetch('/staff/api/admin/update',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,field:'password',value:password})});
+    const d=await r.json();
+    if(d.success)showToast('🔑 تم تغيير كلمة المرور');
+    else showToast('❌ '+(d.error||'حدث خطأ'));
+  }catch(e){showToast('❌ حدث خطأ');}
 }
 function openStaffForm(){document.getElementById('staffOverlay').style.display='flex';document.getElementById('sf-err').style.display='none';}
 function closeStaffForm(){document.getElementById('staffOverlay').style.display='none';}
