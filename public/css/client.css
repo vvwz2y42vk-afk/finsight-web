@@ -695,8 +695,8 @@ body.csb-layout {
 .client-sidebar {
   width: 232px;
   flex-shrink: 0;
-  background: #fff;
-  border-left: 1px solid #e2e8f0;
+  background: #071530;
+  border-left: 1px solid rgba(255,255,255,.06);
   display: flex;
   flex-direction: column;
   position: sticky;
@@ -710,10 +710,11 @@ body.csb-layout {
   align-items: center;
   gap: 12px;
   padding: 22px 18px 18px;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid rgba(255,255,255,.07);
   flex-shrink: 0;
 }
-.csb-logo .nav-logo-sub { color: #94a3b8; }
+.csb-logo img { filter: brightness(0) invert(1); }
+.csb-logo .nav-logo-sub { color: rgba(255,255,255,.35); }
 .csb-nav {
   flex: 1;
   padding: 14px 10px;
@@ -728,17 +729,17 @@ body.csb-layout {
   gap: 10px;
   padding: 10px 13px;
   border-radius: 10px;
-  color: #64748b;
+  color: rgba(255,255,255,.5);
   text-decoration: none;
   font-size: 14px;
   font-weight: 600;
   transition: all .15s;
   border-right: 3px solid transparent;
 }
-.csb-lnk:hover { background: rgba(26,61,143,.07); color: #1a3d8f; }
-.csb-lnk.active { background: rgba(26,61,143,.1); color: #1a3d8f; border-right-color: #1a3d8f; }
+.csb-lnk:hover { background: rgba(255,255,255,.07); color: rgba(255,255,255,.9); }
+.csb-lnk.active { background: rgba(74,144,226,.2); color: #7ec8f8; border-right-color: #4a90e2; }
 .csb-ico { font-size: 16px; width: 22px; text-align: center; flex-shrink: 0; }
-.csb-divider { height: 1px; background: #e2e8f0; margin: 6px 8px; }
+.csb-divider { height: 1px; background: rgba(255,255,255,.07); margin: 6px 8px; }
 .csb-sub {
   display: flex;
   flex-direction: column;
@@ -747,7 +748,7 @@ body.csb-layout {
   margin-bottom: 4px;
 }
 .csb-sublnk {
-  color: #94a3b8;
+  color: rgba(255,255,255,.35);
   font-size: 12px;
   font-weight: 500;
   text-decoration: none;
@@ -756,11 +757,11 @@ body.csb-layout {
   transition: all .15s;
   display: block;
 }
-.csb-sublnk:hover { color: #1a3d8f; background: rgba(26,61,143,.06); }
-.csb-sublnk.active { color: var(--gold); }
+.csb-sublnk:hover { color: rgba(255,255,255,.8); background: rgba(255,255,255,.06); }
+.csb-sublnk.active { color: #7ec8f8; }
 .csb-foot {
   padding: 14px;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid rgba(255,255,255,.07);
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -785,7 +786,7 @@ body.csb-layout {
 .csb-wa:hover { background: rgba(37,211,102,.18); }
 .csb-admin {
   text-align: center;
-  color: #cbd5e1;
+  color: rgba(255,255,255,.2);
   font-size: 11px;
   text-decoration: none;
   padding: 5px;
