@@ -153,12 +153,13 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;direction:rtl;display:fle
   <div class="sb-bld"><%= staff.building %></div>
   <nav class="sb-nav">
     <div class="sn active" onclick="goTab('dashboard',this)" id="sn-dashboard"><span class="sn-ico">🏠</span><span class="sn-lbl">لوحة المعلومات</span></div>
-    <div class="sn" onclick="goTab('apartments',this)" id="sn-apartments" style="display:<%= (staff.permissions||[]).includes('apartments')?'flex':'none' %>"><span class="sn-ico">🏢</span><span class="sn-lbl">الشقق والتسكين</span></div>
-    <div class="sn" onclick="goTab('bookings',this)" id="sn-bookings" style="display:<%= (staff.permissions||[]).includes('bookings')?'flex':'none' %>"><span class="sn-ico">📅</span><span class="sn-lbl">الحجوزات</span></div>
-    <div class="sn" onclick="goTab('customers',this)" id="sn-customers" style="display:<%= (staff.permissions||[]).includes('customers')?'flex':'none' %>"><span class="sn-ico">👥</span><span class="sn-lbl">العملاء</span></div>
-    <div class="sn" onclick="goTab('housekeeping',this)" id="sn-housekeeping" style="display:<%= (staff.permissions||[]).includes('housekeeping')?'flex':'none' %>"><span class="sn-ico">🧹</span><span class="sn-lbl">خدمة الغرف</span></div>
-    <div class="sn" onclick="goTab('activity',this)" id="sn-activity" style="display:<%= (staff.permissions||[]).includes('activity')?'flex':'none' %>"><span class="sn-ico">📋</span><span class="sn-lbl">سجل الحركات</span></div>
-    <div class="sn" onclick="goTab('vouchers',this)" id="sn-vouchers" style="display:<%= (staff.permissions||[]).includes('vouchers')?'flex':'none' %>"><span class="sn-ico">🧾</span><span class="sn-lbl">السندات والفواتير</span></div>
+    <% const P = staff.permissions && staff.permissions.length ? staff.permissions : ['dashboard','apartments','bookings','customers','housekeeping','activity','new_booking','edit_booking','cancel_booking','vouchers']; %>
+    <div class="sn" onclick="goTab('apartments',this)" id="sn-apartments" style="display:<%= P.includes('apartments')?'flex':'none' %>"><span class="sn-ico">🏢</span><span class="sn-lbl">الشقق والتسكين</span></div>
+    <div class="sn" onclick="goTab('bookings',this)" id="sn-bookings" style="display:<%= P.includes('bookings')?'flex':'none' %>"><span class="sn-ico">📅</span><span class="sn-lbl">الحجوزات</span></div>
+    <div class="sn" onclick="goTab('customers',this)" id="sn-customers" style="display:<%= P.includes('customers')?'flex':'none' %>"><span class="sn-ico">👥</span><span class="sn-lbl">العملاء</span></div>
+    <div class="sn" onclick="goTab('housekeeping',this)" id="sn-housekeeping" style="display:<%= P.includes('housekeeping')?'flex':'none' %>"><span class="sn-ico">🧹</span><span class="sn-lbl">خدمة الغرف</span></div>
+    <div class="sn" onclick="goTab('activity',this)" id="sn-activity" style="display:<%= P.includes('activity')?'flex':'none' %>"><span class="sn-ico">📋</span><span class="sn-lbl">سجل الحركات</span></div>
+    <div class="sn" onclick="goTab('vouchers',this)" id="sn-vouchers" style="display:<%= P.includes('vouchers')?'flex':'none' %>"><span class="sn-ico">🧾</span><span class="sn-lbl">السندات والفواتير</span></div>
   </nav>
   <div class="sb-foot">
     <a href="/staff/logout" class="sb-logout" style="text-decoration:none;"><span class="sn-ico">⎋</span><span class="sn-lbl">خروج</span></a>
@@ -215,7 +216,7 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;direction:rtl;display:fle
         <button class="af" onclick="filterApts('awaiting',this)">🟣 انتظار <span id="fc-awaiting">—</span></button>
         <span id="apts-occ-rate" style="font-size:13px;font-weight:700;align-self:center;"></span>
         </div>
-        <% if((staff.permissions||[]).includes('new_booking')){ %><button class="sbtn" onclick="openNewBkModal()">+ حجز جديد</button><% } %>
+        <% if(P.includes('new_booking')){ %><button class="sbtn" onclick="openNewBkModal()">+ حجز جديد</button><% } %>
       </div>
       <div id="aptsContainer"></div>
     </div>
@@ -233,7 +234,7 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;direction:rtl;display:fle
           <option value="cancelled">ملغي</option>
         </select>
         <button class="sbtn" onclick="loadBookings()">🔄 تحديث</button>
-        <% if((staff.permissions||[]).includes('new_booking')){ %><button class="sbtn" onclick="openNewBkModal()" style="background:linear-gradient(135deg,#22c55e,#16a34a);">+ حجز جديد</button><% } %>
+        <% if(P.includes('new_booking')){ %><button class="sbtn" onclick="openNewBkModal()" style="background:linear-gradient(135deg,#22c55e,#16a34a);">+ حجز جديد</button><% } %>
       </div>
       <div class="apt-bld">
         <div class="tbl-wrap">
@@ -491,7 +492,7 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;direction:rtl;display:fle
 
 <script>
 const BUILDING = '<%= staff.building %>';
-const PERMS = <%- JSON.stringify(staff.permissions || ['dashboard','apartments','bookings','customers','housekeeping','activity','new_booking','edit_booking','cancel_booking']) %>;
+const PERMS = <%- JSON.stringify(staff.permissions && staff.permissions.length ? staff.permissions : ['dashboard','apartments','bookings','customers','housekeeping','activity','new_booking','edit_booking','cancel_booking','vouchers']) %>;
 const can = p => PERMS.includes(p);
 let aptsFilter='all', aptsRawData=null;
 let weeklyChartInst=null, donutChartInst=null;
