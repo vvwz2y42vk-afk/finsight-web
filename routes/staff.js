@@ -128,6 +128,48 @@ router.put('/api/bookings/:id/status', reqStaff, async (req,res) => {
   } catch(e){ res.status(500).json({error:e.message}); }
 });
 
+// ── API: Get Single Booking ───────────────────────────────
+router.get('/api/bookings/:id', reqStaff, async (req,res) => {
+  try {
+    const B = require('../models/Booking');
+    const bk = await B.findOne({_id:req.params.id, building:req.staff.building}).lean();
+    if(!bk) return res.status(404).json({error:'الحجز غير موجود'});
+    res.json(bk);
+  } catch(e){ res.status(500).json({error:e.message}); }
+});
+
+// ── API: Edit Booking ─────────────────────────────────────
+router.put('/api/bookings/:id/edit', reqStaff, async (req,res) => {
+  try {
+    const B = require('../models/Booking');
+    const AL = require('../models/ActivityLog');
+    const bk = await B.findOne({_id:req.params.id, building:req.staff.building});
+    if(!bk) return res.status(404).json({error:'الحجز غير موجود'});
+    const { name, phone, checkIn, checkOut, months, pricePerUnit, totalPrice, paidAmount, idType, idNumber, status, notes } = req.body;
+
+    let nights = bk.nights, checkout = checkOut || bk.checkOut;
+    if(bk.bookingType==='daily' && checkIn && checkOut)
+      nights = Math.round((new Date(checkOut)-new Date(checkIn))/86400000);
+    else if(bk.bookingType==='annual' && checkIn && months){
+      const d = new Date(checkIn); d.setMonth(d.getMonth()+(parseInt(months)||1));
+      checkout = d.toISOString().split('T')[0];
+      nights = (parseInt(months)||1)*30;
+    }
+
+    await B.findByIdAndUpdate(bk._id, {
+      name: name||bk.name, phone: phone||bk.phone,
+      checkIn: checkIn?new Date(checkIn):bk.checkIn,
+      checkOut: checkout?new Date(checkout):bk.checkOut,
+      nights, totalPrice: parseFloat(totalPrice)||bk.totalPrice,
+      paidAmount: parseFloat(paidAmount)||0,
+      idType: idType||bk.idType, idNumber: idNumber||bk.idNumber,
+      status: status||bk.status, notes: notes||bk.notes,
+    });
+    AL.create({building:req.staff.building,staffName:req.staff.name,action:'status_change',apt:bk.apt,guestName:name||bk.name,bookingId:bk._id,details:'تعديل الحجز'}).catch(()=>{});
+    res.json({success:true});
+  } catch(e){ res.status(500).json({error:e.message}); }
+});
+
 // ── API: New Manual Booking ───────────────────────────────
 router.post('/api/bookings/new', reqStaff, async (req,res) => {
   try {

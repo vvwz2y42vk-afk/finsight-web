@@ -526,11 +526,54 @@ function openBkModal(bookingId,apt,status){
     html+=`<button class="mbtn mbtn-in" onclick="changeStatus('${bookingId}','active')">✅ تسجيل الدخول</button>`;
   if(['occupied','checkout_today'].includes(status))
     html+=`<button class="mbtn mbtn-out" onclick="changeStatus('${bookingId}','checkout')">🚪 تسجيل الخروج</button>`;
+  if(!['cancelled','checkout'].includes(status))
+    html+=`<button class="mbtn" style="background:#eff6ff;color:#2563eb;" onclick="closeBkModal();editBk('${bookingId}')">✏️ تعديل</button>`;
+  html+=`<button class="mbtn" style="background:#fef2f2;color:#dc2626;" onclick="cancelBk('${bookingId}')">🗑️ إلغاء</button>`;
   html+=`<button class="mbtn mbtn-cancel" onclick="closeBkModal()">إغلاق</button></div>`;
   document.getElementById('bkModalBody').innerHTML=html;
   document.getElementById('bkModal').style.display='flex';
 }
 function closeBkModal(){ document.getElementById('bkModal').style.display='none'; }
+
+let editBkId=null;
+async function editBk(id){
+  try{
+    const r=await fetch('/staff/api/bookings/'+id);
+    if(!r.ok){ toast('❌ تعذر تحميل الحجز'); return; }
+    const b=await r.json();
+    editBkId=id;
+    // populate form
+    await openNewBkModal(true);
+    document.querySelector('#newBkModal .mhd-title').textContent='✏️ تعديل الحجز';
+    document.getElementById('nb-apt').innerHTML=`<option value="${esc(b.apt)}">${esc(b.apt)}</option>`;
+    document.getElementById('nb-apt').value=b.apt;
+    document.getElementById('nb-apt').disabled=true;
+    document.getElementById('nb-name').value=b.name||'';
+    document.getElementById('nb-phone').value=b.phone||'';
+    document.getElementById('nb-type').value=b.bookingType||'daily';
+    toggleNbType();
+    if(b.checkIn) document.getElementById('nb-checkin').value=new Date(b.checkIn).toISOString().split('T')[0];
+    if(b.checkOut) document.getElementById('nb-checkout').value=new Date(b.checkOut).toISOString().split('T')[0];
+    document.getElementById('nb-price').value=b.pricePerNight||b.pricePerMonth||0;
+    document.getElementById('nb-total').value=b.totalPrice||0;
+    document.getElementById('nb-paid').value=b.paidAmount||0;
+    document.getElementById('nb-remain').value=Math.max(0,(b.totalPrice||0)-(b.paidAmount||0))||'';
+    document.getElementById('nb-idtype').value=b.idType||'';
+    document.getElementById('nb-idnum').value=b.idNumber||'';
+    document.getElementById('nb-status').value=b.status||'awaiting_checkin';
+    document.getElementById('nb-notes').value=b.notes||'';
+  }catch(e){ toast('❌ حدث خطأ'); }
+}
+
+async function cancelBk(id){
+  if(!confirm('هل أنت متأكد من إلغاء هذا الحجز؟')) return;
+  try{
+    const r=await fetch('/staff/api/bookings/'+id+'/status',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'cancelled'})});
+    const d=await r.json();
+    if(d.success){ toast('🗑️ تم إلغاء الحجز'); closeBkModal(); loadApartments(); loadStats(); loadBookings(); }
+    else toast('❌ '+d.error);
+  }catch(e){ toast('❌ حدث خطأ'); }
+}
 
 async function changeStatus(id,status){
   try{
@@ -562,6 +605,8 @@ async function loadBookings(){
       <td>
         ${b.status==='awaiting_checkin'?`<button onclick="changeStatus('${b._id}','active')" style="padding:4px 10px;background:#22c55e;color:#fff;border:none;border-radius:7px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">دخول</button>`:''}
         ${b.status==='active'?`<button onclick="changeStatus('${b._id}','checkout')" style="padding:4px 10px;background:#f97316;color:#fff;border:none;border-radius:7px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">خروج</button>`:''}
+        ${!['cancelled','checkout'].includes(b.status)?`<button onclick="editBk('${b._id}')" style="padding:4px 10px;background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;border-radius:7px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">✏️</button>`:''}
+        ${!['cancelled','checkout'].includes(b.status)?`<button onclick="cancelBk('${b._id}')" style="padding:4px 10px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;border-radius:7px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">إلغاء</button>`:''}
       </td>
     </tr>`).join('');
   }catch(e){}
@@ -648,7 +693,7 @@ async function loadActivity(){
 
 // ── New Booking ──────────────────────────────────────────
 let nbListings=[];
-async function openNewBkModal(){
+async function openNewBkModal(editMode){
   const modal=document.getElementById('newBkModal');
   const sel=document.getElementById('nb-apt');
   sel.innerHTML='<option value="">جاري التحميل...</option>';
@@ -677,9 +722,19 @@ async function openNewBkModal(){
   const today=new Date().toISOString().split('T')[0];
   document.getElementById('nb-checkin').value=today;
   document.getElementById('nb-checkout').value='';
+  if(!editMode){
+    editBkId=null;
+    document.querySelector('#newBkModal .mhd-title').textContent='➕ حجز جديد';
+    document.getElementById('nb-apt').disabled=false;
+  }
   modal.style.display='flex';
 }
-function closeNewBkModal(){ document.getElementById('newBkModal').style.display='none'; }
+function closeNewBkModal(){
+  document.getElementById('newBkModal').style.display='none';
+  editBkId=null;
+  document.getElementById('nb-apt').disabled=false;
+  document.querySelector('#newBkModal .mhd-title').textContent='➕ حجز جديد';
+}
 
 function toggleNbType(){
   const t=document.getElementById('nb-type').value;
@@ -741,11 +796,13 @@ async function submitNewBk(){
   }
   try{
     const body={apt,name,phone,bookingType:type,checkIn:checkin,checkOut:checkout,months,pricePerUnit:price,totalPrice:total,paidAmount:paid,idType,idNumber,status,notes};
-    const r=await fetch('/staff/api/bookings/new',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const url=editBkId?`/staff/api/bookings/${editBkId}/edit`:'/staff/api/bookings/new';
+    const method=editBkId?'PUT':'POST';
+    const r=await fetch(url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     const d=await r.json();
     if(!r.ok){errEl.textContent=d.error||'حدث خطأ';errEl.style.display='block';return;}
     closeNewBkModal();
-    toast('✅ تم إضافة الحجز بنجاح');
+    toast(editBkId?'✏️ تم تعديل الحجز':'✅ تم إضافة الحجز بنجاح');
     loadApartments(); loadStats(); loadBookings();
   }catch(e){errEl.textContent='حدث خطأ';errEl.style.display='block';}
 }
