@@ -575,6 +575,18 @@ tbody td{padding:7px 5px;font-size:11px;}
     </div>
   </div>
 
+  <!-- STAFF PERMISSIONS MODAL -->
+  <div class="overlay" id="permsOverlay" style="display:none;" onclick="if(event.target===this)closePermsModal()">
+    <div class="modal" style="max-width:420px;">
+      <div class="modal-hd"><div class="modal-title" id="permsModalTitle">🔐 صلاحيات الموظف</div><button class="modal-close" onclick="closePermsModal()">×</button></div>
+      <div class="modal-body">
+        <div style="font-size:11px;color:var(--t3);margin-bottom:12px;">حدد التبويبات والأدوات التي يستطيع هذا الموظف الوصول إليها</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;" id="permsGrid"></div>
+        <button class="btn btn-gold" style="width:100%;justify-content:center;margin-top:14px;" onclick="savePerms()">حفظ الصلاحيات</button>
+      </div>
+    </div>
+  </div>
+
   <!-- STAFF FORM MODAL -->
   <div class="overlay" id="staffOverlay" style="display:none;" onclick="if(event.target===this)closeStaffForm()">
     <div class="modal" style="max-width:400px;">
@@ -1784,6 +1796,7 @@ function renderStaff(){
         ?`<button class="btn" style="font-size:9px;padding:3px 8px;color:var(--red);" onclick="updateStaff('${s._id}','active',false)">⏸ تعطيل</button>`
         :`<button class="btn" style="font-size:9px;padding:3px 8px;background:rgba(39,174,96,.15);border:1px solid rgba(39,174,96,.4);color:#1e8449;" onclick="updateStaff('${s._id}','active',true)">▶ تفعيل</button>`
       }
+      <button class="btn" style="font-size:9px;padding:3px 8px;color:var(--blue);" onclick="openPermsModal('${s._id}','${s.name}',${JSON.stringify(s.permissions||[])})">🔐 الصلاحيات</button>
       <button class="btn" style="font-size:9px;padding:3px 8px;color:var(--gold);" onclick="resetPassPrompt('${s._id}','${s.name}')">🔑 كلمة المرور</button>
       <a href="/staff/login" target="_blank" class="btn" style="font-size:9px;padding:3px 8px;">🔗</a>
     </td>
@@ -1807,6 +1820,39 @@ async function resetPass(id,password){
     const r=await fetch('/staff/api/admin/update',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,field:'password',value:password})});
     const d=await r.json();
     if(d.success)showToast('🔑 تم تغيير كلمة المرور');
+    else showToast('❌ '+(d.error||'حدث خطأ'));
+  }catch(e){showToast('❌ حدث خطأ');}
+}
+const PERM_LIST=[
+  {v:'dashboard',    l:'🏠 لوحة المعلومات'},
+  {v:'apartments',   l:'🏢 الشقق والتسكين'},
+  {v:'bookings',     l:'📅 الحجوزات'},
+  {v:'customers',    l:'👥 العملاء'},
+  {v:'housekeeping', l:'🧹 خدمة الغرف'},
+  {v:'activity',     l:'📋 سجل الحركات'},
+  {v:'new_booking',  l:'➕ إضافة حجز'},
+  {v:'edit_booking', l:'✏️ تعديل الحجز'},
+  {v:'cancel_booking',l:'🗑️ إلغاء الحجز'},
+];
+let permsStaffId=null;
+function openPermsModal(id,name,current){
+  permsStaffId=id;
+  document.getElementById('permsModalTitle').textContent='🔐 صلاحيات: '+name;
+  document.getElementById('permsGrid').innerHTML=PERM_LIST.map(p=>`
+    <label style="display:flex;align-items:center;gap:7px;font-size:12px;padding:8px 10px;border:1px solid var(--b);border-radius:8px;cursor:pointer;background:var(--s2);">
+      <input type="checkbox" value="${p.v}" ${current.includes(p.v)?'checked':''} style="width:15px;height:15px;accent-color:var(--gold);cursor:pointer;">
+      ${p.l}
+    </label>`).join('');
+  document.getElementById('permsOverlay').style.display='flex';
+}
+function closePermsModal(){document.getElementById('permsOverlay').style.display='none';permsStaffId=null;}
+async function savePerms(){
+  const checked=[...document.querySelectorAll('#permsGrid input:checked')].map(i=>i.value);
+  if(!checked.length){showToast('⚠️ يجب اختيار صلاحية واحدة على الأقل');return;}
+  try{
+    const r=await fetch('/staff/api/admin/update',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:permsStaffId,field:'permissions',value:checked})});
+    const d=await r.json();
+    if(d.success){showToast('✅ تم حفظ الصلاحيات');closePermsModal();loadStaff();}
     else showToast('❌ '+(d.error||'حدث خطأ'));
   }catch(e){showToast('❌ حدث خطأ');}
 }

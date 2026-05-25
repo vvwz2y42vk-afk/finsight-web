@@ -25,7 +25,7 @@ router.post('/login', async (req,res) => {
     const S = require('../models/StaffUser');
     const u = await S.findOne({ username:(req.body.username||'').trim(), active:true });
     if (!u||!(await u.comparePassword(req.body.password))) return res.render('staff-login',{error:'اسم المستخدم أو كلمة المرور غير صحيحة'});
-    res.cookie(COOKIE, createToken({id:u._id,name:u.name,building:u.building,role:u.role}), COPTS);
+    res.cookie(COOKIE, createToken({id:u._id,name:u.name,building:u.building,role:u.role,permissions:u.permissions||[]}), COPTS);
     res.redirect('/staff/dashboard');
   } catch(e){ res.render('staff-login',{error:'حدث خطأ'}); }
 });
@@ -293,7 +293,7 @@ router.put('/api/admin/update', async (req,res) => {
     const S = require('../models/StaffUser');
     const { id, field, value } = req.body;
     if(!id||!field) return res.status(400).json({error:'بيانات ناقصة'});
-    if(!['role','active','password'].includes(field)) return res.status(400).json({error:'حقل غير مسموح'});
+    if(!['role','active','password','permissions'].includes(field)) return res.status(400).json({error:'حقل غير مسموح'});
     if(field==='password'){
       const u = await S.findById(id);
       if(!u) return res.status(404).json({error:'الموظف غير موجود'});

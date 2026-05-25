@@ -130,11 +130,11 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;direction:rtl;display:fle
   <div class="sb-bld"><%= staff.building %></div>
   <nav class="sb-nav">
     <div class="sn active" onclick="goTab('dashboard',this)" id="sn-dashboard"><span class="sn-ico">🏠</span><span class="sn-lbl">لوحة المعلومات</span></div>
-    <div class="sn" onclick="goTab('apartments',this)" id="sn-apartments"><span class="sn-ico">🏢</span><span class="sn-lbl">الشقق والتسكين</span></div>
-    <div class="sn" onclick="goTab('bookings',this)" id="sn-bookings"><span class="sn-ico">📅</span><span class="sn-lbl">الحجوزات</span></div>
-    <div class="sn" onclick="goTab('customers',this)" id="sn-customers"><span class="sn-ico">👥</span><span class="sn-lbl">العملاء</span></div>
-    <div class="sn" onclick="goTab('housekeeping',this)" id="sn-housekeeping"><span class="sn-ico">🧹</span><span class="sn-lbl">خدمة الغرف</span></div>
-    <div class="sn" onclick="goTab('activity',this)" id="sn-activity"><span class="sn-ico">📋</span><span class="sn-lbl">سجل الحركات</span></div>
+    <div class="sn" onclick="goTab('apartments',this)" id="sn-apartments" style="display:<%= (staff.permissions||[]).includes('apartments')?'flex':'none' %>"><span class="sn-ico">🏢</span><span class="sn-lbl">الشقق والتسكين</span></div>
+    <div class="sn" onclick="goTab('bookings',this)" id="sn-bookings" style="display:<%= (staff.permissions||[]).includes('bookings')?'flex':'none' %>"><span class="sn-ico">📅</span><span class="sn-lbl">الحجوزات</span></div>
+    <div class="sn" onclick="goTab('customers',this)" id="sn-customers" style="display:<%= (staff.permissions||[]).includes('customers')?'flex':'none' %>"><span class="sn-ico">👥</span><span class="sn-lbl">العملاء</span></div>
+    <div class="sn" onclick="goTab('housekeeping',this)" id="sn-housekeeping" style="display:<%= (staff.permissions||[]).includes('housekeeping')?'flex':'none' %>"><span class="sn-ico">🧹</span><span class="sn-lbl">خدمة الغرف</span></div>
+    <div class="sn" onclick="goTab('activity',this)" id="sn-activity" style="display:<%= (staff.permissions||[]).includes('activity')?'flex':'none' %>"><span class="sn-ico">📋</span><span class="sn-lbl">سجل الحركات</span></div>
   </nav>
   <div class="sb-foot">
     <a href="/staff/logout" class="sb-logout" style="text-decoration:none;"><span class="sn-ico">⎋</span><span class="sn-lbl">خروج</span></a>
@@ -191,7 +191,7 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;direction:rtl;display:fle
         <button class="af" onclick="filterApts('awaiting',this)">🟣 انتظار <span id="fc-awaiting">—</span></button>
         <span id="apts-occ-rate" style="font-size:13px;font-weight:700;align-self:center;"></span>
         </div>
-        <button class="sbtn" onclick="openNewBkModal()">+ حجز جديد</button>
+        <% if((staff.permissions||[]).includes('new_booking')){ %><button class="sbtn" onclick="openNewBkModal()">+ حجز جديد</button><% } %>
       </div>
       <div id="aptsContainer"></div>
     </div>
@@ -209,7 +209,7 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;direction:rtl;display:fle
           <option value="cancelled">ملغي</option>
         </select>
         <button class="sbtn" onclick="loadBookings()">🔄 تحديث</button>
-        <button class="sbtn" onclick="openNewBkModal()" style="background:linear-gradient(135deg,#22c55e,#16a34a);">+ حجز جديد</button>
+        <% if((staff.permissions||[]).includes('new_booking')){ %><button class="sbtn" onclick="openNewBkModal()" style="background:linear-gradient(135deg,#22c55e,#16a34a);">+ حجز جديد</button><% } %>
       </div>
       <div class="apt-bld">
         <div class="tbl-wrap">
@@ -371,6 +371,8 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;direction:rtl;display:fle
 
 <script>
 const BUILDING = '<%= staff.building %>';
+const PERMS = <%- JSON.stringify(staff.permissions || ['dashboard','apartments','bookings','customers','housekeeping','activity','new_booking','edit_booking','cancel_booking']) %>;
+const can = p => PERMS.includes(p);
 let aptsFilter='all', aptsRawData=null;
 let weeklyChartInst=null, donutChartInst=null;
 let hkCurrentApt=null;
@@ -526,9 +528,10 @@ function openBkModal(bookingId,apt,status){
     html+=`<button class="mbtn mbtn-in" onclick="changeStatus('${bookingId}','active')">✅ تسجيل الدخول</button>`;
   if(['occupied','checkout_today'].includes(status))
     html+=`<button class="mbtn mbtn-out" onclick="changeStatus('${bookingId}','checkout')">🚪 تسجيل الخروج</button>`;
-  if(!['cancelled','checkout'].includes(status))
+  if(!['cancelled','checkout'].includes(status)&&can('edit_booking'))
     html+=`<button class="mbtn" style="background:#eff6ff;color:#2563eb;" onclick="closeBkModal();editBk('${bookingId}')">✏️ تعديل</button>`;
-  html+=`<button class="mbtn" style="background:#fef2f2;color:#dc2626;" onclick="cancelBk('${bookingId}')">🗑️ إلغاء</button>`;
+  if(can('cancel_booking'))
+    html+=`<button class="mbtn" style="background:#fef2f2;color:#dc2626;" onclick="cancelBk('${bookingId}')">🗑️ إلغاء</button>`;
   html+=`<button class="mbtn mbtn-cancel" onclick="closeBkModal()">إغلاق</button></div>`;
   document.getElementById('bkModalBody').innerHTML=html;
   document.getElementById('bkModal').style.display='flex';
@@ -605,8 +608,8 @@ async function loadBookings(){
       <td>
         ${b.status==='awaiting_checkin'?`<button onclick="changeStatus('${b._id}','active')" style="padding:4px 10px;background:#22c55e;color:#fff;border:none;border-radius:7px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">دخول</button>`:''}
         ${b.status==='active'?`<button onclick="changeStatus('${b._id}','checkout')" style="padding:4px 10px;background:#f97316;color:#fff;border:none;border-radius:7px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">خروج</button>`:''}
-        ${!['cancelled','checkout'].includes(b.status)?`<button onclick="editBk('${b._id}')" style="padding:4px 10px;background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;border-radius:7px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">✏️</button>`:''}
-        ${!['cancelled','checkout'].includes(b.status)?`<button onclick="cancelBk('${b._id}')" style="padding:4px 10px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;border-radius:7px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">إلغاء</button>`:''}
+        ${!['cancelled','checkout'].includes(b.status)&&can('edit_booking')?`<button onclick="editBk('${b._id}')" style="padding:4px 10px;background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;border-radius:7px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">✏️</button>`:''}
+        ${!['cancelled','checkout'].includes(b.status)&&can('cancel_booking')?`<button onclick="cancelBk('${b._id}')" style="padding:4px 10px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;border-radius:7px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">إلغاء</button>`:''}
       </td>
     </tr>`).join('');
   }catch(e){}
