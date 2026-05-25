@@ -270,6 +270,7 @@ tbody td{padding:7px 5px;font-size:11px;}
     <button id="nav-hosts" class="ni" onclick="go('hosts',this)"><span class="ni-ico">🏡</span>المضيفون<span class="ni-badge" id="nb-hosts">—</span></button>
     <button id="nav-msgs" class="ni" onclick="go('msgs',this)"><span class="ni-ico">💬</span>الرسائل<span class="ni-badge" id="nb-msgs">—</span></button>
     <button id="nav-apts" class="ni" onclick="go('apts',this)"><span class="ni-ico">🏢</span>الشقق<span class="ni-badge" id="nb-apts">—</span></button>
+    <button id="nav-staff" class="ni" onclick="go('staff',this)"><span class="ni-ico">👤</span>الموظفون</button>
   </nav>
   <div class="sb-user">
     <div class="user-row"><div class="user-av" id="user-av">ع</div><div><div class="user-name" id="user-name">عبد الملك</div><div class="user-role" id="user-role">مساعد إداري · Finsight</div></div></div>
@@ -317,6 +318,7 @@ tbody td{padding:7px 5px;font-size:11px;}
     <button id="tab-nav-hosts" class="tab" onclick="st('hosts',this)">🏡 المضيفون</button>
     <button id="tab-nav-msgs" class="tab" onclick="st('msgs',this)">💬 الرسائل</button>
     <button id="tab-nav-apts" class="tab" onclick="st('apts',this)">🏢 الشقق</button>
+    <button id="tab-nav-staff" class="tab" onclick="st('staff',this)">👤 الموظفون</button>
   </div>
   <div class="tc active" id="tab-dashboard">
     <div class="kpi-grid">
@@ -549,6 +551,53 @@ tbody td{padding:7px 5px;font-size:11px;}
         <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;color:var(--t3);gap:10px;padding:40px;font-size:13px;">
           <span style="font-size:2.5rem;">💬</span><span>اختر محادثة للرد عليها</span>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════ STAFF TAB ═══ -->
+  <div class="tc" id="tab-staff">
+    <div class="topbar" style="margin-bottom:12px;">
+      <div><div class="page-title">إدارة <span>الموظفين</span></div><div style="font-size:10px;color:var(--t3);">حسابات موظفي الاستقبال لكل مبنى</div></div>
+      <div class="topbar-right">
+        <button class="btn btn-gold" onclick="openStaffForm()">+ إضافة موظف</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th>الاسم</th><th>اسم المستخدم</th><th>المبنى</th><th>الدور</th><th>الحالة</th><th>إجراء</th>
+          </tr></thead>
+          <tbody id="staff-tbody"><tr><td colspan="6" style="text-align:center;color:var(--t3);padding:20px;">جاري التحميل...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- STAFF FORM MODAL -->
+  <div class="overlay" id="staffOverlay" style="display:none;" onclick="if(event.target===this)closeStaffForm()">
+    <div class="modal" style="max-width:400px;">
+      <div class="modal-hd"><div class="modal-title">إضافة موظف جديد</div><button class="modal-close" onclick="closeStaffForm()">×</button></div>
+      <div class="modal-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+          <div><label class="form-lbl">الاسم الكامل *</label><input class="form-inp" id="sf-name" type="text" placeholder="اسم الموظف"></div>
+          <div><label class="form-lbl">اسم المستخدم *</label><input class="form-inp" id="sf-username" type="text" placeholder="username"></div>
+          <div><label class="form-lbl">كلمة المرور *</label><input class="form-inp" id="sf-password" type="text" placeholder="••••••••"></div>
+          <div><label class="form-lbl">المبنى *</label>
+            <select class="form-inp" id="sf-building">
+              <option>المنارا</option><option>جوان ان</option><option>الماسة</option><option>الواحة</option>
+            </select>
+          </div>
+          <div><label class="form-lbl">الدور</label>
+            <select class="form-inp" id="sf-role">
+              <option value="receptionist">موظف استقبال</option>
+              <option value="manager">مدير فرع</option>
+            </select>
+          </div>
+        </div>
+        <div id="sf-err" style="color:#dc2626;font-size:12px;margin-bottom:8px;display:none;"></div>
+        <button class="btn btn-gold" style="width:100%;justify-content:center;" onclick="submitStaffForm()">حفظ الموظف</button>
       </div>
     </div>
   </div>
@@ -1011,7 +1060,7 @@ async function confirmDelete(){
   showToast('🗑️ تم الحذف — جاري المزامنة...');if(c)await syncToSheet('deleteContract',c);
 }
 
-const titles={dashboard:'لوحة <span>التحكم</span>',contracts:'<span>العقود</span>',commissions:'<span>العمولات</span>',collection:'<span>التحصيل</span>',expiry:'العقود <span>المنتهية</span>',map:'خريطة <span>الشقق</span>',performance:'تحليل <span>الأداء</span>',sources:'تحليل <span>المصادر</span>',reports:'<span>التقارير</span> الشهرية',listings:'إدارة <span>الإعلانات</span>',bookings:'طلبات <span>الحجز</span>',customers:'العملاء <span>المسجلون</span>',hosts:'المضيفون <span>الخارجيون</span>',msgs:'الرسائل <span>والمحادثات</span>',apts:'الشقق <span>والتسكين</span>'};
+const titles={dashboard:'لوحة <span>التحكم</span>',contracts:'<span>العقود</span>',commissions:'<span>العمولات</span>',collection:'<span>التحصيل</span>',expiry:'العقود <span>المنتهية</span>',map:'خريطة <span>الشقق</span>',performance:'تحليل <span>الأداء</span>',sources:'تحليل <span>المصادر</span>',reports:'<span>التقارير</span> الشهرية',listings:'إدارة <span>الإعلانات</span>',bookings:'طلبات <span>الحجز</span>',customers:'العملاء <span>المسجلون</span>',hosts:'المضيفون <span>الخارجيون</span>',msgs:'الرسائل <span>والمحادثات</span>',apts:'الشقق <span>والتسكين</span>',staff:'إدارة <span>الموظفين</span>'};
 async function loadUser(){
   try{
     const res=await fetch('/api/me');
@@ -1033,14 +1082,14 @@ async function loadUser(){
 }
 
 function go(id,el){
-  if(currentUser&&!currentUser.allowed.includes(id)&&!['listings','bookings','customers','hosts','msgs','apts'].includes(id)){showToast('⛔ ليس لديك صلاحية لعرض هذا القسم');return;}
+  if(currentUser&&!currentUser.allowed.includes(id)&&!['listings','bookings','customers','hosts','msgs','apts','staff'].includes(id)){showToast('⛔ ليس لديك صلاحية لعرض هذا القسم');return;}
   document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));el?.classList.add('active');showTabById(id);set('pageTitle',titles[id]||id);document.getElementById('addBtn').style.display=id==='contracts'?'flex':'none';
-  if(id==='listings')loadListings();if(id==='bookings')loadBookings();if(id==='customers')loadCustomers();if(id==='hosts')loadHosts();if(id==='msgs')loadMessages();if(id==='apts')loadApts();
+  if(id==='listings')loadListings();if(id==='bookings')loadBookings();if(id==='customers')loadCustomers();if(id==='hosts')loadHosts();if(id==='msgs')loadMessages();if(id==='apts')loadApts();if(id==='staff')loadStaff();
 }
 function st(id,el){
-  if(currentUser&&!currentUser.allowed.includes(id)&&!['listings','bookings','customers','hosts','msgs','apts'].includes(id)){showToast('⛔ ليس لديك صلاحية لعرض هذا القسم');return;}
+  if(currentUser&&!currentUser.allowed.includes(id)&&!['listings','bookings','customers','hosts','msgs','apts','staff'].includes(id)){showToast('⛔ ليس لديك صلاحية لعرض هذا القسم');return;}
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el?.classList.add('active');showTabById(id);set('pageTitle',titles[id]||id);document.getElementById('addBtn').style.display=id==='contracts'?'flex':'none';
-  if(id==='listings')loadListings();if(id==='bookings')loadBookings();if(id==='customers')loadCustomers();if(id==='hosts')loadHosts();if(id==='msgs')loadMessages();if(id==='apts')loadApts();
+  if(id==='listings')loadListings();if(id==='bookings')loadBookings();if(id==='customers')loadCustomers();if(id==='hosts')loadHosts();if(id==='msgs')loadMessages();if(id==='apts')loadApts();if(id==='staff')loadStaff();
 }
 function showTabById(id){document.querySelectorAll('.tc').forEach(t=>t.classList.remove('active'));document.getElementById('tab-'+id)?.classList.add('active');}
 
@@ -1702,6 +1751,53 @@ async function suspendHost(id){
     showToast('⏸ تم تعليق المضيف');
     loadHosts();
   }catch(e){showToast('❌ حدث خطأ');}
+}
+
+// ─── Staff Management ────────────────────────────────────
+let allStaff=[];
+async function loadStaff(){
+  try{
+    const r=await fetch('/staff/api/admin/staff');
+    if(!r.ok)return;
+    allStaff=await r.json();
+    renderStaff();
+  }catch(e){}
+}
+function renderStaff(){
+  const tbody=document.getElementById('staff-tbody');
+  if(!tbody)return;
+  if(!allStaff.length){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--t3);">لا يوجد موظفون مضافون بعد</td></tr>';return;}
+  const roleL={receptionist:'موظف استقبال',manager:'مدير فرع'};
+  tbody.innerHTML=allStaff.map(s=>`<tr>
+    <td style="font-weight:600;">${s.name}</td>
+    <td style="font-family:monospace;">${s.username}</td>
+    <td><span class="pill pm">${s.building}</span></td>
+    <td>${roleL[s.role]||s.role}</td>
+    <td><span class="pill ${s.active!==false?'pj':'pcl'}">${s.active!==false?'نشط':'موقوف'}</span></td>
+    <td><a href="/staff/login" target="_blank" class="btn" style="font-size:9px;padding:3px 8px;">🔗 دخول</a></td>
+  </tr>`).join('');
+}
+function openStaffForm(){document.getElementById('staffOverlay').style.display='flex';document.getElementById('sf-err').style.display='none';}
+function closeStaffForm(){document.getElementById('staffOverlay').style.display='none';}
+async function submitStaffForm(){
+  const name=document.getElementById('sf-name').value.trim();
+  const username=document.getElementById('sf-username').value.trim();
+  const password=document.getElementById('sf-password').value.trim();
+  const building=document.getElementById('sf-building').value;
+  const role=document.getElementById('sf-role').value;
+  const errEl=document.getElementById('sf-err');
+  if(!name||!username||!password){errEl.textContent='جميع الحقول مطلوبة';errEl.style.display='block';return;}
+  try{
+    const r=await fetch('/staff/api/admin/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,username,password,building,role})});
+    const d=await r.json();
+    if(!r.ok){errEl.textContent=d.error||'حدث خطأ';errEl.style.display='block';return;}
+    closeStaffForm();
+    showToast('✅ تم إضافة الموظف');
+    document.getElementById('sf-name').value='';
+    document.getElementById('sf-username').value='';
+    document.getElementById('sf-password').value='';
+    loadStaff();
+  }catch(e){errEl.textContent='حدث خطأ';errEl.style.display='block';}
 }
 
 // ─── Apartments Grid ──────────────────────────────────────
