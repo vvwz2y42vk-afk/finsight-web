@@ -12,13 +12,13 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;direction:rtl;display:fle
 /* ── Sidebar ── */
 .sb{width:72px;background:#0f172a;display:flex;flex-direction:column;align-items:center;padding:16px 0;position:fixed;top:0;right:0;bottom:0;z-index:100;transition:width .2s;}
 .sb:hover{width:200px;}
-.sb-logo{width:44px;height:44px;background:linear-gradient(135deg,#DAA520,#f0c040);border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:15px;color:#111;flex-shrink:0;margin-bottom:8px;}
+.sb-logo{display:flex;align-items:center;justify-content:center;margin-bottom:8px;padding:6px 0;}
 .sb-bld{font-size:11px;color:#94a3b8;text-align:center;padding:0 8px;white-space:nowrap;overflow:hidden;margin-bottom:20px;max-width:0;opacity:0;transition:all .2s;}
 .sb:hover .sb-bld{max-width:180px;opacity:1;}
 .sb-nav{flex:1;width:100%;display:flex;flex-direction:column;gap:2px;padding:0 8px;}
 .sn{display:flex;align-items:center;gap:10px;padding:10px 10px;border-radius:10px;cursor:pointer;color:#94a3b8;transition:all .15s;white-space:nowrap;overflow:hidden;}
 .sn:hover{background:#1e293b;color:#e2e8f0;}
-.sn.active{background:linear-gradient(135deg,rgba(218,165,32,.2),rgba(240,192,64,.1));color:#f0c040;}
+.sn.active{background:linear-gradient(135deg,rgba(26,61,143,.2),rgba(240,192,64,.1));color:#2a5cc7;}
 .sn-ico{font-size:20px;flex-shrink:0;width:24px;text-align:center;}
 .sn-lbl{font-size:13px;font-weight:700;opacity:0;transition:opacity .2s;}
 .sb:hover .sn-lbl{opacity:1;}
@@ -29,7 +29,7 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;direction:rtl;display:fle
 .main{margin-right:72px;flex:1;display:flex;flex-direction:column;min-height:100vh;}
 .topbar{background:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e2e8f0;position:sticky;top:0;z-index:50;}
 .tb-title{font-size:18px;font-weight:800;color:#0f172a;}
-.tb-title span{color:#DAA520;}
+.tb-title span{color:#1a3d8f;}
 .tb-meta{font-size:12px;color:#94a3b8;margin-top:2px;}
 .tb-info{text-align:left;font-size:13px;color:#475569;font-weight:600;}
 .content{padding:24px;flex:1;}
@@ -48,7 +48,7 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;direction:rtl;display:fle
 .apt-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
 .af{padding:6px 14px;border-radius:20px;border:1px solid #e2e8f0;background:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;color:#475569;transition:all .15s;}
 .af:hover{background:#f8fafc;}
-.af.active{background:#DAA520;border-color:#DAA520;color:#111;}
+.af.active{background:#1a3d8f;border-color:#1a3d8f;color:#111;}
 .apt-bld{background:#fff;border-radius:14px;border:1px solid #e2e8f0;padding:20px;margin-bottom:14px;}
 .apt-bld-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
 .apt-bld-name{font-size:15px;font-weight:800;}
@@ -83,12 +83,12 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;direction:rtl;display:fle
 /* ── Search ── */
 .search-bar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
 .sinp{padding:9px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;flex:1;min-width:180px;}
-.sinp:focus{border-color:#DAA520;}
-.sbtn{padding:9px 18px;background:linear-gradient(135deg,#DAA520,#f0c040);border:none;border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;color:#111;}
+.sinp:focus{border-color:#1a3d8f;}
+.sbtn{padding:9px 18px;background:linear-gradient(135deg,#1a3d8f,#2a5cc7);border:none;border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;color:#111;}
 /* ── HK Grid ── */
 .hk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;}
 .hk-card{background:#fff;border-radius:12px;border:2px solid #e2e8f0;padding:14px 10px;text-align:center;cursor:pointer;transition:all .15s;}
-.hk-card:hover{border-color:#DAA520;}
+.hk-card:hover{border-color:#1a3d8f;}
 .hk-apt{font-size:16px;font-weight:900;color:#1e293b;}
 .hk-st{font-size:11px;font-weight:700;margin-top:4px;}
 .hk-clean{color:#16a34a;}.hk-dirty{color:#dc2626;}.hk-inspecting{color:#d97706;}.hk-maintenance{color:#7c3aed;}
@@ -129,17 +129,17 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;direction:rtl;display:fle
 @media print{.sb,.topbar,.apt-filters,.search-bar,button,.overlay{display:none!important;}.main{margin:0!important;}.content{padding:0!important;} #printArea{display:block!important;}}
 #printArea{display:none;position:fixed;inset:0;background:#fff;z-index:9999;padding:32px;overflow:auto;}
 .print-doc{max-width:700px;margin:0 auto;font-family:'Cairo',sans-serif;direction:rtl;}
-.print-hd{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #DAA520;padding-bottom:16px;margin-bottom:20px;}
+.print-hd{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #1a3d8f;padding-bottom:16px;margin-bottom:20px;}
 .print-logo{font-size:22px;font-weight:900;color:#0f172a;}
-.print-logo span{color:#DAA520;}
+.print-logo span{color:#1a3d8f;}
 .print-type{font-size:18px;font-weight:800;color:#fff;padding:6px 18px;border-radius:8px;}
 .print-meta{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px;font-size:13px;}
 .print-meta-row{display:flex;gap:6px;padding:6px 0;border-bottom:1px solid #f1f5f9;}
 .print-meta-row span{color:#64748b;min-width:110px;}
 .print-meta-row b{color:#0f172a;}
-.print-total{background:#f8fafc;border:2px solid #DAA520;border-radius:12px;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;margin-top:16px;}
+.print-total{background:#f8fafc;border:2px solid #1a3d8f;border-radius:12px;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;margin-top:16px;}
 .print-total-lbl{font-size:14px;font-weight:700;color:#475569;}
-.print-total-val{font-size:22px;font-weight:900;color:#DAA520;}
+.print-total-val{font-size:22px;font-weight:900;color:#1a3d8f;}
 .print-footer{text-align:center;margin-top:24px;font-size:11px;color:#94a3b8;border-top:1px solid #e2e8f0;padding-top:12px;}
 .print-btns{display:flex;gap:8px;margin-bottom:16px;}
 @media(max-width:768px){.main{margin-right:72px;}.charts-row{grid-template-columns:1fr;}.kpi-row{grid-template-columns:repeat(2,1fr);}.vou-cards{gap:10px;}}
@@ -149,7 +149,7 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;direction:rtl;display:fle
 
 <!-- Sidebar -->
 <aside class="sb" id="sb">
-  <div class="sb-logo">FS</div>
+  <div class="sb-logo"><img src="/images/barez-logo.svg" alt="Barez" style="height:46px;width:auto;"></div>
   <div class="sb-bld"><%= staff.building %></div>
   <nav class="sb-nav">
     <div class="sn active" onclick="goTab('dashboard',this)" id="sn-dashboard"><span class="sn-ico">🏠</span><span class="sn-lbl">لوحة المعلومات</span></div>
@@ -188,7 +188,7 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;direction:rtl;display:fle
         <div class="kpi-c"><div class="kpi-ico">✅</div><div class="kpi-num" id="k-checkin" style="color:#22c55e;">—</div><div class="kpi-lbl">تسجيل الدخول</div></div>
         <div class="kpi-c"><div class="kpi-ico">🌇</div><div class="kpi-num" id="k-departures" style="color:#f97316;">—</div><div class="kpi-lbl">مغادرة اليوم</div></div>
         <div class="kpi-c"><div class="kpi-ico">👥</div><div class="kpi-num" id="k-guests" style="color:#a855f7;">—</div><div class="kpi-lbl">النزلاء الباقين</div></div>
-        <div class="kpi-c"><div class="kpi-ico">📋</div><div class="kpi-num" id="k-new" style="color:#DAA520;">—</div><div class="kpi-lbl">حجوزات جديدة</div></div>
+        <div class="kpi-c"><div class="kpi-ico">📋</div><div class="kpi-num" id="k-new" style="color:#1a3d8f;">—</div><div class="kpi-lbl">حجوزات جديدة</div></div>
         <div class="kpi-c"><div class="kpi-ico">📊</div><div class="kpi-num" id="k-rate" style="color:#0f172a;">—%</div><div class="kpi-lbl">نسبة الإشغال</div></div>
       </div>
       <div class="charts-row">
@@ -461,7 +461,7 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;direction:rtl;display:fle
         </div>
       </div>
       <div id="vm-err" style="color:#dc2626;font-size:12px;font-weight:600;margin-top:8px;display:none;"></div>
-      <button onclick="submitVoucher()" style="width:100%;margin-top:14px;padding:12px;background:linear-gradient(135deg,#DAA520,#f0c040);border:none;border-radius:12px;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;color:#111;" id="vm-submit-btn">حفظ</button>
+      <button onclick="submitVoucher()" style="width:100%;margin-top:14px;padding:12px;background:linear-gradient(135deg,#1a3d8f,#2a5cc7);border:none;border-radius:12px;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;color:#111;" id="vm-submit-btn">حفظ</button>
     </div>
   </div>
 </div>
@@ -550,7 +550,7 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;direction:rtl;display:fle
         </div>
       </div>
       <div id="nb-err" style="color:#dc2626;font-size:12px;font-weight:600;margin-top:8px;display:none;"></div>
-      <button onclick="submitNewBk()" style="width:100%;margin-top:14px;padding:12px;background:linear-gradient(135deg,#DAA520,#f0c040);border:none;border-radius:12px;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;color:#111;">حفظ الحجز</button>
+      <button onclick="submitNewBk()" style="width:100%;margin-top:14px;padding:12px;background:linear-gradient(135deg,#1a3d8f,#2a5cc7);border:none;border-radius:12px;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;color:#111;">حفظ الحجز</button>
     </div>
   </div>
 </div>
@@ -656,7 +656,7 @@ function updateAptCounts(){
   Object.keys(c).forEach(k=>{const el=document.getElementById('fc-'+k);if(el)el.textContent=c[k]||0;});
   const rate=totAll?Math.round(totOcc/totAll*100):0;
   const el=document.getElementById('apts-occ-rate');
-  if(el) el.innerHTML=`نسبة الإشغال: <span style="color:#DAA520;">${rate}%</span> (${totOcc}/${totAll})`;
+  if(el) el.innerHTML=`نسبة الإشغال: <span style="color:#1a3d8f;">${rate}%</span> (${totOcc}/${totAll})`;
 }
 
 const APT_MAP={occupied:{cls:'occ',lbl:'مؤجر'},vacant:{cls:'vac',lbl:'شاغر'},checkin_today:{cls:'cin',lbl:'وصول اليوم'},checkout_today:{cls:'cout',lbl:'خروج اليوم'},awaiting:{cls:'awt',lbl:'انتظار'},awaiting_payment:{cls:'awp',lbl:'انتظار الدفع'}};
@@ -703,7 +703,7 @@ function openBkModal(bookingId,apt,status){
   let html=`
     <div class="mrow"><span>الحالة</span><b>${s.lbl}</b></div>
     ${room.name?`<div class="mrow"><span>النزيل</span><b>${esc(room.name)}</b></div>`:''}
-    ${room.phone?`<div class="mrow"><span>الجوال</span><b><a href="https://wa.me/${room.phone.replace(/^0/,'966')}" style="color:#DAA520;">${esc(room.phone)}</a></b></div>`:''}
+    ${room.phone?`<div class="mrow"><span>الجوال</span><b><a href="https://wa.me/${room.phone.replace(/^0/,'966')}" style="color:#1a3d8f;">${esc(room.phone)}</a></b></div>`:''}
     ${room.checkIn?`<div class="mrow"><span>تاريخ الدخول</span><b>${fDate(room.checkIn)}</b></div>`:''}
     ${room.checkOut?`<div class="mrow"><span>تاريخ الخروج</span><b>${fDate(room.checkOut)}</b></div>`:''}
     ${room.nights?`<div class="mrow"><span>عدد الليالي</span><b>${room.nights}</b></div>`:''}
@@ -788,7 +788,7 @@ async function loadBookings(){
       <td style="color:#94a3b8;">${i+1}</td>
       <td><b>${esc(b.apt||'—')}</b></td>
       <td>${esc(b.name||'—')}</td>
-      <td><a href="https://wa.me/${(b.phone||'').replace(/^0/,'966')}" style="color:#DAA520;">${esc(b.phone||'—')}</a></td>
+      <td><a href="https://wa.me/${(b.phone||'').replace(/^0/,'966')}" style="color:#1a3d8f;">${esc(b.phone||'—')}</a></td>
       <td>${b.bookingType==='daily'?'يومي':b.bookingType==='annual'?'شهري':'استفسار'}</td>
       <td>${fDate(b.checkIn)}</td>
       <td>${fDate(b.checkOut)}</td>
@@ -814,7 +814,7 @@ async function loadCustomers(){
     if(!list.length){ tb.innerHTML='<tr><td colspan="7" style="text-align:center;padding:30px;color:#94a3b8;">لا توجد نتائج</td></tr>'; return; }
     tb.innerHTML=list.map(c=>`<tr>
       <td><b>${esc(c.name||'—')}</b></td>
-      <td><a href="https://wa.me/${(c.phone||'').replace(/^0/,'966')}" style="color:#DAA520;">${esc(c.phone||'—')}</a></td>
+      <td><a href="https://wa.me/${(c.phone||'').replace(/^0/,'966')}" style="color:#1a3d8f;">${esc(c.phone||'—')}</a></td>
       <td>${esc(c.apt||'—')}</td>
       <td>${fDate(c.checkIn)}</td>
       <td>${fDate(c.checkOut)}</td>
@@ -1036,7 +1036,7 @@ function renderVouRow(v,type,i){
   const date=v.date?new Date(v.date).toLocaleDateString('ar-SA'):'—';
   const amt=(v.amount||0).toLocaleString();
   const actions=`<div style="display:flex;gap:4px;">
-    <button onclick="printVoucher('${v._id}')" style="padding:3px 8px;background:#DAA520;color:#111;border:none;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer;">🖨️ طباعة</button>
+    <button onclick="printVoucher('${v._id}')" style="padding:3px 8px;background:#1a3d8f;color:#111;border:none;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer;">🖨️ طباعة</button>
     <button onclick="deleteVou('${v._id}','${type}')" style="padding:3px 8px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer;">🗑️</button>
   </div>`;
   if(type==='receipt'||type==='invoice')
@@ -1121,12 +1121,12 @@ async function printVoucher(id){
     if(!vouCache.length){ const r=await fetch('/staff/api/vouchers'); vouCache=await r.json(); }
     const v=vouCache.find(x=>x._id===id);
     if(!v){toast('❌ تعذر تحميل الوثيقة');return;}
-    const typeInfo={receipt:{lbl:'سند قبض',color:'#3b82f6'},invoice:{lbl:'فاتورة',color:'#8b5cf6'},disbursement:{lbl:'سند صرف',color:'#f59e0b'},check:{lbl:'كمبيالة',color:'#22c55e'},tax:{lbl:'إشعار ضريبي',color:'#ef4444'}}[v.type]||{lbl:'وثيقة',color:'#DAA520'};
+    const typeInfo={receipt:{lbl:'سند قبض',color:'#3b82f6'},invoice:{lbl:'فاتورة',color:'#8b5cf6'},disbursement:{lbl:'سند صرف',color:'#f59e0b'},check:{lbl:'كمبيالة',color:'#22c55e'},tax:{lbl:'إشعار ضريبي',color:'#ef4444'}}[v.type]||{lbl:'وثيقة',color:'#1a3d8f'};
     const tax=v.type==='tax'?Math.round((v.amount||0)*0.15):0;
     const date=v.date?new Date(v.date).toLocaleDateString('ar-SA',{year:'numeric',month:'long',day:'numeric'}):new Date().toLocaleDateString('ar-SA',{year:'numeric',month:'long',day:'numeric'});
     const html=`
     <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:16px;">
-      <button onclick="window.print()" style="padding:8px 20px;background:#DAA520;color:#111;border:none;border-radius:8px;font-family:Cairo,sans-serif;font-size:13px;font-weight:800;cursor:pointer;">🖨️ طباعة</button>
+      <button onclick="window.print()" style="padding:8px 20px;background:#1a3d8f;color:#111;border:none;border-radius:8px;font-family:Cairo,sans-serif;font-size:13px;font-weight:800;cursor:pointer;">🖨️ طباعة</button>
       <button onclick="closePrint()" style="padding:8px 20px;background:#f1f5f9;color:#475569;border:none;border-radius:8px;font-family:Cairo,sans-serif;font-size:13px;font-weight:700;cursor:pointer;">✕ إغلاق</button>
     </div>
     <div class="print-doc">
@@ -1182,11 +1182,11 @@ function printDoc(type, bkId){
     receipt:{lbl:'سند قبض',color:'#3b82f6'},
     invoice:{lbl:'فاتورة',color:'#8b5cf6'},
     tax:    {lbl:'إشعار ضريبي',color:'#ef4444'},
-  }[type]||{lbl:'وثيقة',color:'#DAA520'};
+  }[type]||{lbl:'وثيقة',color:'#1a3d8f'};
 
   const html=`
   <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:16px;">
-    <button onclick="window.print()" style="padding:8px 20px;background:#DAA520;color:#111;border:none;border-radius:8px;font-family:Cairo,sans-serif;font-size:13px;font-weight:800;cursor:pointer;">🖨️ طباعة</button>
+    <button onclick="window.print()" style="padding:8px 20px;background:#1a3d8f;color:#111;border:none;border-radius:8px;font-family:Cairo,sans-serif;font-size:13px;font-weight:800;cursor:pointer;">🖨️ طباعة</button>
     <button onclick="closePrint()" style="padding:8px 20px;background:#f1f5f9;color:#475569;border:none;border-radius:8px;font-family:Cairo,sans-serif;font-size:13px;font-weight:700;cursor:pointer;">✕ إغلاق</button>
   </div>
   <div class="print-doc">

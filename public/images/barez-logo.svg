@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 190" fill="none">
+  <defs>
+    <linearGradient id="bv1" x1="0.4" y1="1" x2="0.6" y2="0">
+      <stop offset="0%" stop-color="#071530"/>
+      <stop offset="45%" stop-color="#1a3d8f"/>
+      <stop offset="100%" stop-color="#4a90e2"/>
+    </linearGradient>
+    <linearGradient id="bv2" x1="0.3" y1="1" x2="0.7" y2="0">
+      <stop offset="0%" stop-color="#0a1e48"/>
+      <stop offset="50%" stop-color="#1e52a8"/>
+      <stop offset="100%" stop-color="#5aa8f0"/>
+    </linearGradient>
+    <linearGradient id="bv3" x1="0.5" y1="1" x2="0.5" y2="0">
+      <stop offset="0%" stop-color="#071530"/>
+      <stop offset="55%" stop-color="#163580"/>
+      <stop offset="100%" stop-color="#3d80d8"/>
+    </linearGradient>
+    <linearGradient id="bv4" x1="0.35" y1="1" x2="0.65" y2="0">
+      <stop offset="0%" stop-color="#0a1e48"/>
+      <stop offset="40%" stop-color="#1a3d8f"/>
+      <stop offset="100%" stop-color="#4a90e2"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Flame 1 (leftmost) -->
+  <path d="M 30,138
+    C 22,114 17,86 20,60
+    C 22,42 30,24 27,8
+    C 31,4 36,4 39,8
+    C 40,22 46,40 48,60
+    C 51,86 46,114 40,138 Z"
+    fill="url(#bv1)"/>
+  <!-- droplet top flame 1 -->
+  <ellipse cx="33" cy="6" rx="4" ry="5.5" fill="#3a7fd4" opacity="0.9"/>
+
+  <!-- Flame 2 -->
+  <path d="M 68,138
+    C 61,112 57,83 61,57
+    C 63,38 72,19 69,3
+    C 73,-1 79,-1 82,3
+    C 83,17 87,36 89,57
+    C 93,83 88,112 80,138 Z"
+    fill="url(#bv2)"/>
+
+  <!-- Flame 3 (slightly brighter highlight) -->
+  <path d="M 107,138
+    C 100,110 97,80 101,53
+    C 104,33 113,13 110,-4
+    C 115,-8 121,-8 124,-4
+    C 125,12 130,32 132,53
+    C 136,80 131,110 123,138 Z"
+    fill="url(#bv3)"/>
+  <!-- droplet top flame 3 -->
+  <ellipse cx="117" cy="-6" rx="5" ry="6.5" fill="#4a90e2" opacity="0.85"/>
+
+  <!-- Flame 4 (rightmost) -->
+  <path d="M 148,138
+    C 141,112 138,82 142,56
+    C 144,37 153,18 150,2
+    C 154,-2 160,-2 163,2
+    C 164,16 168,36 170,56
+    C 174,82 169,112 161,138 Z"
+    fill="url(#bv4)"/>
+  <!-- droplet top flame 4 -->
+  <ellipse cx="156" cy="0" rx="4" ry="5.5" fill="#3a7fd4" opacity="0.9"/>
+
+  <!-- BAREZ text -->
+  <text
+    x="100" y="170"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-size="30"
+    font-weight="700"
+    fill="#071530"
+    text-anchor="middle"
+    letter-spacing="9"
+  >BAREZ</text>
+</svg>
