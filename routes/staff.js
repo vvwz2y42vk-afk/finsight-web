@@ -263,6 +263,38 @@ router.get('/api/activity', reqStaff, async (req,res) => {
   } catch(e){ res.status(500).json({error:e.message}); }
 });
 
+// ── API: Vouchers ─────────────────────────────────────────
+router.get('/api/vouchers', reqStaff, async (req,res) => {
+  try {
+    const V = require('../models/Voucher');
+    const filter = { building: req.staff.building };
+    if(req.query.type) filter.type = req.query.type;
+    const list = await V.find(filter).sort({ createdAt: -1 }).lean();
+    res.json(list);
+  } catch(e){ res.status(500).json({error:e.message}); }
+});
+
+router.post('/api/vouchers', reqStaff, async (req,res) => {
+  try {
+    const V = require('../models/Voucher');
+    const { type, date, name, phone, apt, amount, description, notes, checkNumber, bankName, dueDate, bookingId } = req.body;
+    if(!type||!amount) return res.status(400).json({error:'نوع الوثيقة والمبلغ مطلوبان'});
+    const count = await V.countDocuments({ building: req.staff.building, type });
+    const prefixes = { receipt:'QBD', invoice:'INV', disbursement:'SRF', check:'KMB', tax:'ZRB' };
+    const number = (prefixes[type]||'DOC') + '-' + String(count+1).padStart(4,'0');
+    const v = await new V({ building:req.staff.building, type, number, date:date?new Date(date):new Date(), name, phone, apt, amount:parseFloat(amount)||0, description, notes, checkNumber, bankName, dueDate:dueDate?new Date(dueDate):undefined, bookingId:bookingId||undefined, createdBy:req.staff.name }).save();
+    res.json({ success:true, id:v._id, number:v.number });
+  } catch(e){ res.status(500).json({error:e.message}); }
+});
+
+router.delete('/api/vouchers/:id', reqStaff, async (req,res) => {
+  try {
+    const V = require('../models/Voucher');
+    await V.findOneAndDelete({ _id:req.params.id, building:req.staff.building });
+    res.json({ success:true });
+  } catch(e){ res.status(500).json({error:e.message}); }
+});
+
 // ── Admin: create staff user ──────────────────────────────
 router.post('/api/admin/create', async (req,res) => {
   try {

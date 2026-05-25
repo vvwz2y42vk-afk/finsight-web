@@ -304,13 +304,14 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;direction:rtl;display:fle
       <div class="vou-section" id="vou-receipts">
         <div class="print-btns">
           <button class="sbtn" onclick="showVouCards()" style="background:#64748b;">← رجوع</button>
-          <button class="sbtn" onclick="loadVouBookings('receipts')">🔄 تحديث</button>
+          <button class="sbtn" onclick="openVouModal('receipt')" style="background:linear-gradient(135deg,#3b82f6,#1d4ed8);">➕ إضافة سند قبض</button>
+          <button class="sbtn" onclick="loadVouList('receipt')" style="background:#475569;">🔄 تحديث</button>
         </div>
         <div class="apt-bld">
           <div style="font-size:15px;font-weight:800;color:#1e293b;margin-bottom:14px;">🧾 سندات القبض</div>
-          <div class="tbl-wrap"><table class="stbl" id="receipts-tbl">
-            <thead><tr><th>#</th><th>الشقة</th><th>النزيل</th><th>التاريخ</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th><th>الحالة</th><th>طباعة</th></tr></thead>
-            <tbody id="receipts-tbody"><tr><td colspan="9" style="text-align:center;padding:20px;color:#94a3b8;">اضغط تحديث لتحميل البيانات</td></tr></tbody>
+          <div class="tbl-wrap"><table class="stbl">
+            <thead><tr><th>الرقم</th><th>التاريخ</th><th>الاسم</th><th>الشقة</th><th>البيان</th><th>المبلغ</th><th>إجراء</th></tr></thead>
+            <tbody id="vou-receipt-tbody"><tr><td colspan="7" style="text-align:center;padding:20px;color:#94a3b8;">اضغط تحديث لتحميل البيانات</td></tr></tbody>
           </table></div>
         </div>
       </div>
@@ -319,13 +320,14 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;direction:rtl;display:fle
       <div class="vou-section" id="vou-invoices">
         <div class="print-btns">
           <button class="sbtn" onclick="showVouCards()" style="background:#64748b;">← رجوع</button>
-          <button class="sbtn" onclick="loadVouBookings('invoices')">🔄 تحديث</button>
+          <button class="sbtn" onclick="openVouModal('invoice')" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9);">➕ إضافة فاتورة</button>
+          <button class="sbtn" onclick="loadVouList('invoice')" style="background:#475569;">🔄 تحديث</button>
         </div>
         <div class="apt-bld">
           <div style="font-size:15px;font-weight:800;color:#1e293b;margin-bottom:14px;">📄 الفواتير</div>
-          <div class="tbl-wrap"><table class="stbl" id="invoices-tbl">
-            <thead><tr><th>#</th><th>الشقة</th><th>النزيل</th><th>الجوال</th><th>الدخول</th><th>الخروج</th><th>الإجمالي</th><th>الحالة</th><th>طباعة</th></tr></thead>
-            <tbody id="invoices-tbody"><tr><td colspan="9" style="text-align:center;padding:20px;color:#94a3b8;">اضغط تحديث لتحميل البيانات</td></tr></tbody>
+          <div class="tbl-wrap"><table class="stbl">
+            <thead><tr><th>الرقم</th><th>التاريخ</th><th>الاسم</th><th>الشقة</th><th>البيان</th><th>المبلغ</th><th>إجراء</th></tr></thead>
+            <tbody id="vou-invoice-tbody"><tr><td colspan="7" style="text-align:center;padding:20px;color:#94a3b8;">اضغط تحديث لتحميل البيانات</td></tr></tbody>
           </table></div>
         </div>
       </div>
@@ -334,13 +336,14 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;direction:rtl;display:fle
       <div class="vou-section" id="vou-disbursements">
         <div class="print-btns">
           <button class="sbtn" onclick="showVouCards()" style="background:#64748b;">← رجوع</button>
-          <button class="sbtn" onclick="openNewVoucher('disbursement')">+ سند صرف جديد</button>
+          <button class="sbtn" onclick="openVouModal('disbursement')" style="background:linear-gradient(135deg,#f59e0b,#d97706);">➕ إضافة سند صرف</button>
+          <button class="sbtn" onclick="loadVouList('disbursement')" style="background:#475569;">🔄 تحديث</button>
         </div>
         <div class="apt-bld">
           <div style="font-size:15px;font-weight:800;color:#1e293b;margin-bottom:14px;">💸 سندات الصرف</div>
           <div class="tbl-wrap"><table class="stbl">
-            <thead><tr><th>#</th><th>البيان</th><th>المبلغ</th><th>التاريخ</th><th>المستلم</th><th>طباعة</th></tr></thead>
-            <tbody id="disbursements-tbody"><tr><td colspan="6" style="text-align:center;padding:20px;color:#94a3b8;">لا توجد سندات صرف</td></tr></tbody>
+            <thead><tr><th>الرقم</th><th>التاريخ</th><th>المستلم</th><th>البيان</th><th>المبلغ</th><th>إجراء</th></tr></thead>
+            <tbody id="vou-disbursement-tbody"><tr><td colspan="6" style="text-align:center;padding:20px;color:#94a3b8;">اضغط تحديث لتحميل البيانات</td></tr></tbody>
           </table></div>
         </div>
       </div>
@@ -349,11 +352,15 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;direction:rtl;display:fle
       <div class="vou-section" id="vou-checks">
         <div class="print-btns">
           <button class="sbtn" onclick="showVouCards()" style="background:#64748b;">← رجوع</button>
+          <button class="sbtn" onclick="openVouModal('check')" style="background:linear-gradient(135deg,#22c55e,#15803d);">➕ إضافة كمبيالة</button>
+          <button class="sbtn" onclick="loadVouList('check')" style="background:#475569;">🔄 تحديث</button>
         </div>
-        <div class="apt-bld" style="text-align:center;padding:40px;">
-          <div style="font-size:3rem;margin-bottom:12px;">📋</div>
-          <div style="font-size:15px;font-weight:700;color:#475569;">سندات الكمبيالات</div>
-          <div style="font-size:12px;color:#94a3b8;margin-top:6px;">قريباً</div>
+        <div class="apt-bld">
+          <div style="font-size:15px;font-weight:800;color:#1e293b;margin-bottom:14px;">📋 سندات الكمبيالات</div>
+          <div class="tbl-wrap"><table class="stbl">
+            <thead><tr><th>الرقم</th><th>التاريخ</th><th>الاسم</th><th>رقم الشيك</th><th>البنك</th><th>تاريخ الاستحقاق</th><th>المبلغ</th><th>إجراء</th></tr></thead>
+            <tbody id="vou-check-tbody"><tr><td colspan="8" style="text-align:center;padding:20px;color:#94a3b8;">اضغط تحديث لتحميل البيانات</td></tr></tbody>
+          </table></div>
         </div>
       </div>
 
@@ -361,13 +368,14 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;direction:rtl;display:fle
       <div class="vou-section" id="vou-tax">
         <div class="print-btns">
           <button class="sbtn" onclick="showVouCards()" style="background:#64748b;">← رجوع</button>
-          <button class="sbtn" onclick="loadVouBookings('tax')">🔄 تحديث</button>
+          <button class="sbtn" onclick="openVouModal('tax')" style="background:linear-gradient(135deg,#ef4444,#b91c1c);">➕ إضافة إشعار ضريبي</button>
+          <button class="sbtn" onclick="loadVouList('tax')" style="background:#475569;">🔄 تحديث</button>
         </div>
         <div class="apt-bld">
-          <div style="font-size:15px;font-weight:800;color:#1e293b;margin-bottom:14px;">📊 الإشعارات الضريبية (ضريبة القيمة المضافة 15%)</div>
+          <div style="font-size:15px;font-weight:800;color:#1e293b;margin-bottom:14px;">📊 الإشعارات الضريبية</div>
           <div class="tbl-wrap"><table class="stbl">
-            <thead><tr><th>#</th><th>الشقة</th><th>النزيل</th><th>الإجمالي</th><th>الضريبة (15%)</th><th>الإجمالي شامل الضريبة</th><th>طباعة</th></tr></thead>
-            <tbody id="tax-tbody"><tr><td colspan="7" style="text-align:center;padding:20px;color:#94a3b8;">اضغط تحديث لتحميل البيانات</td></tr></tbody>
+            <thead><tr><th>الرقم</th><th>التاريخ</th><th>الاسم</th><th>الشقة</th><th>المبلغ قبل الضريبة</th><th>الضريبة 15%</th><th>الإجمالي</th><th>إجراء</th></tr></thead>
+            <tbody id="vou-tax-tbody"><tr><td colspan="8" style="text-align:center;padding:20px;color:#94a3b8;">اضغط تحديث لتحميل البيانات</td></tr></tbody>
           </table></div>
         </div>
       </div>
@@ -395,6 +403,65 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;direction:rtl;display:fle
         <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:6px;">ملاحظات</label>
         <textarea id="hkNotes" rows="2" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;resize:none;"></textarea>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Voucher Form Modal -->
+<div class="overlay" id="vouModal" style="display:none;" onclick="if(event.target===this)closeVouModal()">
+  <div class="modal" style="max-width:460px;">
+    <div class="mhd"><div class="mhd-title" id="vouModalTitle">➕ إضافة وثيقة</div><button class="mclose" onclick="closeVouModal()">×</button></div>
+    <div class="mbody" style="max-height:80vh;overflow-y:auto;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div style="grid-column:1/-1;">
+          <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">التاريخ</label>
+          <input id="vm-date" type="date" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;">
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">الاسم</label>
+          <input id="vm-name" type="text" placeholder="اسم الشخص" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;">
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">الجوال</label>
+          <input id="vm-phone" type="tel" placeholder="05xxxxxxxx" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;">
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">رقم الشقة</label>
+          <input id="vm-apt" type="text" placeholder="101" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;">
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">المبلغ (ريال) *</label>
+          <input id="vm-amount" type="number" placeholder="0" onchange="calcVmTax()" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;">
+        </div>
+        <!-- Tax only -->
+        <div id="vm-tax-row" style="display:none;">
+          <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">الضريبة 15%</label>
+          <input id="vm-tax" type="number" readonly style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;background:#f8fafc;color:#dc2626;">
+        </div>
+        <!-- Check only -->
+        <div id="vm-check-row1" style="display:none;">
+          <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">رقم الشيك</label>
+          <input id="vm-checknum" type="text" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;">
+        </div>
+        <div id="vm-check-row2" style="display:none;">
+          <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">اسم البنك</label>
+          <input id="vm-bank" type="text" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;">
+        </div>
+        <div id="vm-check-row3" style="display:none;grid-column:1/-1;">
+          <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">تاريخ الاستحقاق</label>
+          <input id="vm-duedate" type="date" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;">
+        </div>
+        <div style="grid-column:1/-1;">
+          <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">البيان / الوصف *</label>
+          <input id="vm-desc" type="text" placeholder="وصف الوثيقة" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;">
+        </div>
+        <div style="grid-column:1/-1;">
+          <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">ملاحظات</label>
+          <textarea id="vm-notes" rows="2" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;resize:none;"></textarea>
+        </div>
+      </div>
+      <div id="vm-err" style="color:#dc2626;font-size:12px;font-weight:600;margin-top:8px;display:none;"></div>
+      <button onclick="submitVoucher()" style="width:100%;margin-top:14px;padding:12px;background:linear-gradient(135deg,#DAA520,#f0c040);border:none;border-radius:12px;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;color:#111;" id="vm-submit-btn">حفظ</button>
     </div>
   </div>
 </div>
@@ -935,6 +1002,8 @@ async function submitNewBk(){
 // ── Vouchers ─────────────────────────────────────────────
 const ID_TYPE_L={national_id:'هوية وطنية',passport:'جواز سفر',iqama:'إقامة',family_card:'كرت عائلة'};
 const BK_TYPE_L={daily:'يومي',annual:'شهري'};
+const VOU_NAMES={receipt:'سند قبض',invoice:'فاتورة',disbursement:'سند صرف',check:'كمبيالة',tax:'إشعار ضريبي'};
+const VOU_COLS={receipt:7,invoice:7,disbursement:6,check:8,tax:8};
 
 function showVouCards(){
   document.querySelectorAll('.vou-section').forEach(s=>s.classList.remove('active'));
@@ -944,59 +1013,162 @@ function showVouSection(name){
   document.getElementById('vouCards').style.display='none';
   document.querySelectorAll('.vou-section').forEach(s=>s.classList.remove('active'));
   document.getElementById('vou-'+name).classList.add('active');
-  if(['receipts','invoices','tax'].includes(name)) loadVouBookings(name);
+  loadVouList(name==='receipts'?'receipt':name==='invoices'?'invoice':name==='disbursements'?'disbursement':name==='checks'?'check':name==='tax'?'tax':name);
 }
 
-let vouBkCache=[];
-async function loadVouBookings(type){
-  if(!vouBkCache.length){
-    try{ const r=await fetch('/staff/api/bookings?status=all'); vouBkCache=await r.json(); }catch(e){ return; }
+// Load saved vouchers from DB
+async function loadVouList(type){
+  const tbId='vou-'+type+'-tbody';
+  const tb=document.getElementById(tbId); if(!tb)return;
+  tb.innerHTML=`<tr><td colspan="${VOU_COLS[type]||7}" style="text-align:center;padding:20px;color:#94a3b8;">جاري التحميل...</td></tr>`;
+  try{
+    const r=await fetch('/staff/api/vouchers?type='+type);
+    const list=await r.json();
+    if(!list.length){tb.innerHTML=`<tr><td colspan="${VOU_COLS[type]||7}" style="text-align:center;padding:20px;color:#94a3b8;">لا توجد وثائق بعد — اضغط إضافة</td></tr>`;return;}
+    tb.innerHTML=list.map((v,i)=>{
+      const cols=renderVouRow(v,type,i);
+      return `<tr>${cols}</tr>`;
+    }).join('');
+  }catch(e){tb.innerHTML=`<tr><td colspan="${VOU_COLS[type]||7}" style="text-align:center;padding:20px;color:#ef4444;">خطأ في التحميل</td></tr>`;}
+}
+
+function renderVouRow(v,type,i){
+  const date=v.date?new Date(v.date).toLocaleDateString('ar-SA'):'—';
+  const amt=(v.amount||0).toLocaleString();
+  const actions=`<div style="display:flex;gap:4px;">
+    <button onclick="printVoucher('${v._id}')" style="padding:3px 8px;background:#DAA520;color:#111;border:none;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer;">🖨️ طباعة</button>
+    <button onclick="deleteVou('${v._id}','${type}')" style="padding:3px 8px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer;">🗑️</button>
+  </div>`;
+  if(type==='receipt'||type==='invoice')
+    return `<td style="font-size:10px;color:#94a3b8;">${esc(v.number||'—')}</td><td>${date}</td><td><b>${esc(v.name||'—')}</b></td><td>${esc(v.apt||'—')}</td><td style="font-size:11px;color:#64748b;">${esc(v.description||'—')}</td><td style="font-weight:700;">${amt} ر</td><td>${actions}</td>`;
+  if(type==='disbursement')
+    return `<td style="font-size:10px;color:#94a3b8;">${esc(v.number||'—')}</td><td>${date}</td><td><b>${esc(v.name||'—')}</b></td><td style="font-size:11px;color:#64748b;">${esc(v.description||'—')}</td><td style="font-weight:700;">${amt} ر</td><td>${actions}</td>`;
+  if(type==='check')
+    return `<td style="font-size:10px;color:#94a3b8;">${esc(v.number||'—')}</td><td>${date}</td><td><b>${esc(v.name||'—')}</b></td><td>${esc(v.checkNumber||'—')}</td><td>${esc(v.bankName||'—')}</td><td>${v.dueDate?new Date(v.dueDate).toLocaleDateString('ar-SA'):'—'}</td><td style="font-weight:700;">${amt} ر</td><td>${actions}</td>`;
+  if(type==='tax'){
+    const tax=Math.round((v.amount||0)*0.15); const total=(v.amount||0)+tax;
+    return `<td style="font-size:10px;color:#94a3b8;">${esc(v.number||'—')}</td><td>${date}</td><td><b>${esc(v.name||'—')}</b></td><td>${esc(v.apt||'—')}</td><td>${amt} ر</td><td style="color:#dc2626;">${tax.toLocaleString()} ر</td><td style="font-weight:700;">${total.toLocaleString()} ر</td><td>${actions}</td>`;
   }
-  const list=vouBkCache.filter(b=>b.status!=='cancelled'&&b.status!=='pending');
-  if(type==='receipts'){
-    const tb=document.getElementById('receipts-tbody');
-    tb.innerHTML=list.map((b,i)=>{
-      const paid=b.paidAmount||0; const remain=Math.max(0,(b.totalPrice||0)-paid);
-      return `<tr>
-        <td style="color:#94a3b8;">${i+1}</td>
-        <td><b>${esc(b.apt||'—')}</b></td>
-        <td>${esc(b.name||'—')}</td>
-        <td>${fDate(b.checkIn)}</td>
-        <td>${(b.totalPrice||0).toLocaleString()} ر</td>
-        <td style="color:#16a34a;font-weight:700;">${paid.toLocaleString()} ر</td>
-        <td style="color:${remain>0?'#dc2626':'#16a34a'};font-weight:700;">${remain.toLocaleString()} ر</td>
-        <td>${statusBadge(b.status)}</td>
-        <td><button onclick="printDoc('receipt','${b._id}')" style="padding:4px 10px;background:#3b82f6;color:#fff;border:none;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;">🖨️ طباعة</button></td>
-      </tr>`;
-    }).join('')||'<tr><td colspan="9" style="text-align:center;padding:20px;color:#94a3b8;">لا توجد بيانات</td></tr>';
-  } else if(type==='invoices'){
-    const tb=document.getElementById('invoices-tbody');
-    tb.innerHTML=list.map((b,i)=>`<tr>
-      <td style="color:#94a3b8;">${i+1}</td>
-      <td><b>${esc(b.apt||'—')}</b></td>
-      <td>${esc(b.name||'—')}</td>
-      <td><a href="https://wa.me/${(b.phone||'').replace(/^0/,'966')}" style="color:#DAA520;">${esc(b.phone||'—')}</a></td>
-      <td>${fDate(b.checkIn)}</td>
-      <td>${fDate(b.checkOut)}</td>
-      <td>${(b.totalPrice||0).toLocaleString()} ر</td>
-      <td>${statusBadge(b.status)}</td>
-      <td><button onclick="printDoc('invoice','${b._id}')" style="padding:4px 10px;background:#8b5cf6;color:#fff;border:none;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;">🖨️ طباعة</button></td>
-    </tr>`).join('')||'<tr><td colspan="9" style="text-align:center;padding:20px;color:#94a3b8;">لا توجد بيانات</td></tr>';
-  } else if(type==='tax'){
-    const tb=document.getElementById('tax-tbody');
-    tb.innerHTML=list.map((b,i)=>{
-      const net=b.totalPrice||0; const tax=Math.round(net*0.15); const total=net+tax;
-      return `<tr>
-        <td style="color:#94a3b8;">${i+1}</td>
-        <td><b>${esc(b.apt||'—')}</b></td>
-        <td>${esc(b.name||'—')}</td>
-        <td>${net.toLocaleString()} ر</td>
-        <td style="color:#dc2626;font-weight:700;">${tax.toLocaleString()} ر</td>
-        <td style="font-weight:800;">${total.toLocaleString()} ر</td>
-        <td><button onclick="printDoc('tax','${b._id}')" style="padding:4px 10px;background:#ef4444;color:#fff;border:none;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;">🖨️ طباعة</button></td>
-      </tr>`;
-    }).join('')||'<tr><td colspan="7" style="text-align:center;padding:20px;color:#94a3b8;">لا توجد بيانات</td></tr>';
-  }
+  return '';
+}
+
+async function deleteVou(id,type){
+  if(!confirm('حذف هذه الوثيقة؟'))return;
+  try{
+    await fetch('/staff/api/vouchers/'+id,{method:'DELETE'});
+    toast('🗑️ تم الحذف'); loadVouList(type);
+  }catch(e){toast('❌ حدث خطأ');}
+}
+
+// Voucher form modal
+let vouModalType=null;
+function openVouModal(type){
+  vouModalType=type;
+  document.getElementById('vouModalTitle').textContent='➕ إضافة '+VOU_NAMES[type];
+  const today=new Date().toISOString().split('T')[0];
+  document.getElementById('vm-date').value=today;
+  document.getElementById('vm-name').value='';
+  document.getElementById('vm-phone').value='';
+  document.getElementById('vm-apt').value='';
+  document.getElementById('vm-amount').value='';
+  document.getElementById('vm-tax').value='';
+  document.getElementById('vm-desc').value='';
+  document.getElementById('vm-notes').value='';
+  document.getElementById('vm-checknum').value='';
+  document.getElementById('vm-bank').value='';
+  document.getElementById('vm-duedate').value='';
+  document.getElementById('vm-err').style.display='none';
+  document.getElementById('vm-tax-row').style.display=type==='tax'?'':'none';
+  ['vm-check-row1','vm-check-row2','vm-check-row3'].forEach(id=>document.getElementById(id).style.display=type==='check'?'':'none');
+  document.getElementById('vouModal').style.display='flex';
+}
+function closeVouModal(){document.getElementById('vouModal').style.display='none'; vouModalType=null;}
+function calcVmTax(){
+  const amt=parseFloat(document.getElementById('vm-amount').value)||0;
+  document.getElementById('vm-tax').value=Math.round(amt*0.15)||'';
+}
+async function submitVoucher(){
+  const errEl=document.getElementById('vm-err');
+  const amount=parseFloat(document.getElementById('vm-amount').value)||0;
+  const description=document.getElementById('vm-desc').value.trim();
+  if(!amount||!description){errEl.textContent='المبلغ والبيان مطلوبان';errEl.style.display='block';return;}
+  const body={
+    type:vouModalType,
+    date:document.getElementById('vm-date').value,
+    name:document.getElementById('vm-name').value.trim(),
+    phone:document.getElementById('vm-phone').value.trim(),
+    apt:document.getElementById('vm-apt').value.trim(),
+    amount,description,
+    notes:document.getElementById('vm-notes').value.trim(),
+    checkNumber:document.getElementById('vm-checknum').value.trim(),
+    bankName:document.getElementById('vm-bank').value.trim(),
+    dueDate:document.getElementById('vm-duedate').value||null,
+  };
+  try{
+    const r=await fetch('/staff/api/vouchers',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const d=await r.json();
+    if(!r.ok){errEl.textContent=d.error||'حدث خطأ';errEl.style.display='block';return;}
+    closeVouModal();
+    toast('✅ تم الحفظ — رقم الوثيقة: '+d.number);
+    loadVouList(vouModalType);
+  }catch(e){errEl.textContent='حدث خطأ';errEl.style.display='block';}
+}
+
+// Print saved voucher
+let vouCache=[];
+async function printVoucher(id){
+  try{
+    if(!vouCache.length){ const r=await fetch('/staff/api/vouchers'); vouCache=await r.json(); }
+    const v=vouCache.find(x=>x._id===id);
+    if(!v){toast('❌ تعذر تحميل الوثيقة');return;}
+    const typeInfo={receipt:{lbl:'سند قبض',color:'#3b82f6'},invoice:{lbl:'فاتورة',color:'#8b5cf6'},disbursement:{lbl:'سند صرف',color:'#f59e0b'},check:{lbl:'كمبيالة',color:'#22c55e'},tax:{lbl:'إشعار ضريبي',color:'#ef4444'}}[v.type]||{lbl:'وثيقة',color:'#DAA520'};
+    const tax=v.type==='tax'?Math.round((v.amount||0)*0.15):0;
+    const date=v.date?new Date(v.date).toLocaleDateString('ar-SA',{year:'numeric',month:'long',day:'numeric'}):new Date().toLocaleDateString('ar-SA',{year:'numeric',month:'long',day:'numeric'});
+    const html=`
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:16px;">
+      <button onclick="window.print()" style="padding:8px 20px;background:#DAA520;color:#111;border:none;border-radius:8px;font-family:Cairo,sans-serif;font-size:13px;font-weight:800;cursor:pointer;">🖨️ طباعة</button>
+      <button onclick="closePrint()" style="padding:8px 20px;background:#f1f5f9;color:#475569;border:none;border-radius:8px;font-family:Cairo,sans-serif;font-size:13px;font-weight:700;cursor:pointer;">✕ إغلاق</button>
+    </div>
+    <div class="print-doc">
+      <div class="print-hd">
+        <div><div class="print-logo">Fin<span>sight</span></div><div style="font-size:12px;color:#64748b;margin-top:4px;">${esc(BUILDING)} · نظام إدارة الشقق</div></div>
+        <div style="text-align:left;">
+          <div class="print-type" style="background:${typeInfo.color};">${typeInfo.lbl}</div>
+          <div style="font-size:11px;color:#64748b;margin-top:6px;">رقم: ${esc(v.number||'—')}</div>
+          <div style="font-size:11px;color:#64748b;">التاريخ: ${date}</div>
+        </div>
+      </div>
+      <div class="print-meta">
+        <div>
+          ${v.name?`<div class="print-meta-row"><span>الاسم:</span><b>${esc(v.name)}</b></div>`:''}
+          ${v.phone?`<div class="print-meta-row"><span>الجوال:</span><b>${esc(v.phone)}</b></div>`:''}
+          ${v.apt?`<div class="print-meta-row"><span>الشقة:</span><b>${esc(v.apt)}</b></div>`:''}
+        </div>
+        <div>
+          ${v.checkNumber?`<div class="print-meta-row"><span>رقم الشيك:</span><b>${esc(v.checkNumber)}</b></div>`:''}
+          ${v.bankName?`<div class="print-meta-row"><span>البنك:</span><b>${esc(v.bankName)}</b></div>`:''}
+          ${v.dueDate?`<div class="print-meta-row"><span>تاريخ الاستحقاق:</span><b>${new Date(v.dueDate).toLocaleDateString('ar-SA')}</b></div>`:''}
+          <div class="print-meta-row"><span>أنشئ بواسطة:</span><b>${esc(v.createdBy||'—')}</b></div>
+        </div>
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px;">
+        <thead><tr style="background:#1e293b;color:#fff;"><th style="padding:10px;text-align:right;">البيان</th><th style="padding:10px;text-align:left;">المبلغ (ريال)</th></tr></thead>
+        <tbody>
+          <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:10px;">${esc(v.description||'—')}</td><td style="padding:10px;text-align:left;">${(v.amount||0).toLocaleString()}</td></tr>
+          ${tax?`<tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:10px;color:#dc2626;">ضريبة القيمة المضافة (15%)</td><td style="padding:10px;text-align:left;color:#dc2626;">${tax.toLocaleString()}</td></tr>`:''}
+        </tbody>
+      </table>
+      <div class="print-total">
+        <div class="print-total-lbl">الإجمالي</div>
+        <div class="print-total-val">${((v.amount||0)+tax).toLocaleString()} ريال</div>
+      </div>
+      ${v.notes?`<div style="margin-top:14px;padding:10px;background:#f8fafc;border-radius:8px;font-size:12px;color:#475569;"><b>ملاحظات:</b> ${esc(v.notes)}</div>`:''}
+      <div class="print-footer"><div>Finsight — نظام إدارة الشقق الفندقية</div><div style="margin-top:4px;">هذه الوثيقة صادرة إلكترونياً وصالحة بدون توقيع</div></div>
+    </div>`;
+    const area=document.getElementById('printArea');
+    area.innerHTML=html; area.style.display='block';
+    vouCache=[];
+  }catch(e){toast('❌ حدث خطأ');}
 }
 
 function printDoc(type, bkId){
