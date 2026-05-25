@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title><%= staff.building %> — بوابة الموظفين</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Cairo',sans-serif;background:#f1f5f9;direction:rtl;display:flex;min-height:100vh;}
+/* ── Sidebar ── */
+.sb{width:72px;background:#0f172a;display:flex;flex-direction:column;align-items:center;padding:16px 0;position:fixed;top:0;right:0;bottom:0;z-index:100;transition:width .2s;}
+.sb:hover{width:200px;}
+.sb-logo{width:44px;height:44px;background:linear-gradient(135deg,#DAA520,#f0c040);border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:15px;color:#111;flex-shrink:0;margin-bottom:8px;}
+.sb-bld{font-size:11px;color:#94a3b8;text-align:center;padding:0 8px;white-space:nowrap;overflow:hidden;margin-bottom:20px;max-width:0;opacity:0;transition:all .2s;}
+.sb:hover .sb-bld{max-width:180px;opacity:1;}
+.sb-nav{flex:1;width:100%;display:flex;flex-direction:column;gap:2px;padding:0 8px;}
+.sn{display:flex;align-items:center;gap:10px;padding:10px 10px;border-radius:10px;cursor:pointer;color:#94a3b8;transition:all .15s;white-space:nowrap;overflow:hidden;}
+.sn:hover{background:#1e293b;color:#e2e8f0;}
+.sn.active{background:linear-gradient(135deg,rgba(218,165,32,.2),rgba(240,192,64,.1));color:#f0c040;}
+.sn-ico{font-size:20px;flex-shrink:0;width:24px;text-align:center;}
+.sn-lbl{font-size:13px;font-weight:700;opacity:0;transition:opacity .2s;}
+.sb:hover .sn-lbl{opacity:1;}
+.sb-foot{width:100%;padding:0 8px 8px;}
+.sb-logout{display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;cursor:pointer;color:#ef4444;background:rgba(239,68,68,.1);white-space:nowrap;overflow:hidden;}
+.sb-logout:hover{background:rgba(239,68,68,.2);}
+/* ── Main ── */
+.main{margin-right:72px;flex:1;display:flex;flex-direction:column;min-height:100vh;}
+.topbar{background:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e2e8f0;position:sticky;top:0;z-index:50;}
+.tb-title{font-size:18px;font-weight:800;color:#0f172a;}
+.tb-title span{color:#DAA520;}
+.tb-meta{font-size:12px;color:#94a3b8;margin-top:2px;}
+.tb-info{text-align:left;font-size:13px;color:#475569;font-weight:600;}
+.content{padding:24px;flex:1;}
+.tab-section{display:none;}.tab-section.active{display:block;}
+/* ── KPI Cards ── */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:16px;margin-bottom:24px;}
+.kpi-c{background:#fff;border-radius:14px;padding:20px;border:1px solid #e2e8f0;text-align:center;}
+.kpi-num{font-size:32px;font-weight:900;line-height:1;}
+.kpi-lbl{font-size:12px;color:#64748b;font-weight:600;margin-top:6px;}
+.kpi-ico{font-size:22px;margin-bottom:6px;}
+/* ── Charts ── */
+.charts-row{display:grid;grid-template-columns:1fr 280px;gap:16px;margin-bottom:24px;}
+.chart-card{background:#fff;border-radius:14px;padding:20px;border:1px solid #e2e8f0;}
+.chart-title{font-size:14px;font-weight:700;margin-bottom:14px;color:#1e293b;}
+/* ── Apt Grid ── */
+.apt-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+.af{padding:6px 14px;border-radius:20px;border:1px solid #e2e8f0;background:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;color:#475569;transition:all .15s;}
+.af:hover{background:#f8fafc;}
+.af.active{background:#DAA520;border-color:#DAA520;color:#111;}
+.apt-bld{background:#fff;border-radius:14px;border:1px solid #e2e8f0;padding:20px;margin-bottom:14px;}
+.apt-bld-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.apt-bld-name{font-size:15px;font-weight:800;}
+.apt-floor-lbl{font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:8px;}
+.apt-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
+.apt{width:82px;border-radius:10px;padding:10px 6px;text-align:center;cursor:pointer;transition:opacity .15s;user-select:none;}
+.apt:hover{opacity:.8;}
+.apt-n{font-size:14px;font-weight:900;line-height:1;}
+.apt-s{font-size:9px;margin-top:2px;opacity:.9;}
+.apt-g{font-size:9px;margin-top:1px;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.apt.occ{background:#ef4444;color:#fff;}
+.apt.vac{background:#22c55e;color:#fff;}
+.apt.cin{background:#3b82f6;color:#fff;}
+.apt.cout{background:#f97316;color:#fff;}
+.apt.awt{background:#a855f7;color:#fff;}
+.apt.awp{background:#eab308;color:#fff;}
+.apt.dirty{outline:3px solid #f97316;}
+.apt.maintenance{outline:3px solid #94a3b8;}
+/* ── Table ── */
+.tbl-wrap{overflow-x:auto;}
+.stbl{width:100%;border-collapse:collapse;font-size:13px;}
+.stbl th{background:#1e293b;color:#fff;padding:10px 12px;text-align:right;font-weight:700;font-size:12px;}
+.stbl td{padding:10px 12px;border-bottom:1px solid #f1f5f9;color:#334155;}
+.stbl tr:hover td{background:#f8fafc;}
+.badge{display:inline-flex;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+.b-active{background:rgba(34,197,94,.1);color:#16a34a;}
+.b-awaiting{background:rgba(168,85,247,.1);color:#9333ea;}
+.b-checkout{background:rgba(249,115,22,.1);color:#ea580c;}
+.b-pending{background:rgba(234,179,8,.1);color:#ca8a04;}
+.b-cancelled{background:rgba(239,68,68,.1);color:#dc2626;}
+.b-awaiting_payment{background:rgba(59,130,246,.1);color:#2563eb;}
+/* ── Search ── */
+.search-bar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+.sinp{padding:9px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;flex:1;min-width:180px;}
+.sinp:focus{border-color:#DAA520;}
+.sbtn{padding:9px 18px;background:linear-gradient(135deg,#DAA520,#f0c040);border:none;border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;color:#111;}
+/* ── HK Grid ── */
+.hk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;}
+.hk-card{background:#fff;border-radius:12px;border:2px solid #e2e8f0;padding:14px 10px;text-align:center;cursor:pointer;transition:all .15s;}
+.hk-card:hover{border-color:#DAA520;}
+.hk-apt{font-size:16px;font-weight:900;color:#1e293b;}
+.hk-st{font-size:11px;font-weight:700;margin-top:4px;}
+.hk-clean{color:#16a34a;}.hk-dirty{color:#dc2626;}.hk-inspecting{color:#d97706;}.hk-maintenance{color:#7c3aed;}
+.hk-card.hk-dirty-c{border-color:#ef4444;background:#fef2f2;}
+.hk-card.hk-maintenance-c{border-color:#a855f7;background:#faf5ff;}
+/* ── Activity ── */
+.act-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #f1f5f9;}
+.act-ico{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.act-in{background:rgba(34,197,94,.1);}.act-out{background:rgba(249,115,22,.1);}.act-hk{background:rgba(59,130,246,.1);}
+.act-info{flex:1;}
+.act-main{font-size:13px;font-weight:700;color:#1e293b;}
+.act-sub{font-size:11px;color:#94a3b8;margin-top:1px;}
+.act-time{font-size:11px;color:#94a3b8;text-align:left;}
+/* ── Modal ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:1000;}
+.modal{background:#fff;border-radius:16px;width:90%;max-width:440px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.3);}
+.mhd{background:#1e293b;color:#fff;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;}
+.mhd-title{font-size:15px;font-weight:700;}
+.mclose{background:none;border:none;color:#94a3b8;font-size:22px;cursor:pointer;line-height:1;}
+.mclose:hover{color:#fff;}
+.mbody{padding:20px;display:flex;flex-direction:column;gap:12px;font-size:13px;}
+.mrow{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f1f5f9;color:#475569;}
+.mrow b{color:#1e293b;}
+.mbtn{padding:11px;border:none;border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;flex:1;}
+.mbtn-in{background:#22c55e;color:#fff;}
+.mbtn-out{background:#f97316;color:#fff;}
+.mbtn-cancel{background:#f1f5f9;color:#475569;}
+.occ-stat{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;}
+/* ── Toast ── */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:600;opacity:0;transition:opacity .3s;z-index:9999;pointer-events:none;}
+@media(max-width:768px){.main{margin-right:72px;}.charts-row{grid-template-columns:1fr;}.kpi-row{grid-template-columns:repeat(2,1fr);}}
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sb" id="sb">
+  <div class="sb-logo">FS</div>
+  <div class="sb-bld"><%= staff.building %></div>
+  <nav class="sb-nav">
+    <div class="sn active" onclick="goTab('dashboard',this)" id="sn-dashboard"><span class="sn-ico">🏠</span><span class="sn-lbl">لوحة المعلومات</span></div>
+    <div class="sn" onclick="goTab('apartments',this)" id="sn-apartments"><span class="sn-ico">🏢</span><span class="sn-lbl">الشقق والتسكين</span></div>
+    <div class="sn" onclick="goTab('bookings',this)" id="sn-bookings"><span class="sn-ico">📅</span><span class="sn-lbl">الحجوزات</span></div>
+    <div class="sn" onclick="goTab('customers',this)" id="sn-customers"><span class="sn-ico">👥</span><span class="sn-lbl">العملاء</span></div>
+    <div class="sn" onclick="goTab('housekeeping',this)" id="sn-housekeeping"><span class="sn-ico">🧹</span><span class="sn-lbl">خدمة الغرف</span></div>
+    <div class="sn" onclick="goTab('activity',this)" id="sn-activity"><span class="sn-ico">📋</span><span class="sn-lbl">سجل الحركات</span></div>
+  </nav>
+  <div class="sb-foot">
+    <a href="/staff/logout" class="sb-logout" style="text-decoration:none;"><span class="sn-ico">⎋</span><span class="sn-lbl">خروج</span></a>
+  </div>
+</aside>
+
+<!-- Main -->
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="tb-title" id="tbTitle"><%= staff.building %> — <span>لوحة المعلومات</span></div>
+      <div class="tb-meta" id="tbDate"></div>
+    </div>
+    <div class="tb-info">
+      <div><%= staff.name %></div>
+      <div style="font-size:11px;color:#94a3b8;margin-top:1px;"><%= staff.role==='manager'?'مدير':'موظف استقبال' %> · <%= staff.building %></div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ── Dashboard ── -->
+    <div class="tab-section active" id="tab-dashboard">
+      <div class="kpi-row">
+        <div class="kpi-c"><div class="kpi-ico">🌅</div><div class="kpi-num" id="k-arrivals" style="color:#3b82f6;">—</div><div class="kpi-lbl">وصول اليوم</div></div>
+        <div class="kpi-c"><div class="kpi-ico">✅</div><div class="kpi-num" id="k-checkin" style="color:#22c55e;">—</div><div class="kpi-lbl">تسجيل الدخول</div></div>
+        <div class="kpi-c"><div class="kpi-ico">🌇</div><div class="kpi-num" id="k-departures" style="color:#f97316;">—</div><div class="kpi-lbl">مغادرة اليوم</div></div>
+        <div class="kpi-c"><div class="kpi-ico">👥</div><div class="kpi-num" id="k-guests" style="color:#a855f7;">—</div><div class="kpi-lbl">النزلاء الباقين</div></div>
+        <div class="kpi-c"><div class="kpi-ico">📋</div><div class="kpi-num" id="k-new" style="color:#DAA520;">—</div><div class="kpi-lbl">حجوزات جديدة</div></div>
+        <div class="kpi-c"><div class="kpi-ico">📊</div><div class="kpi-num" id="k-rate" style="color:#0f172a;">—%</div><div class="kpi-lbl">نسبة الإشغال</div></div>
+      </div>
+      <div class="charts-row">
+        <div class="chart-card">
+          <div class="chart-title">حالة الشقق الأسبوعية</div>
+          <canvas id="weeklyChart" height="180"></canvas>
+        </div>
+        <div class="chart-card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
+          <div class="chart-title" style="text-align:center;">حالة الشقق</div>
+          <canvas id="donutChart" width="200" height="200"></canvas>
+          <div id="donutLegend" style="margin-top:12px;font-size:12px;font-weight:700;text-align:center;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Apartments ── -->
+    <div class="tab-section" id="tab-apartments">
+      <div class="apt-filters">
+        <button class="af active" onclick="filterApts('all',this)">الكل</button>
+        <button class="af" onclick="filterApts('occupied',this)">🔴 مؤجر <span id="fc-occupied">—</span></button>
+        <button class="af" onclick="filterApts('vacant',this)">🟢 شاغر <span id="fc-vacant">—</span></button>
+        <button class="af" onclick="filterApts('checkin_today',this)">🔵 وصول اليوم <span id="fc-checkin_today">—</span></button>
+        <button class="af" onclick="filterApts('checkout_today',this)">🟠 خروج اليوم <span id="fc-checkout_today">—</span></button>
+        <button class="af" onclick="filterApts('awaiting',this)">🟣 انتظار <span id="fc-awaiting">—</span></button>
+        <span id="apts-occ-rate" style="font-size:13px;font-weight:700;margin-right:auto;align-self:center;"></span>
+      </div>
+      <div id="aptsContainer"></div>
+    </div>
+
+    <!-- ── Bookings ── -->
+    <div class="tab-section" id="tab-bookings">
+      <div class="search-bar">
+        <select class="sinp" id="bk-status-filter" onchange="loadBookings()" style="flex:0 0 160px;">
+          <option value="all">كل الحجوزات</option>
+          <option value="pending">جديد</option>
+          <option value="awaiting_payment">انتظار الدفع</option>
+          <option value="awaiting_checkin">انتظار الدخول</option>
+          <option value="active">مفتوح</option>
+          <option value="checkout">خروج</option>
+          <option value="cancelled">ملغي</option>
+        </select>
+        <button class="sbtn" onclick="loadBookings()">🔄 تحديث</button>
+      </div>
+      <div class="apt-bld">
+        <div class="tbl-wrap">
+          <table class="stbl">
+            <thead><tr><th>#</th><th>الشقة</th><th>النزيل</th><th>الجوال</th><th>نوع الحجز</th><th>الدخول</th><th>الخروج</th><th>الإجمالي</th><th>الحالة</th><th>إجراء</th></tr></thead>
+            <tbody id="bkTbody"><tr><td colspan="10" style="text-align:center;padding:30px;color:#94a3b8;">جاري التحميل...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Customers ── -->
+    <div class="tab-section" id="tab-customers">
+      <div class="search-bar">
+        <input type="text" class="sinp" id="custSearch" placeholder="ابحث بالاسم أو الجوال أو رقم الشقة..." oninput="loadCustomers()">
+      </div>
+      <div class="apt-bld">
+        <div class="tbl-wrap">
+          <table class="stbl">
+            <thead><tr><th>الاسم</th><th>الجوال</th><th>الشقة</th><th>الدخول</th><th>الخروج</th><th>الحالة</th><th>المبلغ</th></tr></thead>
+            <tbody id="custTbody"><tr><td colspan="7" style="text-align:center;padding:30px;color:#94a3b8;">جاري التحميل...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Housekeeping ── -->
+    <div class="tab-section" id="tab-housekeeping">
+      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+        <span style="font-size:13px;font-weight:700;color:#475569;">حالة النظافة:</span>
+        <span style="font-size:12px;font-weight:700;background:rgba(34,197,94,.1);color:#16a34a;padding:3px 10px;border-radius:8px;">🟢 نظيف</span>
+        <span style="font-size:12px;font-weight:700;background:rgba(239,68,68,.1);color:#dc2626;padding:3px 10px;border-radius:8px;">🔴 غير نظيف</span>
+        <span style="font-size:12px;font-weight:700;background:rgba(234,179,8,.1);color:#ca8a04;padding:3px 10px;border-radius:8px;">🟡 قيد الفحص</span>
+        <span style="font-size:12px;font-weight:700;background:rgba(168,85,247,.1);color:#9333ea;padding:3px 10px;border-radius:8px;">🟣 صيانة</span>
+      </div>
+      <div class="hk-grid" id="hkGrid"></div>
+    </div>
+
+    <!-- ── Activity ── -->
+    <div class="tab-section" id="tab-activity">
+      <div class="apt-bld">
+        <div id="actList" style="padding:0 4px;"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Booking Detail Modal -->
+<div class="overlay" id="bkModal" style="display:none;" onclick="if(event.target===this)closeBkModal()">
+  <div class="modal">
+    <div class="mhd"><div class="mhd-title" id="bkModalTitle">تفاصيل الحجز</div><button class="mclose" onclick="closeBkModal()">×</button></div>
+    <div class="mbody" id="bkModalBody"></div>
+  </div>
+</div>
+
+<!-- HK Modal -->
+<div class="overlay" id="hkModal" style="display:none;" onclick="if(event.target===this)closeHkModal()">
+  <div class="modal">
+    <div class="mhd"><div class="mhd-title" id="hkModalTitle">حالة النظافة</div><button class="mclose" onclick="closeHkModal()">×</button></div>
+    <div class="mbody">
+      <div style="font-size:13px;font-weight:600;color:#475569;margin-bottom:8px;">اختر حالة الشقة:</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;" id="hkBtns"></div>
+      <div style="margin-top:12px;">
+        <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:6px;">ملاحظات</label>
+        <textarea id="hkNotes" rows="2" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;resize:none;"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const BUILDING = '<%= staff.building %>';
+let aptsFilter='all', aptsRawData=null;
+let weeklyChartInst=null, donutChartInst=null;
+let hkCurrentApt=null;
+
+// ── Utils ────────────────────────────────────────────────
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.style.opacity='1'; setTimeout(()=>t.style.opacity='0',2500); }
+function esc(s){ return String(s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fDate(d){ return d?new Date(d).toLocaleDateString('ar-SA',{day:'2-digit',month:'2-digit',year:'2-digit'}):'—'; }
+function statusBadge(s){
+  const m={active:'b-active مفتوح',awaiting_checkin:'b-awaiting انتظار الدخول',awaiting_payment:'b-awaiting_payment انتظار الدفع',checkout:'b-checkout خروج',pending:'b-pending جديد',cancelled:'b-cancelled ملغي'};
+  const [cls,lbl]=(m[s]||'b-pending '+s).split(' ');
+  return `<span class="badge ${cls}">${lbl||s}</span>`;
+}
+
+// ── Navigation ───────────────────────────────────────────
+function goTab(id, el){
+  document.querySelectorAll('.tab-section').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.sn').forEach(n=>n.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  el.classList.add('active');
+  const labels={dashboard:'لوحة المعلومات',apartments:'الشقق والتسكين',bookings:'الحجوزات',customers:'العملاء',housekeeping:'خدمة الغرف',activity:'سجل الحركات'};
+  document.getElementById('tbTitle').innerHTML=`${esc(BUILDING)} — <span>${labels[id]||id}</span>`;
+  if(id==='apartments') loadApartments();
+  if(id==='bookings')   loadBookings();
+  if(id==='customers')  loadCustomers();
+  if(id==='housekeeping') loadHousekeeping();
+  if(id==='activity')   loadActivity();
+}
+
+// ── Dashboard ────────────────────────────────────────────
+async function loadStats(){
+  try{
+    const r=await fetch('/staff/api/stats'); const d=await r.json();
+    document.getElementById('k-arrivals').textContent=d.arrivals;
+    document.getElementById('k-checkin').textContent=d.arrivals;
+    document.getElementById('k-departures').textContent=d.departures;
+    document.getElementById('k-guests').textContent=d.currentGuests;
+    document.getElementById('k-new').textContent=d.newBookings;
+    document.getElementById('k-rate').textContent=d.occupancyRate+'%';
+    renderWeeklyChart(d.weekly, d.total);
+    renderDonut(d.occupied, d.total);
+  }catch(e){}
+}
+
+function renderWeeklyChart(weekly, total){
+  const ctx=document.getElementById('weeklyChart').getContext('2d');
+  if(weeklyChartInst) weeklyChartInst.destroy();
+  weeklyChartInst=new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:weekly.map(w=>w.label),
+      datasets:[
+        {label:'محجوز',data:weekly.map(w=>w.occupied),backgroundColor:'rgba(239,68,68,.7)',borderRadius:4},
+        {label:'شاغر', data:weekly.map(w=>Math.max(0,total-w.occupied)),backgroundColor:'rgba(34,197,94,.5)',borderRadius:4},
+      ]
+    },
+    options:{responsive:true,plugins:{legend:{position:'top',labels:{font:{family:'Cairo',size:11}}}},scales:{x:{stacked:true,ticks:{font:{family:'Cairo',size:10}}},y:{stacked:true,max:total,ticks:{font:{family:'Cairo',size:10}}}}}
+  });
+}
+
+function renderDonut(occupied, total){
+  const ctx=document.getElementById('donutChart').getContext('2d');
+  if(donutChartInst) donutChartInst.destroy();
+  const vacant=Math.max(0,total-occupied);
+  donutChartInst=new Chart(ctx,{
+    type:'doughnut',
+    data:{labels:['محجوز','شاغر'],datasets:[{data:[occupied,vacant],backgroundColor:['#ef4444','#22c55e'],borderWidth:0}]},
+    options:{cutout:'65%',plugins:{legend:{display:false}}}
+  });
+  const rate=total?Math.round(occupied/total*100):0;
+  document.getElementById('donutLegend').innerHTML=`<div style="font-size:24px;font-weight:900;">${rate}%</div><div style="font-size:11px;color:#64748b;">${occupied} / ${total} وحدة</div>`;
+}
+
+// ── Apartments ───────────────────────────────────────────
+async function loadApartments(){
+  try{
+    const r=await fetch('/staff/api/apartments');
+    aptsRawData=await r.json();
+    renderAptGrid();
+    updateAptCounts();
+  }catch(e){}
+}
+
+function updateAptCounts(){
+  if(!aptsRawData) return;
+  const c={occupied:0,vacant:0,checkin_today:0,checkout_today:0,awaiting:0,awaiting_payment:0};
+  let totOcc=0, totAll=0;
+  aptsRawData.floors.forEach(f=>f.rooms.forEach(r=>{
+    totAll++; c[r.status]=(c[r.status]||0)+1;
+    if(['occupied','checkout_today','awaiting','checkin_today'].includes(r.status)) totOcc++;
+  }));
+  Object.keys(c).forEach(k=>{const el=document.getElementById('fc-'+k);if(el)el.textContent=c[k]||0;});
+  const rate=totAll?Math.round(totOcc/totAll*100):0;
+  const el=document.getElementById('apts-occ-rate');
+  if(el) el.innerHTML=`نسبة الإشغال: <span style="color:#DAA520;">${rate}%</span> (${totOcc}/${totAll})`;
+}
+
+const APT_MAP={occupied:{cls:'occ',lbl:'مؤجر'},vacant:{cls:'vac',lbl:'شاغر'},checkin_today:{cls:'cin',lbl:'وصول اليوم'},checkout_today:{cls:'cout',lbl:'خروج اليوم'},awaiting:{cls:'awt',lbl:'انتظار'},awaiting_payment:{cls:'awp',lbl:'انتظار الدفع'}};
+
+function renderAptGrid(){
+  if(!aptsRawData){return;}
+  const container=document.getElementById('aptsContainer');
+  let html='<div class="apt-bld"><div class="apt-bld-hd"><div class="apt-bld-name">'+esc(aptsRawData.building)+'</div></div>';
+  aptsRawData.floors.forEach(floor=>{
+    const rooms=floor.rooms.filter(r=>aptsFilter==='all'||r.status===aptsFilter);
+    if(!rooms.length) return;
+    html+=`<div class="apt-floor-lbl">${esc(floor.label)}</div><div class="apt-grid">`;
+    rooms.forEach(r=>{
+      const s=APT_MAP[r.status]||{cls:'',lbl:r.status};
+      const hkClass=r.housekeeping==='dirty'?'dirty':r.housekeeping==='maintenance'?'maintenance':'';
+      html+=`<div class="apt ${s.cls} ${hkClass}" onclick="openBkModal('${r.bookingId||''}','${r.apt}','${r.status}')">
+        <div class="apt-n">${esc(r.apt)}</div>
+        <div class="apt-s">${s.lbl}</div>
+        ${r.name?`<div class="apt-g">${esc(r.name)}</div>`:''}
+      </div>`;
+    });
+    html+='</div>';
+  });
+  html+='</div>';
+  container.innerHTML=html;
+}
+
+function filterApts(f,btn){
+  aptsFilter=f;
+  document.querySelectorAll('.af').forEach(b=>b.classList.remove('active'));
+  btn?.classList.add('active');
+  renderAptGrid();
+}
+
+// ── Booking Modal ────────────────────────────────────────
+function openBkModal(bookingId,apt,status){
+  if(!bookingId||status==='vacant'){
+    toast('🟢 الشقة '+apt+' — شاغرة');return;
+  }
+  const room=aptsRawData?.floors.flatMap(f=>f.rooms).find(r=>r.apt===apt);
+  if(!room) return;
+  document.getElementById('bkModalTitle').textContent='شقة '+apt+' — '+esc(BUILDING);
+  const s=APT_MAP[status]||{lbl:status};
+  let html=`
+    <div class="mrow"><span>الحالة</span><b>${s.lbl}</b></div>
+    ${room.name?`<div class="mrow"><span>النزيل</span><b>${esc(room.name)}</b></div>`:''}
+    ${room.phone?`<div class="mrow"><span>الجوال</span><b><a href="https://wa.me/${room.phone.replace(/^0/,'966')}" style="color:#DAA520;">${esc(room.phone)}</a></b></div>`:''}
+    ${room.checkIn?`<div class="mrow"><span>تاريخ الدخول</span><b>${fDate(room.checkIn)}</b></div>`:''}
+    ${room.checkOut?`<div class="mrow"><span>تاريخ الخروج</span><b>${fDate(room.checkOut)}</b></div>`:''}
+    ${room.nights?`<div class="mrow"><span>عدد الليالي</span><b>${room.nights}</b></div>`:''}
+    ${room.totalPrice?`<div class="mrow"><span>الإجمالي</span><b>${room.totalPrice.toLocaleString()} ريال</b></div>`:''}
+    <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;">`;
+  if(['awaiting','checkin_today','awaiting_checkin'].includes(status))
+    html+=`<button class="mbtn mbtn-in" onclick="changeStatus('${bookingId}','active')">✅ تسجيل الدخول</button>`;
+  if(['occupied','checkout_today'].includes(status))
+    html+=`<button class="mbtn mbtn-out" onclick="changeStatus('${bookingId}','checkout')">🚪 تسجيل الخروج</button>`;
+  html+=`<button class="mbtn mbtn-cancel" onclick="closeBkModal()">إغلاق</button></div>`;
+  document.getElementById('bkModalBody').innerHTML=html;
+  document.getElementById('bkModal').style.display='flex';
+}
+function closeBkModal(){ document.getElementById('bkModal').style.display='none'; }
+
+async function changeStatus(id,status){
+  try{
+    const r=await fetch('/staff/api/bookings/'+id+'/status',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({status})});
+    const d=await r.json();
+    if(d.success){ toast(status==='active'?'✅ تم تسجيل الدخول':'🚪 تم تسجيل الخروج'); closeBkModal(); loadApartments(); loadStats(); }
+    else toast('❌ '+d.error);
+  }catch(e){ toast('❌ حدث خطأ'); }
+}
+
+// ── Bookings Table ───────────────────────────────────────
+async function loadBookings(){
+  const status=document.getElementById('bk-status-filter')?.value||'all';
+  try{
+    const r=await fetch('/staff/api/bookings?status='+status);
+    const list=await r.json();
+    const tb=document.getElementById('bkTbody');
+    if(!list.length){ tb.innerHTML='<tr><td colspan="10" style="text-align:center;padding:30px;color:#94a3b8;">لا توجد حجوزات</td></tr>'; return; }
+    tb.innerHTML=list.map((b,i)=>`<tr>
+      <td style="color:#94a3b8;">${i+1}</td>
+      <td><b>${esc(b.apt||'—')}</b></td>
+      <td>${esc(b.name||'—')}</td>
+      <td><a href="https://wa.me/${(b.phone||'').replace(/^0/,'966')}" style="color:#DAA520;">${esc(b.phone||'—')}</a></td>
+      <td>${b.bookingType==='daily'?'يومي':b.bookingType==='annual'?'شهري':'استفسار'}</td>
+      <td>${fDate(b.checkIn)}</td>
+      <td>${fDate(b.checkOut)}</td>
+      <td>${b.totalPrice?b.totalPrice.toLocaleString()+' ر':'—'}</td>
+      <td>${statusBadge(b.status)}</td>
+      <td>
+        ${b.status==='awaiting_checkin'?`<button onclick="changeStatus('${b._id}','active')" style="padding:4px 10px;background:#22c55e;color:#fff;border:none;border-radius:7px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">دخول</button>`:''}
+        ${b.status==='active'?`<button onclick="changeStatus('${b._id}','checkout')" style="padding:4px 10px;background:#f97316;color:#fff;border:none;border-radius:7px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">خروج</button>`:''}
+      </td>
+    </tr>`).join('');
+  }catch(e){}
+}
+
+// ── Customers ────────────────────────────────────────────
+async function loadCustomers(){
+  const q=document.getElementById('custSearch')?.value||'';
+  try{
+    const r=await fetch('/staff/api/customers?q='+encodeURIComponent(q));
+    const list=await r.json();
+    const tb=document.getElementById('custTbody');
+    if(!list.length){ tb.innerHTML='<tr><td colspan="7" style="text-align:center;padding:30px;color:#94a3b8;">لا توجد نتائج</td></tr>'; return; }
+    tb.innerHTML=list.map(c=>`<tr>
+      <td><b>${esc(c.name||'—')}</b></td>
+      <td><a href="https://wa.me/${(c.phone||'').replace(/^0/,'966')}" style="color:#DAA520;">${esc(c.phone||'—')}</a></td>
+      <td>${esc(c.apt||'—')}</td>
+      <td>${fDate(c.checkIn)}</td>
+      <td>${fDate(c.checkOut)}</td>
+      <td>${statusBadge(c.status)}</td>
+      <td>${c.totalPrice?c.totalPrice.toLocaleString()+' ر':'—'}</td>
+    </tr>`).join('');
+  }catch(e){}
+}
+
+// ── Housekeeping ─────────────────────────────────────────
+async function loadHousekeeping(){
+  try{
+    const r=await fetch('/staff/api/housekeeping');
+    const list=await r.json();
+    const grid=document.getElementById('hkGrid');
+    const ST={clean:{lbl:'نظيف',cls:'hk-clean',icon:'✅'},dirty:{lbl:'غير نظيف',cls:'hk-dirty',icon:'🔴'},inspecting:{lbl:'قيد الفحص',cls:'hk-inspecting',icon:'🔍'},maintenance:{lbl:'صيانة',cls:'hk-maintenance',icon:'🔧'}};
+    grid.innerHTML=list.map(t=>{
+      const s=ST[t.status]||ST.clean;
+      return `<div class="hk-card ${t.status==='dirty'?'hk-dirty-c':t.status==='maintenance'?'hk-maintenance-c':''}" onclick="openHkModal('${t.apt}','${t.status}','${esc(t.notes||'')}')">
+        <div class="hk-apt">${esc(t.apt)}</div>
+        <div class="hk-st ${s.cls}">${s.icon} ${s.lbl}</div>
+        ${t.notes?`<div style="font-size:9px;color:#94a3b8;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(t.notes)}</div>`:''}
+      </div>`;
+    }).join('');
+  }catch(e){}
+}
+
+function openHkModal(apt,status,notes){
+  hkCurrentApt=apt;
+  document.getElementById('hkModalTitle').textContent='شقة '+apt+' — خدمة الغرف';
+  document.getElementById('hkNotes').value=notes||'';
+  const ST=[{v:'clean',lbl:'✅ نظيف',bg:'#22c55e'},{v:'dirty',lbl:'🔴 غير نظيف',bg:'#ef4444'},{v:'inspecting',lbl:'🔍 قيد الفحص',bg:'#eab308'},{v:'maintenance',lbl:'🔧 صيانة',bg:'#a855f7'}];
+  document.getElementById('hkBtns').innerHTML=ST.map(s=>`<button onclick="saveHk('${apt}','${s.v}')" style="padding:10px;background:${s.v===status?s.bg:'#f1f5f9'};color:${s.v===status?'#fff':'#475569'};border:none;border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;">${s.lbl}</button>`).join('');
+  document.getElementById('hkModal').style.display='flex';
+}
+function closeHkModal(){ document.getElementById('hkModal').style.display='none'; }
+
+async function saveHk(apt,status){
+  const notes=document.getElementById('hkNotes').value;
+  try{
+    await fetch('/staff/api/housekeeping/'+apt,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({status,notes})});
+    toast('✅ تم تحديث حالة الشقة '+apt);
+    closeHkModal();
+    loadHousekeeping();
+  }catch(e){ toast('❌ حدث خطأ'); }
+}
+
+// ── Activity ─────────────────────────────────────────────
+async function loadActivity(){
+  try{
+    const r=await fetch('/staff/api/activity');
+    const list=await r.json();
+    const el=document.getElementById('actList');
+    if(!list.length){ el.innerHTML='<div style="text-align:center;padding:30px;color:#94a3b8;">لا توجد حركات بعد</div>'; return; }
+    const icons={check_in:'✅',check_out:'🚪',housekeeping:'🧹',status_change:'🔄',booking_add:'📋'};
+    const clsMap={check_in:'act-in',check_out:'act-out',housekeeping:'act-hk',status_change:'act-hk'};
+    el.innerHTML=list.map(l=>`
+      <div class="act-row">
+        <div class="act-ico ${clsMap[l.action]||'act-hk'}">${icons[l.action]||'📌'}</div>
+        <div class="act-info">
+          <div class="act-main">${l.action==='check_in'?'تسجيل دخول':l.action==='check_out'?'تسجيل خروج':l.action==='housekeeping'?'تحديث نظافة':'تغيير حالة'} — شقة ${esc(l.apt||'')}</div>
+          <div class="act-sub">${esc(l.guestName||'')} ${l.details?'· '+esc(l.details):''} · ${esc(l.staffName||'')}</div>
+        </div>
+        <div class="act-time">${new Date(l.createdAt).toLocaleString('ar-SA',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'short'})}</div>
+      </div>`).join('');
+  }catch(e){}
+}
+
+// ── Clock ────────────────────────────────────────────────
+function updateClock(){
+  document.getElementById('tbDate').textContent=new Date().toLocaleString('ar-SA',{weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+
+// ── Init ─────────────────────────────────────────────────
+window.addEventListener('load',()=>{
+  loadStats();
+  updateClock();
+  setInterval(updateClock,1000);
+  setInterval(loadStats,60000);
+});
+</script>
+</body>
+</html>

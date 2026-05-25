@@ -84,6 +84,7 @@ app.use('/api', dbMiddleware, (req, res, next) => {
 });
 app.use('/account', dbMiddleware, customerMiddleware, require('./routes/account'));
 app.use('/host', dbMiddleware, hostMiddleware, require('./routes/host'));
+app.use('/staff', dbMiddleware, require('./routes/staff'));
 app.use('/', dbMiddleware, customerMiddleware, require('./routes/client'));
 app.use('/api', require('./routes/api'));
 
