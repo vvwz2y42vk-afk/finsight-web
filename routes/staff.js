@@ -88,7 +88,7 @@ router.get('/api/apartments', reqStaff, async (req,res) => {
           else if(b.status==='awaiting_checkin') status=(cin&&cin>=today&&cin<tom)?'checkin_today':'awaiting';
           else if(b.status==='awaiting_payment') status='awaiting_payment';
         }
-        return { apt, status, housekeeping:hk?.status||'clean', bookingId:b?._id||null, name:b?.name||'', phone:b?.phone||'', checkIn:b?.checkIn||null, checkOut:b?.checkOut||null, nights:b?.nights||0, totalPrice:b?.totalPrice||0, bookingType:b?.bookingType||'', notes:hk?.notes||'' };
+        return { apt, status, housekeeping:hk?.status||'clean', bookingId:b?._id||null, name:b?.name||'', phone:b?.phone||'', checkIn:b?.checkIn||null, checkOut:b?.checkOut||null, nights:b?.nights||0, totalPrice:b?.totalPrice||0, paidAmount:b?.paidAmount||0, idType:b?.idType||'', idNumber:b?.idNumber||'', bookingType:b?.bookingType||'', notes:hk?.notes||'' };
       }),
     }));
     res.json({ building:bld, floors });
@@ -133,7 +133,7 @@ router.post('/api/bookings/new', reqStaff, async (req,res) => {
   try {
     const B = require('../models/Booking');
     const AL = require('../models/ActivityLog');
-    const { apt, name, phone, bookingType, checkIn, checkOut, months, pricePerUnit, totalPrice, status, notes } = req.body;
+    const { apt, name, phone, bookingType, checkIn, checkOut, months, pricePerUnit, totalPrice, paidAmount, idType, idNumber, status, notes } = req.body;
     if(!apt||!name||!phone||!bookingType||!checkIn||!totalPrice)
       return res.status(400).json({error:'جميع الحقول المطلوبة غير مكتملة'});
 
@@ -158,6 +158,9 @@ router.post('/api/bookings/new', reqStaff, async (req,res) => {
       pricePerNight: bookingType==='daily' ? pricePerUnit : undefined,
       pricePerMonth: bookingType==='annual' ? pricePerUnit : undefined,
       totalPrice: parseFloat(totalPrice)||0,
+      paidAmount: parseFloat(paidAmount)||0,
+      idType: idType||'',
+      idNumber: idNumber||'',
       status: status||'awaiting_checkin',
       notes: notes||'',
       source: 'manual',

@@ -326,6 +326,28 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;direction:rtl;display:fle
           <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">الإجمالي</label>
           <input id="nb-total" type="number" placeholder="0" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;background:#f8fafc;">
         </div>
+        <div>
+          <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">المبلغ المدفوع</label>
+          <input id="nb-paid" type="number" placeholder="0" onchange="calcNbRemain()" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;">
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">المتبقي</label>
+          <input id="nb-remain" type="number" placeholder="0" readonly style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;background:#f8fafc;color:#dc2626;font-weight:700;">
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">نوع الإثبات</label>
+          <select id="nb-idtype" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;">
+            <option value="">— اختر —</option>
+            <option value="national_id">هوية وطنية</option>
+            <option value="passport">جواز سفر</option>
+            <option value="iqama">إقامة</option>
+            <option value="family_card">كرت عائلة</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">رقم الإثبات</label>
+          <input id="nb-idnum" type="text" placeholder="رقم الوثيقة" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;">
+        </div>
         <div style="grid-column:1/-1;">
           <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">الحالة</label>
           <select id="nb-status" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;">
@@ -495,6 +517,10 @@ function openBkModal(bookingId,apt,status){
     ${room.checkOut?`<div class="mrow"><span>تاريخ الخروج</span><b>${fDate(room.checkOut)}</b></div>`:''}
     ${room.nights?`<div class="mrow"><span>عدد الليالي</span><b>${room.nights}</b></div>`:''}
     ${room.totalPrice?`<div class="mrow"><span>الإجمالي</span><b>${room.totalPrice.toLocaleString()} ريال</b></div>`:''}
+    ${room.totalPrice?`<div class="mrow"><span>المدفوع</span><b style="color:#16a34a;">${(room.paidAmount||0).toLocaleString()} ريال</b></div>`:''}
+    ${room.totalPrice?`<div class="mrow"><span>المتبقي</span><b style="color:${(room.totalPrice-(room.paidAmount||0))>0?'#dc2626':'#16a34a'};">${Math.max(0,room.totalPrice-(room.paidAmount||0)).toLocaleString()} ريال</b></div>`:''}
+    ${room.idType?`<div class="mrow"><span>نوع الإثبات</span><b>${{national_id:'هوية وطنية',passport:'جواز سفر',iqama:'إقامة',family_card:'كرت عائلة'}[room.idType]||room.idType}</b></div>`:''}
+    ${room.idNumber?`<div class="mrow"><span>رقم الإثبات</span><b>${esc(room.idNumber)}</b></div>`:''}
     <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;">`;
   if(['awaiting','checkin_today','awaiting_checkin'].includes(status))
     html+=`<button class="mbtn mbtn-in" onclick="changeStatus('${bookingId}','active')">✅ تسجيل الدخول</button>`;
@@ -642,6 +668,10 @@ async function openNewBkModal(){
   document.getElementById('nb-phone').value='';
   document.getElementById('nb-price').value='';
   document.getElementById('nb-total').value='';
+  document.getElementById('nb-paid').value='';
+  document.getElementById('nb-remain').value='';
+  document.getElementById('nb-idtype').value='';
+  document.getElementById('nb-idnum').value='';
   document.getElementById('nb-notes').value='';
   document.getElementById('nb-err').style.display='none';
   const today=new Date().toISOString().split('T')[0];
@@ -669,6 +699,14 @@ function calcNbTotal(){
     const months=parseInt(document.getElementById('nb-months').value)||1;
     document.getElementById('nb-total').value=months*price;
   }
+  calcNbRemain();
+}
+function calcNbRemain(){
+  const total=parseFloat(document.getElementById('nb-total').value)||0;
+  const paid=parseFloat(document.getElementById('nb-paid').value)||0;
+  const remain=Math.max(0,total-paid);
+  document.getElementById('nb-remain').value=remain||'';
+  document.getElementById('nb-remain').style.color=remain>0?'#dc2626':'#16a34a';
 }
 
 function updateNbPrice(){
@@ -692,6 +730,9 @@ async function submitNewBk(){
   const months=type==='annual'?parseInt(document.getElementById('nb-months').value)||1:0;
   const price=parseFloat(document.getElementById('nb-price').value)||0;
   const total=parseFloat(document.getElementById('nb-total').value)||price;
+  const paid=parseFloat(document.getElementById('nb-paid').value)||0;
+  const idType=document.getElementById('nb-idtype').value;
+  const idNumber=document.getElementById('nb-idnum').value.trim();
   const status=document.getElementById('nb-status').value;
   const notes=document.getElementById('nb-notes').value.trim();
   const errEl=document.getElementById('nb-err');
@@ -699,7 +740,7 @@ async function submitNewBk(){
     errEl.textContent='يرجى تعبئة جميع الحقول المطلوبة'; errEl.style.display='block'; return;
   }
   try{
-    const body={apt,name,phone,bookingType:type,checkIn:checkin,checkOut:checkout,months,pricePerUnit:price,totalPrice:total,status,notes};
+    const body={apt,name,phone,bookingType:type,checkIn:checkin,checkOut:checkout,months,pricePerUnit:price,totalPrice:total,paidAmount:paid,idType,idNumber,status,notes};
     const r=await fetch('/staff/api/bookings/new',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     const d=await r.json();
     if(!r.ok){errEl.textContent=d.error||'حدث خطأ';errEl.style.display='block';return;}

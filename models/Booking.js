@@ -19,6 +19,12 @@ const bookingSchema = new mongoose.Schema({
   notes:        String,
   paymentId:    String,
   paidAt:       Date,
+  paidAmount:   { type: Number, default: 0 },
+  idType:       { type: String, enum: ['national_id','passport','iqama','family_card',''], default: '' },
+  idNumber:     String,
+  source:       String,
+  pricePerNight: Number,
+  pricePerMonth: Number,
 }, { timestamps: true });
 
 module.exports = mongoose.model('Booking', bookingSchema);
