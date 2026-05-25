@@ -6,7 +6,7 @@
 <title>Barez Pro — لوحة إدارة العقارات</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--gold:#4a90e2;--gold2:#4a90e2;--gl:rgba(74,144,226,.15);--gb:rgba(74,144,226,.35);--green:#2ecc71;--gg:rgba(46,204,113,.12);--gb2:rgba(46,204,113,.25);--red:#e74c3c;--rg:rgba(231,76,60,.12);--rb:rgba(231,76,60,.3);--blue:#5dade2;--bg:#0c1828;--s:#0e1f35;--s2:#112440;--b:rgba(255,255,255,.08);--b2:rgba(255,255,255,.13);--t:#f0f4ff;--t3:rgba(240,244,255,.5);--t4:rgba(240,244,255,.3);}
+:root{--gold:#1a3d8f;--gold2:#1a3d8f;--gl:rgba(26,61,143,.1);--gb:rgba(26,61,143,.25);--green:#1A7340;--gg:rgba(26,115,64,.08);--gb2:rgba(26,115,64,.2);--red:#C0392B;--rg:rgba(192,57,43,.08);--rb:rgba(192,57,43,.2);--blue:#1A5276;--bg:#F4F7FC;--s:#fff;--s2:#F0F4FB;--b:#DDE4F0;--b2:#C8D4E8;--t:#1A1A2E;--t3:#6B7A99;--t4:#9AAABB;}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'IBM Plex Sans Arabic',sans-serif;background:var(--bg);direction:rtl;color:var(--t);min-height:100vh;}
 .layout{display:flex;min-height:100vh;}
@@ -198,24 +198,23 @@ tbody td{padding:7px 5px;font-size:11px;}
 @media(max-width:900px){.sidebar{display:none;}.kpi-grid{grid-template-columns:repeat(2,1fr);}.g2,.g4,.buildings-grid,.map-stats{grid-template-columns:1fr 1fr;}}
 ::-webkit-scrollbar{width:4px;height:4px;}::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px;}
 
-/* ── Sidebar Dark BAREZ Theme ─────────────────── */
-.sidebar{background:#081222;border-left:1px solid rgba(255,255,255,.07);}
+/* ── Sidebar BAREZ Dark ─────────────────── */
+.sidebar{background:#071530;border-left:1px solid rgba(255,255,255,.06);}
 .sb-logo{border-bottom:1px solid rgba(255,255,255,.07);padding:16px 14px 14px;}
-.logo-name{font-size:15px;font-weight:800;color:#4a90e2;letter-spacing:1.5px;text-transform:uppercase;}
-.logo-sub{font-size:8px;color:rgba(255,255,255,.3);letter-spacing:1.5px;margin-top:1px;}
+.sb-logo img{filter:brightness(0) invert(1);}
 .nav{padding:10px 8px;}
-.ni{color:rgba(255,255,255,.45);font-size:12px;padding:9px 10px;}
-.ni:hover{background:rgba(74,144,226,.12);color:rgba(255,255,255,.85);}
-.ni.active{background:rgba(74,144,226,.18);color:#4a90e2;font-weight:600;}
+.ni{color:rgba(255,255,255,.5);font-size:12px;padding:9px 10px;}
+.ni:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.9);}
+.ni.active{background:rgba(74,144,226,.2);color:#7ec8f8;font-weight:600;}
 .ni.active::before{background:#4a90e2;}
-.ni-badge{background:rgba(74,144,226,.2);color:#4a90e2;}
-.ni-badge.red{background:rgba(231,76,60,.2);color:#e74c3c;}
-.ni-ico{opacity:.7;}
+.ni-badge{background:rgba(74,144,226,.18);color:#7ec8f8;}
+.ni-badge.red{background:rgba(231,76,60,.2);color:#f87171;}
+.ni-ico{opacity:.65;}
 .ni.active .ni-ico{opacity:1;}
 .sb-user{border-top:1px solid rgba(255,255,255,.07);padding:10px 12px;}
-.user-row{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);}
-.user-name{color:rgba(255,255,255,.9);font-size:12px;}
-.user-role{color:rgba(255,255,255,.35);font-size:9px;}
+.user-row{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);}
+.user-name{color:rgba(255,255,255,.85);font-size:12px;}
+.user-role{color:rgba(255,255,255,.3);font-size:9px;}
 
 /* ── Watermark ───────────────────────────────────────── */
 .watermark{position:fixed;top:50%;left:calc(50% + 105px);transform:translate(-50%,-50%);pointer-events:none;z-index:0;opacity:.04;user-select:none;}
