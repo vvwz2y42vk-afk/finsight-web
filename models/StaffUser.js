@@ -7,7 +7,7 @@ const schema = new mongoose.Schema({
   building: { type: String, required: true },
   role:     { type: String, enum: ['receptionist','manager'], default: 'receptionist' },
   active:      { type: Boolean, default: true },
-  permissions: { type: [String], default: ['dashboard','apartments','bookings','customers','housekeeping','activity','new_booking','edit_booking','cancel_booking'] },
+  permissions: { type: [String], default: ['dashboard','apartments','bookings','customers','housekeeping','activity','new_booking','edit_booking','cancel_booking','vouchers'] },
 }, { timestamps: true });
 schema.pre('save', async function() {
   if (this.isModified('password')) this.password = await bcrypt.hash(this.password, 10);

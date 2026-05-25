@@ -119,7 +119,30 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;direction:rtl;display:fle
 .occ-stat{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;}
 /* ── Toast ── */
 #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:600;opacity:0;transition:opacity .3s;z-index:9999;pointer-events:none;}
-@media(max-width:768px){.main{margin-right:72px;}.charts-row{grid-template-columns:1fr;}.kpi-row{grid-template-columns:repeat(2,1fr);}}
+/* ── Vouchers ── */
+.vou-cards{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:24px;}
+.vou-card{flex:1;min-width:150px;border-radius:16px;padding:30px 20px;text-align:center;cursor:pointer;transition:transform .15s,opacity .15s;color:#fff;user-select:none;}
+.vou-card:hover{transform:translateY(-4px);opacity:.92;}
+.vou-ico{font-size:36px;margin-bottom:10px;}
+.vou-lbl{font-size:14px;font-weight:800;}
+.vou-section{display:none;}.vou-section.active{display:block;}
+@media print{.sb,.topbar,.apt-filters,.search-bar,button,.overlay{display:none!important;}.main{margin:0!important;}.content{padding:0!important;} #printArea{display:block!important;}}
+#printArea{display:none;position:fixed;inset:0;background:#fff;z-index:9999;padding:32px;overflow:auto;}
+.print-doc{max-width:700px;margin:0 auto;font-family:'Cairo',sans-serif;direction:rtl;}
+.print-hd{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #DAA520;padding-bottom:16px;margin-bottom:20px;}
+.print-logo{font-size:22px;font-weight:900;color:#0f172a;}
+.print-logo span{color:#DAA520;}
+.print-type{font-size:18px;font-weight:800;color:#fff;padding:6px 18px;border-radius:8px;}
+.print-meta{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px;font-size:13px;}
+.print-meta-row{display:flex;gap:6px;padding:6px 0;border-bottom:1px solid #f1f5f9;}
+.print-meta-row span{color:#64748b;min-width:110px;}
+.print-meta-row b{color:#0f172a;}
+.print-total{background:#f8fafc;border:2px solid #DAA520;border-radius:12px;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;margin-top:16px;}
+.print-total-lbl{font-size:14px;font-weight:700;color:#475569;}
+.print-total-val{font-size:22px;font-weight:900;color:#DAA520;}
+.print-footer{text-align:center;margin-top:24px;font-size:11px;color:#94a3b8;border-top:1px solid #e2e8f0;padding-top:12px;}
+.print-btns{display:flex;gap:8px;margin-bottom:16px;}
+@media(max-width:768px){.main{margin-right:72px;}.charts-row{grid-template-columns:1fr;}.kpi-row{grid-template-columns:repeat(2,1fr);}.vou-cards{gap:10px;}}
 </style>
 </head>
 <body>
@@ -135,6 +158,7 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;direction:rtl;display:fle
     <div class="sn" onclick="goTab('customers',this)" id="sn-customers" style="display:<%= (staff.permissions||[]).includes('customers')?'flex':'none' %>"><span class="sn-ico">👥</span><span class="sn-lbl">العملاء</span></div>
     <div class="sn" onclick="goTab('housekeeping',this)" id="sn-housekeeping" style="display:<%= (staff.permissions||[]).includes('housekeeping')?'flex':'none' %>"><span class="sn-ico">🧹</span><span class="sn-lbl">خدمة الغرف</span></div>
     <div class="sn" onclick="goTab('activity',this)" id="sn-activity" style="display:<%= (staff.permissions||[]).includes('activity')?'flex':'none' %>"><span class="sn-ico">📋</span><span class="sn-lbl">سجل الحركات</span></div>
+    <div class="sn" onclick="goTab('vouchers',this)" id="sn-vouchers" style="display:<%= (staff.permissions||[]).includes('vouchers')?'flex':'none' %>"><span class="sn-ico">🧾</span><span class="sn-lbl">السندات والفواتير</span></div>
   </nav>
   <div class="sb-foot">
     <a href="/staff/logout" class="sb-logout" style="text-decoration:none;"><span class="sn-ico">⎋</span><span class="sn-lbl">خروج</span></a>
@@ -255,6 +279,99 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;direction:rtl;display:fle
       </div>
     </div>
 
+    <!-- ── Vouchers ── -->
+    <div class="tab-section" id="tab-vouchers">
+      <div class="vou-cards" id="vouCards">
+        <div class="vou-card" style="background:linear-gradient(135deg,#3b82f6,#1d4ed8);" onclick="showVouSection('receipts')">
+          <div class="vou-ico">🧾</div><div class="vou-lbl">سندات القبض</div>
+        </div>
+        <div class="vou-card" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9);" onclick="showVouSection('invoices')">
+          <div class="vou-ico">📄</div><div class="vou-lbl">الفواتير</div>
+        </div>
+        <div class="vou-card" style="background:linear-gradient(135deg,#f59e0b,#d97706);" onclick="showVouSection('disbursements')">
+          <div class="vou-ico">💸</div><div class="vou-lbl">سندات الصرف</div>
+        </div>
+        <div class="vou-card" style="background:linear-gradient(135deg,#22c55e,#15803d);" onclick="showVouSection('checks')">
+          <div class="vou-ico">📋</div><div class="vou-lbl">سندات الكمبيالات</div>
+        </div>
+        <div class="vou-card" style="background:linear-gradient(135deg,#ef4444,#b91c1c);" onclick="showVouSection('tax')">
+          <div class="vou-ico">📊</div><div class="vou-lbl">الإشعارات الضريبية</div>
+        </div>
+      </div>
+
+      <!-- Receipts -->
+      <div class="vou-section" id="vou-receipts">
+        <div class="print-btns">
+          <button class="sbtn" onclick="showVouCards()" style="background:#64748b;">← رجوع</button>
+          <button class="sbtn" onclick="loadVouBookings('receipts')">🔄 تحديث</button>
+        </div>
+        <div class="apt-bld">
+          <div style="font-size:15px;font-weight:800;color:#1e293b;margin-bottom:14px;">🧾 سندات القبض</div>
+          <div class="tbl-wrap"><table class="stbl" id="receipts-tbl">
+            <thead><tr><th>#</th><th>الشقة</th><th>النزيل</th><th>التاريخ</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th><th>الحالة</th><th>طباعة</th></tr></thead>
+            <tbody id="receipts-tbody"><tr><td colspan="9" style="text-align:center;padding:20px;color:#94a3b8;">اضغط تحديث لتحميل البيانات</td></tr></tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- Invoices -->
+      <div class="vou-section" id="vou-invoices">
+        <div class="print-btns">
+          <button class="sbtn" onclick="showVouCards()" style="background:#64748b;">← رجوع</button>
+          <button class="sbtn" onclick="loadVouBookings('invoices')">🔄 تحديث</button>
+        </div>
+        <div class="apt-bld">
+          <div style="font-size:15px;font-weight:800;color:#1e293b;margin-bottom:14px;">📄 الفواتير</div>
+          <div class="tbl-wrap"><table class="stbl" id="invoices-tbl">
+            <thead><tr><th>#</th><th>الشقة</th><th>النزيل</th><th>الجوال</th><th>الدخول</th><th>الخروج</th><th>الإجمالي</th><th>الحالة</th><th>طباعة</th></tr></thead>
+            <tbody id="invoices-tbody"><tr><td colspan="9" style="text-align:center;padding:20px;color:#94a3b8;">اضغط تحديث لتحميل البيانات</td></tr></tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- Disbursements -->
+      <div class="vou-section" id="vou-disbursements">
+        <div class="print-btns">
+          <button class="sbtn" onclick="showVouCards()" style="background:#64748b;">← رجوع</button>
+          <button class="sbtn" onclick="openNewVoucher('disbursement')">+ سند صرف جديد</button>
+        </div>
+        <div class="apt-bld">
+          <div style="font-size:15px;font-weight:800;color:#1e293b;margin-bottom:14px;">💸 سندات الصرف</div>
+          <div class="tbl-wrap"><table class="stbl">
+            <thead><tr><th>#</th><th>البيان</th><th>المبلغ</th><th>التاريخ</th><th>المستلم</th><th>طباعة</th></tr></thead>
+            <tbody id="disbursements-tbody"><tr><td colspan="6" style="text-align:center;padding:20px;color:#94a3b8;">لا توجد سندات صرف</td></tr></tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- Checks -->
+      <div class="vou-section" id="vou-checks">
+        <div class="print-btns">
+          <button class="sbtn" onclick="showVouCards()" style="background:#64748b;">← رجوع</button>
+        </div>
+        <div class="apt-bld" style="text-align:center;padding:40px;">
+          <div style="font-size:3rem;margin-bottom:12px;">📋</div>
+          <div style="font-size:15px;font-weight:700;color:#475569;">سندات الكمبيالات</div>
+          <div style="font-size:12px;color:#94a3b8;margin-top:6px;">قريباً</div>
+        </div>
+      </div>
+
+      <!-- Tax -->
+      <div class="vou-section" id="vou-tax">
+        <div class="print-btns">
+          <button class="sbtn" onclick="showVouCards()" style="background:#64748b;">← رجوع</button>
+          <button class="sbtn" onclick="loadVouBookings('tax')">🔄 تحديث</button>
+        </div>
+        <div class="apt-bld">
+          <div style="font-size:15px;font-weight:800;color:#1e293b;margin-bottom:14px;">📊 الإشعارات الضريبية (ضريبة القيمة المضافة 15%)</div>
+          <div class="tbl-wrap"><table class="stbl">
+            <thead><tr><th>#</th><th>الشقة</th><th>النزيل</th><th>الإجمالي</th><th>الضريبة (15%)</th><th>الإجمالي شامل الضريبة</th><th>طباعة</th></tr></thead>
+            <tbody id="tax-tbody"><tr><td colspan="7" style="text-align:center;padding:20px;color:#94a3b8;">اضغط تحديث لتحميل البيانات</td></tr></tbody>
+          </table></div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -280,6 +397,9 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;direction:rtl;display:fle
     </div>
   </div>
 </div>
+
+<!-- Print Area -->
+<div id="printArea"></div>
 
 <!-- New Booking Modal -->
 <div class="overlay" id="newBkModal" style="display:none;" onclick="if(event.target===this)closeNewBkModal()">
@@ -393,13 +513,14 @@ function goTab(id, el){
   document.querySelectorAll('.sn').forEach(n=>n.classList.remove('active'));
   document.getElementById('tab-'+id).classList.add('active');
   el.classList.add('active');
-  const labels={dashboard:'لوحة المعلومات',apartments:'الشقق والتسكين',bookings:'الحجوزات',customers:'العملاء',housekeeping:'خدمة الغرف',activity:'سجل الحركات'};
+  const labels={dashboard:'لوحة المعلومات',apartments:'الشقق والتسكين',bookings:'الحجوزات',customers:'العملاء',housekeeping:'خدمة الغرف',activity:'سجل الحركات',vouchers:'السندات والفواتير'};
   document.getElementById('tbTitle').innerHTML=`${esc(BUILDING)} — <span>${labels[id]||id}</span>`;
   if(id==='apartments') loadApartments();
   if(id==='bookings')   loadBookings();
   if(id==='customers')  loadCustomers();
   if(id==='housekeeping') loadHousekeeping();
   if(id==='activity')   loadActivity();
+  if(id==='vouchers')   { vouBkCache=[]; showVouCards(); }
 }
 
 // ── Dashboard ────────────────────────────────────────────
@@ -809,6 +930,165 @@ async function submitNewBk(){
     loadApartments(); loadStats(); loadBookings();
   }catch(e){errEl.textContent='حدث خطأ';errEl.style.display='block';}
 }
+
+// ── Vouchers ─────────────────────────────────────────────
+const ID_TYPE_L={national_id:'هوية وطنية',passport:'جواز سفر',iqama:'إقامة',family_card:'كرت عائلة'};
+const BK_TYPE_L={daily:'يومي',annual:'شهري'};
+
+function showVouCards(){
+  document.querySelectorAll('.vou-section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('vouCards').style.display='flex';
+}
+function showVouSection(name){
+  document.getElementById('vouCards').style.display='none';
+  document.querySelectorAll('.vou-section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('vou-'+name).classList.add('active');
+  if(['receipts','invoices','tax'].includes(name)) loadVouBookings(name);
+}
+
+let vouBkCache=[];
+async function loadVouBookings(type){
+  if(!vouBkCache.length){
+    try{ const r=await fetch('/staff/api/bookings?status=all'); vouBkCache=await r.json(); }catch(e){ return; }
+  }
+  const list=vouBkCache.filter(b=>b.status!=='cancelled'&&b.status!=='pending');
+  if(type==='receipts'){
+    const tb=document.getElementById('receipts-tbody');
+    tb.innerHTML=list.map((b,i)=>{
+      const paid=b.paidAmount||0; const remain=Math.max(0,(b.totalPrice||0)-paid);
+      return `<tr>
+        <td style="color:#94a3b8;">${i+1}</td>
+        <td><b>${esc(b.apt||'—')}</b></td>
+        <td>${esc(b.name||'—')}</td>
+        <td>${fDate(b.checkIn)}</td>
+        <td>${(b.totalPrice||0).toLocaleString()} ر</td>
+        <td style="color:#16a34a;font-weight:700;">${paid.toLocaleString()} ر</td>
+        <td style="color:${remain>0?'#dc2626':'#16a34a'};font-weight:700;">${remain.toLocaleString()} ر</td>
+        <td>${statusBadge(b.status)}</td>
+        <td><button onclick="printDoc('receipt','${b._id}')" style="padding:4px 10px;background:#3b82f6;color:#fff;border:none;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;">🖨️ طباعة</button></td>
+      </tr>`;
+    }).join('')||'<tr><td colspan="9" style="text-align:center;padding:20px;color:#94a3b8;">لا توجد بيانات</td></tr>';
+  } else if(type==='invoices'){
+    const tb=document.getElementById('invoices-tbody');
+    tb.innerHTML=list.map((b,i)=>`<tr>
+      <td style="color:#94a3b8;">${i+1}</td>
+      <td><b>${esc(b.apt||'—')}</b></td>
+      <td>${esc(b.name||'—')}</td>
+      <td><a href="https://wa.me/${(b.phone||'').replace(/^0/,'966')}" style="color:#DAA520;">${esc(b.phone||'—')}</a></td>
+      <td>${fDate(b.checkIn)}</td>
+      <td>${fDate(b.checkOut)}</td>
+      <td>${(b.totalPrice||0).toLocaleString()} ر</td>
+      <td>${statusBadge(b.status)}</td>
+      <td><button onclick="printDoc('invoice','${b._id}')" style="padding:4px 10px;background:#8b5cf6;color:#fff;border:none;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;">🖨️ طباعة</button></td>
+    </tr>`).join('')||'<tr><td colspan="9" style="text-align:center;padding:20px;color:#94a3b8;">لا توجد بيانات</td></tr>';
+  } else if(type==='tax'){
+    const tb=document.getElementById('tax-tbody');
+    tb.innerHTML=list.map((b,i)=>{
+      const net=b.totalPrice||0; const tax=Math.round(net*0.15); const total=net+tax;
+      return `<tr>
+        <td style="color:#94a3b8;">${i+1}</td>
+        <td><b>${esc(b.apt||'—')}</b></td>
+        <td>${esc(b.name||'—')}</td>
+        <td>${net.toLocaleString()} ر</td>
+        <td style="color:#dc2626;font-weight:700;">${tax.toLocaleString()} ر</td>
+        <td style="font-weight:800;">${total.toLocaleString()} ر</td>
+        <td><button onclick="printDoc('tax','${b._id}')" style="padding:4px 10px;background:#ef4444;color:#fff;border:none;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;">🖨️ طباعة</button></td>
+      </tr>`;
+    }).join('')||'<tr><td colspan="7" style="text-align:center;padding:20px;color:#94a3b8;">لا توجد بيانات</td></tr>';
+  }
+}
+
+function printDoc(type, bkId){
+  const b=vouBkCache.find(x=>x._id===bkId); if(!b) return;
+  const net=b.totalPrice||0; const paid=b.paidAmount||0; const remain=Math.max(0,net-paid);
+  const tax=Math.round(net*0.15); const totalWithTax=net+tax;
+  const docNum='DOC-'+b._id.toString().slice(-6).toUpperCase();
+  const now=new Date().toLocaleDateString('ar-SA',{year:'numeric',month:'long',day:'numeric'});
+
+  const typeInfo={
+    receipt:{lbl:'سند قبض',color:'#3b82f6'},
+    invoice:{lbl:'فاتورة',color:'#8b5cf6'},
+    tax:    {lbl:'إشعار ضريبي',color:'#ef4444'},
+  }[type]||{lbl:'وثيقة',color:'#DAA520'};
+
+  const html=`
+  <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:16px;">
+    <button onclick="window.print()" style="padding:8px 20px;background:#DAA520;color:#111;border:none;border-radius:8px;font-family:Cairo,sans-serif;font-size:13px;font-weight:800;cursor:pointer;">🖨️ طباعة</button>
+    <button onclick="closePrint()" style="padding:8px 20px;background:#f1f5f9;color:#475569;border:none;border-radius:8px;font-family:Cairo,sans-serif;font-size:13px;font-weight:700;cursor:pointer;">✕ إغلاق</button>
+  </div>
+  <div class="print-doc">
+    <div class="print-hd">
+      <div>
+        <div class="print-logo">Fin<span>sight</span></div>
+        <div style="font-size:12px;color:#64748b;margin-top:4px;">${esc(BUILDING)} · نظام إدارة الشقق</div>
+      </div>
+      <div style="text-align:left;">
+        <div class="print-type" style="background:${typeInfo.color};">${typeInfo.lbl}</div>
+        <div style="font-size:11px;color:#64748b;margin-top:6px;">رقم: ${docNum}</div>
+        <div style="font-size:11px;color:#64748b;">التاريخ: ${now}</div>
+      </div>
+    </div>
+
+    <div class="print-meta">
+      <div>
+        <div class="print-meta-row"><span>اسم النزيل:</span><b>${esc(b.name||'—')}</b></div>
+        <div class="print-meta-row"><span>رقم الجوال:</span><b>${esc(b.phone||'—')}</b></div>
+        ${b.idType?`<div class="print-meta-row"><span>نوع الإثبات:</span><b>${ID_TYPE_L[b.idType]||b.idType}</b></div>`:''}
+        ${b.idNumber?`<div class="print-meta-row"><span>رقم الإثبات:</span><b>${esc(b.idNumber)}</b></div>`:''}
+      </div>
+      <div>
+        <div class="print-meta-row"><span>الشقة:</span><b>${esc(b.apt||'—')} — ${esc(BUILDING)}</b></div>
+        <div class="print-meta-row"><span>نوع الحجز:</span><b>${BK_TYPE_L[b.bookingType]||b.bookingType}</b></div>
+        <div class="print-meta-row"><span>تاريخ الدخول:</span><b>${fDate(b.checkIn)}</b></div>
+        <div class="print-meta-row"><span>تاريخ الخروج:</span><b>${fDate(b.checkOut)}</b></div>
+        ${b.nights?`<div class="print-meta-row"><span>عدد الليالي:</span><b>${b.nights}</b></div>`:''}
+      </div>
+    </div>
+
+    <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px;">
+      <thead><tr style="background:#1e293b;color:#fff;">
+        <th style="padding:10px;text-align:right;">البيان</th>
+        <th style="padding:10px;text-align:left;">المبلغ (ريال)</th>
+      </tr></thead>
+      <tbody>
+        <tr style="border-bottom:1px solid #f1f5f9;">
+          <td style="padding:10px;">إيجار شقة ${esc(b.apt||'')} — ${BK_TYPE_L[b.bookingType]||b.bookingType}</td>
+          <td style="padding:10px;text-align:left;">${net.toLocaleString()}</td>
+        </tr>
+        ${type==='tax'?`
+        <tr style="border-bottom:1px solid #f1f5f9;">
+          <td style="padding:10px;color:#dc2626;">ضريبة القيمة المضافة (15%)</td>
+          <td style="padding:10px;text-align:left;color:#dc2626;">${tax.toLocaleString()}</td>
+        </tr>`:''}
+        ${type==='receipt'?`
+        <tr style="border-bottom:1px solid #f1f5f9;">
+          <td style="padding:10px;color:#16a34a;">المبلغ المدفوع</td>
+          <td style="padding:10px;text-align:left;color:#16a34a;">${paid.toLocaleString()}</td>
+        </tr>
+        <tr>
+          <td style="padding:10px;color:#dc2626;">المبلغ المتبقي</td>
+          <td style="padding:10px;text-align:left;color:#dc2626;">${remain.toLocaleString()}</td>
+        </tr>`:''}
+      </tbody>
+    </table>
+
+    <div class="print-total">
+      <div class="print-total-lbl">${type==='tax'?'الإجمالي شامل الضريبة':type==='receipt'?'إجمالي الحجز':'إجمالي المبلغ'}</div>
+      <div class="print-total-val">${(type==='tax'?totalWithTax:net).toLocaleString()} ريال</div>
+    </div>
+
+    ${b.notes?`<div style="margin-top:14px;padding:10px;background:#f8fafc;border-radius:8px;font-size:12px;color:#475569;"><b>ملاحظات:</b> ${esc(b.notes)}</div>`:''}
+
+    <div class="print-footer">
+      <div>Finsight — نظام إدارة الشقق الفندقية</div>
+      <div style="margin-top:4px;">هذه الوثيقة صادرة إلكترونياً وصالحة بدون توقيع</div>
+    </div>
+  </div>`;
+
+  const area=document.getElementById('printArea');
+  area.innerHTML=html; area.style.display='block';
+}
+function closePrint(){ document.getElementById('printArea').innerHTML=''; document.getElementById('printArea').style.display='none'; }
 
 // ── Clock ────────────────────────────────────────────────
 function updateClock(){
