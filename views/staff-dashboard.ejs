@@ -181,14 +181,17 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;direction:rtl;display:fle
 
     <!-- ── Apartments ── -->
     <div class="tab-section" id="tab-apartments">
-      <div class="apt-filters">
-        <button class="af active" onclick="filterApts('all',this)">الكل</button>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+        <div class="apt-filters" style="margin-bottom:0;">
+          <button class="af active" onclick="filterApts('all',this)">الكل</button>
         <button class="af" onclick="filterApts('occupied',this)">🔴 مؤجر <span id="fc-occupied">—</span></button>
         <button class="af" onclick="filterApts('vacant',this)">🟢 شاغر <span id="fc-vacant">—</span></button>
         <button class="af" onclick="filterApts('checkin_today',this)">🔵 وصول اليوم <span id="fc-checkin_today">—</span></button>
         <button class="af" onclick="filterApts('checkout_today',this)">🟠 خروج اليوم <span id="fc-checkout_today">—</span></button>
         <button class="af" onclick="filterApts('awaiting',this)">🟣 انتظار <span id="fc-awaiting">—</span></button>
-        <span id="apts-occ-rate" style="font-size:13px;font-weight:700;margin-right:auto;align-self:center;"></span>
+        <span id="apts-occ-rate" style="font-size:13px;font-weight:700;align-self:center;"></span>
+        </div>
+        <button class="sbtn" onclick="openNewBkModal()">+ حجز جديد</button>
       </div>
       <div id="aptsContainer"></div>
     </div>
@@ -206,6 +209,7 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;direction:rtl;display:fle
           <option value="cancelled">ملغي</option>
         </select>
         <button class="sbtn" onclick="loadBookings()">🔄 تحديث</button>
+        <button class="sbtn" onclick="openNewBkModal()" style="background:linear-gradient(135deg,#22c55e,#16a34a);">+ حجز جديد</button>
       </div>
       <div class="apt-bld">
         <div class="tbl-wrap">
@@ -273,6 +277,70 @@ body{font-family:'Cairo',sans-serif;background:#f1f5f9;direction:rtl;display:fle
         <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:6px;">ملاحظات</label>
         <textarea id="hkNotes" rows="2" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;resize:none;"></textarea>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- New Booking Modal -->
+<div class="overlay" id="newBkModal" style="display:none;" onclick="if(event.target===this)closeNewBkModal()">
+  <div class="modal" style="max-width:500px;">
+    <div class="mhd"><div class="mhd-title">➕ حجز جديد</div><button class="mclose" onclick="closeNewBkModal()">×</button></div>
+    <div class="mbody" style="max-height:80vh;overflow-y:auto;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div style="grid-column:1/-1;">
+          <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">الشقة *</label>
+          <select id="nb-apt" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;" onchange="updateNbPrice()"></select>
+        </div>
+        <div style="grid-column:1/-1;">
+          <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">الاسم الكامل *</label>
+          <input id="nb-name" type="text" placeholder="اسم النزيل" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;">
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">رقم الجوال *</label>
+          <input id="nb-phone" type="tel" placeholder="05xxxxxxxx" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;">
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">نوع الحجز *</label>
+          <select id="nb-type" onchange="toggleNbType()" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;">
+            <option value="daily">يومي</option>
+            <option value="annual">شهري</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">تاريخ الدخول *</label>
+          <input id="nb-checkin" type="date" onchange="calcNbTotal()" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;">
+        </div>
+        <div id="nb-checkout-grp">
+          <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">تاريخ الخروج *</label>
+          <input id="nb-checkout" type="date" onchange="calcNbTotal()" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;">
+        </div>
+        <div id="nb-months-grp" style="display:none;">
+          <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">عدد الأشهر *</label>
+          <input id="nb-months" type="number" value="1" min="1" onchange="calcNbTotal()" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;">
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">السعر (ريال) *</label>
+          <input id="nb-price" type="number" placeholder="0" onchange="calcNbTotal()" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;">
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">الإجمالي</label>
+          <input id="nb-total" type="number" placeholder="0" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;background:#f8fafc;">
+        </div>
+        <div style="grid-column:1/-1;">
+          <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">الحالة</label>
+          <select id="nb-status" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;">
+            <option value="awaiting_checkin">انتظار الدخول</option>
+            <option value="active">مفتوح (تسجيل دخول فوري)</option>
+            <option value="awaiting_payment">انتظار الدفع</option>
+          </select>
+        </div>
+        <div style="grid-column:1/-1;">
+          <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">ملاحظات</label>
+          <textarea id="nb-notes" rows="2" placeholder="أي ملاحظات..." style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;resize:none;"></textarea>
+        </div>
+      </div>
+      <div id="nb-err" style="color:#dc2626;font-size:12px;font-weight:600;margin-top:8px;display:none;"></div>
+      <button onclick="submitNewBk()" style="width:100%;margin-top:14px;padding:12px;background:linear-gradient(135deg,#DAA520,#f0c040);border:none;border-radius:12px;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;color:#111;">حفظ الحجز</button>
     </div>
   </div>
 </div>
@@ -550,6 +618,95 @@ async function loadActivity(){
         <div class="act-time">${new Date(l.createdAt).toLocaleString('ar-SA',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'short'})}</div>
       </div>`).join('');
   }catch(e){}
+}
+
+// ── New Booking ──────────────────────────────────────────
+let nbListings=[];
+async function openNewBkModal(){
+  const modal=document.getElementById('newBkModal');
+  const sel=document.getElementById('nb-apt');
+  sel.innerHTML='<option value="">جاري التحميل...</option>';
+  try{
+    const r=await fetch('/staff/api/apartments');
+    const d=await r.json();
+    nbListings=[];
+    d.floors.forEach(f=>f.rooms.forEach(r=>{
+      nbListings.push({apt:r.apt,status:r.status,bookingType:r.bookingType||'both',priceDaily:r.priceDaily||0,priceAnnual:r.priceAnnual||0});
+    }));
+    sel.innerHTML='<option value="">اختر شقة...</option>'+nbListings.filter(r=>r.status==='vacant').map(r=>`<option value="${r.apt}">${r.apt}</option>`).join('');
+  }catch(e){
+    sel.innerHTML='<option value="">— اختر شقة —</option>';
+    // fallback: allow manual entry
+  }
+  document.getElementById('nb-name').value='';
+  document.getElementById('nb-phone').value='';
+  document.getElementById('nb-price').value='';
+  document.getElementById('nb-total').value='';
+  document.getElementById('nb-notes').value='';
+  document.getElementById('nb-err').style.display='none';
+  const today=new Date().toISOString().split('T')[0];
+  document.getElementById('nb-checkin').value=today;
+  document.getElementById('nb-checkout').value='';
+  modal.style.display='flex';
+}
+function closeNewBkModal(){ document.getElementById('newBkModal').style.display='none'; }
+
+function toggleNbType(){
+  const t=document.getElementById('nb-type').value;
+  document.getElementById('nb-checkout-grp').style.display=t==='daily'?'':'none';
+  document.getElementById('nb-months-grp').style.display=t==='annual'?'':'none';
+  calcNbTotal();
+}
+
+function calcNbTotal(){
+  const type=document.getElementById('nb-type').value;
+  const price=parseFloat(document.getElementById('nb-price').value)||0;
+  if(type==='daily'){
+    const cin=document.getElementById('nb-checkin').value;
+    const cout=document.getElementById('nb-checkout').value;
+    if(cin&&cout){ const nights=Math.round((new Date(cout)-new Date(cin))/(86400000)); document.getElementById('nb-total').value=nights>0?nights*price:price; }
+  } else {
+    const months=parseInt(document.getElementById('nb-months').value)||1;
+    document.getElementById('nb-total').value=months*price;
+  }
+}
+
+function updateNbPrice(){
+  const apt=document.getElementById('nb-apt').value;
+  const type=document.getElementById('nb-type').value;
+  const listing=nbListings.find(r=>r.apt===apt);
+  if(listing){
+    const p=type==='daily'?(listing.priceDaily||0):(listing.priceAnnual||0);
+    if(p) document.getElementById('nb-price').value=p;
+    calcNbTotal();
+  }
+}
+
+async function submitNewBk(){
+  const apt=document.getElementById('nb-apt').value;
+  const name=document.getElementById('nb-name').value.trim();
+  const phone=document.getElementById('nb-phone').value.trim();
+  const type=document.getElementById('nb-type').value;
+  const checkin=document.getElementById('nb-checkin').value;
+  const checkout=type==='daily'?document.getElementById('nb-checkout').value:'';
+  const months=type==='annual'?parseInt(document.getElementById('nb-months').value)||1:0;
+  const price=parseFloat(document.getElementById('nb-price').value)||0;
+  const total=parseFloat(document.getElementById('nb-total').value)||price;
+  const status=document.getElementById('nb-status').value;
+  const notes=document.getElementById('nb-notes').value.trim();
+  const errEl=document.getElementById('nb-err');
+  if(!apt||!name||!phone||!checkin||(type==='daily'&&!checkout)||!price){
+    errEl.textContent='يرجى تعبئة جميع الحقول المطلوبة'; errEl.style.display='block'; return;
+  }
+  try{
+    const body={apt,name,phone,bookingType:type,checkIn:checkin,checkOut:checkout,months,pricePerUnit:price,totalPrice:total,status,notes};
+    const r=await fetch('/staff/api/bookings/new',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const d=await r.json();
+    if(!r.ok){errEl.textContent=d.error||'حدث خطأ';errEl.style.display='block';return;}
+    closeNewBkModal();
+    toast('✅ تم إضافة الحجز بنجاح');
+    loadApartments(); loadStats(); loadBookings();
+  }catch(e){errEl.textContent='حدث خطأ';errEl.style.display='block';}
 }
 
 // ── Clock ────────────────────────────────────────────────

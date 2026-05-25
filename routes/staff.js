@@ -128,6 +128,46 @@ router.put('/api/bookings/:id/status', reqStaff, async (req,res) => {
   } catch(e){ res.status(500).json({error:e.message}); }
 });
 
+// ── API: New Manual Booking ───────────────────────────────
+router.post('/api/bookings/new', reqStaff, async (req,res) => {
+  try {
+    const B = require('../models/Booking');
+    const AL = require('../models/ActivityLog');
+    const { apt, name, phone, bookingType, checkIn, checkOut, months, pricePerUnit, totalPrice, status, notes } = req.body;
+    if(!apt||!name||!phone||!bookingType||!checkIn||!totalPrice)
+      return res.status(400).json({error:'جميع الحقول المطلوبة غير مكتملة'});
+
+    let nights = 0, checkout = checkOut;
+    if(bookingType==='daily' && checkIn && checkOut){
+      nights = Math.round((new Date(checkOut)-new Date(checkIn))/86400000);
+    } else if(bookingType==='annual' && checkIn && months){
+      const d = new Date(checkIn); d.setMonth(d.getMonth()+(parseInt(months)||1));
+      checkout = d.toISOString().split('T')[0];
+      nights = (parseInt(months)||1)*30;
+    }
+
+    const bk = await new B({
+      building: req.staff.building,
+      apt,
+      name,
+      phone,
+      bookingType,
+      checkIn: new Date(checkIn),
+      checkOut: checkout ? new Date(checkout) : undefined,
+      nights,
+      pricePerNight: bookingType==='daily' ? pricePerUnit : undefined,
+      pricePerMonth: bookingType==='annual' ? pricePerUnit : undefined,
+      totalPrice: parseFloat(totalPrice)||0,
+      status: status||'awaiting_checkin',
+      notes: notes||'',
+      source: 'manual',
+    }).save();
+
+    AL.create({building:req.staff.building,staffName:req.staff.name,action:'booking_add',apt,guestName:name,bookingId:bk._id,details:'حجز يدوي'}).catch(()=>{});
+    res.json({success:true, id:bk._id});
+  } catch(e){ res.status(500).json({error:e.message}); }
+});
+
 // ── API: Customers ────────────────────────────────────────
 router.get('/api/customers', reqStaff, async (req,res) => {
   try {
