@@ -1796,7 +1796,7 @@ function renderStaff(){
         ?`<button class="btn" style="font-size:9px;padding:3px 8px;color:var(--red);" onclick="updateStaff('${s._id}','active',false)">⏸ تعطيل</button>`
         :`<button class="btn" style="font-size:9px;padding:3px 8px;background:rgba(39,174,96,.15);border:1px solid rgba(39,174,96,.4);color:#1e8449;" onclick="updateStaff('${s._id}','active',true)">▶ تفعيل</button>`
       }
-      <button class="btn" style="font-size:9px;padding:3px 8px;color:var(--blue);" onclick="openPermsModal('${s._id}','${s.name}',${JSON.stringify(s.permissions||[])})">🔐 الصلاحيات</button>
+      <button class="btn" style="font-size:9px;padding:3px 8px;color:var(--blue);" onclick="openPermsModal('${s._id}','${s.name}',${allStaff.indexOf(s)})">🔐 الصلاحيات</button>
       <button class="btn" style="font-size:9px;padding:3px 8px;color:var(--gold);" onclick="resetPassPrompt('${s._id}','${s.name}')">🔑 كلمة المرور</button>
       <a href="/staff/login" target="_blank" class="btn" style="font-size:9px;padding:3px 8px;">🔗</a>
     </td>
@@ -1836,8 +1836,9 @@ const PERM_LIST=[
   {v:'vouchers',      l:'🧾 السندات والفواتير'},
 ];
 let permsStaffId=null;
-function openPermsModal(id,name,current){
+function openPermsModal(id,name,idx){
   permsStaffId=id;
+  const current=(allStaff[idx]?.permissions)||[];
   document.getElementById('permsModalTitle').textContent='🔐 صلاحيات: '+name;
   document.getElementById('permsGrid').innerHTML=PERM_LIST.map(p=>`
     <label style="display:flex;align-items:center;gap:7px;font-size:12px;padding:8px 10px;border:1px solid var(--b);border-radius:8px;cursor:pointer;background:var(--s2);">
