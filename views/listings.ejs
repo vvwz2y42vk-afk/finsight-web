@@ -18,10 +18,10 @@
     <div class="csb-divider"></div>
     <a href="/listings" class="csb-lnk active"><span class="csb-ico">🏢</span><span>عقاراتنا</span></a>
     <div class="csb-sub">
-      <a href="/listings?cat=rental_apartment" class="csb-sublnk <%= cat==='rental_apartment'?'active':'' %>">🛏 شقق للإيجار</a>
-      <a href="/listings?cat=rental_commercial" class="csb-sublnk <%= cat==='rental_commercial'?'active':'' %>">🏪 معارض للإيجار</a>
-      <a href="/listings?cat=sale_land" class="csb-sublnk <%= cat==='sale_land'?'active':'' %>">🌍 أراضي للبيع</a>
-      <a href="/listings?cat=sale_apartment" class="csb-sublnk <%= cat==='sale_apartment'?'active':'' %>">🏠 شقق للبيع</a>
+      <a href="/listings?cat=rental_apartment" class="csb-sublnk <%= cat==='rental_apartment'?'active':'' %>">شقق للإيجار</a>
+      <a href="/listings?cat=rental_commercial" class="csb-sublnk <%= cat==='rental_commercial'?'active':'' %>">معارض للإيجار</a>
+      <a href="/listings?cat=sale_land" class="csb-sublnk <%= cat==='sale_land'?'active':'' %>">أراضي للبيع</a>
+      <a href="/listings?cat=sale_apartment" class="csb-sublnk <%= cat==='sale_apartment'?'active':'' %>">شقق للبيع</a>
     </div>
     <div class="csb-divider"></div>
     <a href="/search" class="csb-lnk"><span class="csb-ico">🔍</span><span>بحث</span></a>
@@ -111,7 +111,6 @@
   <div class="page-container">
     <% if (listings.length === 0) { %>
     <div style="text-align:center;padding:80px 0;">
-      <div style="font-size:3.5rem;margin-bottom:16px;"><%= cat==='rental_apartment'?'🏠':cat==='rental_commercial'?'🏪':cat==='sale_apartment'?'🏠':'🌍' %></div>
       <h3 style="font-size:1.4rem;font-weight:700;margin-bottom:8px;">
         لا يوجد <%= cat==='rental_apartment'?'شقق للإيجار':cat==='rental_commercial'?'معارض للإيجار':cat==='sale_apartment'?'شقق للبيع':'أراضي للبيع' %> حالياً
       </h3>
@@ -127,7 +126,7 @@
           <img src="<%= l.photos[0] %>" alt="<%= l.title %>" loading="lazy">
           <% } else { %>
           <div class="listing-card__photo-ph">
-            <%= cat==='rental_apartment'?'🏢':cat==='rental_commercial'?'🏪':cat==='sale_apartment'?'🏠':'🌍' %>
+            <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="opacity:.3;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
           </div>
           <% } %>
           <div class="listing-card__badges">

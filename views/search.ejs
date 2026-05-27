@@ -71,10 +71,10 @@
     <div class="csb-divider"></div>
     <a href="/listings" class="csb-lnk"><span class="csb-ico">🏢</span><span>عقاراتنا</span></a>
     <div class="csb-sub">
-      <a href="/listings?cat=rental_apartment" class="csb-sublnk">🛏 شقق للإيجار</a>
-      <a href="/listings?cat=rental_commercial" class="csb-sublnk">🏪 معارض للإيجار</a>
-      <a href="/listings?cat=sale_land" class="csb-sublnk">🌍 أراضي للبيع</a>
-      <a href="/listings?cat=sale_apartment" class="csb-sublnk">🏠 شقق للبيع</a>
+      <a href="/listings?cat=rental_apartment" class="csb-sublnk">شقق للإيجار</a>
+      <a href="/listings?cat=rental_commercial" class="csb-sublnk">معارض للإيجار</a>
+      <a href="/listings?cat=sale_land" class="csb-sublnk">أراضي للبيع</a>
+      <a href="/listings?cat=sale_apartment" class="csb-sublnk">شقق للبيع</a>
     </div>
     <div class="csb-divider"></div>
     <a href="/search" class="csb-lnk active"><span class="csb-ico">🔍</span><span>بحث</span></a>
@@ -120,10 +120,10 @@
             <label>نوع العقار</label>
             <select class="sf-select" name="cat" onchange="toggleTypeFilter()">
               <option value="" <%=!cat?'selected':''%>>الكل</option>
-              <option value="rental_apartment" <%=cat==='rental_apartment'?'selected':''%>>🛏 شقق إيجار</option>
-              <option value="rental_commercial" <%=cat==='rental_commercial'?'selected':''%>>🏪 معارض إيجار</option>
-              <option value="sale_apartment" <%=cat==='sale_apartment'?'selected':''%>>🏠 شقق للبيع</option>
-              <option value="sale_land" <%=cat==='sale_land'?'selected':''%>>🌍 أراضي للبيع</option>
+              <option value="rental_apartment" <%=cat==='rental_apartment'?'selected':''%>>شقق إيجار</option>
+              <option value="rental_commercial" <%=cat==='rental_commercial'?'selected':''%>>معارض إيجار</option>
+              <option value="sale_apartment" <%=cat==='sale_apartment'?'selected':''%>>شقق للبيع</option>
+              <option value="sale_land" <%=cat==='sale_land'?'selected':''%>>أراضي للبيع</option>
             </select>
           </div>
 
@@ -184,10 +184,10 @@
   <!-- Category quick-tabs -->
   <div class="sf-cats">
     <a href="/search" class="sf-cat <%=!cat?'active':''%>">الكل</a>
-    <a href="/search?cat=rental_apartment" class="sf-cat <%=cat==='rental_apartment'?'active':''%>">🛏 شقق إيجار</a>
-    <a href="/search?cat=rental_commercial" class="sf-cat <%=cat==='rental_commercial'?'active':''%>">🏪 معارض</a>
-    <a href="/search?cat=sale_apartment" class="sf-cat <%=cat==='sale_apartment'?'active':''%>">🏠 شقق بيع</a>
-    <a href="/search?cat=sale_land" class="sf-cat <%=cat==='sale_land'?'active':''%>">🌍 أراضي</a>
+    <a href="/search?cat=rental_apartment" class="sf-cat <%=cat==='rental_apartment'?'active':''%>">شقق إيجار</a>
+    <a href="/search?cat=rental_commercial" class="sf-cat <%=cat==='rental_commercial'?'active':''%>">معارض</a>
+    <a href="/search?cat=sale_apartment" class="sf-cat <%=cat==='sale_apartment'?'active':''%>">شقق بيع</a>
+    <a href="/search?cat=sale_land" class="sf-cat <%=cat==='sale_land'?'active':''%>">أراضي</a>
   </div>
 </section>
 
@@ -198,13 +198,12 @@
     <% if (!hasFilters) { %>
     <!-- Idle state -->
     <div style="text-align:center;padding:70px 0;">
-      <div style="font-size:3.5rem;margin-bottom:16px;">🔍</div>
       <h3 style="font-size:1.3rem;font-weight:700;margin-bottom:8px;">ابدأ بالبحث أو اختر فئة</h3>
       <p style="color:var(--text3);margin-bottom:28px;">ابحث بالاسم، الموقع، أو استخدم الفلاتر لتضييق النتائج</p>
       <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-        <a href="/search?cat=rental_apartment" class="btn btn-gold" style="display:inline-flex;">🛏 شقق إيجار</a>
-        <a href="/search?cat=sale_land"        class="btn"          style="display:inline-flex;">🌍 أراضي للبيع</a>
-        <a href="/search?cat=rental_commercial" class="btn"         style="display:inline-flex;">🏪 معارض</a>
+        <a href="/search?cat=rental_apartment" class="btn btn-gold" style="display:inline-flex;">شقق إيجار</a>
+        <a href="/search?cat=sale_land"        class="btn"          style="display:inline-flex;">أراضي للبيع</a>
+        <a href="/search?cat=rental_commercial" class="btn"         style="display:inline-flex;">معارض</a>
       </div>
     </div>
 
