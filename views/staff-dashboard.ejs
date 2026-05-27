@@ -229,6 +229,8 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
 .modal label{color:var(--t3);font-size:12px;font-weight:600;}
 .modal select option{background:#fff;color:var(--t1);}
 
+@keyframes dot-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.75)}}
+
 /* ══ Print ══ */
 @media print{.sb,.topbar,.apt-filters,.search-bar,button,.overlay{display:none!important;}.main{margin:0!important;}.content{padding:0!important;}#printArea{display:block!important;}}
 #printArea{display:none;position:fixed;inset:0;background:#fff;z-index:9999;padding:32px;overflow:auto;}
@@ -325,6 +327,11 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
         <button class="af" onclick="filterApts('checkout_today',this)">خروج اليوم <span id="fc-checkout_today">—</span></button>
         <button class="af" onclick="filterApts('awaiting',this)">انتظار <span id="fc-awaiting">—</span></button>
         <span id="apts-occ-rate" style="font-size:13px;font-weight:700;align-self:center;"></span>
+        <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--t3);padding:4px 10px;background:rgba(4,120,87,.06);border:1px solid rgba(4,120,87,.2);border-radius:20px;">
+          <span id="apt-sync-dot" style="width:6px;height:6px;border-radius:50%;background:#047857;display:inline-block;animation:dot-pulse 2s infinite;"></span>
+          <span>مباشر ·</span>
+          <span id="apt-sync-time">—</span>
+        </span>
         </div>
         <% if(P.includes('new_booking')){ %><button class="sbtn" onclick="openNewBkModal()">+ حجز جديد</button><% } %>
       </div>
@@ -778,7 +785,12 @@ async function loadApartments(){
     aptsRawData=await r.json();
     renderAptGrid();
     updateAptCounts();
-  }catch(e){}
+    const el=document.getElementById('apt-sync-time');
+    if(el) el.textContent=new Date().toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
+  }catch(e){
+    const el=document.getElementById('apt-sync-dot');
+    if(el){el.style.background='#B91C1C';}
+  }
 }
 
 function updateAptCounts(){
@@ -1407,9 +1419,11 @@ function updateClock(){
 // ── Init ─────────────────────────────────────────────────
 window.addEventListener('load',()=>{
   loadStats();
+  loadApartments();
   updateClock();
   setInterval(updateClock,1000);
   setInterval(loadStats,60000);
+  setInterval(loadApartments,30000);
 });
 </script>
 </body>

@@ -512,7 +512,14 @@ tbody td{padding:7px 5px;font-size:11px;}
         <button onclick="filterApts('checkout_today',this)" class="af-btn" style="--ac:#e67e22;">🟠 خروج اليوم <span id="ac-checkout_today">—</span></button>
         <button onclick="filterApts('awaiting',this)" class="af-btn" style="--ac:#8e44ad;">🟣 انتظار <span id="ac-awaiting">—</span></button>
       </div>
-      <div id="aptsOccRate" style="font-size:13px;font-weight:700;color:var(--t3);">—</div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <div id="aptsOccRate" style="font-size:13px;font-weight:700;color:var(--t3);">—</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--green);padding:3px 10px;background:var(--gg);border:1px solid var(--gb2);border-radius:20px;">
+          <span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse 2s infinite;"></span>
+          <span>مباشر ·</span>
+          <span id="admin-apts-sync">—</span>
+        </div>
+      </div>
     </div>
     <div id="aptsGrid"></div>
   </div>
@@ -1884,6 +1891,8 @@ async function loadApts(){
     aptsData=await r.json();
     renderAptsGrid();
     updateAptsBadges();
+    const el=document.getElementById('admin-apts-sync');
+    if(el) el.textContent=new Date().toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
   }catch(e){}
 }
 
@@ -2072,7 +2081,7 @@ async function adminCloseConv(id){
   }catch(e){}
 }
 
-window.addEventListener('load',()=>{loadUser();loadData();loadListings();loadBookings();loadHosts();loadMessages();loadApts();setInterval(loadData,60000);setInterval(loadMessages,30000);setInterval(loadApts,60000);});
+window.addEventListener('load',()=>{loadUser();loadData();loadListings();loadBookings();loadHosts();loadMessages();loadApts();setInterval(loadData,60000);setInterval(loadMessages,30000);setInterval(loadApts,30000);});
 </script>
 </body>
 </html>
