@@ -263,8 +263,8 @@ img { max-width: 100%; display: block; }
 .numbers-grid { display: grid; grid-template-columns: repeat(4,1fr); text-align: center; }
 .number-item { padding: 10px 20px; position: relative; }
 .number-item:not(:last-child)::after { content: ''; position: absolute; top: 10%; left: 0; height: 80%; width: 1px; background: rgba(0,0,0,.18); }
-.number-item__val { font-size: 3rem; font-weight: 900; color: var(--black); line-height: 1; margin-bottom: 8px; }
-.number-item__lbl { font-size: 14px; font-weight: 600; color: rgba(0,0,0,.58); }
+.number-item__val { font-size: 3rem; font-weight: 900; color: #fff; line-height: 1; margin-bottom: 8px; }
+.number-item__lbl { font-size: 14px; font-weight: 600; color: rgba(255,255,255,.65); }
 
 /* ══════════════════════════════════
    CTA SECTION
