@@ -451,6 +451,15 @@ router.put('/hosts/:id/suspend', auth, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ─── All-buildings Activity Log (admin) ──────────────────
+router.get('/activity', auth, async (req, res) => {
+  try {
+    const AL = require('../models/ActivityLog');
+    const logs = await AL.find().sort({ createdAt: -1 }).limit(60).lean();
+    res.json(logs);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 // ─── Apartments Grid ─────────────────────────────────────
 const GRID_BUILDINGS = {
   'المنارا':  { floors: [{l:'أرضي',r:['001','002']},{l:'الأول',r:['101','102','103','104','105','106']},{l:'الثاني',r:['201','202','203','204','205','206']},{l:'الثالث',r:['301','302','303','304','305','306']},{l:'الرابع',r:['401','402','403','404','405','406']},{l:'الخامس',r:['501','502','503','504']}] },

@@ -247,6 +247,12 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
 .print-btns{display:flex;gap:8px;margin-bottom:16px;}
 @media(max-width:768px){.main{margin-right:var(--sb);}.charts-row{grid-template-columns:1fr;}.kpi-row{grid-template-columns:repeat(2,1fr);}.vou-cards{gap:10px;}}
 </style>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#1e3a5f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="بارز موظفين">
+<link rel="apple-touch-icon" href="/images/logo-dark.png">
 </head>
 <body>
 
@@ -1424,6 +1430,7 @@ window.addEventListener('load',()=>{
   setInterval(updateClock,1000);
   setInterval(loadStats,60000);
   setInterval(loadApartments,30000);
+  if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});
 });
 </script>
 </body>

@@ -7,6 +7,13 @@
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/client.css">
 <link rel="stylesheet" href="https://unpkg.com/aos@2.3.4/dist/aos.css">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#c9a84c">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="بارز">
+<link rel="apple-touch-icon" href="/images/logo-dark.png">
 </head>
 <body class="home-page csb-layout">
 
@@ -88,8 +95,8 @@
     </div>
     <div class="hero-stats-bar">
       <div class="hero-stat-item">
-        <div class="hero-stat-item__num"><%= stats.totalContracts %>+</div>
-        <div class="hero-stat-item__lbl">عقد إيجاري</div>
+        <div class="hero-stat-item__num">+3000</div>
+        <div class="hero-stat-item__lbl">عميل</div>
       </div>
       <div class="hero-stat-divider"></div>
       <div class="hero-stat-item">
@@ -355,11 +362,7 @@
         <div class="number-item__lbl">مجمعات سكنية</div>
       </div>
       <div class="number-item" data-aos="fade-up" data-aos-delay="200">
-        <div class="number-item__val"><%= stats.totalContracts %>+</div>
-        <div class="number-item__lbl">عقد إيجاري</div>
-      </div>
-      <div class="number-item" data-aos="fade-up" data-aos-delay="300">
-        <div class="number-item__val">+2000</div>
+        <div class="number-item__val">+3000</div>
         <div class="number-item__lbl">عميل</div>
       </div>
     </div>
@@ -401,8 +404,11 @@
           <a href="#" class="social-btn" title="تويتر X">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
           </a>
-          <a href="#" class="social-btn" title="إنستغرام">
+          <a href="https://www.instagram.com/finsight.ksa" target="_blank" rel="noopener" class="social-btn" title="إنستغرام">
             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+          </a>
+          <a href="https://www.tiktok.com/@finsight.ksa" target="_blank" rel="noopener" class="social-btn" title="تيك توك">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.76a4.85 4.85 0 0 1-1.01-.07Z"/></svg>
           </a>
         </div>
       </div>
@@ -424,6 +430,8 @@
         <div class="footer-col__title">تواصل معنا</div>
         <a href="tel:+966590561057">0590561057</a>
         <a href="mailto:realstate@barezz.com">realstate@barezz.com</a>
+        <a href="https://www.instagram.com/finsight.ksa" target="_blank" rel="noopener">إنستغرام @finsight.ksa</a>
+        <a href="https://www.tiktok.com/@finsight.ksa" target="_blank" rel="noopener">تيك توك @finsight.ksa</a>
         <a href="/inquiry">أرسل استفساراً</a>
       </div>
     </div>
@@ -544,6 +552,13 @@ document.querySelectorAll('.hero-stat-item__num').forEach(el => {
   }, 16);
 });
 
+</script>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('/sw.js').catch(()=>{});
+  });
+}
 </script>
 </body>
 </html>

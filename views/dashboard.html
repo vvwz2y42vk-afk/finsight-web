@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Barez Pro — لوحة إدارة العقارات</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#1a3d8f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="بارز Pro">
+<link rel="apple-touch-icon" href="/images/logo-dark.png">
 <style>
 :root{--gold:#1a3d8f;--gold2:#1a3d8f;--gl:rgba(26,61,143,.1);--gb:rgba(26,61,143,.25);--green:#1A7340;--gg:rgba(26,115,64,.08);--gb2:rgba(26,115,64,.2);--red:#C0392B;--rg:rgba(192,57,43,.08);--rb:rgba(192,57,43,.2);--blue:#1A5276;--bg:#F4F7FC;--s:#fff;--s2:#F0F4FB;--b:#DDE4F0;--b2:#C8D4E8;--t:#1A1A2E;--t3:#6B7A99;--t4:#9AAABB;}
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -314,16 +320,38 @@ tbody td{padding:7px 5px;font-size:11px;}
       <div class="kpi c4" id="kpi-comm-card"><div class="kpi-ico"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="kpi-lbl">عمولاتك</div><div class="kpi-val" id="k3">—</div><div class="kpi-note" id="k3n">—</div></div>
       <div class="kpi c5"><div class="kpi-ico"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg></div><div class="kpi-lbl">عقود مفتوحة</div><div class="kpi-val" id="k4">—</div><div class="kpi-note" id="k4n">—</div></div>
     </div>
+
+    <!-- ══ مركزية المباني ══ -->
+    <div class="g4" id="bld-cards" style="margin-bottom:10px;"></div>
+
     <div id="alerts-wrap"></div>
-    <div class="g2">
+
+    <!-- ══ سجل الحركات + أكبر الديون ══ -->
+    <div class="g2" style="margin-bottom:10px;">
+      <div class="card">
+        <div class="card-hd">
+          <div class="card-title">سجل الحركات</div>
+          <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--green);padding:3px 10px;background:var(--gg);border:1px solid var(--gb2);border-radius:20px;">
+            <span style="width:5px;height:5px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;display:inline-block;"></span>
+            مباشر
+          </div>
+        </div>
+        <div id="activity-feed" style="max-height:260px;overflow-y:auto;"></div>
+      </div>
       <div class="card"><div class="card-hd"><div><div class="card-title">أكبر الديون</div></div><span class="badge b-red" id="bd-count">—</span></div><div id="top-debts"></div></div>
-      <div class="card"><div class="card-hd"><div><div class="card-title">تنتهي قريباً</div></div><span class="badge b-gold" id="exp-count">—</span></div><div id="top-expiry"></div></div>
     </div>
-    <div class="g4">
-      <div class="card"><div class="card-hd"><div class="card-title"><span class="pill pm">المنارا</span></div></div><div id="sum-m"></div></div>
-      <div class="card"><div class="card-hd"><div class="card-title"><span class="pill pj">جوان ان</span></div></div><div id="sum-j"></div></div>
-      <div class="card"><div class="card-hd"><div class="card-title"><span class="pill pa">الماسة</span></div></div><div id="sum-a"></div></div>
-      <div class="card"><div class="card-hd"><div class="card-title"><span class="pill pw">الواحة</span></div></div><div id="sum-w"></div></div>
+
+    <!-- ══ العقود المنتهية + ملخص المباني ══ -->
+    <div class="g2" style="margin-bottom:10px;">
+      <div class="card"><div class="card-hd"><div><div class="card-title">تنتهي قريباً</div></div><span class="badge b-gold" id="exp-count">—</span></div><div id="top-expiry"></div></div>
+      <div class="card"><div class="card-hd"><div class="card-title">ملخص العقود</div></div>
+        <div class="g2" style="gap:6px;margin:0;">
+          <div><div class="card-title" style="font-size:10px;"><span class="pill pm">المنارا</span></div><div id="sum-m"></div></div>
+          <div><div class="card-title" style="font-size:10px;"><span class="pill pj">جوان ان</span></div><div id="sum-j"></div></div>
+          <div><div class="card-title" style="font-size:10px;"><span class="pill pa">الماسة</span></div><div id="sum-a"></div></div>
+          <div><div class="card-title" style="font-size:10px;"><span class="pill pw">الواحة</span></div><div id="sum-w"></div></div>
+        </div>
+      </div>
     </div>
   </div>
   <div class="tc" id="tab-contracts">
@@ -1906,6 +1934,73 @@ function updateAptsBadges(){
   const rate=totAll?Math.round(totOcc/totAll*100):0;
   const ro=document.getElementById('aptsOccRate');
   if(ro)ro.innerHTML=`نسبة الإشغال: <span style="color:var(--gold);font-size:16px;">${rate}%</span> <span style="font-weight:400;font-size:11px;">(${totOcc}/${totAll})</span>`;
+  renderBuildingCards();
+}
+
+function renderBuildingCards(){
+  if(!aptsData)return;
+  const wrap=document.getElementById('bld-cards');
+  if(!wrap)return;
+  const BCOLORS={المنارا:'#1A5276','جوان ان':'#1A7340',الماسة:'#7D6608',الواحة:'#6E2F00'};
+  wrap.innerHTML=Object.entries(aptsData).map(([name,data])=>{
+    const rate=data.total?Math.round(data.occupied/data.total*100):0;
+    let cin=0,cout=0,vacant=0,awt=0;
+    data.floors.forEach(f=>f.rooms.forEach(r=>{
+      if(r.status==='checkin_today')cin++;
+      else if(r.status==='checkout_today')cout++;
+      else if(r.status==='vacant')vacant++;
+      else if(r.status==='awaiting'||r.status==='awaiting_payment')awt++;
+    }));
+    const color=BCOLORS[name]||'var(--gold)';
+    return `<div class="card" style="border-top:3px solid ${color};cursor:pointer;" onclick="go('apts',document.getElementById('nav-apts'))">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+        <div style="font-size:12px;font-weight:700;color:${color};">${name}</div>
+        <div style="font-size:20px;font-weight:700;color:${color};">${rate}%</div>
+      </div>
+      <div style="background:var(--b);border-radius:20px;height:4px;margin-bottom:8px;overflow:hidden;">
+        <div style="width:${rate}%;height:100%;background:${color};border-radius:20px;transition:width .8s;"></div>
+      </div>
+      <div style="font-size:10px;color:var(--t3);margin-bottom:6px;">${data.occupied}/${data.total} مؤجرة</div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;">
+        ${cin>0?`<span style="font-size:9px;padding:2px 6px;border-radius:20px;background:rgba(26,82,118,.1);color:#1A5276;font-weight:600;">↓${cin} وصول</span>`:''}
+        ${cout>0?`<span style="font-size:9px;padding:2px 6px;border-radius:20px;background:rgba(160,64,0,.1);color:#A04000;font-weight:600;">↑${cout} خروج</span>`:''}
+        ${awt>0?`<span style="font-size:9px;padding:2px 6px;border-radius:20px;background:rgba(26,61,143,.1);color:var(--gold);font-weight:600;">◷${awt} انتظار</span>`:''}
+        ${vacant>0?`<span style="font-size:9px;padding:2px 6px;border-radius:20px;background:var(--gg);color:var(--green);font-weight:600;">●${vacant} شاغر</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function loadActivity(){
+  try{
+    const r=await fetch('/api/activity');
+    if(!r.ok)return;
+    const logs=await r.json();
+    renderActivity(logs);
+  }catch(e){}
+}
+
+function renderActivity(logs){
+  const el=document.getElementById('activity-feed');
+  if(!el)return;
+  const ACTIONS={check_in:'دخول',check_out:'خروج',booking_add:'حجز جديد',status_change:'تغيير حالة',housekeeping:'خدمة غرف'};
+  const ACOLORS={check_in:'var(--green)',check_out:'var(--gold)',booking_add:'var(--blue)',housekeeping:'var(--t4)',status_change:'var(--t4)'};
+  const BCOLORS={المنارا:'#1A5276','جوان ان':'#1A7340',الماسة:'#7D6608',الواحة:'#6E2F00'};
+  if(!logs||!logs.length){el.innerHTML='<div style="text-align:center;padding:20px;color:var(--t3);font-size:11px;">لا توجد حركات بعد</div>';return;}
+  const now=new Date();
+  el.innerHTML=logs.slice(0,20).map(l=>{
+    const t=new Date(l.createdAt);
+    const diffMin=Math.round((now-t)/60000);
+    const timeStr=diffMin<60?diffMin+'د':diffMin<1440?Math.round(diffMin/60)+'س':t.toLocaleDateString('ar-SA');
+    return `<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--b);font-size:11px;">
+      <div style="width:7px;height:7px;border-radius:50%;background:${ACOLORS[l.action]||'var(--t4)'};flex-shrink:0;"></div>
+      <div style="flex:1;min-width:0;">
+        <div><span style="font-weight:600;">${l.staffName||'—'}</span> <span style="color:var(--t3);">${ACTIONS[l.action]||l.action}</span> <span style="font-weight:600;">${l.apt||''}</span>${l.guestName?` <span style="color:var(--t3);">(${l.guestName.split(' ')[0]})</span>`:''}</div>
+        <div style="font-size:9px;color:${BCOLORS[l.building]||'var(--t4)'};">${l.building||''}</div>
+      </div>
+      <div style="font-size:9px;color:var(--t4);flex-shrink:0;">${timeStr}</div>
+    </div>`;
+  }).join('');
 }
 
 function filterApts(f,btn){
@@ -2081,7 +2176,7 @@ async function adminCloseConv(id){
   }catch(e){}
 }
 
-window.addEventListener('load',()=>{loadUser();loadData();loadListings();loadBookings();loadHosts();loadMessages();loadApts();setInterval(loadData,60000);setInterval(loadMessages,30000);setInterval(loadApts,30000);setInterval(loadBookings,30000);});
+window.addEventListener('load',()=>{loadUser();loadData();loadListings();loadBookings();loadHosts();loadMessages();loadApts();loadActivity();setInterval(loadData,60000);setInterval(loadMessages,30000);setInterval(loadApts,30000);setInterval(loadBookings,30000);setInterval(loadActivity,30000);if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});});
 </script>
 </body>
 </html>
