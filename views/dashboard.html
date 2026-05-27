@@ -51,7 +51,7 @@ body{font-family:'IBM Plex Sans Arabic',sans-serif;background:var(--bg);directio
 .kpi::before{content:'';position:absolute;top:0;right:0;left:0;height:3px;}
 .kpi.c1::before{background:var(--gold);}.kpi.c2::before{background:var(--green);}.kpi.c3::before{background:var(--red);}.kpi.c4::before{background:var(--gold2);}.kpi.c5::before{background:var(--blue);}
 .kpi:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.06);}
-.kpi-ico{font-size:16px;margin-bottom:5px;}.kpi-lbl{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px;}
+.kpi-ico{font-size:16px;margin-bottom:5px;display:flex;align-items:center;}.kpi-lbl{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px;}
 .kpi-val{font-size:18px;font-weight:700;line-height:1;margin-bottom:2px;}
 .kpi.c1 .kpi-val{color:var(--gold);}.kpi.c2 .kpi-val{color:var(--green);}.kpi.c3 .kpi-val{color:var(--red);}.kpi.c4 .kpi-val{color:var(--gold2);}.kpi.c5 .kpi-val{color:var(--blue);}
 .kpi-note{font-size:10px;color:var(--t4);}
@@ -308,16 +308,16 @@ tbody td{padding:7px 5px;font-size:11px;}
   </div>
   <div class="tc active" id="tab-dashboard">
     <div class="kpi-grid">
-      <div class="kpi c1"><div class="kpi-ico">📁</div><div class="kpi-lbl">إجمالي العقود</div><div class="kpi-val" id="k0">—</div><div class="kpi-note">كل المباني</div></div>
-      <div class="kpi c2"><div class="kpi-ico">✅</div><div class="kpi-lbl">المحصّل</div><div class="kpi-val" id="k1">—</div><div class="kpi-note" id="k1n">—</div></div>
-      <div class="kpi c3"><div class="kpi-ico">⚠️</div><div class="kpi-lbl">المتبقي</div><div class="kpi-val" id="k2">—</div><div class="kpi-note">يحتاج متابعة</div></div>
-      <div class="kpi c4" id="kpi-comm-card"><div class="kpi-ico">💰</div><div class="kpi-lbl">عمولاتك</div><div class="kpi-val" id="k3">—</div><div class="kpi-note" id="k3n">—</div></div>
-      <div class="kpi c5"><div class="kpi-ico">🔓</div><div class="kpi-lbl">عقود مفتوحة</div><div class="kpi-val" id="k4">—</div><div class="kpi-note" id="k4n">—</div></div>
+      <div class="kpi c1"><div class="kpi-ico"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div class="kpi-lbl">إجمالي العقود</div><div class="kpi-val" id="k0">—</div><div class="kpi-note">كل المباني</div></div>
+      <div class="kpi c2"><div class="kpi-ico"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="kpi-lbl">المحصّل</div><div class="kpi-val" id="k1">—</div><div class="kpi-note" id="k1n">—</div></div>
+      <div class="kpi c3"><div class="kpi-ico"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><div class="kpi-lbl">المتبقي</div><div class="kpi-val" id="k2">—</div><div class="kpi-note">يحتاج متابعة</div></div>
+      <div class="kpi c4" id="kpi-comm-card"><div class="kpi-ico"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="kpi-lbl">عمولاتك</div><div class="kpi-val" id="k3">—</div><div class="kpi-note" id="k3n">—</div></div>
+      <div class="kpi c5"><div class="kpi-ico"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg></div><div class="kpi-lbl">عقود مفتوحة</div><div class="kpi-val" id="k4">—</div><div class="kpi-note" id="k4n">—</div></div>
     </div>
     <div id="alerts-wrap"></div>
     <div class="g2">
-      <div class="card"><div class="card-hd"><div><div class="card-title">🚨 أكبر الديون</div></div><span class="badge b-red" id="bd-count">—</span></div><div id="top-debts"></div></div>
-      <div class="card"><div class="card-hd"><div><div class="card-title">⏰ تنتهي قريباً</div></div><span class="badge b-gold" id="exp-count">—</span></div><div id="top-expiry"></div></div>
+      <div class="card"><div class="card-hd"><div><div class="card-title">أكبر الديون</div></div><span class="badge b-red" id="bd-count">—</span></div><div id="top-debts"></div></div>
+      <div class="card"><div class="card-hd"><div><div class="card-title">تنتهي قريباً</div></div><span class="badge b-gold" id="exp-count">—</span></div><div id="top-expiry"></div></div>
     </div>
     <div class="g4">
       <div class="card"><div class="card-hd"><div class="card-title"><span class="pill pm">المنارا</span></div></div><div id="sum-m"></div></div>

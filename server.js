@@ -91,6 +91,7 @@ app.use('/api', require('./routes/api'));
 // ── Dashboard ────────────────────────────────────────────
 app.get('/dashboard', (req, res) => {
   if (!verifyToken(req.cookies?.fs_auth)) return res.redirect('/login');
+  res.setHeader('Cache-Control', 'no-store');
   res.sendFile(path.join(__dirname, 'views', 'dashboard.html'));
 });
 
