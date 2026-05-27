@@ -6,6 +6,7 @@
 <title>Barez — وحدات سكنية فاخرة في المدينة المنورة</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/client.css">
+<link rel="stylesheet" href="https://unpkg.com/aos@2.3.4/dist/aos.css">
 </head>
 <body class="home-page csb-layout">
 
@@ -50,6 +51,10 @@
      HERO
 ════════════════════════════════════ -->
 <section class="hero-section">
+  <canvas id="heroCanvas"></canvas>
+  <div class="hero-orb hero-orb--1"></div>
+  <div class="hero-orb hero-orb--2"></div>
+  <div class="hero-orb hero-orb--3"></div>
   <div class="hero-section__overlay"></div>
   <div class="hero-section__content">
     <div class="hero-section__badge">
@@ -64,10 +69,10 @@
     <!-- Quick Search Widget -->
     <form method="GET" action="/search" style="display:flex;gap:10px;max-width:560px;margin:0 auto 28px;width:100%;">
       <input type="text" name="q" placeholder="🔍  ابحث بالاسم أو الموقع أو المجمع..."
-        style="flex:1;padding:14px 18px;border-radius:12px;border:2px solid rgba(218,165,32,.3);background:rgba(255,255,255,.08);color:#fff;font-family:'Cairo',sans-serif;font-size:14px;outline:none;min-width:0;"
-        onfocus="this.style.borderColor='rgba(218,165,32,.7)'" onblur="this.style.borderColor='rgba(218,165,32,.3)'">
+        style="flex:1;padding:14px 18px;border-radius:12px;border:2px solid rgba(74,144,226,.35);background:rgba(255,255,255,.08);color:#fff;font-family:'Cairo',sans-serif;font-size:14px;outline:none;min-width:0;backdrop-filter:blur(8px);"
+        onfocus="this.style.borderColor='rgba(126,200,248,.8)';this.style.background='rgba(255,255,255,.12)'" onblur="this.style.borderColor='rgba(74,144,226,.35)';this.style.background='rgba(255,255,255,.08)'">
       <button type="submit"
-        style="padding:14px 24px;border-radius:12px;background:linear-gradient(135deg,#DAA520,#f0c040);border:none;color:#111;font-family:'Cairo',sans-serif;font-size:14px;font-weight:800;cursor:pointer;white-space:nowrap;flex-shrink:0;">
+        style="padding:14px 24px;border-radius:12px;background:linear-gradient(135deg,#1a3d8f,#2a5cc7);border:none;color:#fff;font-family:'Cairo',sans-serif;font-size:14px;font-weight:800;cursor:pointer;white-space:nowrap;flex-shrink:0;box-shadow:0 8px 24px rgba(26,61,143,.4);">
         بحث
       </button>
     </form>
@@ -136,7 +141,7 @@
 ════════════════════════════════════ -->
 <section class="about-intro">
   <div class="page-container">
-    <div class="about-intro__grid">
+    <div class="about-intro__grid" data-aos="fade-up" data-aos-duration="900">
       <div class="about-intro__text">
         <div class="sec-tag">من نحن</div>
         <h2 class="about-intro__title">شريكك الموثوق في <span class="c-gold">إدارة الأملاك والوساطة العقارية</span></h2>
@@ -434,6 +439,8 @@
 </footer>
 
 </div><!-- /csb-content -->
+<script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+<script src="https://unpkg.com/vanilla-tilt@1.8.1/dist/vanilla-tilt.min.js"></script>
 <script>
 function toggleSidebar(){
   document.getElementById('clientSidebar').classList.toggle('open');
@@ -445,6 +452,110 @@ function closeSidebar(){
   document.getElementById('csbOverlay').classList.remove('open');
   document.getElementById('csbHam').classList.remove('active');
 }
+
+/* ── AOS Init ── */
+AOS.init({ duration: 800, once: true, offset: 60 });
+
+/* ── 3D Tilt on Cards ── */
+VanillaTilt.init(document.querySelectorAll('.prop-card,.service-card,.kpi,.about-val,.vmv-card'), {
+  max: 8, speed: 400, glare: true, 'max-glare': 0.15, scale: 1.03
+});
+
+/* ── Hero Particle Network ── */
+(function() {
+  const canvas = document.getElementById('heroCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let W, H, particles = [], mouse = {x:-9999,y:-9999};
+  const N = 70, DIST = 150;
+
+  function resize() {
+    W = canvas.width  = canvas.offsetWidth;
+    H = canvas.height = canvas.offsetHeight;
+  }
+
+  class P {
+    constructor() { this.init(); }
+    init() {
+      this.x  = Math.random() * W;
+      this.y  = Math.random() * H;
+      this.vx = (Math.random() - .5) * .45;
+      this.vy = (Math.random() - .5) * .45;
+      this.r  = Math.random() * 1.8 + .8;
+      this.a  = Math.random() * .45 + .15;
+    }
+    move() {
+      this.x += this.vx; this.y += this.vy;
+      if (this.x < 0 || this.x > W) this.vx *= -1;
+      if (this.y < 0 || this.y > H) this.vy *= -1;
+      const dx = this.x - mouse.x, dy = this.y - mouse.y;
+      const d = Math.hypot(dx, dy);
+      if (d < 110) { const f = (110-d)/110*2.2; this.x += dx/d*f; this.y += dy/d*f; }
+    }
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(126,200,248,${this.a})`;
+      ctx.fill();
+    }
+  }
+
+  function lines() {
+    for (let i=0; i<N; i++) for (let j=i+1; j<N; j++) {
+      const dx = particles[i].x-particles[j].x, dy = particles[i].y-particles[j].y;
+      const d = Math.hypot(dx, dy);
+      if (d < DIST) {
+        ctx.beginPath();
+        ctx.moveTo(particles[i].x, particles[i].y);
+        ctx.lineTo(particles[j].x, particles[j].y);
+        ctx.strokeStyle = `rgba(74,144,226,${.22*(1-d/DIST)})`;
+        ctx.lineWidth = .7;
+        ctx.stroke();
+      }
+    }
+  }
+
+  function loop() {
+    ctx.clearRect(0,0,W,H);
+    particles.forEach(p => { p.move(); p.draw(); });
+    lines();
+    requestAnimationFrame(loop);
+  }
+
+  canvas.addEventListener('mousemove', e => {
+    const r = canvas.getBoundingClientRect();
+    mouse.x = e.clientX - r.left; mouse.y = e.clientY - r.top;
+  });
+  canvas.addEventListener('mouseleave', () => { mouse.x = -9999; mouse.y = -9999; });
+
+  window.addEventListener('resize', resize);
+  resize();
+  for (let i=0; i<N; i++) particles.push(new P());
+  loop();
+})();
+
+/* ── Animated Counters ── */
+document.querySelectorAll('.hero-stat-item__num').forEach(el => {
+  const txt = el.textContent.trim();
+  const num = parseInt(txt.replace(/\D/g,''));
+  if (!num || num < 2) return;
+  let start = 0, dur = 1800, step = num / (dur/16);
+  const suffix = txt.replace(/[\d]/g,'');
+  const timer = setInterval(() => {
+    start = Math.min(start + step, num);
+    el.textContent = Math.floor(start) + suffix;
+    if (start >= num) clearInterval(timer);
+  }, 16);
+});
+
+/* ── AOS for sections not already marked ── */
+document.querySelectorAll('.sec-header, .numbers-section .number-item, .prop-card, .service-card').forEach((el, i) => {
+  if (!el.dataset.aos) {
+    el.dataset.aos = 'fade-up';
+    el.dataset.aosDelay = String((i % 4) * 100);
+  }
+});
+AOS.refresh();
 </script>
 </body>
 </html>

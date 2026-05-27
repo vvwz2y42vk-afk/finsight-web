@@ -854,3 +854,267 @@ body.csb-layout {
 
 /* Adjust sticky booking box (no top navbar) */
 .listing-book-box { top: 24px; }
+
+/* ══════════════════════════════════════════════════════
+   BAREZ 3D WORLD-CLASS DESIGN SYSTEM
+══════════════════════════════════════════════════════ */
+
+/* ── Particle Canvas (Hero) ── */
+#heroCanvas {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  width: 100%;
+  height: 100%;
+}
+.hero-section { position: relative; overflow: hidden; }
+.hero-section__overlay { position: absolute; inset: 0; z-index: 0; }
+.hero-section__content { position: relative; z-index: 3; }
+.hero-section__scroll { position: absolute; z-index: 3; }
+
+/* ── Floating Orbs ── */
+.hero-orb {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 2;
+  filter: blur(90px);
+  will-change: transform;
+}
+.hero-orb--1 {
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(26,61,143,.35) 0%, transparent 70%);
+  top: -150px; left: -100px;
+  animation: orbFloat 9s ease-in-out infinite;
+}
+.hero-orb--2 {
+  width: 350px; height: 350px;
+  background: radial-gradient(circle, rgba(74,144,226,.25) 0%, transparent 70%);
+  bottom: 80px; right: 8%;
+  animation: orbFloat 12s ease-in-out infinite reverse 1s;
+}
+.hero-orb--3 {
+  width: 250px; height: 250px;
+  background: radial-gradient(circle, rgba(126,200,248,.2) 0%, transparent 70%);
+  top: 35%; left: 40%;
+  animation: orbFloat 15s ease-in-out infinite 3s;
+}
+@keyframes orbFloat {
+  0%,100% { transform: translate(0,0) scale(1); }
+  33%      { transform: translate(40px,-40px) scale(1.07); }
+  66%      { transform: translate(-25px,25px) scale(0.93); }
+}
+
+/* ── Glassmorphism ── */
+.glass {
+  background: rgba(255,255,255,.06);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 20px;
+}
+.hero-stats-bar {
+  background: rgba(255,255,255,.07) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255,255,255,.12) !important;
+  border-radius: 20px !important;
+}
+.hero-section__badge {
+  background: rgba(26,61,143,.25) !important;
+  border: 1px solid rgba(74,144,226,.4) !important;
+  backdrop-filter: blur(12px);
+}
+
+/* ── 3D Card Tilt (CSS fallback) ── */
+.prop-card {
+  transform-style: preserve-3d;
+  transition: transform .4s cubic-bezier(.175,.885,.32,1.275), box-shadow .4s ease;
+  will-change: transform;
+}
+.prop-card:hover {
+  transform: perspective(800px) rotateX(-4deg) translateY(-10px);
+  box-shadow: 0 30px 60px rgba(0,0,0,.18), 0 0 0 1px rgba(26,61,143,.15);
+}
+
+/* ── 3D Service Cards ── */
+.service-card {
+  transform-style: preserve-3d;
+  transition: transform .35s ease, box-shadow .35s ease;
+  will-change: transform;
+}
+.service-card:hover {
+  transform: perspective(700px) rotateX(-5deg) rotateY(3deg) translateY(-6px);
+  box-shadow: 0 20px 40px rgba(0,0,0,.3);
+}
+
+/* ── Gradient Animated Title ── */
+.hero-section__title--gold {
+  background: linear-gradient(135deg, #4a90e2, #7ec8f8, #2a5cc7, #a8d8f8);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradientFlow 4s ease infinite;
+}
+@keyframes gradientFlow {
+  0%,100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+
+/* ── Button Shimmer ── */
+.btn-gold {
+  position: relative;
+  overflow: hidden;
+}
+.btn-gold::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.25), transparent);
+  transform: skewX(-20deg);
+  animation: shimmer 2.5s ease infinite;
+}
+@keyframes shimmer {
+  0%   { left: -100%; }
+  100% { left: 200%; }
+}
+
+/* ── 3D Button Press ── */
+.btn {
+  transition: all .2s cubic-bezier(.175,.885,.32,1.275);
+}
+.btn:hover  { transform: translateY(-3px); }
+.btn:active { transform: translateY(0) scale(.97); }
+
+/* ── Floating Animation ── */
+.float-anim {
+  animation: floatUp 3s ease-in-out infinite;
+}
+@keyframes floatUp {
+  0%,100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+
+/* ── Glow Pulse ── */
+.glow-pulse {
+  animation: glowPulse 2.5s ease-in-out infinite;
+}
+@keyframes glowPulse {
+  0%,100% { box-shadow: 0 0 20px rgba(74,144,226,.3); }
+  50%      { box-shadow: 0 0 40px rgba(74,144,226,.7), 0 0 80px rgba(74,144,226,.2); }
+}
+
+/* ── Counter Highlight ── */
+.hero-stat-item__num {
+  background: linear-gradient(135deg, #fff 60%, #7ec8f8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-size: 2.2rem !important;
+}
+
+/* ── Section Reveal (AOS custom) ── */
+[data-aos] { opacity: 0; transition: opacity .7s ease, transform .7s cubic-bezier(.25,.46,.45,.94); }
+[data-aos="fade-up"]    { transform: translateY(40px); }
+[data-aos="fade-right"] { transform: translateX(-40px); }
+[data-aos="fade-left"]  { transform: translateX(40px); }
+[data-aos="zoom-in"]    { transform: scale(.9); }
+[data-aos].aos-animate  { opacity: 1; transform: none; }
+
+/* ── Background Grid ── */
+.csb-content::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(26,61,143,.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(26,61,143,.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+.csb-content > * { position: relative; z-index: 1; }
+
+/* ── Numbers Section 3D ── */
+.numbers-section { position: relative; overflow: hidden; }
+.numbers-section::before {
+  content: '';
+  position: absolute;
+  inset: -50%;
+  background: radial-gradient(ellipse at 50% 50%, rgba(255,255,255,.08) 0%, transparent 60%);
+  animation: rotateBg 20s linear infinite;
+}
+@keyframes rotateBg {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ── About Image 3D Depth ── */
+.about-intro__visual { perspective: 1000px; }
+.about-img {
+  transition: transform .5s ease;
+  transform-style: preserve-3d;
+}
+.about-intro__visual:hover .about-img {
+  transform: perspective(1000px) rotateY(-5deg) rotateX(3deg) scale(1.02);
+}
+
+/* ── Marquee Glow ── */
+.marquee-strip {
+  background: linear-gradient(135deg, #1a3d8f, #0c1e50) !important;
+  position: relative;
+  overflow: hidden;
+}
+.marquee-strip::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,.06) 50%, transparent 100%);
+  animation: scanLine 3s ease-in-out infinite;
+}
+@keyframes scanLine {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+.marquee-track { color: rgba(255,255,255,.85) !important; }
+
+/* ── CTA Section Glow ── */
+.cta-section { position: relative; overflow: hidden; }
+.cta-section::before {
+  content: '';
+  position: absolute;
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(26,61,143,.3) 0%, transparent 70%);
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  animation: ctaGlow 5s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes ctaGlow {
+  0%,100% { transform: translate(-50%,-50%) scale(1); opacity: .6; }
+  50%      { transform: translate(-50%,-50%) scale(1.3); opacity: 1; }
+}
+
+/* ── Property Tag 3D ── */
+.prop-tag {
+  transition: all .2s ease;
+}
+.prop-card:hover .prop-tag {
+  transform: translateZ(10px);
+  background: rgba(26,61,143,.15) !important;
+  color: #1a3d8f !important;
+}
+
+/* ── Footer Brand Logo ── */
+.footer-brand__logo img { filter: brightness(0) invert(1); }
+
+/* ── Hamburger Dark Fix ── */
+.csb-ham {
+  background: #071530 !important;
+  border-color: rgba(74,144,226,.35) !important;
+}
+.csb-ham span { background: #7ec8f8 !important; }
