@@ -451,6 +451,40 @@ router.put('/hosts/:id/suspend', auth, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ─── Staff Performance Leaderboard ───────────────────────
+router.get('/staff-performance', auth, async (req, res) => {
+  try {
+    const AL = require('../models/ActivityLog');
+    const Booking = require('../models/Booking');
+
+    const since = new Date();
+    since.setDate(since.getDate() - 30);
+
+    const [logs, bookings] = await Promise.all([
+      AL.find({ createdAt: { $gte: since } }).lean(),
+      Booking.find({ createdAt: { $gte: since } }).lean(),
+    ]);
+
+    const map = {};
+    const inc = (name, key) => {
+      if (!name) return;
+      if (!map[name]) map[name] = { name, checkIn: 0, checkOut: 0, bookingAdd: 0, housekeeping: 0, total: 0 };
+      map[name][key]++;
+      map[name].total++;
+    };
+
+    logs.forEach(l => {
+      if (l.action === 'check_in')      inc(l.staffName, 'checkIn');
+      else if (l.action === 'check_out') inc(l.staffName, 'checkOut');
+      else if (l.action === 'booking_add') inc(l.staffName, 'bookingAdd');
+      else if (l.action === 'housekeeping') inc(l.staffName, 'housekeeping');
+    });
+
+    const staff = Object.values(map).sort((a, b) => b.total - a.total);
+    res.json(staff);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // ─── All-buildings Activity Log (admin) ──────────────────
 router.get('/activity', auth, async (req, res) => {
   try {

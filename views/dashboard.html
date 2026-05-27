@@ -353,6 +353,25 @@ tbody td{padding:7px 5px;font-size:11px;}
         </div>
       </div>
     </div>
+    <!-- ══ Pipeline + Staff Leaderboard ══ -->
+    <div class="g2" style="margin-bottom:10px;">
+
+      <!-- Booking Pipeline Funnel -->
+      <div class="card">
+        <div class="card-hd"><div class="card-title">مسار الحجوزات</div><span style="font-size:9px;color:var(--t3);">الإشغال الحالي</span></div>
+        <div id="pipeline-wrap" style="padding:4px 0;"></div>
+      </div>
+
+      <!-- Staff Leaderboard -->
+      <div class="card">
+        <div class="card-hd">
+          <div class="card-title">أداء الموظفين</div>
+          <span style="font-size:9px;color:var(--t3);">آخر 30 يوم</span>
+        </div>
+        <div id="staff-leaderboard"></div>
+      </div>
+
+    </div>
   </div>
   <div class="tc" id="tab-contracts">
     <div class="sr">
@@ -1935,6 +1954,7 @@ function updateAptsBadges(){
   const ro=document.getElementById('aptsOccRate');
   if(ro)ro.innerHTML=`نسبة الإشغال: <span style="color:var(--gold);font-size:16px;">${rate}%</span> <span style="font-weight:400;font-size:11px;">(${totOcc}/${totAll})</span>`;
   renderBuildingCards();
+  renderPipeline();
 }
 
 function renderBuildingCards(){
@@ -1969,6 +1989,68 @@ function renderBuildingCards(){
       </div>
     </div>`;
   }).join('');
+}
+
+// ── Booking Pipeline ────────────────────────────────────
+function renderPipeline(){
+  const el=document.getElementById('pipeline-wrap');
+  if(!el||!aptsData)return;
+  const counts={vacant:0,awaiting_payment:0,awaiting:0,checkin_today:0,occupied:0,checkout_today:0};
+  let total=0;
+  Object.values(aptsData).forEach(b=>b.floors.forEach(f=>f.rooms.forEach(r=>{
+    counts[r.status]=(counts[r.status]||0)+1; total++;
+  })));
+  const stages=[
+    {key:'vacant',        lbl:'شاغر',           color:'#1A7340', bg:'rgba(26,115,64,.08)'},
+    {key:'awaiting_payment',lbl:'انتظار الدفع',  color:'#1a3d8f', bg:'rgba(26,61,143,.08)'},
+    {key:'awaiting',      lbl:'انتظار الدخول',   color:'#7D6608', bg:'rgba(125,102,8,.08)'},
+    {key:'checkin_today', lbl:'وصول اليوم',      color:'#1A5276', bg:'rgba(26,82,118,.1)'},
+    {key:'occupied',      lbl:'مؤجر',            color:'#C0392B', bg:'rgba(192,57,43,.07)'},
+    {key:'checkout_today',lbl:'خروج اليوم',      color:'#A04000', bg:'rgba(160,64,0,.08)'},
+  ];
+  el.innerHTML=stages.map(s=>{
+    const n=counts[s.key]||0;
+    const pct=total?Math.round(n/total*100):0;
+    return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--b);">
+      <div style="width:80px;font-size:10px;font-weight:600;color:${s.color};flex-shrink:0;">${s.lbl}</div>
+      <div style="flex:1;background:var(--b);border-radius:20px;height:6px;overflow:hidden;">
+        <div style="width:${pct}%;height:100%;background:${s.color};border-radius:20px;transition:width .8s;"></div>
+      </div>
+      <div style="width:28px;text-align:center;font-size:11px;font-weight:700;color:${s.color};">${n}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── Staff Leaderboard ────────────────────────────────────
+async function loadStaffPerformance(){
+  try{
+    const r=await fetch('/api/staff-performance');
+    if(!r.ok)return;
+    const staff=await r.json();
+    renderStaffLeaderboard(staff);
+  }catch(e){}
+}
+
+function renderStaffLeaderboard(staff){
+  const el=document.getElementById('staff-leaderboard');
+  if(!el)return;
+  if(!staff||!staff.length){
+    el.innerHTML='<div style="text-align:center;padding:20px;color:var(--t3);font-size:11px;">لا توجد بيانات بعد</div>';
+    return;
+  }
+  const medals=['🥇','🥈','🥉'];
+  el.innerHTML=staff.map((s,i)=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--b);font-size:11px;">
+      <div style="width:20px;text-align:center;font-size:13px;">${medals[i]||'#'+(i+1)}</div>
+      <div style="flex:1;font-weight:700;">${s.name}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
+        ${s.checkIn>0?`<span style="padding:2px 7px;border-radius:10px;background:var(--gg);color:var(--green);">↓${s.checkIn}</span>`:''}
+        ${s.checkOut>0?`<span style="padding:2px 7px;border-radius:10px;background:rgba(160,64,0,.08);color:#A04000;">↑${s.checkOut}</span>`:''}
+        ${s.bookingAdd>0?`<span style="padding:2px 7px;border-radius:10px;background:var(--gl);color:var(--gold);">+${s.bookingAdd} حجز</span>`:''}
+        ${s.housekeeping>0?`<span style="padding:2px 7px;border-radius:10px;background:var(--b);color:var(--t3);">🧹${s.housekeeping}</span>`:''}
+      </div>
+      <div style="width:28px;text-align:center;font-size:12px;font-weight:700;color:var(--t1);">${s.total}</div>
+    </div>`).join('');
 }
 
 async function loadActivity(){
@@ -2176,7 +2258,7 @@ async function adminCloseConv(id){
   }catch(e){}
 }
 
-window.addEventListener('load',()=>{loadUser();loadData();loadListings();loadBookings();loadHosts();loadMessages();loadApts();loadActivity();setInterval(loadData,60000);setInterval(loadMessages,30000);setInterval(loadApts,30000);setInterval(loadBookings,30000);setInterval(loadActivity,30000);if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});});
+window.addEventListener('load',()=>{loadUser();loadData();loadListings();loadBookings();loadHosts();loadMessages();loadApts();loadActivity();loadStaffPerformance();setInterval(loadData,60000);setInterval(loadMessages,30000);setInterval(loadApts,30000);setInterval(loadBookings,30000);setInterval(loadActivity,30000);setInterval(loadStaffPerformance,120000);if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});});
 </script>
 </body>
 </html>

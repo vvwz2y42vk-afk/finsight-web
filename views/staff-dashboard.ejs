@@ -303,6 +303,40 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
         <div class="kpi-c"><div class="kpi-ico" style="background:rgba(26,61,143,.1);color:#1a3d8f;"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div class="kpi-num" id="k-new">—</div><div class="kpi-lbl">حجوزات جديدة</div></div>
         <div class="kpi-c"><div class="kpi-ico" style="background:rgba(15,23,42,.07);color:#0F172A;"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><div class="kpi-num" id="k-rate">—%</div><div class="kpi-lbl">نسبة الإشغال</div></div>
       </div>
+      <!-- جدول اليوم -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;" id="today-schedule-wrap">
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:14px;">
+          <div style="font-size:11px;font-weight:700;color:#1A5276;margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="7 10 12 15 17 10"/></svg>
+            وصول اليوم
+          </div>
+          <div id="today-arrivals" style="display:flex;flex-direction:column;gap:6px;max-height:160px;overflow-y:auto;"></div>
+        </div>
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:14px;">
+          <div style="font-size:11px;font-weight:700;color:#A04000;margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="17 14 12 9 7 14"/></svg>
+            مغادرة اليوم
+          </div>
+          <div id="today-departures" style="display:flex;flex-direction:column;gap:6px;max-height:160px;overflow-y:auto;"></div>
+        </div>
+      </div>
+
+      <!-- شريط التقدم الشهري -->
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:14px;margin-bottom:14px;" id="monthly-progress-wrap">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <div style="font-size:12px;font-weight:700;color:#1e3a5f;">إنجاز الشهر</div>
+          <div style="font-size:10px;color:#64748b;" id="monthly-label">— / — حجز</div>
+        </div>
+        <div style="background:#f1f5f9;border-radius:20px;height:8px;overflow:hidden;margin-bottom:8px;">
+          <div id="monthly-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#1a3d8f,#2a5cc7);border-radius:20px;transition:width 1s;"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:#94a3b8;">
+          <span>0%</span>
+          <span id="monthly-pct" style="font-weight:700;color:#1a3d8f;">0%</span>
+          <span>الهدف: <span id="monthly-target">20</span> حجز</span>
+        </div>
+      </div>
+
       <div class="charts-row">
         <div class="chart-card">
           <div class="chart-title">حالة الشقق الأسبوعية</div>
@@ -791,12 +825,52 @@ async function loadApartments(){
     aptsRawData=await r.json();
     renderAptGrid();
     updateAptCounts();
+    renderTodaySchedule();
+    renderMonthlyProgress();
     const el=document.getElementById('apt-sync-time');
     if(el) el.textContent=new Date().toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
   }catch(e){
     const el=document.getElementById('apt-sync-dot');
     if(el){el.style.background='#B91C1C';}
   }
+}
+
+function renderTodaySchedule(){
+  if(!aptsRawData) return;
+  const arrivals=[], departures=[];
+  aptsRawData.floors.forEach(f=>f.rooms.forEach(r=>{
+    if(r.status==='checkin_today') arrivals.push(r);
+    else if(r.status==='checkout_today') departures.push(r);
+  }));
+
+  const card = (r,color) => `<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:#f8fafc;border-radius:8px;border-right:3px solid ${color};">
+    <div style="flex:1;min-width:0;">
+      <div style="font-size:11px;font-weight:700;color:#1e3a5f;">${esc(r.apt)}</div>
+      <div style="font-size:10px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${r.name?esc(r.name):'—'}</div>
+    </div>
+  </div>`;
+
+  const arrEl=document.getElementById('today-arrivals');
+  const depEl=document.getElementById('today-departures');
+  if(arrEl) arrEl.innerHTML=arrivals.length?arrivals.map(r=>card(r,'#1A5276')).join(''):'<div style="font-size:10px;color:#94a3b8;text-align:center;padding:8px;">لا يوجد وصول</div>';
+  if(depEl) depEl.innerHTML=departures.length?departures.map(r=>card(r,'#A04000')).join(''):'<div style="font-size:10px;color:#94a3b8;text-align:center;padding:8px;">لا يوجد مغادرة</div>';
+}
+
+function renderMonthlyProgress(){
+  if(!aptsRawData) return;
+  const target=20;
+  let booked=0;
+  aptsRawData.floors.forEach(f=>f.rooms.forEach(r=>{
+    if(['occupied','checkout_today','checkin_today','awaiting','awaiting_payment'].includes(r.status)) booked++;
+  }));
+  const pct=Math.min(Math.round(booked/target*100),100);
+  const bar=document.getElementById('monthly-bar');
+  const pctEl=document.getElementById('monthly-pct');
+  const lbl=document.getElementById('monthly-label');
+  if(bar) bar.style.width=pct+'%';
+  if(bar) bar.style.background=pct>=100?'linear-gradient(90deg,#047857,#10b981)':'linear-gradient(90deg,#1a3d8f,#2a5cc7)';
+  if(pctEl) pctEl.textContent=pct+'%';
+  if(lbl) lbl.textContent=booked+' / '+target+' وحدة مشغولة';
 }
 
 function updateAptCounts(){
