@@ -548,6 +548,38 @@ router.get('/apartments/grid', auth, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ─── Weekly Occupancy Stats ───────────────────────────────
+router.get('/weekly-stats', auth, async (req, res) => {
+  try {
+    const Booking = require('../models/Booking');
+    const today = new Date(); today.setHours(0,0,0,0);
+
+    const totalApts = Object.values(GRID_BUILDINGS).reduce((sum,b)=>sum+b.floors.reduce((s,f)=>s+f.r.length,0),0);
+
+    const since = new Date(today); since.setDate(today.getDate()-6);
+    const bookings = await Booking.find({
+      status:{ $in:['active','checkout','awaiting_checkin'] },
+      checkIn:{ $exists:true }, checkOut:{ $exists:true },
+    }).select('checkIn checkOut status').lean();
+
+    const weekly=[];
+    for(let i=6;i>=0;i--){
+      const d=new Date(today); d.setDate(today.getDate()-i);
+      const nd=new Date(d); nd.setDate(d.getDate()+1);
+      const occ=bookings.filter(b=>{
+        if(!b.checkIn||!b.checkOut)return false;
+        return new Date(b.checkIn)<nd && new Date(b.checkOut)>d;
+      }).length;
+      weekly.push({
+        label:d.toLocaleDateString('ar-SA',{weekday:'short',day:'numeric',month:'numeric'}),
+        date:d.toISOString().split('T')[0],
+        occupied:occ,
+      });
+    }
+    res.json({weekly,total:totalApts});
+  } catch(e){ res.status(500).json({error:e.message}); }
+});
+
 // ─── Messaging (admin) ───────────────────────────────────
 router.get('/conversations', auth, async (req, res) => {
   try {

@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Barez Pro — لوحة إدارة العقارات</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#1a3d8f">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -323,6 +324,15 @@ tbody td{padding:7px 5px;font-size:11px;}
 
     <!-- ══ مركزية المباني ══ -->
     <div class="g4" id="bld-cards" style="margin-bottom:10px;"></div>
+
+    <!-- ══ حالة الشقق الأسبوعية ══ -->
+    <div class="card" style="margin-bottom:10px;">
+      <div class="card-hd">
+        <div><div class="card-title">حالة الشقق الأسبوعية</div><div class="card-sub">إشغال آخر 7 أيام — جميع المباني</div></div>
+        <span style="font-size:9px;color:var(--t4);" id="weekly-sync"></span>
+      </div>
+      <canvas id="adminWeeklyChart" height="140"></canvas>
+    </div>
 
     <div id="alerts-wrap"></div>
 
@@ -2258,7 +2268,49 @@ async function adminCloseConv(id){
   }catch(e){}
 }
 
-window.addEventListener('load',()=>{loadUser();loadData();loadListings();loadBookings();loadHosts();loadMessages();loadApts();loadActivity();loadStaffPerformance();setInterval(loadData,60000);setInterval(loadMessages,30000);setInterval(loadApts,30000);setInterval(loadBookings,30000);setInterval(loadActivity,30000);setInterval(loadStaffPerformance,120000);if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});});
+// ── Weekly Chart ─────────────────────────────────────────
+let adminWeeklyChartInst=null;
+
+async function loadWeeklyStats(){
+  try{
+    const r=await fetch('/api/weekly-stats');
+    if(!r.ok)return;
+    const d=await r.json();
+    renderAdminWeeklyChart(d.weekly,d.total);
+    const el=document.getElementById('weekly-sync');
+    if(el) el.textContent=new Date().toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
+  }catch(e){}
+}
+
+function renderAdminWeeklyChart(weekly,total){
+  const canvas=document.getElementById('adminWeeklyChart');
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  if(adminWeeklyChartInst) adminWeeklyChartInst.destroy();
+  adminWeeklyChartInst=new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:weekly.map(w=>w.label),
+      datasets:[
+        {label:'محجوز',data:weekly.map(w=>w.occupied),backgroundColor:'rgba(185,28,28,.75)',hoverBackgroundColor:'rgba(185,28,28,.9)',borderRadius:6,borderSkipped:false},
+        {label:'شاغر',data:weekly.map(w=>Math.max(0,total-w.occupied)),backgroundColor:'rgba(4,120,87,.55)',hoverBackgroundColor:'rgba(4,120,87,.75)',borderRadius:6,borderSkipped:false},
+      ]
+    },
+    options:{
+      responsive:true,
+      plugins:{
+        legend:{position:'top',rtl:true,labels:{font:{family:'IBM Plex Sans Arabic',size:11},boxWidth:12,padding:8}},
+        tooltip:{rtl:true,bodyFont:{family:'IBM Plex Sans Arabic'},titleFont:{family:'IBM Plex Sans Arabic'},callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y}`}},
+      },
+      scales:{
+        x:{stacked:true,ticks:{font:{family:'IBM Plex Sans Arabic',size:10},maxRotation:0},grid:{display:false}},
+        y:{stacked:true,beginAtZero:true,max:total+2,ticks:{font:{family:'IBM Plex Sans Arabic',size:10},stepSize:Math.ceil(total/4)},grid:{color:'rgba(0,0,0,.05)'}},
+      },
+    }
+  });
+}
+
+window.addEventListener('load',()=>{loadUser();loadData();loadListings();loadBookings();loadHosts();loadMessages();loadApts();loadActivity();loadStaffPerformance();loadWeeklyStats();setInterval(loadData,60000);setInterval(loadMessages,30000);setInterval(loadApts,30000);setInterval(loadBookings,30000);setInterval(loadActivity,30000);setInterval(loadStaffPerformance,120000);setInterval(loadWeeklyStats,300000);if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});});
 </script>
 </body>
 </html>
