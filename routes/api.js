@@ -580,6 +580,18 @@ router.get('/weekly-stats', auth, async (req, res) => {
   } catch(e){ res.status(500).json({error:e.message}); }
 });
 
+// ─── Housekeeping Stats (admin) ───────────────────────────
+router.get('/housekeeping-stats', auth, async (req, res) => {
+  try {
+    const HK = require('../models/HousekeepingTask');
+    const tasks = await HK.find({}).lean();
+    const totalRooms = Object.values(GRID_BUILDINGS).reduce((sum,b)=>sum+b.floors.reduce((s,f)=>s+f.r.length,0),0);
+    const dirty = tasks.filter(t=>t.status==='dirty'||t.status==='inspection'||t.status==='maintenance').length;
+    const clean = totalRooms - dirty;
+    res.json({ clean, dirty, total: totalRooms });
+  } catch(e){ res.status(500).json({ error: e.message }); }
+});
+
 // ─── Messaging (admin) ───────────────────────────────────
 router.get('/conversations', auth, async (req, res) => {
   try {
