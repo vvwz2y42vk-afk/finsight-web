@@ -325,13 +325,29 @@ tbody td{padding:7px 5px;font-size:11px;}
     <!-- ══ مركزية المباني ══ -->
     <div class="g4" id="bld-cards" style="margin-bottom:10px;"></div>
 
-    <!-- ══ حالة الشقق الأسبوعية ══ -->
-    <div class="card" style="margin-bottom:10px;">
-      <div class="card-hd">
-        <div><div class="card-title">حالة الشقق الأسبوعية</div><div class="card-sub">إشغال آخر 7 أيام — جميع المباني</div></div>
-        <span style="font-size:9px;color:var(--t4);" id="weekly-sync"></span>
+    <!-- ══ حالة الشقق الأسبوعية + الدائري ══ -->
+    <div class="g2" style="margin-bottom:10px;">
+      <div class="card">
+        <div class="card-hd">
+          <div><div class="card-title">حالة الشقق الأسبوعية</div><div class="card-sub">إشغال آخر 7 أيام — جميع المباني</div></div>
+          <span style="font-size:9px;color:var(--t4);" id="weekly-sync"></span>
+        </div>
+        <canvas id="adminWeeklyChart" height="190"></canvas>
       </div>
-      <canvas id="adminWeeklyChart" height="140"></canvas>
+      <div class="card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
+        <div class="card-hd" style="width:100%;"><div class="card-title">حالة الشقق</div></div>
+        <div style="position:relative;width:180px;height:180px;margin:12px auto 8px;">
+          <canvas id="adminDonutChart"></canvas>
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;">
+            <div style="font-size:22px;font-weight:700;color:var(--t);" id="donut-rate">—</div>
+            <div style="font-size:10px;color:var(--t3);">إشغال</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:16px;font-size:11px;margin-bottom:8px;">
+          <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:rgba(185,28,28,.75);margin-left:4px;"></span>محجوز <b id="donut-occ">—</b></span>
+          <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:rgba(4,120,87,.55);margin-left:4px;"></span>شاغر <b id="donut-vac">—</b></span>
+        </div>
+      </div>
     </div>
 
     <div id="alerts-wrap"></div>
@@ -1965,6 +1981,7 @@ function updateAptsBadges(){
   if(ro)ro.innerHTML=`نسبة الإشغال: <span style="color:var(--gold);font-size:16px;">${rate}%</span> <span style="font-weight:400;font-size:11px;">(${totOcc}/${totAll})</span>`;
   renderBuildingCards();
   renderPipeline();
+  renderAdminDonut(totOcc,totAll);
 }
 
 function renderBuildingCards(){
@@ -2266,6 +2283,32 @@ async function adminCloseConv(id){
     adminOpenConv(id);
     loadMessages();
   }catch(e){}
+}
+
+// ── Donut Chart ───────────────────────────────────────────
+let adminDonutInst=null;
+
+function renderAdminDonut(occupied,total){
+  const canvas=document.getElementById('adminDonutChart');
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  if(adminDonutInst) adminDonutInst.destroy();
+  const vacant=Math.max(0,total-occupied);
+  adminDonutInst=new Chart(ctx,{
+    type:'doughnut',
+    data:{
+      labels:['محجوز','شاغر'],
+      datasets:[{data:[occupied,vacant],backgroundColor:['rgba(185,28,28,.75)','rgba(4,120,87,.55)'],hoverBackgroundColor:['rgba(185,28,28,.9)','rgba(4,120,87,.75)'],borderWidth:0,borderRadius:4}]
+    },
+    options:{
+      responsive:true,cutout:'70%',
+      plugins:{legend:{display:false},tooltip:{rtl:true,bodyFont:{family:'IBM Plex Sans Arabic'},callbacks:{label:ctx=>`${ctx.label}: ${ctx.parsed}`}}},
+    }
+  });
+  const rate=total?Math.round(occupied/total*100):0;
+  const r=document.getElementById('donut-rate');if(r) r.textContent=rate+'%';
+  const o=document.getElementById('donut-occ');if(o) o.textContent=occupied;
+  const v=document.getElementById('donut-vac');if(v) v.textContent=vacant;
 }
 
 // ── Weekly Chart ─────────────────────────────────────────
