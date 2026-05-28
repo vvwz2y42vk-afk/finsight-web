@@ -328,12 +328,14 @@ tbody td{padding:7px 5px;font-size:11px;}
 
     <!-- ══ حالة الشقق الأسبوعية + الدائري ══ -->
     <div class="charts-row-admin">
-      <div class="card">
+      <div class="card" style="min-width:0;overflow:hidden;">
         <div class="card-hd">
           <div><div class="card-title">حالة الشقق الأسبوعية</div><div class="card-sub">إشغال آخر 7 أيام — جميع المباني</div></div>
           <span style="font-size:9px;color:var(--t4);" id="weekly-sync"></span>
         </div>
-        <canvas id="adminWeeklyChart" height="180"></canvas>
+        <div style="width:100%;height:200px;overflow:hidden;">
+          <canvas id="adminWeeklyChart" style="max-width:100%;height:200px!important;"></canvas>
+        </div>
       </div>
       <div class="card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
         <div class="card-hd" style="width:100%;"><div class="card-title">حالة الشقق</div></div>
@@ -2383,6 +2385,8 @@ async function loadWeeklyStats(){
 function renderAdminWeeklyChart(weekly,total){
   const canvas=document.getElementById('adminWeeklyChart');
   if(!canvas)return;
+  // Force fixed pixel size — bypasses CSS grid timing issue
+  canvas.width=580; canvas.height=200;
   const ctx=canvas.getContext('2d');
   if(adminWeeklyChartInst) adminWeeklyChartInst.destroy();
   adminWeeklyChartInst=new Chart(ctx,{
@@ -2395,7 +2399,7 @@ function renderAdminWeeklyChart(weekly,total){
       ]
     },
     options:{
-      responsive:true,aspectRatio:3.2,
+      responsive:false,
       plugins:{
         legend:{position:'top',rtl:true,labels:{font:{family:'IBM Plex Sans Arabic',size:11},boxWidth:12,padding:8}},
         tooltip:{rtl:true,bodyFont:{family:'IBM Plex Sans Arabic'},titleFont:{family:'IBM Plex Sans Arabic'},callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y}`}},
