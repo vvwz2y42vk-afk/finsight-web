@@ -217,15 +217,49 @@ router.post('/api/bookings/new', reqStaff, async (req,res) => {
 router.get('/api/customers', reqStaff, async (req,res) => {
   try {
     const B = require('../models/Booking');
-    const q = (req.query.q||'').trim();
-    const all = await B.find({building:req.staff.building,status:{$nin:['cancelled']}}).sort({createdAt:-1}).lean();
-    const seen=new Set(), out=[];
-    all.forEach(b=>{
-      if(!b.phone||seen.has(b.phone)) return;
-      if(q&&!b.name?.includes(q)&&!b.phone?.includes(q)&&!b.apt?.includes(q)) return;
-      seen.add(b.phone);
-      out.push({name:b.name,phone:b.phone,apt:b.apt,checkIn:b.checkIn,checkOut:b.checkOut,status:b.status,bookingType:b.bookingType,totalPrice:b.totalPrice,bookingId:b._id});
-    });
+    const { q='', sf='open', apt='', booking_type='', date_from='', date_to='', booking_num='' } = req.query;
+    const today = new Date(); today.setHours(0,0,0,0);
+    const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate()+1);
+
+    const filter = { building: req.staff.building };
+
+    // Status filter
+    if      (sf==='open')                  filter.status = { $nin:['cancelled','checkout'] };
+    else if (sf==='active')                filter.status = 'active';
+    else if (sf==='pending_checkin')       filter.status = { $in:['pending','awaiting_payment','awaiting_checkin'] };
+    else if (sf==='today_arrival_pending') { filter.checkIn={$gte:today,$lt:tomorrow}; filter.status={$ne:'active'}; }
+    else if (sf==='today_arrival_done')    { filter.checkIn={$gte:today,$lt:tomorrow}; filter.status='active'; }
+    else if (sf==='today_arrival_all')     filter.checkIn = { $gte:today,$lt:tomorrow };
+    else if (sf==='today_dep_pending')     { filter.checkOut={$gte:today,$lt:tomorrow}; filter.status='active'; }
+    else if (sf==='today_dep_done')        { filter.checkOut={$gte:today,$lt:tomorrow}; filter.status='checkout'; }
+    else if (sf==='today_dep_all')         filter.checkOut = { $gte:today,$lt:tomorrow };
+    else if (sf==='closed')                filter.status = 'checkout';
+    else if (sf==='cancelled')             filter.status = 'cancelled';
+    // sf==='all' → no status filter
+
+    if (apt)          filter.apt = apt;
+    if (booking_type) filter.bookingType = booking_type;
+    if (date_from)    filter.checkIn = { ...(filter.checkIn||{}), $gte: new Date(date_from) };
+    if (date_to)      filter.checkIn = { ...(filter.checkIn||{}), $lte: new Date(date_to) };
+
+    let bookings = await B.find(filter).sort({ createdAt:-1 }).limit(200).lean();
+
+    // Text search
+    const qs = q.trim();
+    if (qs) bookings = bookings.filter(b =>
+      b.name?.includes(qs) || b.phone?.includes(qs) || b.apt?.includes(qs) || b._id.toString().endsWith(qs)
+    );
+    // Booking number search
+    if (booking_num.trim()) bookings = bookings.filter(b => b._id.toString().slice(-5) === booking_num.trim());
+
+    const out = bookings.map(b => ({
+      bookingNum: b._id.toString().slice(-5).toUpperCase(),
+      name: b.name, phone: b.phone, apt: b.apt,
+      checkIn: b.checkIn, checkOut: b.checkOut,
+      status: b.status, bookingType: b.bookingType,
+      totalPrice: b.totalPrice, paidAmount: b.paidAmount||0,
+      source: b.source||'', bookingId: b._id,
+    }));
     res.json(out);
   } catch(e){ res.status(500).json({error:e.message}); }
 });

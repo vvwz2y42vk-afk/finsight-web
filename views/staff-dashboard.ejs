@@ -405,16 +405,77 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
 
     <!-- ── Customers ── -->
     <div class="tab-section" id="tab-customers">
-      <div class="search-bar">
-        <input type="text" class="sinp" id="custSearch" placeholder="ابحث بالاسم أو الجوال أو رقم الشقة..." oninput="loadCustomers()">
+
+      <!-- ── فلاتر البحث ── -->
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:14px 16px;margin-bottom:12px;">
+
+        <!-- صف 1: بحث نصي + رقم الحجز + الشقة + نوع الإيجار -->
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;margin-bottom:8px;">
+          <div style="display:flex;flex-direction:column;gap:3px;">
+            <label style="font-size:10px;font-weight:700;color:#1a3d8f;">اسم العميل / الجوال</label>
+            <input type="text" id="custSearch" class="sinp" placeholder="ابحث..." oninput="loadCustomers()" style="padding:7px 10px;font-size:12px;">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:3px;">
+            <label style="font-size:10px;font-weight:700;color:#1a3d8f;">رقم الحجز</label>
+            <input type="text" id="custBookingNum" class="sinp" placeholder="آخر 5 أرقام" oninput="loadCustomers()" style="padding:7px 10px;font-size:12px;">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:3px;">
+            <label style="font-size:10px;font-weight:700;color:#1a3d8f;">الشقة</label>
+            <input type="text" id="custApt" class="sinp" placeholder="رقم الشقة" oninput="loadCustomers()" style="padding:7px 10px;font-size:12px;">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:3px;">
+            <label style="font-size:10px;font-weight:700;color:#1a3d8f;">نوع الإيجار</label>
+            <select id="custType" class="sinp" onchange="loadCustomers()" style="padding:7px 10px;font-size:12px;">
+              <option value="">الكل</option>
+              <option value="daily">يومي</option>
+              <option value="annual">شهري</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- صف 2: من تاريخ + إلى تاريخ + حالة الحجز + مسح -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 2fr auto;gap:8px;align-items:flex-end;">
+          <div style="display:flex;flex-direction:column;gap:3px;">
+            <label style="font-size:10px;font-weight:700;color:#1a3d8f;">من تاريخ</label>
+            <input type="date" id="custDateFrom" class="sinp" onchange="loadCustomers()" style="padding:7px 10px;font-size:12px;">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:3px;">
+            <label style="font-size:10px;font-weight:700;color:#1a3d8f;">إلى تاريخ</label>
+            <input type="date" id="custDateTo" class="sinp" onchange="loadCustomers()" style="padding:7px 10px;font-size:12px;">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:3px;">
+            <label style="font-size:10px;font-weight:700;color:#1a3d8f;">حالة الحجز</label>
+            <select id="custSF" class="sinp" onchange="loadCustomers()" style="padding:7px 10px;font-size:12px;">
+              <option value="open">الحجوزات المفتوحة</option>
+              <option value="active">النزلاء المقيمين</option>
+              <option value="pending_checkin">الحجوزات (بدون دخول)</option>
+              <option value="today_arrival_pending">وصول اليوم (بدون دخول)</option>
+              <option value="today_arrival_done">وصول اليوم (دخول)</option>
+              <option value="today_arrival_all">وصول اليوم (الجميع)</option>
+              <option value="today_dep_pending">مغادرة اليوم (بدون خروج)</option>
+              <option value="today_dep_done">مغادرة اليوم (خروج)</option>
+              <option value="today_dep_all">مغادرة اليوم (الجميع)</option>
+              <option value="closed">الحجوزات المغلقة</option>
+              <option value="cancelled">الحجوزات الملغاة</option>
+              <option value="all">جميع الحجوزات</option>
+            </select>
+          </div>
+          <button onclick="clearCustFilters()" style="padding:7px 14px;border-radius:8px;border:1px solid #e2e8f0;background:#f8fafc;color:#64748b;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">× مسح</button>
+        </div>
       </div>
+
+      <!-- ── الجدول ── -->
       <div class="apt-bld">
         <div class="tbl-wrap">
           <table class="stbl">
-            <thead><tr><th>الاسم</th><th>الجوال</th><th>الشقة</th><th>الدخول</th><th>الخروج</th><th>الحالة</th><th>المبلغ</th></tr></thead>
-            <tbody id="custTbody"><tr><td colspan="7" style="text-align:center;padding:30px;color:#94a3b8;">جاري التحميل...</td></tr></tbody>
+            <thead><tr>
+              <th>رقم الحجز</th><th>الاسم</th><th>الجوال</th><th>الشقة</th>
+              <th>الدخول</th><th>الخروج</th><th>نوع الإيجار</th><th>الحالة</th><th>الإجمالي</th><th>المدفوع</th>
+            </tr></thead>
+            <tbody id="custTbody"><tr><td colspan="10" style="text-align:center;padding:30px;color:#94a3b8;">جاري التحميل...</td></tr></tbody>
           </table>
         </div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:8px;" id="custCount"></div>
       </div>
     </div>
 
@@ -1033,21 +1094,46 @@ async function loadBookings(){
 }
 
 // ── Customers ────────────────────────────────────────────
+function clearCustFilters(){
+  ['custSearch','custBookingNum','custApt','custDateFrom','custDateTo'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const sf=document.getElementById('custSF'); if(sf) sf.value='open';
+  const tp=document.getElementById('custType'); if(tp) tp.value='';
+  loadCustomers();
+}
+
+const BTYPE_LBL={daily:'يومي',annual:'شهري',inquiry:'استفسار'};
+
 async function loadCustomers(){
-  const q=document.getElementById('custSearch')?.value||'';
+  const q           = document.getElementById('custSearch')?.value||'';
+  const sf          = document.getElementById('custSF')?.value||'open';
+  const apt         = document.getElementById('custApt')?.value||'';
+  const booking_type= document.getElementById('custType')?.value||'';
+  const date_from   = document.getElementById('custDateFrom')?.value||'';
+  const date_to     = document.getElementById('custDateTo')?.value||'';
+  const booking_num = document.getElementById('custBookingNum')?.value||'';
+
+  const params=new URLSearchParams({q,sf,apt,booking_type,date_from,date_to,booking_num});
   try{
-    const r=await fetch('/staff/api/customers?q='+encodeURIComponent(q));
+    const r=await fetch('/staff/api/customers?'+params);
     const list=await r.json();
     const tb=document.getElementById('custTbody');
-    if(!list.length){ tb.innerHTML='<tr><td colspan="7" style="text-align:center;padding:30px;color:#94a3b8;">لا توجد نتائج</td></tr>'; return; }
+    const cnt=document.getElementById('custCount');
+    if(cnt) cnt.textContent=list.length?`${list.length} حجز`:'';
+    if(!list.length){
+      tb.innerHTML=`<tr><td colspan="10" style="text-align:center;padding:30px;color:#94a3b8;">لا توجد نتائج</td></tr>`;
+      return;
+    }
     tb.innerHTML=list.map(c=>`<tr>
+      <td style="font-family:monospace;font-weight:700;color:#1a3d8f;letter-spacing:.5px;">#${c.bookingNum}</td>
       <td><b>${esc(c.name||'—')}</b></td>
-      <td><a href="https://wa.me/${(c.phone||'').replace(/^0/,'966')}" style="color:#1a3d8f;">${esc(c.phone||'—')}</a></td>
-      <td>${esc(c.apt||'—')}</td>
+      <td><a href="https://wa.me/${(c.phone||'').replace(/^0/,'966')}" style="color:#1a3d8f;text-decoration:none;">${esc(c.phone||'—')}</a></td>
+      <td style="font-weight:700;">${esc(c.apt||'—')}</td>
       <td>${fDate(c.checkIn)}</td>
       <td>${fDate(c.checkOut)}</td>
+      <td><span style="font-size:10px;padding:2px 8px;border-radius:8px;background:rgba(26,61,143,.08);color:#1a3d8f;font-weight:600;">${BTYPE_LBL[c.bookingType]||c.bookingType||'—'}</span></td>
       <td>${statusBadge(c.status)}</td>
-      <td>${c.totalPrice?c.totalPrice.toLocaleString()+' ر':'—'}</td>
+      <td style="font-weight:700;">${c.totalPrice?c.totalPrice.toLocaleString()+' ر':'—'}</td>
+      <td style="color:${c.paidAmount>=c.totalPrice?'#16a34a':'#dc2626'};font-weight:700;">${c.paidAmount?(c.paidAmount.toLocaleString()+' ر'):'—'}</td>
     </tr>`).join('');
   }catch(e){}
 }
