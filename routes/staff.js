@@ -31,7 +31,7 @@ router.post('/login', async (req,res) => {
 });
 
 router.get('/logout',(req,res)=>{ res.clearCookie(COOKIE); res.redirect('/staff/login'); });
-router.get('/dashboard', reqStaff, (req,res) => res.render('staff-dashboard',{staff:req.staff}));
+router.get('/dashboard', reqStaff, (req,res) => { res.setHeader('Cache-Control','no-store'); res.render('staff-dashboard',{staff:req.staff}); });
 
 // ── API: Stats ────────────────────────────────────────────
 router.get('/api/stats', reqStaff, async (req,res) => {
