@@ -294,6 +294,7 @@ router.get('/api/customers', reqStaff, async (req,res) => {
       status: b.status, bookingType: b.bookingType,
       totalPrice: b.totalPrice, paidAmount: b.paidAmount||0,
       source: b.source||'', bookingId: b._id,
+      idType: b.idType||'', idNumber: b.idNumber||'',
     }));
     res.json(out);
   } catch(e){ res.status(500).json({error:e.message}); }
