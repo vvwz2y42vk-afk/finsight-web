@@ -362,7 +362,8 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
           <div class="donut-wrap">
             <canvas id="hkDonutChart" width="170" height="170"></canvas>
             <div class="donut-center">
-              <div style="font-size:13px;font-weight:700;background:var(--brand);color:#fff;padding:4px 12px;border-radius:8px;cursor:pointer;pointer-events:auto;" onclick="goTab('housekeeping',document.getElementById('sn-housekeeping'))">عرض</div>
+              <div class="donut-pct" id="hkDonutNum">—</div>
+              <div class="donut-pct-sub">نظيف</div>
             </div>
           </div>
           <div id="hkDonutLegend" style="margin-top:12px;font-size:11px;text-align:center;display:flex;gap:12px;justify-content:center;"></div>
@@ -1020,6 +1021,7 @@ function renderHkDonut(){
     }]},
     options:{cutout:'76%',plugins:{legend:{display:false},tooltip:{backgroundColor:'#0F172A',titleFont:{family:'Cairo',size:11},bodyFont:{family:'Cairo',size:11},padding:10,cornerRadius:8}}}
   });
+  const numEl=document.getElementById('hkDonutNum'); if(numEl) numEl.textContent=clean;
   document.getElementById('hkDonutLegend').innerHTML=
     `<span style="display:flex;align-items:center;gap:5px;color:#64748B;font-size:11px;"><span style="width:8px;height:8px;border-radius:2px;background:rgba(4,120,87,.7);display:inline-block;"></span>نظيف ${clean}</span>`+
     `<span style="display:flex;align-items:center;gap:5px;color:#64748B;font-size:11px;"><span style="width:8px;height:8px;border-radius:2px;background:rgba(234,179,8,.8);display:inline-block;"></span>غير نظيف ${dirty}</span>`;
