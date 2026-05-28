@@ -116,7 +116,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
 .kpi-lbl{font-size:11px;color:var(--t4);font-weight:400;margin-top:6px;letter-spacing:.02em;}
 
 /* ══ Charts ══ */
-.charts-row{display:grid;grid-template-columns:1fr 260px;gap:16px;margin-bottom:28px;}
+.charts-row{display:grid;grid-template-columns:1fr 220px 220px;gap:16px;margin-bottom:28px;}
 .chart-card{background:var(--surface);border-radius:var(--r);padding:24px;border:1px solid var(--border);box-shadow:var(--sh-sm);}
 .chart-title{
   font-size:13px;font-weight:600;margin-bottom:20px;color:var(--t2);
@@ -349,13 +349,23 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
         <div class="chart-card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
           <div class="chart-title" style="justify-content:center;">حالة الشقق</div>
           <div class="donut-wrap">
-            <canvas id="donutChart" width="190" height="190"></canvas>
+            <canvas id="donutChart" width="170" height="170"></canvas>
             <div class="donut-center">
               <div class="donut-pct" id="donutPct">—</div>
               <div class="donut-pct-sub">إشغال</div>
             </div>
           </div>
-          <div id="donutLegend" style="margin-top:16px;font-size:12px;text-align:center;display:flex;gap:16px;justify-content:center;"></div>
+          <div id="donutLegend" style="margin-top:12px;font-size:11px;text-align:center;display:flex;gap:12px;justify-content:center;"></div>
+        </div>
+        <div class="chart-card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
+          <div class="chart-title" style="justify-content:center;">خدمة الغرف</div>
+          <div class="donut-wrap">
+            <canvas id="hkDonutChart" width="170" height="170"></canvas>
+            <div class="donut-center">
+              <div style="font-size:13px;font-weight:700;color:var(--brand);background:var(--brand);color:#fff;padding:4px 12px;border-radius:8px;cursor:pointer;" onclick="goTab('housekeeping',document.getElementById('sn-housekeeping'))">عرض</div>
+            </div>
+          </div>
+          <div id="hkDonutLegend" style="margin-top:12px;font-size:11px;text-align:center;display:flex;gap:12px;justify-content:center;"></div>
         </div>
       </div>
     </div>
@@ -890,7 +900,7 @@ const BUILDING = '<%= staff.building %>';
 const PERMS = <%- JSON.stringify(staff.permissions && staff.permissions.length ? staff.permissions : ['dashboard','apartments','bookings','customers','housekeeping','activity','new_booking','edit_booking','cancel_booking','vouchers']) %>;
 const can = p => PERMS.includes(p);
 let aptsFilter='all', aptsRawData=null;
-let weeklyChartInst=null, donutChartInst=null;
+let weeklyChartInst=null, donutChartInst=null, hkDonutInst=null;
 let hkCurrentApt=null;
 
 // ── Utils ────────────────────────────────────────────────
@@ -989,6 +999,32 @@ function renderDonut(occupied, total){
     `<span style="display:flex;align-items:center;gap:5px;color:#64748B;font-size:11px;"><span style="width:8px;height:8px;border-radius:2px;background:#047857;display:inline-block;"></span>شاغر ${Math.max(0,total-occupied)}</span>`;
 }
 
+function renderHkDonut(){
+  if(!aptsRawData) return;
+  let clean=0, dirty=0;
+  aptsRawData.floors.forEach(f=>f.rooms.forEach(r=>{
+    if(r.housekeeping==='dirty'||r.housekeeping==='maintenance'||r.housekeeping==='inspection') dirty++;
+    else clean++;
+  }));
+  const canvas=document.getElementById('hkDonutChart');
+  if(!canvas) return;
+  const ctx=canvas.getContext('2d');
+  if(hkDonutInst) hkDonutInst.destroy();
+  hkDonutInst=new Chart(ctx,{
+    type:'doughnut',
+    data:{labels:['نظيف','غير نظيف'],datasets:[{
+      data:[clean||0, dirty||0],
+      backgroundColor:['rgba(4,120,87,.55)','rgba(234,179,8,.6)'],
+      hoverBackgroundColor:['rgba(4,120,87,.8)','rgba(234,179,8,.85)'],
+      borderWidth:0,borderRadius:4
+    }]},
+    options:{cutout:'76%',plugins:{legend:{display:false},tooltip:{backgroundColor:'#0F172A',titleFont:{family:'Cairo',size:11},bodyFont:{family:'Cairo',size:11},padding:10,cornerRadius:8}}}
+  });
+  document.getElementById('hkDonutLegend').innerHTML=
+    `<span style="display:flex;align-items:center;gap:5px;color:#64748B;font-size:11px;"><span style="width:8px;height:8px;border-radius:2px;background:rgba(4,120,87,.7);display:inline-block;"></span>نظيف ${clean}</span>`+
+    `<span style="display:flex;align-items:center;gap:5px;color:#64748B;font-size:11px;"><span style="width:8px;height:8px;border-radius:2px;background:rgba(234,179,8,.8);display:inline-block;"></span>غير نظيف ${dirty}</span>`;
+}
+
 // ── Apartments ───────────────────────────────────────────
 async function loadApartments(){
   try{
@@ -998,6 +1034,7 @@ async function loadApartments(){
     updateAptCounts();
     renderTodaySchedule();
     renderMonthlyProgress();
+    renderHkDonut();
     const el=document.getElementById('apt-sync-time');
     if(el) el.textContent=new Date().toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
   }catch(e){
