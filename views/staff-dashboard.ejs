@@ -1048,7 +1048,6 @@ function renderAptGrid(){
       html+=`<div class="apt ${s.cls} ${hkClass}" onclick="openBkModal('${r.bookingId||''}','${r.apt}','${r.status}')">
         <div class="apt-n">${esc(r.apt)}</div>
         ${r.roomType?`<div class="apt-type">${esc(r.roomType)}</div>`:''}
-        ${r.bedrooms?`<div class="apt-type">${r.bedrooms} أسرة</div>`:''}
         <div class="apt-s">${s.lbl}</div>
         ${r.name?`<div class="apt-g">${esc(r.name)}</div>`:''}
       </div>`;
