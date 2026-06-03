@@ -15,6 +15,7 @@ const totalApts = b => (BLDGS[b]?.floors||[]).reduce((s,f)=>s+f.r.length,0);
 
 function staffAuth(req,res,next){ req.staff=verifyToken(req.cookies?.[COOKIE])||null; next(); }
 function reqStaff(req,res,next){ if(!req.staff)return res.redirect('/staff/login'); next(); }
+const DEFAULT_PERMS=['dashboard','apartments','bookings','customers','housekeeping','activity','new_booking','edit_booking','cancel_booking','vouchers'];
 router.use(staffAuth);
 
 // ── Auth ─────────────────────────────────────────────────
@@ -300,6 +301,32 @@ router.get('/api/customers', reqStaff, async (req,res) => {
       idType: b.idType||'', idNumber: b.idNumber||'',
     }));
     res.json(out);
+  } catch(e){ res.status(500).json({error:e.message}); }
+});
+
+// ── API: Room Info ────────────────────────────────────────
+router.get('/api/room-info', reqStaff, async (req,res) => {
+  try {
+    const RI = require('../models/RoomInfo');
+    const rows = await RI.find({ building: req.staff.building }).lean();
+    const map = {};
+    rows.forEach(r => { map[r.apt] = { roomType: r.roomType, beds: r.beds }; });
+    res.json(map);
+  } catch(e){ res.status(500).json({error:e.message}); }
+});
+
+router.put('/api/room-info/:apt', reqStaff, async (req,res) => {
+  try {
+    const perms = req.staff.permissions||[];
+    if(!perms.includes('edit_room_info')) return res.status(403).json({error:'ليس لديك صلاحية'});
+    const RI = require('../models/RoomInfo');
+    const { roomType='', beds='' } = req.body;
+    await RI.findOneAndUpdate(
+      { building: req.staff.building, apt: req.params.apt },
+      { roomType, beds },
+      { upsert: true }
+    );
+    res.json({ success: true });
   } catch(e){ res.status(500).json({error:e.message}); }
 });
 

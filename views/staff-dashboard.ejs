@@ -831,11 +831,31 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
 
 <div id="toast"></div>
 
+<!-- مودال تعديل بيانات الشقة -->
+<div id="roomInfoModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:900;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:14px;padding:24px;width:320px;box-shadow:0 20px 50px rgba(0,0,0,.2);">
+    <div style="font-size:14px;font-weight:700;color:#0f172a;margin-bottom:16px;">تعديل بيانات الشقة <span id="riAptNum" style="color:var(--brand);"></span></div>
+    <div style="margin-bottom:12px;">
+      <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px;">نوع الشقة</label>
+      <input id="riRoomType" type="text" placeholder="مثال: غرفة+صالة+مطبخ" style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-family:inherit;font-size:12px;outline:none;">
+    </div>
+    <div style="margin-bottom:18px;">
+      <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px;">الأسرة</label>
+      <input id="riBeds" type="text" placeholder="مثال: 3أسرة أو سرير مزدوج" style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-family:inherit;font-size:12px;outline:none;">
+    </div>
+    <div id="riErr" style="color:#dc2626;font-size:11px;margin-bottom:8px;display:none;"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button onclick="closeRoomInfoModal()" style="padding:8px 16px;border-radius:8px;border:1px solid #e2e8f0;background:#f8fafc;color:#64748b;font-family:inherit;font-size:12px;cursor:pointer;">إلغاء</button>
+      <button onclick="saveRoomInfo()" style="padding:8px 20px;border-radius:8px;background:var(--brand);border:none;color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">حفظ</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const BUILDING = '<%= staff.building %>';
 const PERMS = <%- JSON.stringify(staff.permissions && staff.permissions.length ? staff.permissions : ['dashboard','apartments','bookings','customers','housekeeping','activity','new_booking','edit_booking','cancel_booking','vouchers']) %>;
 const can = p => PERMS.includes(p);
-let aptsFilter='all', aptsRawData=null;
+let aptsFilter='all', aptsRawData=null, roomInfoMap={};
 let weeklyChartInst=null, donutChartInst=null, hkDonutInst=null;
 let hkCurrentApt=null;
 
@@ -965,8 +985,9 @@ function renderHkDonut(){
 // ── Apartments ───────────────────────────────────────────
 async function loadApartments(){
   try{
-    const r=await fetch('/staff/api/apartments');
+    const [r, ri]=await Promise.all([fetch('/staff/api/apartments'),fetch('/staff/api/room-info')]);
     aptsRawData=await r.json();
+    if(ri.ok) roomInfoMap=await ri.json();
     renderAptGrid();
     updateAptCounts();
     renderTodaySchedule();
@@ -1068,11 +1089,16 @@ function renderAptGrid(){
     rooms.forEach(r=>{
       const s=APT_MAP[r.status]||{cls:'',lbl:r.status};
       const hkClass=r.housekeeping==='dirty'?'dirty':r.housekeeping==='maintenance'?'maintenance':'';
-      const ai=(APT_TYPES[BUILDING]||{})[r.apt]||null;
-      html+=`<div class="apt ${s.cls} ${hkClass}" onclick="openBkModal('${r.bookingId||''}','${r.apt}','${r.status}')">
+      const dbInfo=roomInfoMap[r.apt]||null;
+      const fbInfo=(APT_TYPES[BUILDING]||{})[r.apt]||null;
+      const rt=dbInfo?.roomType||fbInfo?.t||'';
+      const bd=dbInfo?.beds||fbInfo?.b||'';
+      const editBtn=can('edit_room_info')?`<div onclick="event.stopPropagation();openRoomInfoModal('${r.apt}','${esc(rt)}','${esc(bd)}')" style="position:absolute;top:4px;left:4px;width:16px;height:16px;background:rgba(255,255,255,.25);border-radius:4px;display:flex;align-items:center;justify-content:center;cursor:pointer;" title="تعديل">✏️</div>`:'';
+      html+=`<div class="apt ${s.cls} ${hkClass}" style="position:relative;" onclick="openBkModal('${r.bookingId||''}','${r.apt}','${r.status}')">
+        ${editBtn}
         <div class="apt-n">${esc(r.apt)}</div>
-        ${ai&&ai.t?'<div class="apt-type">'+esc(ai.t)+'</div>':''}
-        ${ai&&ai.b?'<div class="apt-type" style="opacity:.65;">('+esc(ai.b)+')</div>':''}
+        ${rt?'<div class="apt-type">'+esc(rt)+'</div>':''}
+        ${bd?'<div class="apt-type" style="opacity:.65;">('+esc(bd)+')</div>':''}
         <div class="apt-s">${s.lbl}</div>
         ${r.name?'<div class="apt-g">'+esc(r.name)+'</div>':''}
       </div>`;
@@ -1738,6 +1764,33 @@ function closePrint(){ document.getElementById('printArea').innerHTML=''; docume
 // ── Clock ────────────────────────────────────────────────
 function updateClock(){
   document.getElementById('tbDate').textContent=new Date().toLocaleString('ar-SA',{weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+
+// ── Room Info Modal ───────────────────────────────────────
+let riCurrentApt=null;
+function openRoomInfoModal(apt,rt,bd){
+  riCurrentApt=apt;
+  document.getElementById('riAptNum').textContent=apt;
+  document.getElementById('riRoomType').value=rt||'';
+  document.getElementById('riBeds').value=bd||'';
+  document.getElementById('riErr').style.display='none';
+  document.getElementById('roomInfoModal').style.display='flex';
+}
+function closeRoomInfoModal(){ document.getElementById('roomInfoModal').style.display='none'; riCurrentApt=null; }
+async function saveRoomInfo(){
+  if(!riCurrentApt) return;
+  const roomType=document.getElementById('riRoomType').value.trim();
+  const beds=document.getElementById('riBeds').value.trim();
+  const errEl=document.getElementById('riErr');
+  try{
+    const r=await fetch('/staff/api/room-info/'+riCurrentApt,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({roomType,beds})});
+    const d=await r.json();
+    if(!r.ok){errEl.textContent=d.error||'حدث خطأ';errEl.style.display='block';return;}
+    roomInfoMap[riCurrentApt]={roomType,beds};
+    closeRoomInfoModal();
+    renderAptGrid();
+    toast('تم حفظ بيانات الشقة '+riCurrentApt);
+  }catch(e){errEl.textContent='حدث خطأ';errEl.style.display='block';}
 }
 
 // ── Init ─────────────────────────────────────────────────
