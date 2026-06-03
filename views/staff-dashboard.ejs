@@ -1068,12 +1068,13 @@ function renderAptGrid(){
     rooms.forEach(r=>{
       const s=APT_MAP[r.status]||{cls:'',lbl:r.status};
       const hkClass=r.housekeeping==='dirty'?'dirty':r.housekeeping==='maintenance'?'maintenance':'';
+      const ai=(APT_TYPES[BUILDING]||{})[r.apt]||null;
       html+=`<div class="apt ${s.cls} ${hkClass}" onclick="openBkModal('${r.bookingId||''}','${r.apt}','${r.status}')">
         <div class="apt-n">${esc(r.apt)}</div>
-        ${(APT_TYPES[aptsRawData.building]?.[r.apt]?.t)?`<div class="apt-type">${esc(APT_TYPES[aptsRawData.building][r.apt].t)}</div>`:''}
-        ${(APT_TYPES[aptsRawData.building]?.[r.apt]?.b)?`<div class="apt-type" style="opacity:.65;">(${esc(APT_TYPES[aptsRawData.building][r.apt].b)})</div>`:''}
+        ${ai&&ai.t?'<div class="apt-type">'+esc(ai.t)+'</div>':''}
+        ${ai&&ai.b?'<div class="apt-type" style="opacity:.65;">('+esc(ai.b)+')</div>':''}
         <div class="apt-s">${s.lbl}</div>
-        ${r.name?`<div class="apt-g">${esc(r.name)}</div>`:''}
+        ${r.name?'<div class="apt-g">'+esc(r.name)+'</div>':''}
       </div>`;
     });
     html+='</div>';
