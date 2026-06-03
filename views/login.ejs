@@ -1,50 +1,143 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>تسجيل الدخول — BAREZ</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/css/client.css">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>لوحة التحكم — BAREZ</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:'Cairo',sans-serif;
+  background:#04091a;
+  min-height:100vh;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;position:relative;
+}
+.bg-glow{
+  position:fixed;top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  width:900px;height:900px;
+  background:radial-gradient(ellipse at center,rgba(26,61,143,.35) 0%,rgba(26,61,143,.08) 45%,transparent 70%);
+  pointer-events:none;z-index:0;
+}
+.bg-glow2{
+  position:fixed;bottom:-200px;right:-200px;
+  width:600px;height:600px;
+  background:radial-gradient(ellipse at center,rgba(201,168,68,.12) 0%,transparent 65%);
+  pointer-events:none;z-index:0;
+}
+.bg-logo-wrap{
+  position:fixed;top:50%;left:50%;
+  transform:translate(-50%,-54%);
+  z-index:0;pointer-events:none;
+  animation:logoFloat 7s ease-in-out infinite;
+}
+.bg-logo-wrap img{
+  width:520px;height:auto;
+  filter:drop-shadow(0 0 80px rgba(42,92,199,.7)) drop-shadow(0 0 30px rgba(42,92,199,.4)) brightness(0) invert(1);
+  opacity:.1;
+  transform:perspective(900px) rotateX(28deg) rotateY(-4deg);
+}
+@keyframes logoFloat{
+  0%,100%{transform:translate(-50%,-54%) translateY(0);}
+  50%{transform:translate(-50%,-54%) translateY(-18px);}
+}
+.bg-text{
+  position:fixed;bottom:40px;left:50%;
+  transform:translateX(-50%);
+  font-size:clamp(60px,12vw,130px);font-weight:900;
+  letter-spacing:.25em;
+  color:transparent;
+  -webkit-text-stroke:1px rgba(255,255,255,.04);
+  white-space:nowrap;z-index:0;pointer-events:none;user-select:none;
+}
+.particles{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
+.p{
+  position:absolute;border-radius:50%;
+  background:rgba(42,92,199,.6);
+  animation:rise linear infinite;opacity:0;
+}
+@keyframes rise{
+  0%{transform:translateY(100vh) scale(0);opacity:0;}
+  10%{opacity:.6;}90%{opacity:.2;}
+  100%{transform:translateY(-20vh) scale(1.5);opacity:0;}
+}
+.box{
+  position:relative;z-index:10;
+  background:rgba(255,255,255,.06);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:24px;
+  padding:44px 40px;
+  width:100%;max-width:400px;
+  box-shadow:0 32px 80px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.1);
+}
+.logo-wrap{display:flex;justify-content:center;margin-bottom:28px;}
+.logo-wrap img{height:68px;width:auto;filter:brightness(0) invert(1);}
+.brand{text-align:center;font-size:22px;font-weight:900;color:#fff;letter-spacing:.15em;margin-bottom:2px;}
+.brand-sub{text-align:center;font-size:11px;color:rgba(255,255,255,.45);letter-spacing:.1em;margin-bottom:28px;}
+label{display:block;font-size:11px;font-weight:700;color:rgba(255,255,255,.55);margin-bottom:6px;letter-spacing:.06em;}
+input{
+  width:100%;padding:12px 14px;
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:10px;
+  font-family:inherit;font-size:14px;color:#fff;outline:none;
+  transition:border .2s,background .2s;margin-bottom:16px;
+}
+input::placeholder{color:rgba(255,255,255,.3);}
+input:focus{border-color:rgba(42,92,199,.8);background:rgba(255,255,255,.12);}
+button{
+  width:100%;padding:14px;
+  background:linear-gradient(135deg,#1a3d8f,#2a5cc7);
+  border:none;border-radius:12px;
+  color:#fff;font-family:inherit;font-size:15px;font-weight:800;
+  cursor:pointer;transition:all .2s;
+  box-shadow:0 4px 20px rgba(26,61,143,.5);letter-spacing:.05em;
+}
+button:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(26,61,143,.65);}
+button:active{transform:translateY(0);}
+.err{
+  background:rgba(220,38,38,.15);border:1px solid rgba(220,38,38,.3);
+  color:#fca5a5;border-radius:10px;padding:10px 14px;
+  font-size:13px;font-weight:600;margin-bottom:16px;text-align:center;
+}
+.back{text-align:center;margin-top:20px;font-size:12px;color:rgba(255,255,255,.3);}
+.back a{color:rgba(255,255,255,.55);text-decoration:none;font-weight:700;transition:color .2s;}
+.back a:hover{color:#fff;}
+</style>
 </head>
 <body>
-<div class="login-wrap">
-  <svg class="login-bg-logo" width="700" height="260" viewBox="0 0 420 120" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="lg" x1="0" y1="0" x2="0.5" y2="1">
-        <stop offset="0%" stop-color="#F5D060"/>
-        <stop offset="100%" stop-color="#8B6010"/>
-      </linearGradient>
-    </defs>
-    <path d="M4,4 L54,4 L54,24 L26,24 L18,32 L4,32 Z" fill="url(#lg)"/>
-    <rect x="4" y="4" width="14" height="60" fill="url(#lg)"/>
-    <path d="M4,40 L42,40 L42,52 L18,52 L4,62 Z" fill="url(#lg)"/>
-    <text x="72" y="52" font-family="Arial,sans-serif" font-size="52" font-weight="900" fill="#DAA520" letter-spacing="6">INSIGHT</text>
-  </svg>
-  <div class="login-card">
-    <div class="login-logo">
-      <img src="/images/logo-dark.png" alt="Barez" style="height:70px;width:auto;margin:0 auto 8px;display:block;filter:brightness(0) invert(1);">
-      <h2>BAREZ</h2>
-      <p>لوحة تحكم الموظفين</p>
-    </div>
-    <% if (error) { %>
-      <div class="login-error"><%= error %></div>
-    <% } %>
-    <form method="POST" action="/login">
-      <div class="login-group">
-        <label>اسم المستخدم</label>
-        <input type="text" name="username" placeholder="اسم المستخدم" autofocus>
-      </div>
-      <div class="login-group">
-        <label>كلمة المرور</label>
-        <input type="password" name="password" placeholder="••••••••">
-      </div>
-      <button type="submit" class="login-btn">دخول ←</button>
-    </form>
-    <div style="margin-top:20px;text-align:center;">
-      <a href="/" style="color:#555;font-size:12px;">← العودة للموقع</a>
-    </div>
-  </div>
+<div class="bg-glow"></div>
+<div class="bg-glow2"></div>
+<div class="bg-logo-wrap"><img src="/images/logo-dark.png" alt=""></div>
+<div class="bg-text">BAREZ</div>
+<div class="particles" id="particles"></div>
+
+<div class="box">
+  <div class="logo-wrap"><img src="/images/logo-dark.png" alt="Barez"></div>
+  <div class="brand">BAREZ</div>
+  <div class="brand-sub">لوحة التحكم الإدارية</div>
+  <% if (error) { %><div class="err">⚠️ <%= error %></div><% } %>
+  <form method="POST" action="/login">
+    <label>اسم المستخدم</label>
+    <input type="text" name="username" placeholder="username" required autofocus>
+    <label>كلمة المرور</label>
+    <input type="password" name="password" placeholder="••••••••" required>
+    <button type="submit">دخول ←</button>
+  </form>
+  <div class="back"><a href="/">← العودة للموقع</a></div>
 </div>
+
+<script>
+const container=document.getElementById('particles');
+for(let i=0;i<18;i++){
+  const p=document.createElement('div');p.className='p';
+  const size=Math.random()*4+2;
+  p.style.cssText=`width:${size}px;height:${size}px;left:${Math.random()*100}%;animation-duration:${Math.random()*12+8}s;animation-delay:${Math.random()*10}s;`;
+  container.appendChild(p);
+}
+</script>
 </body>
 </html>
