@@ -1143,7 +1143,7 @@ async function loadUser(){
     currentUser=await res.json();
     document.getElementById('user-av').textContent=currentUser.avatar||currentUser.name[0];
     document.getElementById('user-name').textContent=currentUser.name;
-    document.getElementById('user-role').textContent=currentUser.role==='admin'?'مدير · BAREZ':currentUser.role==='manager'?'مدير تنفيذي · BAREZ':'موظفة · BAREZ';
+    document.getElementById('user-role').textContent=currentUser.role==='admin'?'مدير · BAREZ':currentUser.role==='manager'?'مدير · BAREZ':'موظفة · BAREZ';
     ['dashboard','contracts','commissions','collection','expiry','map','performance','sources','reports'].forEach(s=>{
       if(!currentUser.allowed.includes(s)){
         const nb=document.getElementById('nav-'+s);if(nb)nb.style.display='none';
