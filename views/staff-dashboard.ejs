@@ -1034,6 +1034,29 @@ function updateAptCounts(){
 
 const APT_MAP={occupied:{cls:'occ',lbl:'مؤجر'},vacant:{cls:'vac',lbl:'شاغر'},checkin_today:{cls:'cin',lbl:'وصول اليوم'},checkout_today:{cls:'cout',lbl:'خروج اليوم'},awaiting:{cls:'awt',lbl:'انتظار'},awaiting_payment:{cls:'awp',lbl:'انتظار الدفع'}};
 
+const APT_TYPES={
+  'الماسة':{
+    '101':{t:'غرفة+صالة+مطبخ',b:'سرير مزدوج'},
+    '102':{t:'غرفة+صالة+مطبخ',b:'3أسرة'},
+    '103':{t:'غرفة+صالة+مطبخ',b:'3أسرة'},
+    '104':{t:'غرفة+صالة+مطبخ',b:'3أسرة'},
+    '105':{t:'غرفة+صالة+مطبخ VIP',b:'سرير مزدوج'},
+    '106':{t:'غرفة توأم',b:'2سرير'},
+    '201':{t:'غرفتين+صالة+مطبخ',b:''},
+    '202':{t:'غرفتين+مطبخ',b:''},
+    '203':{t:'غرفة+صالة',b:'3أسرة'},
+    '204':{t:'غرفة+صالة',b:'3أسرة'},
+    '205':{t:'غرفة توأم+مطبخ',b:'سرير مزدوج'},
+    '206':{t:'غرفة توأم',b:'2سرير'},
+    '301':{t:'غرفتين+صالة+مطبخ',b:''},
+    '302':{t:'غرفتين+مطبخ',b:'سرير مزدوج'},
+    '303':{t:'غرفة+صالة',b:'3أسرة'},
+    '304':{t:'غرفة+صالة+مطبخ',b:'3أسرة'},
+    '305':{t:'غرفة+صالة+مطبخ',b:'سرير مزدوج'},
+    '306':{t:'غرفة توأم',b:'2سرير'},
+  }
+};
+
 function renderAptGrid(){
   if(!aptsRawData){return;}
   const container=document.getElementById('aptsContainer');
@@ -1047,7 +1070,8 @@ function renderAptGrid(){
       const hkClass=r.housekeeping==='dirty'?'dirty':r.housekeeping==='maintenance'?'maintenance':'';
       html+=`<div class="apt ${s.cls} ${hkClass}" onclick="openBkModal('${r.bookingId||''}','${r.apt}','${r.status}')">
         <div class="apt-n">${esc(r.apt)}</div>
-        ${r.roomType?`<div class="apt-type">${esc(r.roomType)}</div>`:''}
+        ${(APT_TYPES[aptsRawData.building]?.[r.apt]?.t)?`<div class="apt-type">${esc(APT_TYPES[aptsRawData.building][r.apt].t)}</div>`:''}
+        ${(APT_TYPES[aptsRawData.building]?.[r.apt]?.b)?`<div class="apt-type" style="opacity:.65;">(${esc(APT_TYPES[aptsRawData.building][r.apt].b)})</div>`:''}
         <div class="apt-s">${s.lbl}</div>
         ${r.name?`<div class="apt-g">${esc(r.name)}</div>`:''}
       </div>`;
