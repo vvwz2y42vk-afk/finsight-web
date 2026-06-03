@@ -60,6 +60,14 @@ const USERS = [
     role: 'employee',
     avatar: 'Y',
     allowed: ['dashboard','contracts','commissions','expiry']
+  },
+  {
+    username: 'Abdulrahim',
+    password: 'Barez@2026',
+    name: 'عبد الرحيم',
+    role: 'manager',
+    avatar: 'ر',
+    allowed: ['dashboard','contracts','collection','expiry','performance','sources','reports','listings','bookings','customers','apts','staff']
   }
 ];
 
