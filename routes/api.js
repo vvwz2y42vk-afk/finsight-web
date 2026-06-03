@@ -538,7 +538,7 @@ router.get('/apartments/grid', auth, async (req, res) => {
               status = 'awaiting_payment';
             }
           }
-          return { apt, status, bookingId: b?._id||null, name: b?.name||'', phone: b?.phone||'', checkIn: b?.checkIn||null, checkOut: b?.checkOut||null, bookingType: b?.bookingType||'' };
+          return { apt, status, bookingId: b?._id||null, name: b?.name||'', phone: b?.phone||'', checkIn: b?.checkIn||null, checkOut: b?.checkOut||null, bookingType: b?.bookingType||'', totalPrice: b?.totalPrice||0, paidAmount: b?.paidAmount||0 };
         }),
       }));
       const total = bData.floors.reduce((s,f)=>s+f.r.length,0);
