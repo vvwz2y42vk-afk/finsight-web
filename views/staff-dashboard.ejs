@@ -116,7 +116,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
 .kpi-lbl{font-size:11px;color:var(--t4);font-weight:400;margin-top:6px;letter-spacing:.02em;}
 
 /* ══ Charts ══ */
-.charts-row{display:grid;grid-template-columns:1fr 220px 220px;gap:16px;margin-bottom:28px;}
+.charts-row{display:grid;grid-template-columns:1fr 200px 200px 200px;gap:14px;margin-bottom:28px;}
 .chart-card{background:var(--surface);border-radius:var(--r);padding:24px;border:1px solid var(--border);box-shadow:var(--sh-sm);}
 .chart-title{
   font-size:13px;font-weight:600;margin-bottom:20px;color:var(--t2);
@@ -368,6 +368,10 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
             </div>
           </div>
           <div id="hkDonutLegend" style="margin-top:12px;font-size:11px;text-align:center;display:flex;gap:12px;justify-content:center;"></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">اشغال أنواع الغرف</div>
+          <div id="roomTypeChart" style="padding-top:4px;"></div>
         </div>
       </div>
     </div>
@@ -955,6 +959,37 @@ function renderDonut(occupied, total){
     `<span style="display:flex;align-items:center;gap:5px;color:#64748B;font-size:11px;"><span style="width:8px;height:8px;border-radius:2px;background:#047857;display:inline-block;"></span>شاغر ${Math.max(0,total-occupied)}</span>`;
 }
 
+function renderRoomTypeChart(){
+  if(!aptsRawData) return;
+  const el=document.getElementById('roomTypeChart');
+  if(!el) return;
+  const bTypes=APT_TYPES[BUILDING]||{};
+  const stats={};
+  aptsRawData.floors.forEach(f=>f.rooms.forEach(r=>{
+    const info=bTypes[r.apt];
+    if(!info||!info.t) return;
+    const type=info.t;
+    if(!stats[type]) stats[type]={total:0,occupied:0};
+    stats[type].total++;
+    if(['occupied','checkin_today','checkout_today','awaiting','awaiting_payment'].includes(r.status))
+      stats[type].occupied++;
+  }));
+  const sorted=Object.entries(stats).sort((a,b)=>b[1].total-a[1].total);
+  if(!sorted.length){el.innerHTML='<div style="font-size:11px;color:#94a3b8;text-align:center;padding:20px 0;">لا توجد بيانات</div>';return;}
+  el.innerHTML=sorted.map(([type,{total,occupied}])=>{
+    const pct=total?Math.round(occupied/total*100):0;
+    return `<div style="margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;">
+        <span style="font-size:11px;font-weight:600;color:var(--t2);">${esc(type)}</span>
+        <span style="font-size:10px;color:var(--t4);">${occupied}/${total}</span>
+      </div>
+      <div style="background:#e2e8f0;border-radius:20px;height:9px;overflow:hidden;position:relative;">
+        <div style="background:linear-gradient(90deg,#1a3d8f,#2a5cc7);height:100%;width:${pct}%;border-radius:20px;transition:width .6s;"></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
 function renderHkDonut(){
   if(!aptsRawData) return;
   let clean=0, dirty=0;
@@ -993,6 +1028,7 @@ async function loadApartments(){
     renderTodaySchedule();
     renderMonthlyProgress();
     renderHkDonut();
+    renderRoomTypeChart();
     const el=document.getElementById('apt-sync-time');
     if(el) el.textContent=new Date().toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
   }catch(e){
