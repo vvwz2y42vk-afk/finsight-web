@@ -138,7 +138,8 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
 .apt-bld-name{font-size:14px;font-weight:700;color:var(--t1);letter-spacing:-.01em;}
 .apt-floor-lbl{font-size:10px;font-weight:500;color:var(--t4);margin-bottom:10px;letter-spacing:.07em;text-transform:uppercase;}
 .apt-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
-.apt{width:82px;border-radius:10px;padding:10px 6px;text-align:center;cursor:pointer;transition:all .2s var(--ease);user-select:none;}
+.apt{width:90px;border-radius:10px;padding:10px 6px;text-align:center;cursor:pointer;transition:all .2s var(--ease);user-select:none;}
+.apt-type{font-size:8px;margin-top:3px;opacity:.82;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2;}
 .apt:hover{opacity:.82;transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.18);}
 .apt-n{font-size:14px;font-weight:700;line-height:1;letter-spacing:-.01em;}
 .apt-s{font-size:9px;margin-top:2px;opacity:.85;}
@@ -1046,6 +1047,8 @@ function renderAptGrid(){
       const hkClass=r.housekeeping==='dirty'?'dirty':r.housekeeping==='maintenance'?'maintenance':'';
       html+=`<div class="apt ${s.cls} ${hkClass}" onclick="openBkModal('${r.bookingId||''}','${r.apt}','${r.status}')">
         <div class="apt-n">${esc(r.apt)}</div>
+        ${r.roomType?`<div class="apt-type">${esc(r.roomType)}</div>`:''}
+        ${r.bedrooms?`<div class="apt-type">${r.bedrooms} أسرة</div>`:''}
         <div class="apt-s">${s.lbl}</div>
         ${r.name?`<div class="apt-g">${esc(r.name)}</div>`:''}
       </div>`;

@@ -71,16 +71,19 @@ router.get('/api/apartments', reqStaff, async (req,res) => {
     const today=new Date(); today.setHours(0,0,0,0);
     const tom=new Date(today); tom.setDate(today.getDate()+1);
 
+    const L = require('../models/Listing');
     const bookings = await B.find({ building:bld, status:{$in:['awaiting_payment','awaiting_checkin','active']} }).lean();
     const hkTasks  = await HK.find({ building:bld }).lean();
-    const bmap={}, hkmap={};
+    const listings = await L.find({ building:bld }).select('apt title bedrooms').lean();
+    const bmap={}, hkmap={}, lmap={};
     bookings.forEach(b=>{ if(b.apt) bmap[b.apt]=b; });
     hkTasks.forEach(t=>{ hkmap[t.apt]=t; });
+    listings.forEach(l=>{ if(l.apt) lmap[l.apt]=l; });
 
     const floors = bData.floors.map(f=>({
       label: f.l,
       rooms: f.r.map(apt=>{
-        const b=bmap[apt], hk=hkmap[apt];
+        const b=bmap[apt], hk=hkmap[apt], l=lmap[apt];
         let status='vacant';
         if(b){
           const cin=b.checkIn?new Date(b.checkIn):null, cout=b.checkOut?new Date(b.checkOut):null;
@@ -88,7 +91,7 @@ router.get('/api/apartments', reqStaff, async (req,res) => {
           else if(b.status==='awaiting_checkin') status=(cin&&cin>=today&&cin<tom)?'checkin_today':'awaiting';
           else if(b.status==='awaiting_payment') status='awaiting_payment';
         }
-        return { apt, status, housekeeping:hk?.status||'clean', bookingId:b?._id||null, name:b?.name||'', phone:b?.phone||'', checkIn:b?.checkIn||null, checkOut:b?.checkOut||null, nights:b?.nights||0, totalPrice:b?.totalPrice||0, paidAmount:b?.paidAmount||0, idType:b?.idType||'', idNumber:b?.idNumber||'', bookingType:b?.bookingType||'', notes:hk?.notes||'' };
+        return { apt, status, housekeeping:hk?.status||'clean', bookingId:b?._id||null, name:b?.name||'', phone:b?.phone||'', checkIn:b?.checkIn||null, checkOut:b?.checkOut||null, nights:b?.nights||0, totalPrice:b?.totalPrice||0, paidAmount:b?.paidAmount||0, idType:b?.idType||'', idNumber:b?.idNumber||'', bookingType:b?.bookingType||'', notes:hk?.notes||'', roomType:l?.title||'', bedrooms:l?.bedrooms||0 };
       }),
     }));
     res.json({ building:bld, floors });
