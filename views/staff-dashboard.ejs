@@ -1552,8 +1552,8 @@ async function submitNewBk(){
   if(!apt||!name||!phone||!checkin||(type==='daily'&&!checkout)||!price){
     errEl.textContent='يرجى تعبئة جميع الحقول المطلوبة'; errEl.style.display='block'; return;
   }
-  if(!/^05\d{8}$/.test(phone)){
-    errEl.textContent='رقم الجوال يجب أن يبدأ بـ 05 ويتكون من 10 أرقام'; errEl.style.display='block';
+  if(!/^\d{10}$/.test(phone)){
+    errEl.textContent='رقم الجوال يجب أن يتكون من 10 أرقام'; errEl.style.display='block';
     document.getElementById('nb-phone').focus(); return;
   }
   try{
