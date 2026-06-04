@@ -178,6 +178,71 @@ router.get('/listings', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ─── Mobile App API ───────────────────────────────────────
+// GET /api/app/listings?cat=&sort=&q=&page=
+router.get('/app/listings', async (req, res) => {
+  try {
+    const Listing = require('../models/Listing');
+    const { cat='', sort='newest', q='', page=1, limit=20 } = req.query;
+    const filter = {};
+    if(cat) filter.category = cat;
+    if(q) filter.$or = [
+      { title: { $regex: q, $options:'i' } },
+      { description: { $regex: q, $options:'i' } },
+      { location: { $regex: q, $options:'i' } },
+      { building: { $regex: q, $options:'i' } },
+    ];
+    const sortMap = { newest:{createdAt:-1}, featured:{featured:-1,createdAt:-1}, price_asc:{price_daily:1}, price_desc:{price_daily:-1} };
+    const skip = (parseInt(page)-1)*parseInt(limit);
+    const [listings, total] = await Promise.all([
+      Listing.find(filter).sort(sortMap[sort]||{createdAt:-1}).skip(skip).limit(parseInt(limit)).lean(),
+      Listing.countDocuments(filter),
+    ]);
+    res.json({ listings, total, page:parseInt(page), pages:Math.ceil(total/parseInt(limit)) });
+  } catch(e){ res.status(500).json({error:e.message}); }
+});
+
+// GET /api/app/listings/:id
+router.get('/app/listings/:id', async (req, res) => {
+  try {
+    const Listing = require('../models/Listing');
+    const l = await Listing.findById(req.params.id).lean();
+    if(!l) return res.status(404).json({error:'غير موجود'});
+    res.json(l);
+  } catch(e){ res.status(500).json({error:e.message}); }
+});
+
+// POST /api/app/inquiry
+router.post('/app/inquiry', async (req, res) => {
+  try {
+    const Inquiry = require('../models/Inquiry');
+    const { name, phone, message, listingId } = req.body;
+    if(!name||!phone) return res.status(400).json({error:'الاسم والجوال مطلوبان'});
+    await new Inquiry({ name, phone, message:message||'', listing:listingId||null, source:'app' }).save();
+    res.json({ success:true });
+  } catch(e){ res.status(500).json({error:e.message}); }
+});
+
+// GET /api/app/config
+router.get('/app/config', (req, res) => {
+  res.json({
+    name: 'بارز للشقق المفروشة',
+    nameEn: 'Barez',
+    phone: '0590561057',
+    whatsapp: '966590561057',
+    email: 'realstate@barezz.com',
+    city: 'المدينة المنورة',
+    instagram: 'https://www.instagram.com/finsight.ksa',
+    tiktok: 'https://www.tiktok.com/@finsight.ksa',
+    categories: [
+      { key:'rental_apartment', label:'شقق للإيجار', icon:'home' },
+      { key:'rental_commercial', label:'معارض للإيجار', icon:'store' },
+      { key:'sale_land', label:'أراضي للبيع', icon:'landscape' },
+      { key:'sale_apartment', label:'شقق للبيع', icon:'apartment' },
+    ]
+  });
+});
+
 router.post('/listings', auth, async (req, res) => {
   try {
     const Listing = require('../models/Listing');
