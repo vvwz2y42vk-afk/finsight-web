@@ -1502,6 +1502,13 @@ async function openNewBkModal(editMode){
     document.getElementById('nb-apt').disabled=false;
   }
   modal.style.display='flex';
+  setTimeout(()=>{
+    ['nb-checkin','nb-checkout'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el && el._flatpickr) el._flatpickr.destroy();
+      if(el) flatpickr(el,{locale:'ar',dateFormat:'Y-m-d',disableMobile:true,onChange:()=>calcNbTotal()});
+    });
+  },50);
 }
 function closeNewBkModal(){
   document.getElementById('newBkModal').style.display='none';
@@ -1885,12 +1892,21 @@ async function saveRoomInfo(){
 function initDatePickers(){
   const cfg = {
     locale: 'ar', dateFormat: 'Y-m-d', allowInput: true,
-    disableMobile: false,
+    disableMobile: true,
     onChange(dates, dateStr, inst){ inst.input.dispatchEvent(new Event('change')); }
+  };
+  const cfgModal = {
+    locale: 'ar', dateFormat: 'Y-m-d', allowInput: true,
+    disableMobile: true,
+    onChange(dates, dateStr, inst){ inst.input.dispatchEvent(new Event('change')); calcNbTotal(); }
   };
   ['bkDateFrom','bkDateTo','custDateFrom','custDateTo'].forEach(id=>{
     const el=document.getElementById(id);
     if(el && !el._flatpickr) flatpickr(el, cfg);
+  });
+  ['nb-checkin','nb-checkout'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el && !el._flatpickr) flatpickr(el, cfgModal);
   });
 }
 
