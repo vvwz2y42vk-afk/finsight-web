@@ -6,6 +6,9 @@
 <title><%= staff.building %> — بوابة الموظفين</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ar.js"></script>
 <style>
 /* ═══ BAREZ — LUXURY DASHBOARD SYSTEM ═══ */
 :root{
@@ -231,6 +234,20 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
 .modal select option{background:#fff;color:var(--t1);}
 
 @keyframes dot-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.75)}}
+.flatpickr-calendar{border-radius:14px!important;box-shadow:0 8px 28px rgba(15,23,42,.13)!important;border:1px solid #e2e8f0!important;font-family:'Cairo',sans-serif!important;direction:rtl!important;}
+.flatpickr-months{background:var(--brand)!important;border-radius:13px 13px 0 0!important;padding:4px 0!important;}
+.flatpickr-month,.flatpickr-current-month,.flatpickr-current-month .cur-month{color:#fff!important;}
+.flatpickr-current-month .flatpickr-monthDropdown-months{color:#fff!important;font-weight:700!important;font-size:14px!important;font-family:'Cairo',sans-serif!important;border:none!important;background:transparent!important;cursor:pointer!important;}
+.flatpickr-current-month .flatpickr-monthDropdown-months option{color:#0f172a!important;background:#fff!important;}
+.flatpickr-current-month input.cur-year{color:#fff!important;font-weight:800!important;font-size:14px!important;}
+.numInputWrapper:hover{background:rgba(255,255,255,.1)!important;}
+.arrowUp:after{border-bottom-color:#fff!important;} .arrowDown:after{border-top-color:#fff!important;}
+.flatpickr-prev-month svg,.flatpickr-next-month svg{fill:#fff!important;}
+.flatpickr-prev-month:hover,.flatpickr-next-month:hover{background:rgba(255,255,255,.15)!important;}
+.flatpickr-weekday{color:var(--brand)!important;font-weight:700!important;}
+.flatpickr-day.selected{background:var(--brand)!important;border-color:var(--brand)!important;border-radius:8px!important;}
+.flatpickr-day:hover{background:var(--brand-m)!important;border-radius:8px!important;}
+.flatpickr-day.today{border-color:var(--brand)!important;font-weight:700!important;}
 .cust-ff{display:flex;flex-direction:column;gap:3px;}
 .cust-ff label{font-size:10px;font-weight:700;color:#1a3d8f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .cff{padding:6px 10px;border-radius:7px;border:1px solid #dde4f0;background:#f7f9ff;color:#1a1a2e;font-family:inherit;font-size:12px;outline:none;width:100%;}
@@ -1486,6 +1503,7 @@ async function openNewBkModal(editMode){
     document.getElementById('nb-apt').disabled=false;
   }
   modal.style.display='flex';
+  setTimeout(initFP,100);
   setTimeout(()=>{
     ['nb-checkin','nb-checkout'].forEach(id=>{
       const el=document.getElementById(id);
@@ -1871,11 +1889,23 @@ async function saveRoomInfo(){
 }
 
 
+// ── Date Pickers ─────────────────────────────────────────
+function initFP(){
+  ['bkDateFrom','bkDateTo','custDateFrom','custDateTo','nb-checkin','nb-checkout'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el||el._flatpickr)return;
+    flatpickr(el,{locale:'ar',dateFormat:'Y-m-d',disableMobile:true,
+      onChange(){el.dispatchEvent(new Event('change'));}
+    });
+  });
+}
+
 // ── Init ─────────────────────────────────────────────────
 window.addEventListener('load',()=>{
   loadStats();
   loadApartments();
   updateClock();
+  setTimeout(initFP,300);
 
   setInterval(updateClock,1000);
   setInterval(loadStats,60000);
