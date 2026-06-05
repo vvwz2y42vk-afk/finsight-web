@@ -1,0 +1,20 @@
+const mongoose = require('mongoose');
+
+const schema = new mongoose.Schema({
+  name:       { type: String, required: true, trim: true },
+  phone:      { type: String, required: true, trim: true },
+  idType:     { type: String, default: '' },
+  idNumber:   { type: String, default: '' },
+  nationality:{ type: String, default: '' },
+  notes:      { type: String, default: '' },
+  propertyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Property', default: null },
+  building:   { type: String, default: '' },
+  totalBookings: { type: Number, default: 1 },
+  lastSeen:   { type: Date, default: Date.now },
+}, { timestamps: true });
+
+schema.index({ phone: 1, propertyId: 1 }, { unique: true });
+schema.index({ propertyId: 1, building: 1 });
+schema.index({ name: 1 });
+
+module.exports = mongoose.model('Guest', schema);

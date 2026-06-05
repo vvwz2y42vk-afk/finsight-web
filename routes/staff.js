@@ -270,6 +270,13 @@ router.post('/api/bookings/new', reqStaff, async (req,res) => {
     }).save();
 
     AL.create({building:req.staff.building,staffName:req.staff.name,action:'booking_add',apt,guestName:name,bookingId:bk._id,details:'حجز يدوي'}).catch(()=>{});
+    // Upsert guest record
+    const Guest = require('../models/Guest');
+    Guest.findOneAndUpdate(
+      { phone, propertyId: req.staff.propertyId || null },
+      { name, idType: idType||'', idNumber: idNumber||'', building: req.staff.building, lastSeen: new Date(), $inc: { totalBookings: 1 } },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    ).catch(() => {});
     res.json({success:true, id:bk._id});
   } catch(e){ res.status(500).json({error:e.message}); }
 });
@@ -484,6 +491,63 @@ router.get('/api/reports', reqStaff, async (req, res) => {
       },
       chart: dailyChart,
     });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── Property Settings ────────────────────────────────────
+router.get('/api/property', reqStaff, async (req, res) => {
+  try {
+    if (!req.staff.propertyId) {
+      return res.json({
+        name: req.staff.building,
+        isInternal: true,
+        buildings: Object.entries(BLDGS).map(([name, data]) => ({
+          name, floors: data.floors.map(f => ({ label: f.l, rooms: f.r }))
+        }))
+      });
+    }
+    const prop = await Property.findById(req.staff.propertyId).lean();
+    if (!prop) return res.status(404).json({ error: 'المنشأة غير موجودة' });
+    res.json(prop);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+router.put('/api/property/buildings', reqStaff, async (req, res) => {
+  try {
+    if (!req.staff.propertyId) return res.status(403).json({ error: 'هذا الإعداد للمنشآت المسجّلة فقط' });
+    if (req.staff.role !== 'manager') return res.status(403).json({ error: 'المديرون فقط يمكنهم تعديل الإعدادات' });
+    const { buildings } = req.body;
+    if (!Array.isArray(buildings)) return res.status(400).json({ error: 'بيانات غير صحيحة' });
+    for (const b of buildings) {
+      if (!b.name?.trim()) return res.status(400).json({ error: 'اسم المبنى مطلوب' });
+    }
+    await Property.findByIdAndUpdate(req.staff.propertyId, { buildings });
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── Guests ────────────────────────────────────────────────
+router.get('/api/guests', reqStaff, async (req, res) => {
+  try {
+    const Guest = require('../models/Guest');
+    const { q = '' } = req.query;
+    const filter = { propertyId: req.staff.propertyId || null };
+    if (q.trim()) {
+      const re = new RegExp(q.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      filter.$or = [{ name: re }, { phone: re }, { idNumber: re }];
+    }
+    const guests = await Guest.find(filter).sort({ lastSeen: -1 }).limit(200).lean();
+    res.json(guests);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+router.get('/api/guests/search', reqStaff, async (req, res) => {
+  try {
+    const Guest = require('../models/Guest');
+    const phone = (req.query.phone || '').trim();
+    if (phone.length < 9) return res.json(null);
+    const guest = await Guest.findOne({ phone, propertyId: req.staff.propertyId || null }).lean();
+    res.json(guest || null);
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 

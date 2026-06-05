@@ -311,6 +311,10 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
     <div class="sn" onclick="goTab('activity',this)" id="sn-activity" style="display:<%= P.includes('activity')?'flex':'none' %>"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span><span class="sn-lbl">سجل الحركات</span></div>
     <div class="sn" onclick="goTab('vouchers',this)" id="sn-vouchers" style="display:<%= P.includes('vouchers')?'flex':'none' %>"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></span><span class="sn-lbl">السندات والفواتير</span></div>
     <div class="sn" onclick="goTab('reports',this)" id="sn-reports" style="display:<%= P.includes('reports')?'flex':'none' %>"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></span><span class="sn-lbl">التقارير</span></div>
+    <div class="sn" onclick="goTab('guests',this)" id="sn-guests" style="display:flex"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span><span class="sn-lbl">الضيوف</span></div>
+    <% if(staff.role==='manager'){ %>
+    <div class="sn" onclick="goTab('settings',this)" id="sn-settings"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span><span class="sn-lbl">إعدادات المبنى</span></div>
+    <% } %>
   </nav>
   <div class="sb-foot">
     <a href="/staff/logout" class="sb-logout" style="text-decoration:none;"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></span><span class="sn-lbl">خروج</span></a>
@@ -628,6 +632,50 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
       </div>
     </div>
 
+    <!-- ── Guests ── -->
+    <div class="tab-section" id="tab-guests">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px;">
+        <div>
+          <div style="font-size:15px;font-weight:700;color:var(--t1);">قاعدة الضيوف</div>
+          <div style="font-size:11px;color:var(--t4);margin-top:2px;" id="guests-count"></div>
+        </div>
+        <input class="sinp" id="guests-search" placeholder="بحث بالاسم أو الجوال أو رقم الهوية..." style="max-width:280px;" oninput="searchGuests(this.value)">
+      </div>
+      <div class="chart-card" style="padding:0;">
+        <div class="tbl-wrap">
+          <table class="stbl">
+            <thead><tr>
+              <th>الضيف</th><th>الجوال</th><th>نوع الهوية</th><th>رقم الهوية</th><th>المبنى</th><th>عدد الحجوزات</th><th>آخر زيارة</th>
+            </tr></thead>
+            <tbody id="guests-tbody"><tr><td colspan="7" style="text-align:center;padding:30px;color:var(--t4);">جاري التحميل...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Settings ── -->
+    <div class="tab-section" id="tab-settings">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+        <div>
+          <div style="font-size:15px;font-weight:700;color:var(--t1);">إعداد المباني والشقق</div>
+          <div style="font-size:11px;color:var(--t4);margin-top:2px;">حدد مبانيك وطوابقك وأرقام الشقق</div>
+        </div>
+        <button class="sbtn" onclick="saveSettings()">حفظ التغييرات</button>
+      </div>
+
+      <div id="settings-internal-note" style="display:none;background:#FFFBEB;border:1px solid #FDE68A;border-radius:12px;padding:14px 18px;margin-bottom:20px;font-size:13px;color:#92400E;">
+        ⚠️ هذه المنشأة داخلية — يتم إدارة المباني من قِبل الإدارة مباشرة.
+      </div>
+
+      <div id="settings-err" style="display:none;background:#FEF2F2;border:1px solid #FECACA;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:#B91C1C;"></div>
+
+      <div id="buildings-wrap"></div>
+
+      <button onclick="addBuilding()" id="add-bld-btn" style="display:flex;align-items:center;gap:8px;padding:10px 20px;border:2px dashed #C7D9FF;border-radius:12px;background:#F0F4FF;color:#1a3d8f;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;margin-top:12px;width:100%;justify-content:center;transition:all .2s;" onmouseover="this.style.background='#E0ECFF'" onmouseout="this.style.background='#F0F4FF'">
+        + إضافة مبنى
+      </button>
+    </div>
+
     <!-- ── Activity ── -->
     <div class="tab-section" id="tab-activity">
       <div class="apt-bld">
@@ -840,7 +888,10 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
         </div>
         <div>
           <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">رقم الجوال *</label>
-          <input id="nb-phone" type="tel" inputmode="numeric" maxlength="10" placeholder="05xxxxxxxx" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,10)" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;">
+          <div style="position:relative;">
+            <input id="nb-phone" type="tel" inputmode="numeric" maxlength="10" placeholder="05xxxxxxxx" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,10);onPhoneInput(this.value)" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;">
+            <span id="nb-guest-badge" style="display:none;position:absolute;left:8px;top:50%;transform:translateY(-50%);background:#047857;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;">ضيف سابق ✓</span>
+          </div>
         </div>
         <div>
           <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">نوع الحجز *</label>
@@ -965,6 +1016,8 @@ function goTab(id, el){
   if(id==='activity')   loadActivity();
   if(id==='vouchers')   { vouBkCache=[]; showVouCards(); }
   if(id==='reports')    loadReports();
+  if(id==='guests')     loadGuests();
+  if(id==='settings')   loadSettings();
 }
 
 // ── Dashboard ────────────────────────────────────────────
@@ -1949,6 +2002,186 @@ async function saveRoomInfo(){
   }catch(e){errEl.textContent='حدث خطأ';errEl.style.display='block';}
 }
 
+
+// ── Guests ───────────────────────────────────────────────
+let allGuests = [];
+async function loadGuests() {
+  try {
+    const r = await fetch('/staff/api/guests');
+    if (!r.ok) return;
+    allGuests = await r.json();
+    renderGuests(allGuests);
+  } catch(e) {}
+}
+
+function renderGuests(list) {
+  const tb = document.getElementById('guests-tbody');
+  const lbl = document.getElementById('guests-count');
+  if (lbl) lbl.textContent = list.length + ' ضيف مسجّل';
+  if (!list.length) {
+    tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--t4);">لا يوجد ضيوف مسجّلون بعد — سيُضافون تلقائياً عند إنشاء الحجوزات</td></tr>';
+    return;
+  }
+  const idLabels = { national_id: 'هوية وطنية', passport: 'جواز سفر', residence: 'إقامة', other: 'أخرى' };
+  tb.innerHTML = list.map(g => {
+    const last = g.lastSeen ? new Date(g.lastSeen).toLocaleDateString('ar-SA', { year:'numeric', month:'short', day:'numeric' }) : '—';
+    return `<tr>
+      <td><div style="font-weight:600;">${esc(g.name)}</div></td>
+      <td style="font-family:monospace;">${esc(g.phone)}</td>
+      <td style="font-size:12px;color:var(--t3);">${idLabels[g.idType] || g.idType || '—'}</td>
+      <td style="font-family:monospace;font-size:12px;">${esc(g.idNumber) || '—'}</td>
+      <td style="font-size:12px;color:var(--t3);">${esc(g.building) || '—'}</td>
+      <td style="text-align:center;"><span class="badge b-active">${g.totalBookings}</span></td>
+      <td style="font-size:12px;color:var(--t4);">${last}</td>
+    </tr>`;
+  }).join('');
+}
+
+let guestSearchTimer;
+function searchGuests(q) {
+  clearTimeout(guestSearchTimer);
+  guestSearchTimer = setTimeout(() => {
+    if (!q.trim()) return renderGuests(allGuests);
+    const re = new RegExp(q.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+    renderGuests(allGuests.filter(g => re.test(g.name) || re.test(g.phone) || re.test(g.idNumber || '')));
+  }, 250);
+}
+
+// ── Phone auto-fill in new booking ───────────────────────
+let phoneTimer;
+async function onPhoneInput(val) {
+  clearTimeout(phoneTimer);
+  const badge = document.getElementById('nb-guest-badge');
+  if (badge) badge.style.display = 'none';
+  if (val.length < 10) return;
+  phoneTimer = setTimeout(async () => {
+    try {
+      const r = await fetch('/staff/api/guests/search?phone=' + val);
+      if (!r.ok) return;
+      const g = await r.json();
+      if (!g) return;
+      // Auto-fill
+      const nameEl = document.getElementById('nb-name');
+      const idTypeEl = document.getElementById('nb-idtype');
+      const idNumEl = document.getElementById('nb-idnumber');
+      if (nameEl && !nameEl.value) nameEl.value = g.name;
+      if (idTypeEl && g.idType) idTypeEl.value = g.idType;
+      if (idNumEl && !idNumEl.value) idNumEl.value = g.idNumber || '';
+      if (badge) badge.style.display = 'inline-block';
+      toast('تم تعبئة بيانات الضيف تلقائياً ✓');
+    } catch(e) {}
+  }, 400);
+}
+
+// ── Settings (Building Config) ────────────────────────────
+let propBuildings = [];
+let isInternalProp = false;
+
+async function loadSettings() {
+  try {
+    const r = await fetch('/staff/api/property');
+    if (!r.ok) return;
+    const prop = await r.json();
+    isInternalProp = !!prop.isInternal;
+    propBuildings = (prop.buildings || []).map(b => ({
+      name: b.name,
+      floors: (b.floors || []).map(f => ({ label: f.label || f.l || '', rooms: (f.rooms || f.r || []).join(', ') }))
+    }));
+    document.getElementById('settings-internal-note').style.display = isInternalProp ? 'block' : 'none';
+    document.getElementById('add-bld-btn').style.display = isInternalProp ? 'none' : 'flex';
+    renderSettings();
+  } catch(e) {}
+}
+
+function renderSettings() {
+  const wrap = document.getElementById('buildings-wrap');
+  if (!wrap) return;
+  if (!propBuildings.length) {
+    wrap.innerHTML = '<div style="text-align:center;padding:30px;color:var(--t4);font-size:13px;">لا توجد مباني — اضغط "+ إضافة مبنى" للبدء</div>';
+    return;
+  }
+  wrap.innerHTML = propBuildings.map((b, bi) => `
+    <div style="background:#fff;border:1px solid #E2E8F0;border-radius:14px;padding:20px;margin-bottom:14px;box-shadow:0 2px 8px rgba(15,23,42,.04);">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+        <div style="width:8px;height:8px;border-radius:50%;background:#1a3d8f;flex-shrink:0;"></div>
+        <input value="${esc(b.name)}" onchange="propBuildings[${bi}].name=this.value" placeholder="اسم المبنى" style="flex:1;font-size:14px;font-weight:700;border:none;outline:none;color:#0F172A;background:transparent;" ${isInternalProp ? 'disabled' : ''}>
+        ${!isInternalProp ? `<button onclick="removeBuilding(${bi})" style="background:none;border:none;color:#B91C1C;cursor:pointer;font-size:18px;padding:0 4px;" title="حذف المبنى">×</button>` : ''}
+      </div>
+      ${b.floors.map((f, fi) => `
+        <div style="background:#F8FAFC;border:1px solid #EEF2F8;border-radius:10px;padding:14px;margin-bottom:8px;">
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+            <input value="${esc(f.label)}" onchange="propBuildings[${bi}].floors[${fi}].label=this.value" placeholder="اسم الطابق (مثال: الأرضي، الأول)" style="flex:1;padding:7px 10px;border:1.5px solid #E2E8F0;border-radius:8px;font-family:'Cairo',sans-serif;font-size:13px;outline:none;" ${isInternalProp ? 'disabled' : ''}>
+            ${!isInternalProp ? `<button onclick="removeFloor(${bi},${fi})" style="background:none;border:none;color:#B91C1C;cursor:pointer;font-size:16px;flex-shrink:0;">×</button>` : ''}
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <div style="font-size:11px;color:#64748B;flex-shrink:0;">أرقام الشقق:</div>
+            <input value="${esc(f.rooms)}" onchange="propBuildings[${bi}].floors[${fi}].rooms=this.value" placeholder="101, 102, 103, 104" style="flex:1;padding:6px 10px;border:1.5px solid #E2E8F0;border-radius:8px;font-family:monospace;font-size:12px;outline:none;" ${isInternalProp ? 'disabled' : ''}>
+            ${!isInternalProp ? `<button onclick="autoGenRooms(${bi},${fi})" style="padding:5px 10px;background:#1a3d8f;border:none;border-radius:7px;color:#fff;font-family:'Cairo',sans-serif;font-size:11px;cursor:pointer;flex-shrink:0;">توليد</button>` : ''}
+          </div>
+        </div>
+      `).join('')}
+      ${!isInternalProp ? `<button onclick="addFloor(${bi})" style="display:flex;align-items:center;gap:6px;padding:7px 14px;border:1.5px dashed #C7D9FF;border-radius:8px;background:transparent;color:#1a3d8f;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;margin-top:4px;">+ إضافة طابق</button>` : ''}
+    </div>
+  `).join('');
+}
+
+function addBuilding() {
+  propBuildings.push({ name: '', floors: [{ label: '', rooms: '' }] });
+  renderSettings();
+  // focus last building name input
+  setTimeout(() => { const inputs = document.querySelectorAll('#buildings-wrap input[placeholder="اسم المبنى"]'); if (inputs.length) inputs[inputs.length-1].focus(); }, 50);
+}
+
+function removeBuilding(i) {
+  if (!confirm('هل تريد حذف هذا المبنى وكل طوابقه؟')) return;
+  propBuildings.splice(i, 1);
+  renderSettings();
+}
+
+function addFloor(bi) {
+  propBuildings[bi].floors.push({ label: '', rooms: '' });
+  renderSettings();
+}
+
+function removeFloor(bi, fi) {
+  propBuildings[bi].floors.splice(fi, 1);
+  renderSettings();
+}
+
+function autoGenRooms(bi, fi) {
+  const prefix = prompt('رمز الطابق (مثال: 1 للطابق الأول، اتركه فارغاً للأرضي):') || '';
+  const countStr = prompt('كم عدد الشقق في هذا الطابق؟');
+  const count = parseInt(countStr);
+  if (!count || count < 1 || count > 50) return;
+  const rooms = [];
+  for (let i = 1; i <= count; i++) {
+    rooms.push(prefix + String(i).padStart(2, '0'));
+  }
+  propBuildings[bi].floors[fi].rooms = rooms.join(', ');
+  renderSettings();
+}
+
+async function saveSettings() {
+  if (isInternalProp) return;
+  const errEl = document.getElementById('settings-err');
+  errEl.style.display = 'none';
+  const buildings = propBuildings.map(b => ({
+    name: b.name.trim(),
+    floors: b.floors.map(f => ({
+      label: f.label.trim(),
+      rooms: f.rooms.split(',').map(r => r.trim()).filter(Boolean)
+    }))
+  }));
+  for (const b of buildings) {
+    if (!b.name) { errEl.textContent = 'كل مبنى يجب أن يكون له اسم'; errEl.style.display = 'block'; return; }
+  }
+  try {
+    const r = await fetch('/staff/api/property/buildings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ buildings }) });
+    const d = await r.json();
+    if (!r.ok) { errEl.textContent = d.error || 'خطأ في الحفظ'; errEl.style.display = 'block'; return; }
+    toast('تم حفظ إعدادات المباني بنجاح ✓');
+  } catch(e) { errEl.textContent = 'خطأ في الاتصال'; errEl.style.display = 'block'; }
+}
 
 // ── Reports ──────────────────────────────────────────────
 let revenueChartInst = null;
