@@ -238,20 +238,10 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
 .flatpickr-calendar{border-radius:14px!important;box-shadow:0 8px 32px rgba(15,23,42,.14)!important;border:1px solid #e2e8f0!important;font-family:'Cairo',sans-serif!important;direction:rtl;}
 .flatpickr-months{background:var(--brand)!important;border-radius:13px 13px 0 0!important;}
 .flatpickr-month{color:#fff!important;}
-.flatpickr-current-month{display:flex!important;align-items:center!important;justify-content:center!important;gap:4px!important;}
-.flatpickr-current-month .flatpickr-monthDropdown-months,.flatpickr-current-month input.cur-year,.flatpickr-current-month .numInputWrapper{display:none!important;}
-.fp-hd-btn{background:rgba(255,255,255,.15);border:none;color:#fff;font-weight:800;font-size:15px;font-family:'Cairo',sans-serif;padding:4px 14px;border-radius:8px;cursor:pointer;white-space:nowrap;}
-.fp-hd-btn:hover{background:rgba(255,255,255,.28);}
-.fp-picker-panel{position:absolute;top:46px;left:50%;transform:translateX(-50%);background:#fff;border-radius:14px;box-shadow:0 10px 32px rgba(0,0,0,.18);z-index:99999;padding:12px;width:240px;display:none;}
-.fp-picker-panel.open{display:block;}
-.fp-yr-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
-.fp-yr-val{font-size:15px;font-weight:800;color:var(--brand);}
-.fp-yr-arrow{background:var(--brand-m);border:none;color:var(--brand);width:28px;height:28px;border-radius:8px;cursor:pointer;font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;}
-.fp-yr-arrow:hover{background:var(--brand);color:#fff;}
-.fp-months-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
-.fp-mi{padding:8px 4px;text-align:center;border-radius:8px;font-size:12px;font-weight:600;color:var(--t1);cursor:pointer;transition:all .12s;font-family:'Cairo',sans-serif;}
-.fp-mi:hover{background:var(--brand-m);color:var(--brand);}
-.fp-mi.sel{background:var(--brand);color:#fff;}
+.flatpickr-current-month{display:flex!important;align-items:center!important;justify-content:center!important;gap:6px!important;padding:6px 0!important;}
+.flatpickr-current-month .flatpickr-monthDropdown-months{background:rgba(255,255,255,.15)!important;color:#fff!important;border:none!important;border-radius:6px!important;padding:4px 8px!important;font-size:14px!important;font-weight:700!important;font-family:'Cairo',sans-serif!important;cursor:pointer!important;-webkit-appearance:auto!important;appearance:auto!important;}
+.flatpickr-current-month input.cur-year{font-size:14px!important;font-weight:800!important;color:#fff!important;background:rgba(255,255,255,.15)!important;border-radius:6px!important;padding:4px 6px!important;width:56px!important;text-align:center!important;border:none!important;}
+.flatpickr-current-month .numInputWrapper{display:inline-flex!important;}
 .flatpickr-current-month input.cur-year{color:#fff!important;}
 .flatpickr-prev-month,.flatpickr-next-month{color:#fff!important;fill:#fff!important;}
 .flatpickr-prev-month:hover,.flatpickr-next-month:hover{background:rgba(255,255,255,.15)!important;border-radius:6px!important;}
@@ -1902,74 +1892,9 @@ async function saveRoomInfo(){
 }
 
 // ── Flatpickr Date Pickers ────────────────────────────────
-const MN=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
-
-function buildMonthYearPicker(fp){
-  const cal=fp.calendarContainer;
-  if(!cal||cal._mypicker)return;
-  cal._mypicker=true;
-  const mWrap=cal.querySelector('.flatpickr-current-month');
-  if(!mWrap)return;
-
-  let pickerYear=fp.currentYear;
-
-  // header button
-  const btn=document.createElement('button');
-  btn.type='button'; btn.className='fp-hd-btn';
-  const updateBtn=()=>btn.textContent=MN[fp.currentMonth]+' '+fp.currentYear;
-  updateBtn();
-  mWrap.appendChild(btn);
-
-  // panel
-  const panel=document.createElement('div');
-  panel.className='fp-picker-panel';
-  cal.querySelector('.flatpickr-months').style.position='relative';
-  cal.querySelector('.flatpickr-months').appendChild(panel);
-
-  // year row
-  const yrRow=document.createElement('div'); yrRow.className='fp-yr-row';
-  const prevYr=document.createElement('button'); prevYr.type='button'; prevYr.className='fp-yr-arrow'; prevYr.textContent='‹';
-  const yrVal=document.createElement('span'); yrVal.className='fp-yr-val';
-  const nextYr=document.createElement('button'); nextYr.type='button'; nextYr.className='fp-yr-arrow'; nextYr.textContent='›';
-  yrRow.append(prevYr,yrVal,nextYr); panel.appendChild(yrRow);
-
-  // months grid
-  const grid=document.createElement('div'); grid.className='fp-months-grid';
-  MN.forEach((m,i)=>{
-    const mi=document.createElement('div'); mi.className='fp-mi'; mi.textContent=m;
-    mi.addEventListener('click',()=>{
-      fp.changeYear(pickerYear);
-      fp.changeMonth(i-fp.currentMonth,false);
-      panel.classList.remove('open');
-      updateBtn();
-    });
-    grid.appendChild(mi);
-  });
-  panel.appendChild(grid);
-
-  const refreshGrid=()=>{
-    yrVal.textContent=pickerYear;
-    grid.querySelectorAll('.fp-mi').forEach((el,i)=>el.classList.toggle('sel',i===fp.currentMonth&&pickerYear===fp.currentYear));
-  };
-
-  prevYr.addEventListener('click',e=>{e.stopPropagation();pickerYear--;refreshGrid();});
-  nextYr.addEventListener('click',e=>{e.stopPropagation();pickerYear++;refreshGrid();});
-
-  btn.addEventListener('click',e=>{
-    e.stopPropagation();
-    pickerYear=fp.currentYear;
-    refreshGrid();
-    panel.classList.toggle('open');
-  });
-  document.addEventListener('click',()=>panel.classList.remove('open'));
-
-  fp.config.onMonthChange.push(()=>updateBtn());
-}
-
 function initDatePickers(){
-  const mk=(extra={})=>({locale:'ar',dateFormat:'Y-m-d',allowInput:true,disableMobile:true,onReady(d,s,fp){buildMonthYearPicker(fp);},onMonthChange(d,s,fp){buildMonthYearPicker(fp);}, ...extra});
-  const cfg=mk({onChange(d,s,inst){inst.input.dispatchEvent(new Event('change'));}});
-  const cfgModal=mk({onChange(d,s,inst){inst.input.dispatchEvent(new Event('change'));calcNbTotal();}});
+  const cfg={locale:'ar',dateFormat:'Y-m-d',allowInput:true,disableMobile:true,onChange(d,s,inst){inst.input.dispatchEvent(new Event('change'));}};
+  const cfgModal={locale:'ar',dateFormat:'Y-m-d',allowInput:true,disableMobile:true,onChange(d,s,inst){inst.input.dispatchEvent(new Event('change'));calcNbTotal();}};
   ['bkDateFrom','bkDateTo','custDateFrom','custDateTo'].forEach(id=>{
     const el=document.getElementById(id);
     if(el && !el._flatpickr) flatpickr(el, cfg);
