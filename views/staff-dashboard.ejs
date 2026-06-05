@@ -340,7 +340,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
     <div class="sn" onclick="goTab('activity',this)" id="sn-activity" style="display:<%= P.includes('activity')?'flex':'none' %>"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span><span class="sn-lbl">سجل الحركات</span></div>
     <div class="sn" onclick="goTab('vouchers',this)" id="sn-vouchers" style="display:<%= P.includes('vouchers')?'flex':'none' %>"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></span><span class="sn-lbl">السندات والفواتير</span></div>
     <div class="sn" onclick="goTab('reports',this)" id="sn-reports" style="display:<%= P.includes('reports')?'flex':'none' %>"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></span><span class="sn-lbl">التقارير</span></div>
-    <div class="sn" onclick="goTab('guests',this)" id="sn-guests" style="display:flex"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span><span class="sn-lbl">الضيوف</span></div>
+    <div class="sn" onclick="goTab('guests',this)" id="sn-guests" style="display:<%= P.includes('guests') || staff.role==='manager' ? 'flex' : 'none' %>"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span><span class="sn-lbl">الضيوف</span></div>
     <% if(staff.role==='manager'){ %>
     <div class="sn" onclick="goTab('settings',this)" id="sn-settings"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span><span class="sn-lbl">إعدادات المبنى</span></div>
     <% } %>
@@ -1075,7 +1075,7 @@ async function loadStats(){
     animateNum(document.getElementById('k-rate'), d.occupancyRate, '%');
     renderWeeklyChart(d.weekly, d.total);
     renderDonut(d.occupied, d.total);
-  }catch(e){}
+  }catch(e){ toast('❌ تعذر تحميل الإحصاءات — تحقق من الاتصال'); }
 }
 
 function renderWeeklyChart(weekly, total){
@@ -1530,7 +1530,10 @@ async function loadBookings(){
         ${!['cancelled','checkout'].includes(b.status)&&can('cancel_booking')?`<button onclick="cancelBk('${b._id}')" style="padding:4px 10px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;border-radius:7px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">إلغاء</button>`:''}
       </td>
     </tr>`).join('');
-  }catch(e){}
+  }catch(e){
+    const tb=document.getElementById('bkTbody');
+    if(tb) tb.innerHTML='<tr><td colspan="10" style="text-align:center;padding:30px;color:#dc2626;">❌ تعذر تحميل الحجوزات — تحقق من الاتصال</td></tr>';
+  }
 }
 
 // ── Customers ────────────────────────────────────────────
@@ -1595,7 +1598,10 @@ async function loadCustomers(){
         ${c.totalPrice?`<br><span style="color:#64748b;">${c.totalPrice.toLocaleString()} ر</span>`:''}
       </td>
     </tr>`).join('');
-  }catch(e){}
+  }catch(e){
+    const tb=document.getElementById('custTbody');
+    if(tb) tb.innerHTML='<tr><td colspan="10" style="text-align:center;padding:30px;color:#dc2626;">❌ تعذر تحميل البيانات — تحقق من الاتصال</td></tr>';
+  }
 }
 
 // ── Housekeeping ─────────────────────────────────────────
@@ -1613,7 +1619,7 @@ async function loadHousekeeping(){
         ${t.notes?`<div style="font-size:9px;color:#94a3b8;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(t.notes)}</div>`:''}
       </div>`;
     }).join('');
-  }catch(e){}
+  }catch(e){ toast('❌ تعذر تحميل بيانات النظافة'); }
 }
 
 function openHkModal(apt,status,notes){
@@ -1654,7 +1660,7 @@ async function loadActivity(){
         </div>
         <div class="act-time">${new Date(l.createdAt).toLocaleString('ar-SA',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'short'})}</div>
       </div>`).join('');
-  }catch(e){}
+  }catch(e){ toast('❌ تعذر تحميل سجل الحركات'); }
 }
 
 // ── New Booking ──────────────────────────────────────────

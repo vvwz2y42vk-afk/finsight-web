@@ -38,7 +38,30 @@ const totalApts = b => (BLDGS[b]?.floors||[]).reduce((s,f)=>s+f.r.length,0);
 
 function staffAuth(req,res,next){ req.staff=verifyToken(req.cookies?.[COOKIE])||null; next(); }
 function reqStaff(req,res,next){ if(!req.staff)return res.redirect('/staff/login'); next(); }
-const DEFAULT_PERMS=['dashboard','apartments','bookings','customers','housekeeping','activity','new_booking','edit_booking','cancel_booking','vouchers','reports'];
+const DEFAULT_PERMS=['dashboard','apartments','bookings','customers','housekeeping','activity','new_booking','edit_booking','cancel_booking','vouchers','reports','guests'];
+
+function buildBookingFilter(staff, { sf='open', apt='', booking_type='', date_from='', date_to='' }) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate()+1);
+  const filter = { building: staff.building };
+  if      (sf==='open')                  filter.status = { $nin:['cancelled','checkout'] };
+  else if (sf==='active')                filter.status = 'active';
+  else if (sf==='pending_checkin')       filter.status = { $in:['pending','awaiting_payment','awaiting_checkin'] };
+  else if (sf==='today_arrival_pending') { filter.checkIn={$gte:today,$lt:tomorrow}; filter.status={$ne:'active'}; }
+  else if (sf==='today_arrival_done')    { filter.checkIn={$gte:today,$lt:tomorrow}; filter.status='active'; }
+  else if (sf==='today_arrival_all')     filter.checkIn = { $gte:today,$lt:tomorrow };
+  else if (sf==='today_dep_pending')     { filter.checkOut={$gte:today,$lt:tomorrow}; filter.status='active'; }
+  else if (sf==='today_dep_done')        { filter.checkOut={$gte:today,$lt:tomorrow}; filter.status='checkout'; }
+  else if (sf==='today_dep_all')         filter.checkOut = { $gte:today,$lt:tomorrow };
+  else if (sf==='closed')                filter.status = 'checkout';
+  else if (sf==='cancelled')             filter.status = 'cancelled';
+  if (apt)          filter.apt = apt;
+  if (booking_type) filter.bookingType = booking_type;
+  if (date_from)    filter.checkIn = { ...(filter.checkIn||{}), $gte: new Date(date_from) };
+  if (date_to)      filter.checkIn = { ...(filter.checkIn||{}), $lte: new Date(date_to) };
+  return filter;
+}
+
 router.use(staffAuth);
 
 // ── Auth ─────────────────────────────────────────────────
@@ -70,7 +93,8 @@ router.get('/api/stats', reqStaff, async (req,res) => {
     const arrivals    = all.filter(b=>{ const c=b.checkIn?new Date(b.checkIn):null; return c&&c>=today&&c<tom&&['awaiting_checkin','active'].includes(b.status); });
     const departures  = all.filter(b=>{ const c=b.checkOut?new Date(b.checkOut):null; return c&&c>=today&&c<tom&&b.status==='active'; });
     const newBk       = all.filter(b=>['pending','awaiting_payment'].includes(b.status));
-    const total       = totalApts(bld);
+    const { bldgs: bldgsForStats } = await getBldgConfig(req.staff);
+    const total       = totalAptsFromConfig(bldgsForStats, bld);
     const rate        = total?Math.round(active.length/total*100):0;
 
     const weekly = [];
@@ -127,28 +151,8 @@ router.get('/api/bookings', reqStaff, async (req,res) => {
   try {
     const B = require('../models/Booking');
     const { sf='open', apt='', booking_type='', source='', date_from='', date_to='', booking_num='', q='' } = req.query;
-    const today = new Date(); today.setHours(0,0,0,0);
-    const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate()+1);
-
-    const filter = { building: req.staff.building };
-
-    if      (sf==='open')                  filter.status = { $nin:['cancelled','checkout'] };
-    else if (sf==='active')                filter.status = 'active';
-    else if (sf==='pending_checkin')       filter.status = { $in:['pending','awaiting_payment','awaiting_checkin'] };
-    else if (sf==='today_arrival_pending') { filter.checkIn={$gte:today,$lt:tomorrow}; filter.status={$ne:'active'}; }
-    else if (sf==='today_arrival_done')    { filter.checkIn={$gte:today,$lt:tomorrow}; filter.status='active'; }
-    else if (sf==='today_arrival_all')     filter.checkIn = { $gte:today,$lt:tomorrow };
-    else if (sf==='today_dep_pending')     { filter.checkOut={$gte:today,$lt:tomorrow}; filter.status='active'; }
-    else if (sf==='today_dep_done')        { filter.checkOut={$gte:today,$lt:tomorrow}; filter.status='checkout'; }
-    else if (sf==='today_dep_all')         filter.checkOut = { $gte:today,$lt:tomorrow };
-    else if (sf==='closed')                filter.status = 'checkout';
-    else if (sf==='cancelled')             filter.status = 'cancelled';
-
-    if (apt)          filter.apt = apt;
-    if (booking_type) filter.bookingType = booking_type;
-    if (source)       filter.source = source;
-    if (date_from)    filter.checkIn = { ...(filter.checkIn||{}), $gte: new Date(date_from) };
-    if (date_to)      filter.checkIn = { ...(filter.checkIn||{}), $lte: new Date(date_to) };
+    const filter = buildBookingFilter(req.staff, { sf, apt, booking_type, date_from, date_to });
+    if (source) filter.source = source;
 
     let list = await B.find(filter).sort({createdAt:-1}).limit(300).lean();
 
@@ -291,29 +295,7 @@ router.get('/api/customers', reqStaff, async (req,res) => {
   try {
     const B = require('../models/Booking');
     const { q='', sf='open', apt='', booking_type='', date_from='', date_to='', booking_num='' } = req.query;
-    const today = new Date(); today.setHours(0,0,0,0);
-    const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate()+1);
-
-    const filter = { building: req.staff.building };
-
-    // Status filter
-    if      (sf==='open')                  filter.status = { $nin:['cancelled','checkout'] };
-    else if (sf==='active')                filter.status = 'active';
-    else if (sf==='pending_checkin')       filter.status = { $in:['pending','awaiting_payment','awaiting_checkin'] };
-    else if (sf==='today_arrival_pending') { filter.checkIn={$gte:today,$lt:tomorrow}; filter.status={$ne:'active'}; }
-    else if (sf==='today_arrival_done')    { filter.checkIn={$gte:today,$lt:tomorrow}; filter.status='active'; }
-    else if (sf==='today_arrival_all')     filter.checkIn = { $gte:today,$lt:tomorrow };
-    else if (sf==='today_dep_pending')     { filter.checkOut={$gte:today,$lt:tomorrow}; filter.status='active'; }
-    else if (sf==='today_dep_done')        { filter.checkOut={$gte:today,$lt:tomorrow}; filter.status='checkout'; }
-    else if (sf==='today_dep_all')         filter.checkOut = { $gte:today,$lt:tomorrow };
-    else if (sf==='closed')                filter.status = 'checkout';
-    else if (sf==='cancelled')             filter.status = 'cancelled';
-    // sf==='all' → no status filter
-
-    if (apt)          filter.apt = apt;
-    if (booking_type) filter.bookingType = booking_type;
-    if (date_from)    filter.checkIn = { ...(filter.checkIn||{}), $gte: new Date(date_from) };
-    if (date_to)      filter.checkIn = { ...(filter.checkIn||{}), $lte: new Date(date_to) };
+    const filter = buildBookingFilter(req.staff, { sf, apt, booking_type, date_from, date_to });
 
     let bookings = await B.find(filter).sort({ createdAt:-1 }).limit(200).lean();
 
