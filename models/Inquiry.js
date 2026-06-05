@@ -11,4 +11,7 @@ const inquirySchema = new mongoose.Schema({
   status:   { type: String, default: 'جديد', enum: ['جديد', 'تم التواصل', 'تم الحجز', 'ملغي'] },
 }, { timestamps: true });
 
+inquirySchema.index({ status: 1 });
+inquirySchema.index({ createdAt: -1 });
+
 module.exports = mongoose.model('Inquiry', inquirySchema);

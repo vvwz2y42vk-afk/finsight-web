@@ -203,7 +203,23 @@ tbody td{padding:7px 5px;font-size:11px;}
 .toast{position:fixed;bottom:14px;right:50%;transform:translateX(50%) translateY(100px);background:var(--gold);color:#fff;padding:8px 16px;border-radius:10px;font-size:12px;font-weight:600;z-index:9999;transition:transform .3s;pointer-events:none;}
 .toast.show{transform:translateX(50%) translateY(0);}
 .charts-row-admin{display:grid;grid-template-columns:1fr 230px 230px;gap:12px;margin-bottom:10px;}
-@media(max-width:900px){.sidebar{display:none;}.kpi-grid{grid-template-columns:repeat(2,1fr);}.g2,.g4,.buildings-grid,.map-stats{grid-template-columns:1fr 1fr;}.charts-row-admin{grid-template-columns:1fr 1fr;}}
+/* ── Mobile hamburger ── */
+.mob-ham{display:none;flex-direction:column;gap:5px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;cursor:pointer;padding:7px 8px;margin-left:8px;}
+.mob-ham span{display:block;width:18px;height:2px;background:rgba(255,255,255,.8);border-radius:2px;transition:all .25s;}
+.mob-ham.active span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+.mob-ham.active span:nth-child(2){opacity:0;}
+.mob-ham.active span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+.mob-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:499;}
+.mob-overlay.open{display:block;}
+@media(max-width:900px){
+  .sidebar{display:flex;position:fixed;right:0;top:0;height:100vh;z-index:500;transform:translateX(110%);transition:transform .3s ease;box-shadow:-6px 0 32px rgba(0,0,0,.4);}
+  .sidebar.open{transform:translateX(0);}
+  .mob-ham{display:flex;}
+  .kpi-grid{grid-template-columns:repeat(2,1fr);}
+  .g2,.g4,.buildings-grid,.map-stats{grid-template-columns:1fr 1fr;}
+  .charts-row-admin{grid-template-columns:1fr 1fr;}
+  .main{padding:12px;}
+}
 ::-webkit-scrollbar{width:4px;height:4px;}::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px;}
 
 /* ── Sidebar BAREZ Dark ─────────────────── */
@@ -242,8 +258,9 @@ tbody td{padding:7px 5px;font-size:11px;}
 </style>
 </head>
 <body>
+<div class="mob-overlay" id="mobOverlay" onclick="closeMobNav()"></div>
 <div class="layout">
-<aside class="sidebar">
+<aside class="sidebar" id="dashSidebar">
   <div class="sb-logo" style="gap:12px;">
     <img src="/images/logo-dark.png" alt="Barez" style="height:48px;width:auto;">
   </div>
@@ -264,6 +281,9 @@ tbody td{padding:7px 5px;font-size:11px;}
     <button id="nav-msgs" class="ni" onclick="go('msgs',this)"><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>الرسائل<span class="ni-badge" id="nb-msgs">—</span></button>
     <button id="nav-apts" class="ni" onclick="go('apts',this)"><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg></span>الشقق<span class="ni-badge" id="nb-apts">—</span></button>
     <button id="nav-staff" class="ni" onclick="go('staff',this)"><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/><line x1="19" y1="8" x2="23" y2="8"/><line x1="21" y1="6" x2="21" y2="10"/></svg></span>الموظفون</button>
+    <div style="height:1px;background:rgba(255,255,255,.07);margin:6px 8px;" id="admin-sep" style="display:none;"></div>
+    <button id="nav-users" class="ni" onclick="go('users',this)" style="display:none"><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="23" y1="11" x2="17" y2="11"/><line x1="20" y1="8" x2="20" y2="14"/></svg></span>مستخدمو النظام</button>
+    <button id="nav-audit" class="ni" onclick="go('audit',this)" style="display:none"><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="10" y1="17" x2="8" y2="17"/><circle cx="16" cy="17" r="2"/></svg></span>سجل المراقبة</button>
   </nav>
   <div class="sb-user">
     <div class="user-row"><div class="user-av" id="user-av">ع</div><div><div class="user-name" id="user-name">عبد الملك</div><div class="user-role" id="user-role">مساعد إداري · BAREZ</div></div></div>
@@ -294,6 +314,7 @@ tbody td{padding:7px 5px;font-size:11px;}
     <div class="topbar-right">
       <div class="sync-badge ok" id="syncBadge"><div class="sync-dot"></div><span id="syncTxt">متصل بقاعدة البيانات ✓</span></div>
       <button class="btn btn-gold" id="addBtn" onclick="openAdd()" style="display:none">+ إضافة عقد</button>
+      <button class="mob-ham" id="mobHam" onclick="toggleMobNav()"><span></span><span></span><span></span></button>
     </div>
   </div>
   <div class="tabs" style="display:none;">
@@ -311,6 +332,8 @@ tbody td{padding:7px 5px;font-size:11px;}
     <button id="tab-nav-msgs" class="tab" onclick="st('msgs',this)">💬 الرسائل</button>
     <button id="tab-nav-apts" class="tab" onclick="st('apts',this)">🏢 الشقق</button>
     <button id="tab-nav-staff" class="tab" onclick="st('staff',this)">👤 الموظفون</button>
+    <button id="tab-nav-users" class="tab" onclick="st('users',this)" style="display:none">🔑 المستخدمون</button>
+    <button id="tab-nav-audit" class="tab" onclick="st('audit',this)" style="display:none">📋 المراقبة</button>
   </div>
   <div class="tc active" id="tab-dashboard">
     <div class="kpi-grid">
@@ -673,6 +696,92 @@ tbody td{padding:7px 5px;font-size:11px;}
         </div>
         <div id="sf-err" style="color:#dc2626;font-size:12px;margin-bottom:8px;display:none;"></div>
         <button class="btn btn-gold" style="width:100%;justify-content:center;" onclick="submitStaffForm()">حفظ الموظف</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════ USERS TAB ═══ -->
+  <div class="tc" id="tab-users">
+    <div class="topbar" style="margin-bottom:12px;">
+      <div><div class="page-title">مستخدمو <span>النظام</span></div><div style="font-size:10px;color:var(--t3);">إدارة حسابات الدخول للوحة التحكم</div></div>
+      <div class="topbar-right">
+        <button class="btn btn-gold" onclick="openUserForm()">+ إضافة مستخدم</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th>المستخدم</th><th>اسم الدخول</th><th>الدور</th><th>الحالة</th><th>الصفحات المسموحة</th><th>إجراء</th>
+          </tr></thead>
+          <tbody id="users-tbody"><tr><td colspan="6" style="text-align:center;color:var(--t3);padding:20px;">جاري التحميل...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════ AUDIT TAB ═══ -->
+  <div class="tc" id="tab-audit">
+    <div class="topbar" style="margin-bottom:12px;">
+      <div><div class="page-title">سجل <span>المراقبة</span></div><div style="font-size:10px;color:var(--t3);">كل عملية حذف أو تعديل أو إنشاء مسجّلة تلقائياً</div></div>
+    </div>
+    <div class="card" style="margin-bottom:10px;">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <select class="si" id="audit-model" style="flex:none;width:auto;" onchange="loadAuditLogs()">
+          <option value="">كل الأنواع</option>
+          <option value="Contract">العقود</option>
+          <option value="AdminUser">المستخدمون</option>
+          <option value="Booking">الحجوزات</option>
+          <option value="Listing">الإعلانات</option>
+        </select>
+        <select class="si" id="audit-action" style="flex:none;width:auto;" onchange="loadAuditLogs()">
+          <option value="">كل الإجراءات</option>
+          <option value="create">إنشاء</option>
+          <option value="update">تعديل</option>
+          <option value="delete">حذف</option>
+          <option value="login">دخول</option>
+        </select>
+        <input class="si" id="audit-user-filter" style="flex:none;width:130px;" placeholder="بحث بالمستخدم..." oninput="loadAuditLogs()">
+        <span style="font-size:10px;color:var(--t3);" id="audit-total-lbl"></span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th>الوقت</th><th>المستخدم</th><th>الإجراء</th><th>النوع</th><th>الملخص</th>
+          </tr></thead>
+          <tbody id="audit-tbody"><tr><td colspan="5" style="text-align:center;color:var(--t3);padding:20px;">جاري التحميل...</td></tr></tbody>
+        </table>
+      </div>
+      <div style="display:flex;justify-content:center;gap:6px;margin-top:12px;" id="audit-pagination"></div>
+    </div>
+  </div>
+
+  <!-- USER FORM MODAL -->
+  <div class="overlay" id="userOverlay" style="display:none;" onclick="if(event.target===this)closeUserForm()">
+    <div class="modal" style="max-width:420px;">
+      <div class="modal-hd"><div class="modal-title" id="userFormTitle">+ مستخدم جديد</div><button class="modal-close" onclick="closeUserForm()">×</button></div>
+      <div class="modal-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+          <div><label class="form-lbl">الاسم الكامل *</label><input class="form-inp" id="uf-name" type="text" placeholder="الاسم"></div>
+          <div><label class="form-lbl">اسم الدخول *</label><input class="form-inp" id="uf-username" type="text" placeholder="username"></div>
+          <div><label class="form-lbl">كلمة المرور *</label><input class="form-inp" id="uf-password" type="password" placeholder="اتركها فارغة للإبقاء عليها"></div>
+          <div><label class="form-lbl">الرمز (Avatar)</label><input class="form-inp" id="uf-avatar" type="text" placeholder="ع" maxlength="2"></div>
+          <div style="grid-column:1/-1;"><label class="form-lbl">الدور *</label>
+            <select class="form-inp" id="uf-role">
+              <option value="admin">مدير عام (Admin)</option>
+              <option value="manager">مدير (Manager)</option>
+              <option value="employee">موظف (Employee)</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-bottom:10px;">
+          <label class="form-lbl">الصفحات المسموحة</label>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px;" id="uf-allowed-grid"></div>
+        </div>
+        <div id="uf-err" style="color:#dc2626;font-size:12px;margin-bottom:8px;display:none;"></div>
+        <button class="btn btn-gold" style="width:100%;justify-content:center;" onclick="submitUserForm()">حفظ المستخدم</button>
       </div>
     </div>
   </div>
@@ -1135,7 +1244,7 @@ async function confirmDelete(){
   showToast('🗑️ تم الحذف — جاري المزامنة...');if(c)await syncToSheet('deleteContract',c);
 }
 
-const titles={dashboard:'لوحة <span>التحكم</span>',contracts:'<span>العقود</span>',commissions:'<span>العمولات</span>',collection:'<span>التحصيل</span>',expiry:'العقود <span>المنتهية</span>',map:'خريطة <span>الشقق</span>',performance:'تحليل <span>الأداء</span>',sources:'تحليل <span>المصادر</span>',reports:'<span>التقارير</span> الشهرية',listings:'إدارة <span>الإعلانات</span>',bookings:'طلبات <span>الحجز</span>',customers:'العملاء <span>المسجلون</span>',hosts:'المضيفون <span>الخارجيون</span>',msgs:'الرسائل <span>والمحادثات</span>',apts:'الشقق <span>والتسكين</span>',staff:'إدارة <span>الموظفين</span>'};
+const titles={dashboard:'لوحة <span>التحكم</span>',contracts:'<span>العقود</span>',commissions:'<span>العمولات</span>',collection:'<span>التحصيل</span>',expiry:'العقود <span>المنتهية</span>',map:'خريطة <span>الشقق</span>',performance:'تحليل <span>الأداء</span>',sources:'تحليل <span>المصادر</span>',reports:'<span>التقارير</span> الشهرية',listings:'إدارة <span>الإعلانات</span>',bookings:'طلبات <span>الحجز</span>',customers:'العملاء <span>المسجلون</span>',hosts:'المضيفون <span>الخارجيون</span>',msgs:'الرسائل <span>والمحادثات</span>',apts:'الشقق <span>والتسكين</span>',staff:'إدارة <span>الموظفين</span>',users:'مستخدمو <span>النظام</span>',audit:'سجل <span>المراقبة</span>'};
 async function loadUser(){
   try{
     const res=await fetch('/api/me');
@@ -1152,19 +1261,41 @@ async function loadUser(){
     });
     if(currentUser.role!=='admin'){
       const kc=document.getElementById('kpi-comm-card');if(kc)kc.style.display='none';
+    } else {
+      // Show admin-only sections
+      document.getElementById('nav-users').style.display='';
+      document.getElementById('nav-audit').style.display='';
+      document.getElementById('tab-nav-users').style.display='';
+      document.getElementById('tab-nav-audit').style.display='';
     }
   }catch(e){}
 }
 
+function toggleMobNav(){
+  const s=document.getElementById('dashSidebar'),o=document.getElementById('mobOverlay'),h=document.getElementById('mobHam');
+  s.classList.toggle('open');o.classList.toggle('open');h.classList.toggle('active');
+}
+function closeMobNav(){
+  document.getElementById('dashSidebar').classList.remove('open');
+  document.getElementById('mobOverlay').classList.remove('open');
+  document.getElementById('mobHam').classList.remove('active');
+}
+
+const PUBLIC_SECTIONS=['listings','bookings','customers','hosts','msgs','apts','staff','users','audit'];
 function go(id,el){
-  if(currentUser&&!currentUser.allowed.includes(id)&&!['listings','bookings','customers','hosts','msgs','apts','staff'].includes(id)){showToast('⛔ ليس لديك صلاحية لعرض هذا القسم');return;}
+  if(currentUser&&!currentUser.allowed.includes(id)&&!PUBLIC_SECTIONS.includes(id)){showToast('⛔ ليس لديك صلاحية لعرض هذا القسم');return;}
+  if((id==='users'||id==='audit')&&currentUser?.role!=='admin'){showToast('⛔ هذا القسم للمدير العام فقط');return;}
   document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));el?.classList.add('active');showTabById(id);set('pageTitle',titles[id]||id);document.getElementById('addBtn').style.display=id==='contracts'?'flex':'none';
   if(id==='listings')loadListings();if(id==='bookings')loadBookings();if(id==='customers')loadCustomers();if(id==='hosts')loadHosts();if(id==='msgs')loadMessages();if(id==='apts')loadApts();if(id==='staff')loadStaff();
+  if(id==='users')loadAdminUsers();if(id==='audit')loadAuditLogs(1);
+  closeMobNav();
 }
 function st(id,el){
-  if(currentUser&&!currentUser.allowed.includes(id)&&!['listings','bookings','customers','hosts','msgs','apts','staff'].includes(id)){showToast('⛔ ليس لديك صلاحية لعرض هذا القسم');return;}
+  if(currentUser&&!currentUser.allowed.includes(id)&&!PUBLIC_SECTIONS.includes(id)){showToast('⛔ ليس لديك صلاحية لعرض هذا القسم');return;}
+  if((id==='users'||id==='audit')&&currentUser?.role!=='admin'){showToast('⛔ هذا القسم للمدير العام فقط');return;}
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el?.classList.add('active');showTabById(id);set('pageTitle',titles[id]||id);document.getElementById('addBtn').style.display=id==='contracts'?'flex':'none';
   if(id==='listings')loadListings();if(id==='bookings')loadBookings();if(id==='customers')loadCustomers();if(id==='hosts')loadHosts();if(id==='msgs')loadMessages();if(id==='apts')loadApts();if(id==='staff')loadStaff();
+  if(id==='users')loadAdminUsers();if(id==='audit')loadAuditLogs(1);
 }
 function showTabById(id){document.querySelectorAll('.tc').forEach(t=>t.classList.remove('active'));document.getElementById('tab-'+id)?.classList.add('active');}
 
@@ -2395,6 +2526,166 @@ function renderAdminWeeklyChart(weekly,total){
       },
     }
   });
+}
+
+// ── Admin Users ───────────────────────────────────────────
+let adminUsers=[];
+let editingUserId=null;
+const ALL_PAGES=['dashboard','contracts','commissions','collection','expiry','map','performance','sources','reports','listings','bookings','customers','hosts','msgs','apts','staff'];
+const PAGE_LABELS={dashboard:'الرئيسية',contracts:'العقود',commissions:'العمولات',collection:'التحصيل',expiry:'المنتهية',map:'الخريطة',performance:'الأداء',sources:'المصادر',reports:'التقارير',listings:'الإعلانات',bookings:'الحجوزات',customers:'العملاء',hosts:'المضيفون',msgs:'الرسائل',apts:'الشقق',staff:'الموظفون'};
+const ROLE_LABEL={admin:'مدير عام',manager:'مدير',employee:'موظف'};
+const ROLE_COLOR={admin:'b-gold',manager:'pa',employee:'pcl'};
+
+async function loadAdminUsers(){
+  try{
+    const r=await fetch('/api/admin-users');
+    if(!r.ok)return;
+    adminUsers=await r.json();
+    renderAdminUsers();
+  }catch(e){showToast('خطأ في تحميل المستخدمين');}
+}
+
+function renderAdminUsers(){
+  const tb=document.getElementById('users-tbody');if(!tb)return;
+  if(!adminUsers.length){tb.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--t3);padding:20px;">لا يوجد مستخدمون</td></tr>';return;}
+  tb.innerHTML=adminUsers.map(u=>`
+    <tr>
+      <td><div style="display:flex;align-items:center;gap:8px;"><div style="width:28px;height:28px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;color:#fff;flex-shrink:0;">${u.avatar||u.name[0]}</div><div><div style="font-size:11px;font-weight:600;">${u.name}</div></div></div></td>
+      <td style="font-family:monospace;font-size:11px;">${u.username}</td>
+      <td><span class="pill ${ROLE_COLOR[u.role]||'pcl'}">${ROLE_LABEL[u.role]||u.role}</span></td>
+      <td><span class="pill ${u.active?'pj':'pcl'}">${u.active?'نشط':'معطّل'}</span></td>
+      <td style="font-size:10px;color:var(--t3);">${(u.allowed||[]).map(p=>PAGE_LABELS[p]||p).join(' · ')||'—'}</td>
+      <td>
+        <div style="display:flex;gap:4px;">
+          <button class="btn" style="padding:3px 8px;font-size:10px;" onclick="openUserEdit('${u._id}')">تعديل</button>
+          ${u.active?`<button class="btn" style="padding:3px 8px;font-size:10px;color:var(--red);border-color:var(--rb);" onclick="deactivateUser('${u._id}','${u.name}')">تعطيل</button>`:''}
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function buildAllowedGrid(selected=[]){
+  const grid=document.getElementById('uf-allowed-grid');if(!grid)return;
+  grid.innerHTML=ALL_PAGES.map(p=>`
+    <label style="display:flex;align-items:center;gap:5px;font-size:11px;cursor:pointer;">
+      <input type="checkbox" value="${p}" ${selected.includes(p)?'checked':''} style="width:14px;height:14px;accent-color:var(--gold);">
+      ${PAGE_LABELS[p]||p}
+    </label>
+  `).join('');
+}
+
+function openUserForm(){
+  editingUserId=null;
+  document.getElementById('userFormTitle').textContent='+ مستخدم جديد';
+  document.getElementById('uf-name').value='';
+  document.getElementById('uf-username').value='';
+  document.getElementById('uf-password').value='';
+  document.getElementById('uf-avatar').value='';
+  document.getElementById('uf-role').value='employee';
+  document.getElementById('uf-err').style.display='none';
+  buildAllowedGrid([]);
+  document.getElementById('userOverlay').style.display='flex';
+}
+
+function openUserEdit(id){
+  const u=adminUsers.find(x=>x._id===id);if(!u)return;
+  editingUserId=id;
+  document.getElementById('userFormTitle').textContent='تعديل: '+u.name;
+  document.getElementById('uf-name').value=u.name;
+  document.getElementById('uf-username').value=u.username;
+  document.getElementById('uf-password').value='';
+  document.getElementById('uf-avatar').value=u.avatar||'';
+  document.getElementById('uf-role').value=u.role;
+  document.getElementById('uf-err').style.display='none';
+  buildAllowedGrid(u.allowed||[]);
+  document.getElementById('userOverlay').style.display='flex';
+}
+
+function closeUserForm(){document.getElementById('userOverlay').style.display='none';}
+
+async function submitUserForm(){
+  const name=document.getElementById('uf-name').value.trim();
+  const username=document.getElementById('uf-username').value.trim();
+  const password=document.getElementById('uf-password').value;
+  const avatar=document.getElementById('uf-avatar').value.trim();
+  const role=document.getElementById('uf-role').value;
+  const allowed=[...document.querySelectorAll('#uf-allowed-grid input:checked')].map(el=>el.value);
+  const errEl=document.getElementById('uf-err');
+  errEl.style.display='none';
+  if(!name||!username){errEl.textContent='الاسم واسم الدخول مطلوبان';errEl.style.display='block';return;}
+  if(!editingUserId&&!password){errEl.textContent='كلمة المرور مطلوبة للمستخدم الجديد';errEl.style.display='block';return;}
+  const body={name,username,role,avatar,allowed};
+  if(password)body.password=password;
+  try{
+    const url=editingUserId?`/api/admin-users/${editingUserId}`:'/api/admin-users';
+    const method=editingUserId?'PUT':'POST';
+    const r=await fetch(url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const data=await r.json();
+    if(!r.ok){errEl.textContent=data.error||'خطأ';errEl.style.display='block';return;}
+    closeUserForm();
+    showToast(editingUserId?'تم التعديل بنجاح':'تم إنشاء المستخدم بنجاح');
+    loadAdminUsers();
+  }catch(e){errEl.textContent='خطأ في الاتصال';errEl.style.display='block';}
+}
+
+async function deactivateUser(id,name){
+  if(!confirm(`هل تريد تعطيل حساب "${name}"؟`))return;
+  try{
+    const r=await fetch(`/api/admin-users/${id}`,{method:'DELETE'});
+    const d=await r.json();
+    if(!r.ok){showToast(d.error||'خطأ في التعطيل');return;}
+    showToast('تم تعطيل الحساب');
+    loadAdminUsers();
+  }catch(e){showToast('خطأ في الاتصال');}
+}
+
+// ── Audit Logs ────────────────────────────────────────────
+let auditPage=1;
+const AUDIT_ACTION_AR={create:'إنشاء',update:'تعديل',delete:'حذف',login:'دخول',approve:'موافقة',reject:'رفض'};
+const AUDIT_ACTION_COLOR={create:'pj',update:'pa',delete:'b-red',login:'pm',approve:'pj',reject:'b-red'};
+
+async function loadAuditLogs(page){
+  if(page)auditPage=page;
+  const model=document.getElementById('audit-model')?.value||'';
+  const action=document.getElementById('audit-action')?.value||'';
+  const user=document.getElementById('audit-user-filter')?.value||'';
+  const params=new URLSearchParams({page:auditPage,limit:30});
+  if(model)params.set('model',model);
+  if(action)params.set('action',action);
+  if(user)params.set('user',user);
+  try{
+    const r=await fetch('/api/audit-logs?'+params);
+    if(!r.ok)return;
+    const d=await r.json();
+    renderAuditLogs(d);
+  }catch(e){}
+}
+
+function renderAuditLogs(d){
+  const tb=document.getElementById('audit-tbody');if(!tb)return;
+  const lbl=document.getElementById('audit-total-lbl');
+  if(lbl)lbl.textContent=`${d.total} سجل إجمالاً`;
+  if(!d.logs.length){tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--t3);padding:20px;">لا توجد سجلات</td></tr>';return;}
+  tb.innerHTML=d.logs.map(l=>{
+    const dt=new Date(l.createdAt);
+    const time=dt.toLocaleDateString('ar-SA',{month:'short',day:'numeric'})+' '+dt.toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
+    return`<tr>
+      <td style="font-size:10px;color:var(--t3);white-space:nowrap;">${time}</td>
+      <td style="font-size:11px;font-weight:600;">${l.user}</td>
+      <td><span class="pill ${AUDIT_ACTION_COLOR[l.action]||'pcl'}">${AUDIT_ACTION_AR[l.action]||l.action}</span></td>
+      <td style="font-size:10px;color:var(--t3);">${l.model}</td>
+      <td style="font-size:11px;">${l.summary||'—'}</td>
+    </tr>`;
+  }).join('');
+  // Pagination
+  const pg=document.getElementById('audit-pagination');if(!pg)return;
+  if(d.pages<=1){pg.innerHTML='';return;}
+  let html='';
+  if(d.page>1)html+=`<button class="btn" style="padding:4px 10px;font-size:10px;" onclick="loadAuditLogs(${d.page-1})">السابق</button>`;
+  html+=`<span style="font-size:11px;padding:4px 8px;">${d.page} / ${d.pages}</span>`;
+  if(d.page<d.pages)html+=`<button class="btn" style="padding:4px 10px;font-size:10px;" onclick="loadAuditLogs(${d.page+1})">التالي</button>`;
+  pg.innerHTML=html;
 }
 
 window.addEventListener('load',()=>{loadUser();loadData();loadListings();loadBookings();loadHosts();loadMessages();loadApts();loadActivity();loadStaffPerformance();loadWeeklyStats();loadHkStats();setInterval(loadData,60000);setInterval(loadMessages,30000);setInterval(loadApts,30000);setInterval(loadBookings,30000);setInterval(loadActivity,30000);setInterval(loadStaffPerformance,120000);setInterval(loadWeeklyStats,300000);setInterval(loadHkStats,60000);if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});});

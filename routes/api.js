@@ -3,7 +3,29 @@ const router = express.Router();
 const Contract = require('../models/Contract');
 const Inquiry = require('../models/Inquiry');
 const CommissionHistory = require('../models/CommissionHistory');
-const { verifyToken } = require('../utils/auth');
+const Listing = require('../models/Listing');
+const Booking = require('../models/Booking');
+const Customer = require('../models/Customer');
+const Host = require('../models/Host');
+const ActivityLog = require('../models/ActivityLog');
+const Conversation = require('../models/Conversation');
+const Message = require('../models/Message');
+const HousekeepingTask = require('../models/HousekeepingTask');
+const AdminUser = require('../models/AdminUser');
+const AuditLog = require('../models/AuditLog');
+const { verifyToken, requireRole } = require('../utils/auth');
+
+function audit(req, action, model, recordId, summary = '', changes = null) {
+  AuditLog.create({
+    user: req.user?.username || 'unknown',
+    role: req.user?.role,
+    action, model,
+    recordId: String(recordId),
+    summary,
+    changes,
+    ip: req.ip,
+  }).catch(() => {});
+}
 
 const auth = (req, res, next) => {
   if (req.user) return next();
@@ -16,8 +38,12 @@ const hostAuth = (req, res, next) => {
   next();
 };
 
-// ─── Auto-close expired contracts ────────────────────────
+// ─── Auto-close expired contracts (cached: once per hour) ──
+let _autoCloseLastRun = 0;
 async function autoCloseExpired() {
+  const now = Date.now();
+  if (now - _autoCloseLastRun < 60 * 60 * 1000) return;
+  _autoCloseLastRun = now;
   const contracts = await Contract.find({ st: { $nin: ['مغلق'] }, ex: { $ne: '' } }).lean();
   const today = new Date(); today.setHours(0,0,0,0);
   const toClose = contracts.filter(c => {
@@ -41,38 +67,46 @@ router.get('/contracts', auth, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+const CONTRACT_FIELDS = ['id','n','sheet','a','v','p','r','en','ex','ph','st','py','src','type','notes','ej','pm'];
+function pickContract(body) {
+  return CONTRACT_FIELDS.reduce((obj, k) => { if (k in body) obj[k] = body[k]; return obj; }, {});
+}
+
 router.post('/contracts', auth, async (req, res) => {
   try {
-    await Contract.findOneAndUpdate(
-      { id: req.body.id },
-      req.body,
-      { upsert: true, new: true }
-    );
+    const data = pickContract(req.body);
+    if (!data.id) return res.status(400).json({ error: 'id مطلوب' });
+    const existing = await Contract.findOne({ id: data.id });
+    await Contract.findOneAndUpdate({ id: data.id }, data, { upsert: true, new: true });
+    audit(req, existing ? 'update' : 'create', 'Contract', data.id, `عقد ${data.n || data.id}`, data);
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 router.put('/contracts/:id', auth, async (req, res) => {
   try {
-    await Contract.findOneAndUpdate({ id: req.params.id }, req.body);
+    const changes = pickContract(req.body);
+    await Contract.findOneAndUpdate({ id: req.params.id }, changes);
+    audit(req, 'update', 'Contract', req.params.id, `تعديل عقد ${req.params.id}`, changes);
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-router.delete('/contracts/:id', auth, async (req, res) => {
+router.delete('/contracts/:id', auth, requireRole('admin'), async (req, res) => {
   try {
-    await Contract.findOneAndDelete({ id: req.params.id });
+    const c = await Contract.findOneAndDelete({ id: req.params.id });
+    audit(req, 'delete', 'Contract', req.params.id, `حذف عقد ${c?.n || req.params.id}`);
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// Bulk save (initial seed)
-router.post('/contracts/bulk', auth, async (req, res) => {
+// Bulk save (initial seed) — admin only
+router.post('/contracts/bulk', auth, requireRole('admin'), async (req, res) => {
   try {
     const { contracts } = req.body;
     if (!contracts || !contracts.length) return res.json({ success: false });
     for (const c of contracts) {
-      await Contract.findOneAndUpdate({ id: c.id }, c, { upsert: true });
+      await Contract.findOneAndUpdate({ id: c.id }, pickContract(c), { upsert: true });
     }
     res.json({ success: true, count: contracts.length });
   } catch (e) { res.status(500).json({ error: e.message }); }
@@ -122,6 +156,11 @@ router.get('/apartments/available', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+function escHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
 async function sendEmail(subject, html) {
   if (!process.env.RESEND_API_KEY) return;
   try {
@@ -136,18 +175,29 @@ async function sendEmail(subject, html) {
 // ─── Inquiries ────────────────────────────────────────────
 router.post('/inquiries', async (req, res) => {
   try {
-    const inquiry = new Inquiry(req.body);
-    await inquiry.save();
     const { name, phone, email, subject, message, listing } = req.body;
+    if (!name?.trim() || name.trim().length > 100) return res.status(400).json({ error: 'الاسم مطلوب (100 حرف كحد أقصى)' });
+    if (!phone?.trim() || !/^[\d\s\+\-]{7,20}$/.test(phone.trim())) return res.status(400).json({ error: 'رقم الجوال غير صحيح' });
+    const inquiry = new Inquiry({
+      name: name.trim().slice(0, 100),
+      phone: phone.trim().slice(0, 20),
+      email: email?.trim().slice(0, 150) || '',
+      building: req.body.building?.slice(0, 50) || '',
+      budget: req.body.budget?.slice(0, 50) || '',
+      duration: req.body.duration?.slice(0, 50) || '',
+      message: message?.slice(0, 1000) || '',
+      status: 'جديد',
+    });
+    await inquiry.save();
     sendEmail(
-      `💬 استفسار — ${subject || listing || 'استفسار عقاري'}`,
+      `💬 استفسار — ${escHtml(subject || listing || 'استفسار عقاري')}`,
       `<div dir="rtl" style="font-family:Arial;line-height:2;">
         <h2 style="color:#d4af37;">استفسار جديد</h2>
-        <p><b>الاسم:</b> ${name}</p>
-        <p><b>الهاتف:</b> <a href="https://wa.me/${(phone||'').replace(/^0/,'966')}">${phone}</a></p>
-        ${email ? `<p><b>الإيميل:</b> ${email}</p>` : ''}
-        ${listing ? `<p><b>العقار:</b> ${listing}</p>` : ''}
-        ${message ? `<p><b>الرسالة:</b> ${message}</p>` : ''}
+        <p><b>الاسم:</b> ${escHtml(name)}</p>
+        <p><b>الهاتف:</b> <a href="https://wa.me/${escHtml((phone||'').replace(/\D/g,'').replace(/^0/,'966'))}">${escHtml(phone)}</a></p>
+        ${email ? `<p><b>الإيميل:</b> ${escHtml(email)}</p>` : ''}
+        ${listing ? `<p><b>العقار:</b> ${escHtml(listing)}</p>` : ''}
+        ${message ? `<p><b>الرسالة:</b> ${escHtml(message)}</p>` : ''}
         <hr><a href="https://finsight-web-xi.vercel.app/dashboard" style="color:#d4af37;">فتح الداشبورد</a>
       </div>`
     );
@@ -172,8 +222,13 @@ router.put('/inquiries/:id', auth, async (req, res) => {
 // ─── Listings (public read, auth write) ──────────────────
 router.get('/listings', async (req, res) => {
   try {
-    const Listing = require('../models/Listing');
-    const listings = await Listing.find().sort({ featured: -1, createdAt: -1 }).lean();
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(200, parseInt(req.query.limit) || 200);
+    const [listings, total] = await Promise.all([
+      Listing.find().sort({ featured: -1, createdAt: -1 }).skip((page - 1) * limit).limit(limit).lean(),
+      req.query.page ? Listing.countDocuments() : Promise.resolve(null),
+    ]);
+    if (req.query.page) return res.json({ listings, total, page, pages: Math.ceil(total / limit) });
     res.json(listings);
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -182,7 +237,6 @@ router.get('/listings', async (req, res) => {
 // GET /api/app/listings?cat=&sort=&q=&page=
 router.get('/app/listings', async (req, res) => {
   try {
-    const Listing = require('../models/Listing');
     const { cat='', sort='newest', q='', page=1, limit=20 } = req.query;
     const filter = {};
     if(cat) filter.category = cat;
@@ -205,7 +259,6 @@ router.get('/app/listings', async (req, res) => {
 // GET /api/app/listings/:id
 router.get('/app/listings/:id', async (req, res) => {
   try {
-    const Listing = require('../models/Listing');
     const l = await Listing.findById(req.params.id).lean();
     if(!l) return res.status(404).json({error:'غير موجود'});
     res.json(l);
@@ -215,10 +268,11 @@ router.get('/app/listings/:id', async (req, res) => {
 // POST /api/app/inquiry
 router.post('/app/inquiry', async (req, res) => {
   try {
-    const Inquiry = require('../models/Inquiry');
     const { name, phone, message, listingId } = req.body;
-    if(!name||!phone) return res.status(400).json({error:'الاسم والجوال مطلوبان'});
-    await new Inquiry({ name, phone, message:message||'', listing:listingId||null, source:'app' }).save();
+    if(!name?.trim()||!phone?.trim()) return res.status(400).json({error:'الاسم والجوال مطلوبان'});
+    if(name.trim().length>100) return res.status(400).json({error:'الاسم طويل جداً'});
+    if(!/^[\d\s\+\-]{7,20}$/.test(phone.trim())) return res.status(400).json({error:'رقم الجوال غير صحيح'});
+    await new Inquiry({ name:name.trim().slice(0,100), phone:phone.trim().slice(0,20), message:(message||'').slice(0,1000), listing:listingId||null, source:'app' }).save();
     res.json({ success:true });
   } catch(e){ res.status(500).json({error:e.message}); }
 });
@@ -245,7 +299,6 @@ router.get('/app/config', (req, res) => {
 
 router.post('/listings', auth, async (req, res) => {
   try {
-    const Listing = require('../models/Listing');
     const listing = await new Listing(req.body).save();
     res.json({ success: true, listing });
   } catch (e) { res.status(500).json({ error: e.message }); }
@@ -253,15 +306,13 @@ router.post('/listings', auth, async (req, res) => {
 
 router.put('/listings/:id', auth, async (req, res) => {
   try {
-    const Listing = require('../models/Listing');
     await Listing.findByIdAndUpdate(req.params.id, req.body);
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-router.delete('/listings/:id', auth, async (req, res) => {
+router.delete('/listings/:id', auth, requireRole('admin', 'manager'), async (req, res) => {
   try {
-    const Listing = require('../models/Listing');
     await Listing.findByIdAndDelete(req.params.id);
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
@@ -270,16 +321,22 @@ router.delete('/listings/:id', auth, async (req, res) => {
 // ─── Bookings (auth) ──────────────────────────────────────
 router.get('/bookings', auth, async (req, res) => {
   try {
-    const Booking = require('../models/Booking');
-    const bookings = await Booking.find().sort({ createdAt: -1 }).lean();
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(200, parseInt(req.query.limit) || 200);
+    const filter = {};
+    if (req.query.status) filter.status = req.query.status;
+    if (req.query.listing) filter.listing = req.query.listing;
+    const [bookings, total] = await Promise.all([
+      Booking.find(filter).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit).lean(),
+      req.query.page ? Booking.countDocuments(filter) : Promise.resolve(null),
+    ]);
+    if (req.query.page) return res.json({ bookings, total, page, pages: Math.ceil(total / limit) });
     res.json(bookings);
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 router.put('/bookings/:id', auth, async (req, res) => {
   try {
-    const Booking = require('../models/Booking');
-    const Listing = require('../models/Listing');
 
     const booking = await Booking.findById(req.params.id).lean();
     if (!booking) return res.status(404).json({ error: 'الحجز غير موجود' });
@@ -319,9 +376,8 @@ router.put('/bookings/:id', auth, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-router.delete('/bookings/:id', auth, async (req, res) => {
+router.delete('/bookings/:id', auth, requireRole('admin', 'manager'), async (req, res) => {
   try {
-    const Booking = require('../models/Booking');
     await Booking.findByIdAndDelete(req.params.id);
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
@@ -330,8 +386,18 @@ router.delete('/bookings/:id', auth, async (req, res) => {
 // ─── Customers ───────────────────────────────────────────
 router.get('/customers', auth, async (req, res) => {
   try {
-    const Customer = require('../models/Customer');
-    const customers = await Customer.find().sort({ createdAt: -1 }).select('-password').lean();
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(200, parseInt(req.query.limit) || 200);
+    const filter = {};
+    if (req.query.q) {
+      const re = new RegExp(req.query.q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      filter.$or = [{ name: re }, { email: re }, { phone: re }];
+    }
+    const [customers, total] = await Promise.all([
+      Customer.find(filter).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit).select('-password').lean(),
+      req.query.page ? Customer.countDocuments(filter) : Promise.resolve(null),
+    ]);
+    if (req.query.page) return res.json({ customers, total, page, pages: Math.ceil(total / limit) });
     res.json(customers);
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -339,7 +405,6 @@ router.get('/customers', auth, async (req, res) => {
 // ─── Host API ─────────────────────────────────────────────
 router.get('/host/me', hostAuth, async (req, res) => {
   try {
-    const Host = require('../models/Host');
     const host = await Host.findById(req.hostAccount.id).select('-password').lean();
     if (!host) return res.status(404).json({ error: 'غير موجود' });
     res.json(host);
@@ -348,7 +413,6 @@ router.get('/host/me', hostAuth, async (req, res) => {
 
 router.put('/host/profile', hostAuth, async (req, res) => {
   try {
-    const Host = require('../models/Host');
     const { name, email, bio, iban, bankName } = req.body;
     const host = await Host.findByIdAndUpdate(
       req.hostAccount.id,
@@ -361,7 +425,6 @@ router.put('/host/profile', hostAuth, async (req, res) => {
 
 router.post('/host/change-password', hostAuth, async (req, res) => {
   try {
-    const Host = require('../models/Host');
     const { currentPassword, newPassword } = req.body;
     const host = await Host.findById(req.hostAccount.id);
     if (!host || !(await host.comparePassword(currentPassword))) return res.status(400).json({ error: 'كلمة المرور الحالية غير صحيحة' });
@@ -374,7 +437,6 @@ router.post('/host/change-password', hostAuth, async (req, res) => {
 
 router.get('/host/listings', hostAuth, async (req, res) => {
   try {
-    const Listing = require('../models/Listing');
     const listings = await Listing.find({ host: req.hostAccount.id }).sort({ createdAt: -1 }).lean();
     res.json(listings);
   } catch (e) { res.status(500).json({ error: e.message }); }
@@ -382,10 +444,8 @@ router.get('/host/listings', hostAuth, async (req, res) => {
 
 router.post('/host/listings', hostAuth, async (req, res) => {
   try {
-    const Host = require('../models/Host');
     const host = await Host.findById(req.hostAccount.id).lean();
     if (!host || host.status !== 'approved') return res.status(403).json({ error: 'حسابك قيد المراجعة' });
-    const Listing = require('../models/Listing');
     const listing = await new Listing({ ...req.body, host: req.hostAccount.id }).save();
     res.json({ success: true, listing });
   } catch (e) { res.status(500).json({ error: e.message }); }
@@ -393,7 +453,6 @@ router.post('/host/listings', hostAuth, async (req, res) => {
 
 router.put('/host/listings/:id', hostAuth, async (req, res) => {
   try {
-    const Listing = require('../models/Listing');
     const listing = await Listing.findOne({ _id: req.params.id, host: req.hostAccount.id });
     if (!listing) return res.status(404).json({ error: 'غير موجود' });
     await Listing.findByIdAndUpdate(req.params.id, req.body);
@@ -403,7 +462,6 @@ router.put('/host/listings/:id', hostAuth, async (req, res) => {
 
 router.delete('/host/listings/:id', hostAuth, async (req, res) => {
   try {
-    const Listing = require('../models/Listing');
     await Listing.findOneAndDelete({ _id: req.params.id, host: req.hostAccount.id });
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
@@ -411,8 +469,6 @@ router.delete('/host/listings/:id', hostAuth, async (req, res) => {
 
 router.get('/host/bookings', hostAuth, async (req, res) => {
   try {
-    const Listing = require('../models/Listing');
-    const Booking = require('../models/Booking');
     const listings = await Listing.find({ host: req.hostAccount.id }, '_id').lean();
     const ids = listings.map(l => l._id);
     const bookings = await Booking.find({ listing: { $in: ids } })
@@ -423,8 +479,6 @@ router.get('/host/bookings', hostAuth, async (req, res) => {
 
 router.put('/host/bookings/:id/status', hostAuth, async (req, res) => {
   try {
-    const Listing = require('../models/Listing');
-    const Booking = require('../models/Booking');
     const { status } = req.body;
     // Verify this booking belongs to host
     const listing = await Listing.findOne({ host: req.hostAccount.id });
@@ -459,8 +513,6 @@ router.put('/host/bookings/:id/status', hostAuth, async (req, res) => {
 
 router.get('/host/stats', hostAuth, async (req, res) => {
   try {
-    const Listing = require('../models/Listing');
-    const Booking = require('../models/Booking');
     const listings = await Listing.find({ host: req.hostAccount.id }, '_id').lean();
     const ids = listings.map(l => l._id);
     const bookings = await Booking.find({ listing: { $in: ids } }).lean();
@@ -486,31 +538,27 @@ router.get('/host/stats', hostAuth, async (req, res) => {
 // ─── Admin: Hosts management ──────────────────────────────
 router.get('/hosts', auth, async (req, res) => {
   try {
-    const Host = require('../models/Host');
     const hosts = await Host.find().sort({ createdAt: -1 }).select('-password').lean();
     res.json(hosts);
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-router.put('/hosts/:id/approve', auth, async (req, res) => {
+router.put('/hosts/:id/approve', auth, requireRole('admin'), async (req, res) => {
   try {
-    const Host = require('../models/Host');
     await Host.findByIdAndUpdate(req.params.id, { status: 'approved', rejectionReason: '' });
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-router.put('/hosts/:id/reject', auth, async (req, res) => {
+router.put('/hosts/:id/reject', auth, requireRole('admin'), async (req, res) => {
   try {
-    const Host = require('../models/Host');
     await Host.findByIdAndUpdate(req.params.id, { status: 'rejected', rejectionReason: req.body.reason || '' });
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-router.put('/hosts/:id/suspend', auth, async (req, res) => {
+router.put('/hosts/:id/suspend', auth, requireRole('admin'), async (req, res) => {
   try {
-    const Host = require('../models/Host');
     await Host.findByIdAndUpdate(req.params.id, { status: 'suspended' });
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
@@ -519,14 +567,12 @@ router.put('/hosts/:id/suspend', auth, async (req, res) => {
 // ─── Staff Performance Leaderboard ───────────────────────
 router.get('/staff-performance', auth, async (req, res) => {
   try {
-    const AL = require('../models/ActivityLog');
-    const Booking = require('../models/Booking');
 
     const since = new Date();
     since.setDate(since.getDate() - 30);
 
     const [logs, bookings] = await Promise.all([
-      AL.find({ createdAt: { $gte: since } }).lean(),
+      ActivityLog.find({ createdAt: { $gte: since } }).lean(),
       Booking.find({ createdAt: { $gte: since } }).lean(),
     ]);
 
@@ -553,8 +599,7 @@ router.get('/staff-performance', auth, async (req, res) => {
 // ─── All-buildings Activity Log (admin) ──────────────────
 router.get('/activity', auth, async (req, res) => {
   try {
-    const AL = require('../models/ActivityLog');
-    const logs = await AL.find().sort({ createdAt: -1 }).limit(60).lean();
+    const logs = await ActivityLog.find().sort({ createdAt: -1 }).limit(60).lean();
     res.json(logs);
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
@@ -569,7 +614,6 @@ const GRID_BUILDINGS = {
 
 router.get('/apartments/grid', auth, async (req, res) => {
   try {
-    const Booking = require('../models/Booking');
     const today = new Date(); today.setHours(0,0,0,0);
     const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
 
@@ -616,7 +660,6 @@ router.get('/apartments/grid', auth, async (req, res) => {
 // ─── Weekly Occupancy Stats ───────────────────────────────
 router.get('/weekly-stats', auth, async (req, res) => {
   try {
-    const Booking = require('../models/Booking');
     const today = new Date(); today.setHours(0,0,0,0);
 
     const totalApts = Object.values(GRID_BUILDINGS).reduce((sum,b)=>sum+b.floors.reduce((s,f)=>s+f.r.length,0),0);
@@ -648,8 +691,7 @@ router.get('/weekly-stats', auth, async (req, res) => {
 // ─── Housekeeping Stats (admin) ───────────────────────────
 router.get('/housekeeping-stats', auth, async (req, res) => {
   try {
-    const HK = require('../models/HousekeepingTask');
-    const tasks = await HK.find({}).lean();
+    const tasks = await HousekeepingTask.find({}).lean();
     const totalRooms = Object.values(GRID_BUILDINGS).reduce((sum,b)=>sum+b.floors.reduce((s,f)=>s+f.r.length,0),0);
     const dirty = tasks.filter(t=>t.status==='dirty'||t.status==='inspection'||t.status==='maintenance').length;
     const clean = totalRooms - dirty;
@@ -660,7 +702,6 @@ router.get('/housekeeping-stats', auth, async (req, res) => {
 // ─── Messaging (admin) ───────────────────────────────────
 router.get('/conversations', auth, async (req, res) => {
   try {
-    const Conversation = require('../models/Conversation');
     const convs = await Conversation.find().sort({ lastAt: -1 }).lean();
     res.json(convs);
   } catch (e) { res.status(500).json({ error: e.message }); }
@@ -668,8 +709,6 @@ router.get('/conversations', auth, async (req, res) => {
 
 router.get('/conversations/:id', auth, async (req, res) => {
   try {
-    const Conversation = require('../models/Conversation');
-    const Message = require('../models/Message');
     const conv = await Conversation.findById(req.params.id).lean();
     if (!conv) return res.status(404).json({ error: 'غير موجود' });
     const messages = await Message.find({ conversation: conv._id }).sort({ createdAt: 1 }).lean();
@@ -680,8 +719,6 @@ router.get('/conversations/:id', auth, async (req, res) => {
 
 router.post('/conversations/:id/reply', auth, async (req, res) => {
   try {
-    const Conversation = require('../models/Conversation');
-    const Message = require('../models/Message');
     const conv = await Conversation.findById(req.params.id);
     if (!conv) return res.status(404).json({ error: 'غير موجود' });
     const body = req.body.body?.trim();
@@ -694,7 +731,6 @@ router.post('/conversations/:id/reply', auth, async (req, res) => {
 
 router.post('/conversations/:id/close', auth, async (req, res) => {
   try {
-    const Conversation = require('../models/Conversation');
     await Conversation.findByIdAndUpdate(req.params.id, { status: 'closed' });
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
@@ -723,6 +759,74 @@ router.post('/ai/chat', auth, async (req, res) => {
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || 'لم يصل رد من الذكاء الاصطناعي.';
     res.json({ text });
   } catch (e) { res.status(500).json({ text: `تعذّر الاتصال: ${e.message}` }); }
+});
+
+// ─── Admin Users CRUD (admin only) ───────────────────────
+router.get('/admin-users', auth, requireRole('admin'), async (req, res) => {
+  try {
+    const users = await AdminUser.find().select('-password').sort({ createdAt: 1 }).lean();
+    res.json(users);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.post('/admin-users', auth, requireRole('admin'), async (req, res) => {
+  try {
+    const { name, username, password, role, avatar, allowed } = req.body;
+    if (!name || !username || !password || !role) return res.status(400).json({ error: 'name, username, password, role مطلوبة' });
+    if (!['admin', 'manager', 'employee'].includes(role)) return res.status(400).json({ error: 'دور غير صحيح' });
+    const exists = await AdminUser.findOne({ username: username.trim() });
+    if (exists) return res.status(400).json({ error: 'اسم المستخدم مستخدم بالفعل' });
+    const user = await new AdminUser({ name, username, password, role, avatar: avatar || username[0], allowed: allowed || [] }).save();
+    audit(req, 'create', 'AdminUser', user._id, `إنشاء مستخدم ${username}`);
+    res.json({ success: true, id: user._id });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.put('/admin-users/:id', auth, requireRole('admin'), async (req, res) => {
+  try {
+    const { name, role, avatar, allowed, active, password } = req.body;
+    if (role && !['admin', 'manager', 'employee'].includes(role)) return res.status(400).json({ error: 'دور غير صحيح' });
+    const user = await AdminUser.findById(req.params.id);
+    if (!user) return res.status(404).json({ error: 'المستخدم غير موجود' });
+    if (name !== undefined) user.name = name;
+    if (role !== undefined) user.role = role;
+    if (avatar !== undefined) user.avatar = avatar;
+    if (allowed !== undefined) user.allowed = allowed;
+    if (active !== undefined) user.active = active;
+    if (password) user.password = password;
+    await user.save();
+    audit(req, 'update', 'AdminUser', user._id, `تعديل مستخدم ${user.username}`);
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.delete('/admin-users/:id', auth, requireRole('admin'), async (req, res) => {
+  try {
+    const user = await AdminUser.findById(req.params.id);
+    if (!user) return res.status(404).json({ error: 'المستخدم غير موجود' });
+    if (user.username === req.user?.username) return res.status(400).json({ error: 'لا يمكنك حذف حسابك الخاص' });
+    user.active = false;
+    await user.save();
+    audit(req, 'delete', 'AdminUser', user._id, `تعطيل مستخدم ${user.username}`);
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ─── Audit Log viewer (admin only) ───────────────────────
+router.get('/audit-logs', auth, requireRole('admin'), async (req, res) => {
+  try {
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, parseInt(req.query.limit) || 50);
+    const filter = {};
+    if (req.query.model) filter.model = req.query.model;
+    if (req.query.user) filter.user = req.query.user;
+    if (req.query.action) filter.action = req.query.action;
+    const [logs, total] = await Promise.all([
+      AuditLog.find(filter).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit).lean(),
+      AuditLog.countDocuments(filter),
+    ]);
+    res.json({ logs, total, page, pages: Math.ceil(total / limit) });
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 module.exports = router;

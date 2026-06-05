@@ -38,4 +38,8 @@ const listingSchema = new mongoose.Schema({
   reviewCount:        { type: Number, default: 0 },
 }, { timestamps: true });
 
+listingSchema.index({ category: 1, available: 1 });
+listingSchema.index({ host: 1 });
+listingSchema.index({ featured: -1, createdAt: -1 });
+
 module.exports = mongoose.model('Listing', listingSchema);

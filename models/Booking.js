@@ -27,4 +27,9 @@ const bookingSchema = new mongoose.Schema({
   pricePerMonth: Number,
 }, { timestamps: true });
 
+bookingSchema.index({ status: 1 });
+bookingSchema.index({ listing: 1 });
+bookingSchema.index({ building: 1, apt: 1 });
+bookingSchema.index({ createdAt: -1 });
+
 module.exports = mongoose.model('Booking', bookingSchema);
