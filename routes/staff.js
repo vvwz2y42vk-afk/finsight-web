@@ -1,21 +1,43 @@
 const express = require('express');
 const router = express.Router();
 const { createToken, verifyToken } = require('../utils/auth');
+const Property = require('../models/Property');
 
 const COOKIE = 'fs_staff';
 const COPTS  = { httpOnly: true, maxAge: 12 * 60 * 60 * 1000, sameSite: 'lax' };
 
+// Hardcoded buildings for BAREZ internal (propertyId === null)
 const BLDGS = {
   'المنارا':  { floors: [{l:'أرضي',r:['001','002']},{l:'الأول',r:['101','102','103','104','105','106']},{l:'الثاني',r:['201','202','203','204','205','206']},{l:'الثالث',r:['301','302','303','304','305','306']},{l:'الرابع',r:['401','402','403','404','405','406']},{l:'الخامس',r:['501','502','503','504']}] },
   'جوان ان': { floors: [{l:'أرضي',r:['001','002','003','004']},{l:'الأول',r:['101','102','103','104','105']},{l:'الثاني',r:['201','202','203','204','205']},{l:'الثالث',r:['301','302','303','304','305','306']},{l:'الرابع',r:['401','402']}] },
   'الماسة':  { floors: [{l:'الأول',r:['101','102','103','104','105','106']},{l:'الثاني',r:['201','202','203','204','205','206']},{l:'الثالث',r:['301','302','303','304','305','306']}] },
   'الواحة':  { floors: [{l:'أرضي',r:['001','002','003','004']},{l:'الأول',r:['101','102','103','104','105','106','107','108']},{l:'الثاني',r:['201','202','203','204','205','206','207','208']}] },
 };
+
+// Returns building config — from DB if property exists, else hardcoded
+async function getBldgConfig(staff) {
+  if (staff.propertyId) {
+    const prop = await Property.findById(staff.propertyId).lean();
+    if (prop) {
+      const map = {};
+      prop.buildings.forEach(b => {
+        map[b.name] = { floors: b.floors.map(f => ({ l: f.label, r: f.rooms })) };
+      });
+      return { bldgs: map, prop };
+    }
+  }
+  return { bldgs: BLDGS, prop: null };
+}
+
+function totalAptsFromConfig(bldgs, bldName) {
+  return (bldgs[bldName]?.floors || []).reduce((s, f) => s + f.r.length, 0);
+}
+
 const totalApts = b => (BLDGS[b]?.floors||[]).reduce((s,f)=>s+f.r.length,0);
 
 function staffAuth(req,res,next){ req.staff=verifyToken(req.cookies?.[COOKIE])||null; next(); }
 function reqStaff(req,res,next){ if(!req.staff)return res.redirect('/staff/login'); next(); }
-const DEFAULT_PERMS=['dashboard','apartments','bookings','customers','housekeeping','activity','new_booking','edit_booking','cancel_booking','vouchers'];
+const DEFAULT_PERMS=['dashboard','apartments','bookings','customers','housekeeping','activity','new_booking','edit_booking','cancel_booking','vouchers','reports'];
 router.use(staffAuth);
 
 // ── Auth ─────────────────────────────────────────────────
@@ -393,6 +415,123 @@ router.delete('/api/vouchers/:id', reqStaff, async (req,res) => {
     await V.findOneAndDelete({ _id:req.params.id, building:req.staff.building });
     res.json({ success:true });
   } catch(e){ res.status(500).json({error:e.message}); }
+});
+
+// ── Reports ───────────────────────────────────────────────
+router.get('/api/reports', reqStaff, async (req, res) => {
+  try {
+    const B = require('../models/Booking');
+    const bld = req.staff.building;
+    const { bldgs } = await getBldgConfig(req.staff);
+    const total = totalAptsFromConfig(bldgs, bld);
+
+    const now = new Date();
+    const today = new Date(now); today.setHours(0,0,0,0);
+    const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const nextMonth  = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+    // Last 30 days for daily chart
+    const chartFrom = new Date(today); chartFrom.setDate(today.getDate() - 29);
+
+    const [allMonth, allActive, allChart] = await Promise.all([
+      B.find({ building: bld, checkIn: { $gte: monthStart, $lt: nextMonth }, status: { $ne: 'cancelled' } }).lean(),
+      B.find({ building: bld, status: 'active' }).lean(),
+      B.find({ building: bld, checkIn: { $gte: chartFrom, $lt: tomorrow }, status: { $ne: 'cancelled' } }).lean(),
+    ]);
+
+    // Today
+    const todayBk = allMonth.filter(b => { const d = new Date(b.checkIn); return d >= today && d < tomorrow; });
+    const departuresToday = allActive.filter(b => { const d = b.checkOut ? new Date(b.checkOut) : null; return d && d >= today && d < tomorrow; });
+
+    // Month summary
+    const monthRevenue  = allMonth.reduce((s,b) => s + (b.totalPrice||0), 0);
+    const monthPaid     = allMonth.reduce((s,b) => s + (b.paidAmount||0), 0);
+    const monthRemaining = monthRevenue - monthPaid;
+
+    // Revenue by type
+    const daily  = allMonth.filter(b => b.bookingType === 'daily');
+    const annual = allMonth.filter(b => b.bookingType === 'annual');
+
+    // Daily chart: revenue per day last 30 days
+    const dailyChart = [];
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(today); d.setDate(today.getDate() - i);
+      const nd = new Date(d); nd.setDate(d.getDate() + 1);
+      const rev = allChart.filter(b => { const bd = new Date(b.checkIn); return bd >= d && bd < nd; }).reduce((s,b) => s + (b.totalPrice||0), 0);
+      dailyChart.push({ label: d.toLocaleDateString('ar-SA', { day:'numeric', month:'short' }), revenue: rev });
+    }
+
+    res.json({
+      today: {
+        arrivals: todayBk.length,
+        departures: departuresToday.length,
+        occupied: allActive.length,
+        occupancyRate: total ? Math.round(allActive.length / total * 100) : 0,
+        total,
+        revenue: todayBk.reduce((s,b) => s + (b.totalPrice||0), 0),
+      },
+      month: {
+        bookings: allMonth.length,
+        revenue: monthRevenue,
+        paid: monthPaid,
+        remaining: monthRemaining,
+        dailyBookings: daily.length,
+        annualBookings: annual.length,
+        dailyRevenue: daily.reduce((s,b) => s + (b.totalPrice||0), 0),
+        annualRevenue: annual.reduce((s,b) => s + (b.totalPrice||0), 0),
+        avgOccupancy: total ? Math.round(allActive.length / total * 100) : 0,
+      },
+      chart: dailyChart,
+    });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── Register new property ─────────────────────────────────
+router.get('/register', (req, res) => {
+  if (req.staff) return res.redirect('/staff/dashboard');
+  res.render('staff-register', { error: null, success: false });
+});
+
+router.post('/register', async (req, res) => {
+  try {
+    const S = require('../models/StaffUser');
+    const { propertyName, propertyType, city, adminName, username, password, password2 } = req.body;
+    if (!propertyName || !adminName || !username || !password) {
+      return res.render('staff-register', { error: 'جميع الحقول مطلوبة', success: false });
+    }
+    if (password !== password2) {
+      return res.render('staff-register', { error: 'كلمتا المرور غير متطابقتين', success: false });
+    }
+    if (password.length < 6) {
+      return res.render('staff-register', { error: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل', success: false });
+    }
+    const exists = await S.findOne({ username: username.trim() });
+    if (exists) return res.render('staff-register', { error: 'اسم المستخدم مستخدم بالفعل، اختر اسماً آخر', success: false });
+
+    // Create property
+    const prop = await new Property({
+      name: propertyName.trim(),
+      type: propertyType || 'apartment',
+      city: city || '',
+      buildings: [], // admin configures buildings later
+    }).save();
+
+    // Create manager account
+    await new S({
+      name: adminName.trim(),
+      username: username.trim(),
+      password,
+      building: propertyName.trim(), // default building = property name
+      role: 'manager',
+      propertyId: prop._id,
+      permissions: DEFAULT_PERMS,
+    }).save();
+
+    res.render('staff-register', { error: null, success: true });
+  } catch(e) {
+    res.render('staff-register', { error: 'حدث خطأ أثناء التسجيل، حاول مرة أخرى', success: false });
+  }
 });
 
 // ── Admin: create staff user ──────────────────────────────

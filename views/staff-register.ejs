@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>سجّل منشأتك — BAREZ Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Cairo',sans-serif;background:#F0F4FF;direction:rtl;min-height:100vh;display:flex;flex-direction:column;}
+
+.top-nav{padding:18px 32px;display:flex;align-items:center;justify-content:space-between;}
+.nav-logo{font-size:18px;font-weight:800;color:#1a3d8f;letter-spacing:-.5px;}
+.nav-logo span{color:#B8860B;}
+.nav-login{font-size:13px;color:#64748b;text-decoration:none;padding:7px 16px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;transition:all .2s;}
+.nav-login:hover{border-color:#1a3d8f;color:#1a3d8f;}
+
+.hero{text-align:center;padding:48px 20px 32px;}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:#EEF4FF;border:1px solid #C7D9FF;color:#1a3d8f;font-size:12px;font-weight:600;padding:5px 14px;border-radius:20px;margin-bottom:20px;}
+.hero-badge::before{content:'';width:6px;height:6px;border-radius:50%;background:#1a3d8f;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.hero h1{font-size:32px;font-weight:800;color:#0F172A;line-height:1.2;margin-bottom:10px;}
+.hero h1 span{color:#1a3d8f;}
+.hero p{font-size:15px;color:#64748b;max-width:500px;margin:0 auto;}
+
+.form-wrap{max-width:520px;margin:0 auto;padding:0 20px 60px;}
+.card{background:#fff;border-radius:18px;padding:32px;box-shadow:0 4px 24px rgba(15,23,42,.07),0 1px 4px rgba(15,23,42,.04);border:1px solid #E8EEF8;}
+
+.section-label{font-size:11px;font-weight:700;color:#1a3d8f;text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.section-label::after{content:'';flex:1;height:1px;background:#E8EEF8;}
+
+.field{margin-bottom:16px;}
+.field label{display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:6px;}
+.field input,.field select{width:100%;padding:11px 14px;border:1.5px solid #E2E8F0;border-radius:10px;font-family:'Cairo',sans-serif;font-size:14px;color:#0F172A;background:#FAFBFF;outline:none;transition:all .2s;}
+.field input:focus,.field select:focus{border-color:#1a3d8f;background:#fff;box-shadow:0 0 0 3px rgba(26,61,143,.08);}
+.field input::placeholder{color:#94A3B8;}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+
+.type-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:4px;}
+.type-opt{border:1.5px solid #E2E8F0;border-radius:10px;padding:14px 10px;text-align:center;cursor:pointer;transition:all .2s;background:#FAFBFF;}
+.type-opt:hover{border-color:#1a3d8f;background:#EEF4FF;}
+.type-opt.selected{border-color:#1a3d8f;background:#EEF4FF;color:#1a3d8f;}
+.type-opt-ico{font-size:22px;margin-bottom:6px;}
+.type-opt-lbl{font-size:12px;font-weight:600;}
+
+.divider{height:1px;background:#F1F5F9;margin:22px 0;}
+
+.submit-btn{width:100%;padding:14px;background:linear-gradient(135deg,#1a3d8f,#2563eb);border:none;border-radius:12px;font-family:'Cairo',sans-serif;font-size:15px;font-weight:700;color:#fff;cursor:pointer;transition:all .2s;box-shadow:0 4px 16px rgba(26,61,143,.25);margin-top:6px;}
+.submit-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(26,61,143,.35);}
+.submit-btn:active{transform:translateY(0);}
+
+.err{background:#FEF2F2;border:1px solid #FECACA;color:#B91C1C;padding:12px 16px;border-radius:10px;font-size:13px;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+
+.success-box{text-align:center;padding:40px 20px;}
+.success-ico{font-size:56px;margin-bottom:16px;}
+.success-title{font-size:22px;font-weight:700;color:#047857;margin-bottom:8px;}
+.success-sub{font-size:14px;color:#64748b;line-height:1.7;margin-bottom:24px;}
+.success-btn{display:inline-flex;align-items:center;gap:8px;padding:12px 28px;background:linear-gradient(135deg,#1a3d8f,#2563eb);border-radius:12px;color:#fff;font-family:'Cairo',sans-serif;font-size:14px;font-weight:700;text-decoration:none;box-shadow:0 4px 16px rgba(26,61,143,.25);}
+
+.features{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:32px;margin-bottom:32px;}
+.feat{background:#fff;border-radius:12px;padding:16px;border:1px solid #E8EEF8;text-align:center;}
+.feat-ico{font-size:24px;margin-bottom:8px;}
+.feat-lbl{font-size:12px;font-weight:600;color:#0F172A;}
+.feat-sub{font-size:11px;color:#94A3B8;margin-top:2px;}
+
+.trial-note{background:#FFFBEB;border:1px solid #FDE68A;border-radius:10px;padding:12px 16px;font-size:12px;color:#92400E;margin-bottom:20px;display:flex;align-items:center;gap:8px;}
+
+@media(max-width:600px){
+  .hero h1{font-size:24px;}
+  .grid2{grid-template-columns:1fr;}
+  .type-grid{grid-template-columns:1fr 1fr;}
+  .features{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <div class="nav-logo">BAREZ <span>Pro</span></div>
+  <a href="/staff/login" class="nav-login">تسجيل الدخول</a>
+</nav>
+
+<% if(success){ %>
+<div class="form-wrap">
+  <div class="card">
+    <div class="success-box">
+      <div class="success-ico">🎉</div>
+      <div class="success-title">تم التسجيل بنجاح!</div>
+      <div class="success-sub">
+        تم إنشاء حسابك. يمكنك الآن تسجيل الدخول وبدء إدارة منشأتك.<br>
+        <strong>ملاحظة:</strong> الحساب في فترة تجريبية مجانية لمدة 30 يوم.
+      </div>
+      <a href="/staff/login" class="success-btn">تسجيل الدخول الآن</a>
+    </div>
+  </div>
+</div>
+<% } else { %>
+
+<div class="hero">
+  <div class="hero-badge">تجربة مجانية 30 يوم — بدون بطاقة ائتمان</div>
+  <h1>أدر منشأتك بذكاء<br>مع <span>BAREZ Pro</span></h1>
+  <p>نظام متكامل لإدارة الفنادق والشقق الفندقية — الحجوزات، الشقق، الوصولات، التقارير المالية</p>
+</div>
+
+<div class="form-wrap">
+
+  <div class="features">
+    <div class="feat"><div class="feat-ico">🏠</div><div class="feat-lbl">خريطة الشقق</div><div class="feat-sub">لحظة بلحظة</div></div>
+    <div class="feat"><div class="feat-ico">📊</div><div class="feat-lbl">تقارير مالية</div><div class="feat-sub">يومية وشهرية</div></div>
+    <div class="feat"><div class="feat-ico">🧹</div><div class="feat-lbl">خدمة الغرف</div><div class="feat-sub">تتبع التنظيف</div></div>
+    <div class="feat"><div class="feat-ico">🧾</div><div class="feat-lbl">سندات وفواتير</div><div class="feat-sub">جاهزة للطباعة</div></div>
+    <div class="feat"><div class="feat-ico">👥</div><div class="feat-lbl">متعدد الموظفين</div><div class="feat-sub">صلاحيات منفصلة</div></div>
+    <div class="feat"><div class="feat-ico">📱</div><div class="feat-lbl">يعمل على الجوال</div><div class="feat-sub">بدون تطبيق</div></div>
+  </div>
+
+  <div class="card">
+    <% if(error){ %>
+    <div class="err">⚠️ <%= error %></div>
+    <% } %>
+
+    <div class="trial-note">🎁 تجربة مجانية كاملة لمدة 30 يوم — لا يلزم أي دفع مسبق</div>
+
+    <form method="POST" action="/staff/register">
+
+      <div class="section-label">معلومات المنشأة</div>
+
+      <div class="field">
+        <label>اسم المنشأة *</label>
+        <input type="text" name="propertyName" placeholder="مثال: فندق الأندلس، شقق النخيل الفندقية" required>
+      </div>
+
+      <div class="field">
+        <label>نوع المنشأة *</label>
+        <div class="type-grid" id="typeGrid">
+          <div class="type-opt selected" onclick="selectType('apartment',this)">
+            <div class="type-opt-ico">🏢</div>
+            <div class="type-opt-lbl">شقق فندقية</div>
+          </div>
+          <div class="type-opt" onclick="selectType('hotel',this)">
+            <div class="type-opt-ico">🏨</div>
+            <div class="type-opt-lbl">فندق</div>
+          </div>
+          <div class="type-opt" onclick="selectType('mixed',this)">
+            <div class="type-opt-ico">🏗️</div>
+            <div class="type-opt-lbl">مختلط</div>
+          </div>
+        </div>
+        <input type="hidden" name="propertyType" id="propertyTypeInput" value="apartment">
+      </div>
+
+      <div class="field">
+        <label>المدينة</label>
+        <input type="text" name="city" placeholder="مثال: الرياض، جدة، مكة المكرمة">
+      </div>
+
+      <div class="divider"></div>
+      <div class="section-label">حساب المدير</div>
+
+      <div class="grid2">
+        <div class="field">
+          <label>الاسم الكامل *</label>
+          <input type="text" name="adminName" placeholder="اسمك" required>
+        </div>
+        <div class="field">
+          <label>اسم الدخول (username) *</label>
+          <input type="text" name="username" placeholder="بالإنجليزي أو الأرقام" required autocomplete="username">
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="field">
+          <label>كلمة المرور *</label>
+          <input type="password" name="password" placeholder="6 أحرف على الأقل" required autocomplete="new-password">
+        </div>
+        <div class="field">
+          <label>تأكيد كلمة المرور *</label>
+          <input type="password" name="password2" placeholder="أعد كتابة كلمة المرور" required autocomplete="new-password">
+        </div>
+      </div>
+
+      <button type="submit" class="submit-btn">إنشاء الحساب مجاناً</button>
+
+      <div style="text-align:center;margin-top:16px;font-size:12px;color:#94a3b8;">
+        بالتسجيل توافق على شروط الاستخدام وسياسة الخصوصية
+      </div>
+    </form>
+  </div>
+
+  <div style="text-align:center;margin-top:20px;font-size:13px;color:#64748b;">
+    لديك حساب؟ <a href="/staff/login" style="color:#1a3d8f;font-weight:600;text-decoration:none;">تسجيل الدخول</a>
+  </div>
+</div>
+<% } %>
+
+<script>
+function selectType(val, el) {
+  document.querySelectorAll('.type-opt').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('propertyTypeInput').value = val;
+}
+</script>
+</body>
+</html>
