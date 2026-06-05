@@ -2276,7 +2276,7 @@ async function loadReports() {
     if (!r.ok) return;
     rptData = await r.json();
     renderReports();
-  } catch(e) {}
+  } catch(e) { toast('❌ تعذر تحميل التقارير'); }
 }
 
 function fmt(n) { return (n||0).toLocaleString('ar-SA'); }
@@ -2340,31 +2340,77 @@ function renderReports() {
   }
 }
 
-function exportReportCSV() {
-  if (!rptData) return;
-  const { today, month } = rptData;
-  const now = new Date().toLocaleDateString('ar-SA');
-  const rows = [
-    ['التقرير', 'القيمة'],
-    ['التاريخ', now],
-    ['--- اليوم ---', ''],
-    ['وصولات اليوم', today.arrivals],
-    ['مغادرات اليوم', today.departures],
-    ['نسبة الإشغال', today.occupancyRate + '%'],
-    ['إيراد الحجوزات اليوم', today.revenue],
-    ['--- الشهر ---', ''],
-    ['إجمالي الحجوزات', month.bookings],
-    ['إجمالي الإيرادات', month.revenue],
-    ['المحصّل', month.paid],
-    ['المتبقي', month.remaining],
-    ['إيراد يومي', month.dailyRevenue],
-    ['إيراد شهري', month.annualRevenue],
-  ];
-  const csv = '﻿' + rows.map(r => r.join(',')).join('\n');
-  const a = document.createElement('a');
-  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
-  a.download = 'تقرير-' + new Date().toISOString().split('T')[0] + '.csv';
-  a.click();
+async function exportReportCSV() {
+  if (!rptData) { toast('❌ افتح التقارير أولاً'); return; }
+  toast('جاري تحضير الملف...');
+  try {
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+    const monthEnd   = new Date(now.getFullYear(), now.getMonth()+1, 0).toISOString().split('T')[0];
+    const r = await fetch(`/staff/api/bookings?sf=all&date_from=${monthStart}&date_to=${monthEnd}`);
+    const bookings = await r.json();
+
+    const { today, month } = rptData;
+    const dateStr = now.toLocaleDateString('ar-SA', { year:'numeric', month:'long', day:'numeric' });
+    const statusMap = { active:'مفتوح', awaiting_checkin:'انتظار الدخول', awaiting_payment:'انتظار الدفع', checkout:'خروج', cancelled:'ملغي', pending:'جديد' };
+    const typeMap   = { daily:'يومي', annual:'شهري', inquiry:'استفسار' };
+
+    const sep = ',';
+    const cell = v => `"${String(v||'').replace(/"/g,'""')}"`;
+
+    const lines = [];
+
+    // ملخص
+    lines.push([cell('ملخص التقرير'), cell(dateStr)].join(sep));
+    lines.push([cell('المبنى'), cell(BUILDING)].join(sep));
+    lines.push(['', ''].join(sep));
+    lines.push([cell('--- اليوم ---'), ''].join(sep));
+    lines.push([cell('وصولات اليوم'),    cell(today.arrivals)].join(sep));
+    lines.push([cell('مغادرات اليوم'),   cell(today.departures)].join(sep));
+    lines.push([cell('نسبة الإشغال'),    cell(today.occupancyRate + '%')].join(sep));
+    lines.push([cell('إيراد اليوم'),     cell(today.revenue + ' ريال')].join(sep));
+    lines.push(['', ''].join(sep));
+    lines.push([cell('--- الشهر الحالي ---'), ''].join(sep));
+    lines.push([cell('إجمالي الحجوزات'), cell(month.bookings)].join(sep));
+    lines.push([cell('إجمالي الإيرادات'),cell(month.revenue + ' ريال')].join(sep));
+    lines.push([cell('المحصّل'),         cell(month.paid + ' ريال')].join(sep));
+    lines.push([cell('المتبقي'),         cell(month.remaining + ' ريال')].join(sep));
+    lines.push([cell('إيراد يومي'),      cell(month.dailyRevenue + ' ريال')].join(sep));
+    lines.push([cell('إيراد شهري'),      cell(month.annualRevenue + ' ريال')].join(sep));
+    lines.push(['', ''].join(sep));
+
+    // تفاصيل الحجوزات
+    lines.push([cell('--- تفاصيل حجوزات الشهر ---'), '', '', '', '', '', '', '', '', '', ''].join(sep));
+    lines.push([
+      cell('رقم العقد'), cell('الاسم'), cell('الجوال'),
+      cell('الشقة'), cell('نوع الإيجار'), cell('تاريخ الدخول'), cell('تاريخ الخروج'),
+      cell('الإجمالي'), cell('المدفوع'), cell('المتبقي'), cell('الحالة'),
+    ].join(sep));
+
+    bookings.forEach(b => {
+      const remaining = (b.totalPrice||0) - (b.paidAmount||0);
+      lines.push([
+        cell('#' + b.bookingNum),
+        cell(b.name),
+        cell(b.phone),
+        cell(b.apt),
+        cell(typeMap[b.bookingType] || b.bookingType),
+        cell(b.checkIn ? new Date(b.checkIn).toLocaleDateString('en-GB') : ''),
+        cell(b.checkOut ? new Date(b.checkOut).toLocaleDateString('en-GB') : ''),
+        cell(b.totalPrice || 0),
+        cell(b.paidAmount || 0),
+        cell(Math.max(0, remaining)),
+        cell(statusMap[b.status] || b.status),
+      ].join(sep));
+    });
+
+    const csv = '﻿' + lines.join('\n');
+    const a = document.createElement('a');
+    a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+    a.download = `تقرير-${BUILDING}-${monthStart}.csv`;
+    a.click();
+    toast('✅ تم تصدير ' + bookings.length + ' حجز');
+  } catch(e) { toast('❌ فشل التصدير'); }
 }
 
 function printReport() {
