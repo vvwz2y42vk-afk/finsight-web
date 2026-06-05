@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { createToken, verifyToken } = require('../utils/auth');
 const Property = require('../models/Property');
+const WA = require('../utils/whatsapp');
 
 const COOKIE = 'fs_staff';
 const COPTS  = { httpOnly: true, maxAge: 12 * 60 * 60 * 1000, sameSite: 'lax' };
@@ -185,6 +186,8 @@ router.put('/api/bookings/:id/status', reqStaff, async (req,res) => {
       }
     }
     AL.create({building:req.staff.building,staffName:req.staff.name,action:status==='active'?'check_in':status==='checkout'?'check_out':'status_change',apt:bk.apt,guestName:bk.name,bookingId:bk._id,details:`${prev} → ${status}`}).catch(()=>{});
+    if (status === 'active')   WA.send(bk.phone, WA.msgCheckIn(bk.name, bk.apt, req.staff.building));
+    if (status === 'checkout') WA.send(bk.phone, WA.msgCheckOut(bk.name, bk.apt));
     res.json({success:true});
   } catch(e){ res.status(500).json({error:e.message}); }
 });
@@ -277,6 +280,8 @@ router.post('/api/bookings/new', reqStaff, async (req,res) => {
       { name, idType: idType||'', idNumber: idNumber||'', building: req.staff.building, lastSeen: new Date(), $inc: { totalBookings: 1 } },
       { upsert: true, new: true, setDefaultsOnInsert: true }
     ).catch(() => {});
+    // WhatsApp booking confirmation
+    WA.send(phone, WA.msgBookingConfirmed(name, apt, req.staff.building, bk.checkIn, bk.checkOut, bk.totalPrice));
     res.json({success:true, id:bk._id});
   } catch(e){ res.status(500).json({error:e.message}); }
 });
