@@ -267,7 +267,26 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
 .print-total-lbl{font-size:14px;font-weight:600;color:#475569;}.print-total-val{font-size:22px;font-weight:700;color:var(--brand);}
 .print-footer{text-align:center;margin-top:24px;font-size:11px;color:#94a3b8;border-top:1px solid #e2e8f0;padding-top:12px;}
 .print-btns{display:flex;gap:8px;margin-bottom:16px;}
-@media(max-width:768px){.main{margin-right:var(--sb);}.charts-row{grid-template-columns:1fr;}.kpi-row{grid-template-columns:repeat(2,1fr);}.vou-cards{gap:10px;}}
+@media(max-width:768px){
+  .main{margin-right:var(--sb);}
+  .charts-row{grid-template-columns:1fr;}
+  .kpi-row{grid-template-columns:repeat(2,1fr);}
+  .vou-cards{gap:10px;}
+  /* فلتر الحجوزات والعملاء على الجوال */
+  .cust-ff{min-width:140px;}
+  [style*="grid-template-columns:repeat(7"]{grid-template-columns:repeat(2,1fr)!important;}
+  [style*="grid-template-columns:2fr 1.5fr"]{grid-template-columns:1fr 1fr!important;flex-wrap:wrap!important;}
+  /* الجداول تصير كروت */
+  .stbl thead{display:none!important;}
+  .stbl tr{display:block!important;background:#fff;border-radius:12px;margin-bottom:10px;padding:12px;box-shadow:var(--sh-sm);border:1px solid var(--border);}
+  .stbl td{display:flex!important;justify-content:space-between;align-items:center;padding:5px 0!important;border:none!important;font-size:12px;}
+  .stbl td::before{content:attr(data-label);color:var(--t3);font-size:11px;font-weight:600;margin-left:8px;white-space:nowrap;}
+  /* KPI row */
+  .kpi-row{gap:8px;}
+  .kpi{padding:12px 10px;}
+  /* content padding */
+  .content{padding:12px;}
+}
 </style>
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#1e3a5f">
@@ -883,7 +902,7 @@ let hkCurrentApt=null;
 // ── Utils ────────────────────────────────────────────────
 function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.style.opacity='1'; setTimeout(()=>t.style.opacity='0',2500); }
 function esc(s){ return String(s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function fDate(d){ return d?new Date(d).toLocaleDateString('ar-SA',{day:'2-digit',month:'2-digit',year:'2-digit'}):'—'; }
+function fDate(d){ if(!d)return'—'; const dt=new Date(d); return dt.toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit',year:'numeric',calendar:'gregory'}); }
 function statusBadge(s){
   const m={active:'b-active مفتوح',awaiting_checkin:'b-awaiting انتظار الدخول',awaiting_payment:'b-awaiting_payment انتظار الدفع',checkout:'b-checkout خروج',pending:'b-pending جديد',cancelled:'b-cancelled ملغي'};
   const [cls,lbl]=(m[s]||'b-pending '+s).split(' ');
@@ -1323,16 +1342,16 @@ async function loadBookings(){
     if(cnt) cnt.textContent=list.length?`${list.length} حجز`:'';
     if(!list.length){ tb.innerHTML='<tr><td colspan="10" style="text-align:center;padding:30px;color:#94a3b8;">لا توجد حجوزات</td></tr>'; return; }
     tb.innerHTML=list.map(b=>`<tr>
-      <td style="font-family:monospace;font-weight:700;color:#1a3d8f;letter-spacing:.5px;">#${b.bookingNum}</td>
-      <td><b>${esc(b.apt||'—')}</b></td>
-      <td>${esc(b.name||'—')}</td>
-      <td><a href="https://wa.me/${(b.phone||'').replace(/^0/,'966')}" style="color:#1a3d8f;text-decoration:none;">${esc(b.phone||'—')}</a></td>
-      <td><span style="font-size:10px;padding:2px 8px;border-radius:8px;background:rgba(26,61,143,.08);color:#1a3d8f;font-weight:600;">${b.bookingType==='daily'?'يومي':b.bookingType==='annual'?'شهري':'استفسار'}</span></td>
-      <td>${fDate(b.checkIn)}</td>
-      <td>${fDate(b.checkOut)}</td>
-      <td>${b.totalPrice?b.totalPrice.toLocaleString()+' ر':'—'}</td>
-      <td>${statusBadge(b.status)}</td>
-      <td>
+      <td data-label="رقم العقد" style="font-family:monospace;font-weight:700;color:#1a3d8f;">#${b.bookingNum}</td>
+      <td data-label="الشقة"><b>${esc(b.apt||'—')}</b></td>
+      <td data-label="النزيل">${esc(b.name||'—')}</td>
+      <td data-label="الجوال"><a href="https://wa.me/${(b.phone||'').replace(/^0/,'966')}" style="color:#1a3d8f;text-decoration:none;">${esc(b.phone||'—')}</a></td>
+      <td data-label="نوع الإيجار"><span style="font-size:10px;padding:2px 8px;border-radius:8px;background:rgba(26,61,143,.08);color:#1a3d8f;font-weight:600;">${b.bookingType==='daily'?'يومي':b.bookingType==='annual'?'شهري':'استفسار'}</span></td>
+      <td data-label="الدخول">${fDate(b.checkIn)}</td>
+      <td data-label="الخروج">${fDate(b.checkOut)}</td>
+      <td data-label="الإجمالي">${b.totalPrice?b.totalPrice.toLocaleString()+' ر':'—'}</td>
+      <td data-label="الحالة">${statusBadge(b.status)}</td>
+      <td data-label="إجراء">
         ${b.status==='awaiting_checkin'?`<button onclick="changeStatus('${b._id}','active')" style="padding:4px 10px;background:#22c55e;color:#fff;border:none;border-radius:7px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">دخول</button>`:''}
         ${b.status==='active'?`<button onclick="changeStatus('${b._id}','checkout')" style="padding:4px 10px;background:#f97316;color:#fff;border:none;border-radius:7px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">خروج</button>`:''}
         ${!['cancelled','checkout'].includes(b.status)&&can('edit_booking')?`<button onclick="editBk('${b._id}')" style="padding:4px 10px;background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;border-radius:7px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">تعديل</button>`:''}
