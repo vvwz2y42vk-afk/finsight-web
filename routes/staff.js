@@ -186,8 +186,8 @@ router.put('/api/bookings/:id/status', reqStaff, async (req,res) => {
       }
     }
     AL.create({building:req.staff.building,staffName:req.staff.name,action:status==='active'?'check_in':status==='checkout'?'check_out':'status_change',apt:bk.apt,guestName:bk.name,bookingId:bk._id,details:`${prev} → ${status}`}).catch(()=>{});
-    if (status === 'active')   WA.send(bk.phone, WA.msgCheckIn(bk.name, bk.apt, req.staff.building));
-    if (status === 'checkout') WA.send(bk.phone, WA.msgCheckOut(bk.name, bk.apt));
+    if (status === 'active')   WA.sendCheckIn(bk.phone, bk.name, req.staff.building, bk.apt);
+    if (status === 'checkout') WA.sendCheckOut(bk.phone, bk.name, bk.apt);
     res.json({success:true});
   } catch(e){ res.status(500).json({error:e.message}); }
 });
@@ -281,7 +281,7 @@ router.post('/api/bookings/new', reqStaff, async (req,res) => {
       { upsert: true, new: true, setDefaultsOnInsert: true }
     ).catch(() => {});
     // WhatsApp booking confirmation
-    WA.send(phone, WA.msgBookingConfirmed(name, apt, req.staff.building, bk.checkIn, bk.checkOut, bk.totalPrice));
+    WA.sendBookingConfirmed(phone, name, apt, req.staff.building, bk.checkIn, bk.checkOut, bk.totalPrice);
     res.json({success:true, id:bk._id});
   } catch(e){ res.status(500).json({error:e.message}); }
 });

@@ -60,11 +60,20 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
   box-shadow:inset 0 0 0 1px rgba(37,99,235,.2);
 }
 .sn.active::after{
-  content:'';position:absolute;right:0;top:22%;bottom:22%;
+  content:'';position:absolute;right:0;top:18%;bottom:18%;
   width:3px;border-radius:2px 0 0 2px;
-  background:linear-gradient(180deg,#60A5FA,#3B82F6);
-  box-shadow:0 0 10px rgba(96,165,250,.5);
+  background:linear-gradient(180deg,#93C5FD,#3B82F6,#93C5FD);
+  box-shadow:0 0 12px rgba(96,165,250,.7);
 }
+.sb-occ{
+  width:calc(100% - 20px);margin:0 10px 14px;
+  background:rgba(255,255,255,.04);border-radius:10px;
+  padding:10px;overflow:hidden;max-height:0;opacity:0;
+  transition:all .28s var(--ease);
+}
+.sb:hover .sb-occ{max-height:80px;opacity:1;}
+.sb-occ-bar{height:4px;background:rgba(255,255,255,.1);border-radius:4px;margin-top:6px;overflow:hidden;}
+.sb-occ-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#3B82F6,#60A5FA);transition:width .8s var(--ease);}
 .sn-ico{flex-shrink:0;width:22px;display:flex;align-items:center;justify-content:center;}
 .sn-lbl{font-size:13px;font-weight:500;opacity:0;transition:opacity .2s var(--ease);}
 .sb:hover .sn-lbl{opacity:1;}
@@ -79,9 +88,10 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
 /* ══ Main ══ */
 .main{margin-right:var(--sb);flex:1;display:flex;flex-direction:column;min-height:100vh;}
 .topbar{
-  background:rgba(248,250,252,.96);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-  padding:15px 28px;display:flex;align-items:center;justify-content:space-between;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  padding:14px 28px;display:flex;align-items:center;justify-content:space-between;
   border-bottom:1px solid var(--border-s);position:sticky;top:0;z-index:50;
+  box-shadow:0 1px 12px rgba(15,23,42,.05);
 }
 .tb-left{}
 .tb-title{font-size:16px;font-weight:700;color:var(--t1);letter-spacing:-.01em;}
@@ -103,20 +113,22 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
 /* ══ KPI Cards ══ */
 .kpi-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:14px;margin-bottom:28px;}
 .kpi-c{
-  background:var(--surface);border-radius:var(--r);padding:20px;
+  background:var(--surface);border-radius:var(--r);padding:22px 20px;
   border:1px solid var(--border);box-shadow:var(--sh-sm);
   transition:all .25s var(--ease);cursor:default;
   display:flex;flex-direction:column;
+  position:relative;overflow:hidden;
 }
-.kpi-c:hover{box-shadow:var(--sh);transform:translateY(-2px);border-color:rgba(26,61,143,.12);}
+.kpi-c::before{content:'';position:absolute;bottom:-18px;left:-18px;width:80px;height:80px;border-radius:50%;background:rgba(26,61,143,.04);pointer-events:none;}
+.kpi-c:hover{box-shadow:var(--sh);transform:translateY(-3px);border-color:rgba(26,61,143,.15);}
 .kpi-ico{
-  width:42px;height:42px;border-radius:11px;
+  width:44px;height:44px;border-radius:12px;
   display:flex;align-items:center;justify-content:center;
-  margin-bottom:16px;transition:transform .25s var(--ease);flex-shrink:0;
+  margin-bottom:18px;transition:transform .3s var(--ease);flex-shrink:0;
 }
-.kpi-c:hover .kpi-ico{transform:scale(1.08);}
-.kpi-num{font-size:28px;font-weight:700;line-height:1;letter-spacing:-.03em;color:var(--t1);}
-.kpi-lbl{font-size:11px;color:var(--t4);font-weight:400;margin-top:6px;letter-spacing:.02em;}
+.kpi-c:hover .kpi-ico{transform:scale(1.1) rotate(-4deg);}
+.kpi-num{font-size:32px;font-weight:900;line-height:1;letter-spacing:-.04em;color:var(--t1);}
+.kpi-lbl{font-size:11px;color:var(--t4);font-weight:500;margin-top:7px;letter-spacing:.02em;}
 
 /* ══ Charts ══ */
 .charts-row{display:grid;grid-template-columns:1fr 200px 200px 200px;gap:14px;margin-bottom:28px;}
@@ -138,23 +150,31 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
 .af.active{background:var(--brand);border-color:var(--brand);color:#fff;box-shadow:0 2px 8px rgba(26,61,143,.25);}
 .apt-bld{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--sh-sm);padding:22px;margin-bottom:14px;}
 .apt-bld-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
-.apt-bld-name{font-size:14px;font-weight:700;color:var(--t1);letter-spacing:-.01em;}
-.apt-floor-lbl{font-size:10px;font-weight:500;color:var(--t4);margin-bottom:10px;letter-spacing:.07em;text-transform:uppercase;}
-.apt-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
-.apt{width:100px;border-radius:10px;padding:10px 6px;text-align:center;cursor:pointer;transition:all .2s var(--ease);user-select:none;}
-.apt-type{font-size:10px;margin-top:3px;opacity:.82;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;}
-.apt:hover{opacity:.82;transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.18);}
-.apt-n{font-size:14px;font-weight:700;line-height:1;letter-spacing:-.01em;}
-.apt-s{font-size:9px;margin-top:2px;opacity:.85;}
-.apt-g{font-size:9px;margin-top:1px;opacity:.78;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.apt.occ{background:#B91C1C;color:#fff;}
-.apt.vac{background:#047857;color:#fff;}
-.apt.cin{background:#1D4ED8;color:#fff;}
-.apt.cout{background:#B45309;color:#fff;}
-.apt.awt{background:#5B21B6;color:#fff;}
-.apt.awp{background:#92400E;color:#fff;}
-.apt.dirty{outline:2px solid #B45309;outline-offset:1px;}
-.apt.maintenance{outline:2px solid #6B7280;outline-offset:1px;}
+.apt-bld-name{font-size:15px;font-weight:800;color:var(--t1);letter-spacing:-.01em;}
+.apt-floor-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;margin-top:8px;}
+.apt-floor-lbl{font-size:11px;font-weight:700;color:var(--brand);letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;}
+.apt-floor-stats{font-size:10px;font-weight:700;padding:2px 9px;background:rgba(26,61,143,.08);color:var(--brand);border-radius:20px;white-space:nowrap;flex-shrink:0;}
+.apt-floor-line{flex:1;height:1px;background:rgba(26,61,143,.1);}
+.apt-grid{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px;}
+.apt{width:114px;border-radius:13px;padding:13px 8px 11px;text-align:center;cursor:pointer;transition:all .25s var(--ease);user-select:none;box-shadow:0 3px 12px rgba(0,0,0,.14);position:relative;}
+.apt:hover{transform:translateY(-4px);box-shadow:0 10px 24px rgba(0,0,0,.22);}
+.apt-type{font-size:9px;margin-top:4px;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;}
+.apt-n{font-size:19px;font-weight:900;line-height:1;letter-spacing:-.02em;}
+.apt-s{font-size:10px;margin-top:5px;opacity:.92;font-weight:700;letter-spacing:.01em;}
+.apt-g{font-size:10px;margin-top:2px;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500;}
+.apt-nights{display:inline-block;margin-top:6px;font-size:9px;background:rgba(255,255,255,.22);padding:1px 7px;border-radius:20px;font-weight:800;letter-spacing:.02em;}
+.apt.occ{background:linear-gradient(145deg,#B91C1C,#dc2626);color:#fff;}
+.apt.vac{background:linear-gradient(145deg,#047857,#059669);color:#fff;}
+.apt.cin{background:linear-gradient(145deg,#1a3d8f,#2563eb);color:#fff;}
+.apt.cout{background:linear-gradient(145deg,#92400E,#B45309);color:#fff;}
+.apt.awt{background:linear-gradient(145deg,#5B21B6,#7c3aed);color:#fff;}
+.apt.awp{background:linear-gradient(145deg,#78350F,#92400E);color:#fff;}
+.apt.dirty{outline:2.5px solid #B45309;outline-offset:2px;}
+.apt.maintenance{outline:2.5px solid #6B7280;outline-offset:2px;}
+@keyframes urgentPulse{0%,100%{box-shadow:0 3px 12px rgba(0,0,0,.14);}60%{box-shadow:0 0 0 6px rgba(255,255,255,.18),0 3px 18px rgba(0,0,0,.22);}}
+.apt.cin,.apt.cout{animation:urgentPulse 2.2s ease-in-out infinite;}
+@keyframes kpiIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.kpi-c{animation:kpiIn .45s ease both;}
 
 /* ══ Table ══ */
 .tbl-wrap{overflow-x:auto;}
@@ -216,12 +236,13 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
 .occ-stat{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:500;}
 
 /* ══ Toast ══ */
-#toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:var(--t1);color:#fff;padding:11px 22px;border-radius:10px;font-size:13px;font-weight:500;opacity:0;transition:opacity .3s;z-index:9999;pointer-events:none;box-shadow:var(--sh);letter-spacing:.01em;}
+#toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:rgba(15,23,42,.92);backdrop-filter:blur(12px);color:#fff;padding:12px 24px;border-radius:12px;font-size:13px;font-weight:600;opacity:0;transition:opacity .3s,transform .3s;z-index:9999;pointer-events:none;box-shadow:0 8px 28px rgba(0,0,0,.3);letter-spacing:.01em;border:1px solid rgba(255,255,255,.08);}
 
 /* ══ Vouchers ══ */
 .vou-cards{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:28px;}
-.vou-card{flex:1;min-width:150px;border-radius:var(--r);padding:28px 20px;text-align:center;cursor:pointer;transition:all .25s var(--ease);color:#fff;user-select:none;box-shadow:var(--sh-sm);}
-.vou-card:hover{transform:translateY(-4px);box-shadow:var(--sh);}
+.vou-card{flex:1;min-width:150px;border-radius:var(--r);padding:30px 20px;text-align:center;cursor:pointer;transition:all .28s var(--ease);color:#fff;user-select:none;box-shadow:0 4px 16px rgba(0,0,0,.14);position:relative;overflow:hidden;}
+.vou-card::before{content:'';position:absolute;bottom:-20px;right:-20px;width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,.08);pointer-events:none;}
+.vou-card:hover{transform:translateY(-5px);box-shadow:0 12px 28px rgba(0,0,0,.2);}
 .vou-ico{margin-bottom:12px;display:flex;align-items:center;justify-content:center;}
 .vou-lbl{font-size:13px;font-weight:600;letter-spacing:.01em;}
 .vou-section{display:none;}.vou-section.active{display:block;}
@@ -301,6 +322,14 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
 <aside class="sb" id="sb">
   <div class="sb-logo"><img src="/images/logo-dark.png" alt="Barez" style="height:46px;width:auto;"></div>
   <div class="sb-bld"><%= staff.building %></div>
+  <div class="sb-occ">
+    <div style="font-size:9px;color:rgba(255,255,255,.4);letter-spacing:.08em;text-transform:uppercase;">الإشغال الحالي</div>
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:3px;">
+      <div style="font-size:18px;font-weight:800;color:#fff;" id="sb-occ-num">—</div>
+      <div style="font-size:9px;color:rgba(255,255,255,.35);" id="sb-occ-total"></div>
+    </div>
+    <div class="sb-occ-bar"><div class="sb-occ-fill" id="sb-occ-fill" style="width:0%"></div></div>
+  </div>
   <nav class="sb-nav">
     <div class="sn active" onclick="goTab('dashboard',this)" id="sn-dashboard"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span><span class="sn-lbl">لوحة المعلومات</span></div>
     <% const P = staff.permissions && staff.permissions.length ? staff.permissions : ['dashboard','apartments','bookings','customers','housekeeping','activity','new_booking','edit_booking','cancel_booking','vouchers']; %>
@@ -436,6 +465,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
         </div>
         <% if(P.includes('new_booking')){ %><button class="sbtn" onclick="openNewBkModal()">+ حجز جديد</button><% } %>
       </div>
+      <div id="apt-alert-strip" style="display:none;margin-bottom:14px;"></div>
       <div id="aptsContainer"></div>
     </div>
 
@@ -993,6 +1023,19 @@ let hkCurrentApt=null;
 
 // ── Utils ────────────────────────────────────────────────
 function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.style.opacity='1'; setTimeout(()=>t.style.opacity='0',2500); }
+
+function animateNum(el, target, suffix=''){
+  if(!el||isNaN(target)) return;
+  const duration=700;
+  const startTime=performance.now();
+  const update=t=>{
+    const progress=Math.min((t-startTime)/duration,1);
+    const ease=1-Math.pow(1-progress,3);
+    el.textContent=Math.round(target*ease)+suffix;
+    if(progress<1) requestAnimationFrame(update);
+  };
+  requestAnimationFrame(update);
+}
 function esc(s){ return String(s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function fDate(d){ if(!d)return'—'; const dt=new Date(d); return dt.toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit',year:'numeric',calendar:'gregory'}); }
 function statusBadge(s){
@@ -1024,12 +1067,12 @@ function goTab(id, el){
 async function loadStats(){
   try{
     const r=await fetch('/staff/api/stats'); const d=await r.json();
-    document.getElementById('k-arrivals').textContent=d.arrivals;
-    document.getElementById('k-checkin').textContent=d.arrivals;
-    document.getElementById('k-departures').textContent=d.departures;
-    document.getElementById('k-guests').textContent=d.currentGuests;
-    document.getElementById('k-new').textContent=d.newBookings;
-    document.getElementById('k-rate').textContent=d.occupancyRate+'%';
+    animateNum(document.getElementById('k-arrivals'), d.arrivals);
+    animateNum(document.getElementById('k-checkin'), d.arrivals);
+    animateNum(document.getElementById('k-departures'), d.departures);
+    animateNum(document.getElementById('k-guests'), d.currentGuests);
+    animateNum(document.getElementById('k-new'), d.newBookings);
+    animateNum(document.getElementById('k-rate'), d.occupancyRate, '%');
     renderWeeklyChart(d.weekly, d.total);
     renderDonut(d.occupied, d.total);
   }catch(e){}
@@ -1218,6 +1261,25 @@ function updateAptCounts(){
   const rate=totAll?Math.round(totOcc/totAll*100):0;
   const el=document.getElementById('apts-occ-rate');
   if(el) el.innerHTML=`نسبة الإشغال: <span style="color:#1a3d8f;">${rate}%</span> (${totOcc}/${totAll})`;
+  const sbNum=document.getElementById('sb-occ-num');
+  const sbTot=document.getElementById('sb-occ-total');
+  const sbFill=document.getElementById('sb-occ-fill');
+  if(sbNum) sbNum.textContent=rate+'%';
+  if(sbTot) sbTot.textContent=totOcc+'/'+totAll+' وحدة';
+  if(sbFill) sbFill.style.width=rate+'%';
+
+  // شريط التنبيهات العاجلة
+  const strip=document.getElementById('apt-alert-strip');
+  if(!strip) return;
+  const alerts=[];
+  if(c.checkin_today>0) alerts.push(`<div style="display:flex;align-items:center;gap:8px;padding:10px 16px;background:linear-gradient(135deg,rgba(29,78,216,.08),rgba(29,78,216,.04));border:1px solid rgba(29,78,216,.2);border-radius:10px;"><span style="width:8px;height:8px;border-radius:50%;background:#2563eb;display:inline-block;animation:dot-pulse 1.5s infinite;flex-shrink:0;"></span><span style="font-size:13px;font-weight:700;color:#1D4ED8;">${c.checkin_today} حجز بانتظار الدخول اليوم</span></div>`);
+  if(c.checkout_today>0) alerts.push(`<div style="display:flex;align-items:center;gap:8px;padding:10px 16px;background:linear-gradient(135deg,rgba(180,83,9,.08),rgba(180,83,9,.04));border:1px solid rgba(180,83,9,.2);border-radius:10px;"><span style="width:8px;height:8px;border-radius:50%;background:#B45309;display:inline-block;animation:dot-pulse 1.5s infinite;flex-shrink:0;"></span><span style="font-size:13px;font-weight:700;color:#B45309;">${c.checkout_today} شقة موعد خروجها اليوم</span></div>`);
+  if(alerts.length){
+    strip.style.display='flex';
+    strip.style.gap='10px';
+    strip.style.flexWrap='wrap';
+    strip.innerHTML=alerts.join('');
+  } else { strip.style.display='none'; }
 }
 
 const APT_MAP={occupied:{cls:'occ',lbl:'مؤجر'},vacant:{cls:'vac',lbl:'شاغر'},checkin_today:{cls:'cin',lbl:'وصول اليوم'},checkout_today:{cls:'cout',lbl:'خروج اليوم'},awaiting:{cls:'awt',lbl:'انتظار'},awaiting_payment:{cls:'awp',lbl:'انتظار الدفع'}};
@@ -1280,11 +1342,20 @@ const APT_TYPES={
 function renderAptGrid(){
   if(!aptsRawData){return;}
   const container=document.getElementById('aptsContainer');
+  const today=new Date(); today.setHours(0,0,0,0);
   let html='<div class="apt-bld"><div class="apt-bld-hd"><div class="apt-bld-name">'+esc(aptsRawData.building)+'</div></div>';
   aptsRawData.floors.forEach(floor=>{
-    const rooms=floor.rooms.filter(r=>aptsFilter==='all'||r.status===aptsFilter);
+    const allRooms=floor.rooms;
+    const rooms=allRooms.filter(r=>aptsFilter==='all'||r.status===aptsFilter);
     if(!rooms.length) return;
-    html+=`<div class="apt-floor-lbl">${esc(floor.label)}</div><div class="apt-grid">`;
+    const floorOcc=allRooms.filter(r=>['occupied','checkout_today','checkin_today','awaiting','awaiting_payment'].includes(r.status)).length;
+    const pct=allRooms.length?Math.round(floorOcc/allRooms.length*100):0;
+    html+=`<div class="apt-floor-row">
+      <div class="apt-floor-lbl">${esc(floor.label)}</div>
+      <div class="apt-floor-stats">${floorOcc}/${allRooms.length} · ${pct}%</div>
+      <div class="apt-floor-line"></div>
+    </div>
+    <div class="apt-grid">`;
     rooms.forEach(r=>{
       const s=APT_MAP[r.status]||{cls:'',lbl:r.status};
       const hkClass=r.housekeeping==='dirty'?'dirty':r.housekeeping==='maintenance'?'maintenance':'';
@@ -1292,14 +1363,20 @@ function renderAptGrid(){
       const fbInfo=(APT_TYPES[BUILDING]||{})[r.apt]||null;
       const rt=dbInfo?.roomType||fbInfo?.t||'';
       const bd=dbInfo?.beds||fbInfo?.b||'';
-      const editBtn=can('edit_room_info')?`<div onclick="event.stopPropagation();openRoomInfoModal('${r.apt}','${esc(rt)}','${esc(bd)}')" style="position:absolute;top:4px;left:4px;width:16px;height:16px;background:rgba(255,255,255,.25);border-radius:4px;display:flex;align-items:center;justify-content:center;cursor:pointer;" title="تعديل">✏️</div>`:'';
-      html+=`<div class="apt ${s.cls} ${hkClass}" style="position:relative;" onclick="openBkModal('${r.bookingId||''}','${r.apt}','${r.status}')">
+      const editBtn=can('edit_room_info')?`<div onclick="event.stopPropagation();openRoomInfoModal('${r.apt}','${esc(rt)}','${esc(bd)}')" style="position:absolute;top:4px;left:4px;width:15px;height:15px;background:rgba(255,255,255,.2);border-radius:4px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:8px;" title="تعديل">✏️</div>`:'';
+      let nightsHtml='';
+      if(r.checkOut&&['occupied','checkout_today'].includes(r.status)){
+        const co=new Date(r.checkOut); co.setHours(0,0,0,0);
+        const days=Math.round((co-today)/(86400000));
+        nightsHtml=days<=0?`<div class="apt-nights">خروج اليوم</div>`:days===1?`<div class="apt-nights">غداً</div>`:`<div class="apt-nights">${days} يوم</div>`;
+      }
+      html+=`<div class="apt ${s.cls} ${hkClass}" onclick="openBkModal('${r.bookingId||''}','${r.apt}','${r.status}')">
         ${editBtn}
         <div class="apt-n">${esc(r.apt)}</div>
         ${rt?'<div class="apt-type">'+esc(rt)+'</div>':''}
-        ${bd?'<div class="apt-type" style="opacity:.65;">('+esc(bd)+')</div>':''}
         <div class="apt-s">${s.lbl}</div>
         ${r.name?'<div class="apt-g">'+esc(r.name)+'</div>':''}
+        ${nightsHtml}
       </div>`;
     });
     html+='</div>';

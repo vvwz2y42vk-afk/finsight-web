@@ -10,6 +10,41 @@ function formatPhone(phone) {
   return clean;
 }
 
+function formatDate(d) {
+  return d ? new Date(d).toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' }) : '—';
+}
+
+function param(text) {
+  return { type: 'text', text: String(text) };
+}
+
+async function sendTemplate(phone, templateName, params) {
+  if (!PHONE_ID || !TOKEN) return;
+  const to = formatPhone(phone);
+  if (!to || to.length < 10) return;
+  try {
+    await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messaging_product: 'whatsapp',
+        recipient_type: 'individual',
+        to,
+        type: 'template',
+        template: {
+          name: templateName,
+          language: { code: 'ar' },
+          components: [{
+            type: 'body',
+            parameters: params.map(param),
+          }],
+        },
+      }),
+    });
+  } catch(e) { /* fire and forget */ }
+}
+
+// للرسائل النصية العادية (داخل نافذة الـ 24 ساعة فقط)
 async function send(phone, body) {
   if (!PHONE_ID || !TOKEN) return;
   const to = formatPhone(phone);
@@ -29,39 +64,23 @@ async function send(phone, body) {
   } catch(e) { /* fire and forget */ }
 }
 
-function msgBookingConfirmed(name, apt, building, checkIn, checkOut, total) {
-  const d = d => d ? new Date(d).toLocaleDateString('ar-SA', { year:'numeric', month:'long', day:'numeric' }) : '—';
-  return `مرحباً ${name} 👋
-
-✅ *تم تأكيد حجزك*
-
-🏠 الشقة: ${apt} — ${building}
-📅 الدخول: ${d(checkIn)}
-📅 الخروج: ${d(checkOut)}
-💰 الإجمالي: ${(total||0).toLocaleString()} ريال
-
-للاستفسار تواصل معنا على هذا الرقم.
-_BAREZ — نظام إدارة الشقق الفندقية_`;
+async function sendBookingConfirmed(phone, name, apt, building, checkIn, checkOut, total) {
+  return sendTemplate(phone, 'barez_booking_confirmed', [
+    name,
+    apt,
+    building,
+    formatDate(checkIn),
+    formatDate(checkOut),
+    `${(total || 0).toLocaleString('ar-SA')}`,
+  ]);
 }
 
-function msgCheckIn(name, apt, building) {
-  return `أهلاً وسهلاً ${name} 🌟
-
-نورتم *${building}*
-🔑 شقتكم رقم: *${apt}*
-
-نتمنى لكم إقامة سعيدة ومريحة 🏡
-فريقنا في خدمتكم على مدار الساعة.
-_BAREZ — نظام إدارة الشقق الفندقية_`;
+async function sendCheckIn(phone, name, building, apt) {
+  return sendTemplate(phone, 'barez_check_in', [name, building, apt]);
 }
 
-function msgCheckOut(name, apt) {
-  return `شكراً لاختياركم ${name} 🙏
-
-نأمل أن إقامتكم في شقة *${apt}* كانت مميزة.
-يسعدنا استقبالكم مجدداً في أي وقت 😊
-
-_BAREZ — نظام إدارة الشقق الفندقية_`;
+async function sendCheckOut(phone, name, apt) {
+  return sendTemplate(phone, 'barez_check_out', [name, apt]);
 }
 
-module.exports = { send, msgBookingConfirmed, msgCheckIn, msgCheckOut };
+module.exports = { send, sendBookingConfirmed, sendCheckIn, sendCheckOut };
