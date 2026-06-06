@@ -1495,11 +1495,92 @@ function openBkModal(bookingId,apt,status){
     html+=`<button class="mbtn" style="background:#eff6ff;color:#2563eb;" onclick="closeBkModal();editBk('${bookingId}')">✏️ تعديل</button>`;
   if(can('cancel_booking'))
     html+=`<button class="mbtn" style="background:#fef2f2;color:#dc2626;" onclick="cancelBk('${bookingId}')">🗑️ إلغاء</button>`;
+  if(bookingId)
+    html+=`<button class="mbtn" style="background:#f0fdf4;color:#16a34a;" onclick="closeBkModal();printBkInvoice('${bookingId}')">🖨️ فاتورة</button>`;
   html+=`<button class="mbtn mbtn-cancel" onclick="closeBkModal()">إغلاق</button></div>`;
   document.getElementById('bkModalBody').innerHTML=html;
   document.getElementById('bkModal').style.display='flex';
 }
 function closeBkModal(){ document.getElementById('bkModal').style.display='none'; }
+
+async function printBkInvoice(bookingId){
+  try{
+    const r=await fetch('/staff/api/bookings/'+bookingId);
+    if(!r.ok){ toast('❌ تعذر تحميل بيانات الحجز'); return; }
+    const b=await r.json();
+    const net=b.totalPrice||0; const paid=b.paidAmount||0; const remain=Math.max(0,net-paid);
+    const docNum='INV-'+b._id.toString().slice(-6).toUpperCase();
+    const now=new Date().toLocaleDateString('ar-SA',{year:'numeric',month:'long',day:'numeric'});
+    const ID_L={national_id:'هوية وطنية',passport:'جواز سفر',iqama:'إقامة',family_card:'كرت عائلة'};
+    const BK_L={daily:'يومي',annual:'شهري / سنوي',inquiry:'استفسار'};
+    const html=`
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <button onclick="window.print()" style="padding:8px 20px;background:#16a34a;color:#fff;border:none;border-radius:8px;font-family:Cairo,sans-serif;font-size:13px;font-weight:700;cursor:pointer;">🖨️ طباعة</button>
+      <button onclick="closePrint()" style="padding:8px 20px;background:#f1f5f9;color:#475569;border:none;border-radius:8px;font-family:Cairo,sans-serif;font-size:13px;font-weight:700;cursor:pointer;">✕ إغلاق</button>
+    </div>
+    <div class="print-doc">
+      <div class="print-hd">
+        <div>
+          <div class="print-logo">BAREZ <span style="color:var(--brand);">Pro</span></div>
+          <div style="font-size:12px;color:#64748b;margin-top:4px;">${esc(b.building||BUILDING)} · نظام إدارة الشقق الفندقية</div>
+        </div>
+        <div style="text-align:left;">
+          <div class="print-type" style="background:#8b5cf6;">فاتورة حجز</div>
+          <div style="font-size:11px;color:#64748b;margin-top:6px;">رقم: ${docNum}</div>
+          <div style="font-size:11px;color:#64748b;">التاريخ: ${now}</div>
+        </div>
+      </div>
+      <div class="print-meta">
+        <div>
+          <div class="print-meta-row"><span>اسم النزيل:</span><b>${esc(b.name||'—')}</b></div>
+          <div class="print-meta-row"><span>رقم الجوال:</span><b>${esc(b.phone||'—')}</b></div>
+          ${b.email?`<div class="print-meta-row"><span>البريد:</span><b>${esc(b.email)}</b></div>`:''}
+          ${b.idType?`<div class="print-meta-row"><span>نوع الإثبات:</span><b>${ID_L[b.idType]||b.idType}</b></div>`:''}
+          ${b.idNumber?`<div class="print-meta-row"><span>رقم الإثبات:</span><b>${esc(b.idNumber)}</b></div>`:''}
+        </div>
+        <div>
+          <div class="print-meta-row"><span>الشقة:</span><b>${esc(b.apt||'—')} — ${esc(b.building||BUILDING)}</b></div>
+          <div class="print-meta-row"><span>نوع الحجز:</span><b>${BK_L[b.bookingType]||b.bookingType||'—'}</b></div>
+          ${b.checkIn?`<div class="print-meta-row"><span>تاريخ الدخول:</span><b>${fDate(b.checkIn)}</b></div>`:''}
+          ${b.checkOut?`<div class="print-meta-row"><span>تاريخ الخروج:</span><b>${fDate(b.checkOut)}</b></div>`:''}
+          ${b.nights?`<div class="print-meta-row"><span>عدد الليالي:</span><b>${b.nights}</b></div>`:''}
+          ${b.guests?`<div class="print-meta-row"><span>عدد النزلاء:</span><b>${b.guests}</b></div>`:''}
+        </div>
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px;">
+        <thead><tr style="background:#1e293b;color:#fff;">
+          <th style="padding:10px;text-align:right;">البيان</th>
+          <th style="padding:10px;text-align:left;min-width:120px;">المبلغ (ريال)</th>
+        </tr></thead>
+        <tbody>
+          <tr style="border-bottom:1px solid #f1f5f9;">
+            <td style="padding:10px;">إيجار شقة ${esc(b.apt||'')} — ${BK_L[b.bookingType]||''}</td>
+            <td style="padding:10px;text-align:left;">${net.toLocaleString()}</td>
+          </tr>
+          ${paid>0?`<tr style="border-bottom:1px solid #f1f5f9;">
+            <td style="padding:10px;color:#16a34a;">المبلغ المدفوع</td>
+            <td style="padding:10px;text-align:left;color:#16a34a;">${paid.toLocaleString()}</td>
+          </tr>`:''}
+          ${remain>0?`<tr>
+            <td style="padding:10px;color:#dc2626;">المبلغ المتبقي</td>
+            <td style="padding:10px;text-align:left;color:#dc2626;">${remain.toLocaleString()}</td>
+          </tr>`:''}
+        </tbody>
+      </table>
+      <div class="print-total">
+        <div class="print-total-lbl">إجمالي الحجز</div>
+        <div class="print-total-val">${net.toLocaleString()} ريال</div>
+      </div>
+      ${b.notes?`<div style="margin-top:14px;padding:10px;background:#f8fafc;border-radius:8px;font-size:12px;color:#475569;"><b>ملاحظات:</b> ${esc(b.notes)}</div>`:''}
+      <div class="print-footer">
+        <div>BAREZ Pro — نظام إدارة الشقق الفندقية</div>
+        <div style="margin-top:4px;">هذه الفاتورة صادرة إلكترونياً وصالحة بدون توقيع</div>
+      </div>
+    </div>`;
+    const area=document.getElementById('printArea');
+    area.innerHTML=html; area.style.display='block';
+  }catch(e){ toast('❌ خطأ في تحميل الفاتورة'); }
+}
 
 let editBkId=null;
 async function editBk(id){
