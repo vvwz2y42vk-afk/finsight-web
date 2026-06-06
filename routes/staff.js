@@ -34,7 +34,6 @@ function totalAptsFromConfig(bldgs, bldName) {
   return (bldgs[bldName]?.floors || []).reduce((s, f) => s + f.r.length, 0);
 }
 
-const totalApts = b => (BLDGS[b]?.floors||[]).reduce((s,f)=>s+f.r.length,0);
 
 function staffAuth(req,res,next){ req.staff=verifyToken(req.cookies?.[COOKIE])||null; next(); }
 function reqStaff(req,res,next){
@@ -107,7 +106,10 @@ router.get('/api/stats', reqStaff, async (req,res) => {
     const today = new Date(); today.setHours(0,0,0,0);
     const tom   = new Date(today); tom.setDate(today.getDate()+1);
 
-    const all = await B.find({ building:bld, status:{$nin:['cancelled']} }).lean();
+    const statsFilter = req.staff.propertyId
+      ? { propertyId: req.staff.propertyId }
+      : { building: bld, propertyId: null };
+    const all = await B.find({ ...statsFilter, status:{$nin:['cancelled']} }).lean();
     const active      = all.filter(b=>b.status==='active');
     const arrivals    = all.filter(b=>{ const c=b.checkIn?new Date(b.checkIn):null; return c&&c>=today&&c<tom&&['awaiting_checkin','active'].includes(b.status); });
     const departures  = all.filter(b=>{ const c=b.checkOut?new Date(b.checkOut):null; return c&&c>=today&&c<tom&&b.status==='active'; });
@@ -133,14 +135,18 @@ router.get('/api/apartments', reqStaff, async (req,res) => {
     const B  = require('../models/Booking');
     const HK = require('../models/HousekeepingTask');
     const bld = req.staff.building;
-    const bData = BLDGS[bld]; if(!bData) return res.status(404).json({error:'المبنى غير موجود'});
+    const { bldgs: aptBldgs } = await getBldgConfig(req.staff);
+    const bData = aptBldgs[bld]; if(!bData) return res.status(404).json({error:'المبنى غير موجود'});
 
     const today=new Date(); today.setHours(0,0,0,0);
     const tom=new Date(today); tom.setDate(today.getDate()+1);
 
     const L = require('../models/Listing');
-    const bookings = await B.find({ building:bld, status:{$in:['awaiting_payment','awaiting_checkin','active']} }).lean();
-    const hkTasks  = await HK.find({ building:bld }).lean();
+    const tenantFilter = req.staff.propertyId
+      ? { propertyId: req.staff.propertyId }
+      : { building: bld, propertyId: null };
+    const bookings = await B.find({ ...tenantFilter, status:{$in:['awaiting_payment','awaiting_checkin','active']} }).lean();
+    const hkTasks  = await HK.find(tenantFilter).lean();
     const listings = await L.find({ building:bld }).select('apt title bedrooms').lean();
     const bmap={}, hkmap={}, lmap={};
     bookings.forEach(b=>{ if(b.apt) bmap[b.apt]=b; });
@@ -209,8 +215,8 @@ router.put('/api/bookings/:id/status', reqStaff, async (req,res) => {
       }
     }
     AL.create({building:req.staff.building,staffName:req.staff.name,action:status==='active'?'check_in':status==='checkout'?'check_out':'status_change',apt:bk.apt,guestName:bk.name,bookingId:bk._id,details:`${prev} → ${status}`}).catch(()=>{});
-    if (status === 'active')   WA.sendCheckIn(bk.phone, bk.name, req.staff.building, bk.apt);
-    if (status === 'checkout') WA.sendCheckOut(bk.phone, bk.name, bk.apt);
+    if (status !== prev && status === 'active')   WA.sendCheckIn(bk.phone, bk.name, req.staff.building, bk.apt);
+    if (status !== prev && status === 'checkout') WA.sendCheckOut(bk.phone, bk.name, bk.apt);
     res.json({success:true});
   } catch(e){ res.status(500).json({error:e.message}); }
 });
@@ -250,7 +256,7 @@ router.put('/api/bookings/:id/edit', reqStaff, async (req,res) => {
       nights, totalPrice: parseFloat(totalPrice)||bk.totalPrice,
       paidAmount: parseFloat(paidAmount)||0,
       idType: idType||bk.idType, idNumber: idNumber||bk.idNumber,
-      status: status||bk.status, notes: notes||bk.notes,
+      status: status||bk.status, notes: notes !== undefined ? notes : bk.notes,
     });
     AL.create({building:req.staff.building,staffName:req.staff.name,action:'status_change',apt:bk.apt,guestName:name||bk.name,bookingId:bk._id,details:'تعديل الحجز'}).catch(()=>{});
     res.json({success:true});
