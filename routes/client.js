@@ -29,9 +29,7 @@ function countApts(bName) {
 }
 const totalUnits = Object.keys(BUILDINGS).reduce((s, b) => s + countApts(b), 0);
 
-router.get('/', (req, res) => res.render('landing'));
-
-router.get('/old-home', async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const contracts = await Contract.find({ n: { $exists: true, $ne: '' } }).lean();
     const active = contracts.filter(c => c.st !== 'مغلق');
