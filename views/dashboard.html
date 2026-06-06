@@ -444,6 +444,32 @@ tbody td{padding:7px 5px;font-size:11px;}
       <select class="si" id="cStatus" onchange="renderContracts()"><option value="">كل الحالات</option><option>مفتوح</option><option>مغلق</option></select>
     </div>
     <div class="card"><div class="tbl-wrap"><table><thead><tr><th>العميل</th><th>المبنى</th><th>الشقة</th><th>القيمة</th><th>المدفوع</th><th>المتبقي</th><th>الدخول</th><th>الخروج</th><th>الحالة</th><th>السداد</th><th>رسوم إيجار</th><th>طريقة الدفع</th><th></th></tr></thead><tbody id="contracts-tbody"></tbody></table></div><div style="margin-top:6px;font-size:10px;color:var(--t3);" id="c-count"></div></div>
+
+    <!-- حجوزات الموظفين -->
+    <div style="margin-top:24px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="font-size:13px;font-weight:700;color:#1a3d8f;border-right:3px solid #1a3d8f;padding-right:10px;">📋 حجوزات الموظفين</div>
+          <span id="staff-bk-count" style="font-size:11px;background:rgba(26,61,143,.1);color:#1a3d8f;padding:2px 10px;border-radius:20px;font-weight:600;"></span>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <select id="sbk-building" onchange="renderStaffBookings()" style="font-size:11px;padding:5px 10px;border:1px solid var(--b2);border-radius:8px;background:var(--s);color:var(--t1);font-family:inherit;">
+            <option value="">كل المباني</option>
+          </select>
+          <select id="sbk-status" onchange="renderStaffBookings()" style="font-size:11px;padding:5px 10px;border:1px solid var(--b2);border-radius:8px;background:var(--s);color:var(--t1);font-family:inherit;">
+            <option value="">كل الحالات</option>
+            <option value="awaiting_checkin">انتظار دخول</option>
+            <option value="active">نشط</option>
+            <option value="checkout">خروج</option>
+            <option value="cancelled">ملغي</option>
+          </select>
+        </div>
+      </div>
+      <div class="card"><div class="tbl-wrap"><table>
+        <thead><tr><th>النزيل</th><th>الجوال</th><th>المبنى</th><th>الشقة</th><th>النوع</th><th>الدخول</th><th>الخروج</th><th>الليالي</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th><th>الحالة</th></tr></thead>
+        <tbody id="staff-bk-tbody"></tbody>
+      </table></div></div>
+    </div>
   </div>
   <div class="tc" id="tab-commissions">
     <div class="month-ctrl">
@@ -1288,6 +1314,7 @@ function go(id,el){
   document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));el?.classList.add('active');showTabById(id);set('pageTitle',titles[id]||id);document.getElementById('addBtn').style.display=id==='contracts'?'flex':'none';
   if(id==='listings')loadListings();if(id==='bookings')loadBookings();if(id==='customers')loadCustomers();if(id==='hosts')loadHosts();if(id==='msgs')loadMessages();if(id==='apts')loadApts();if(id==='staff')loadStaff();
   if(id==='users')loadAdminUsers();if(id==='audit')loadAuditLogs(1);
+  if(id==='contracts')loadStaffBookings();
   closeMobNav();
 }
 function st(id,el){
@@ -1296,6 +1323,7 @@ function st(id,el){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el?.classList.add('active');showTabById(id);set('pageTitle',titles[id]||id);document.getElementById('addBtn').style.display=id==='contracts'?'flex':'none';
   if(id==='listings')loadListings();if(id==='bookings')loadBookings();if(id==='customers')loadCustomers();if(id==='hosts')loadHosts();if(id==='msgs')loadMessages();if(id==='apts')loadApts();if(id==='staff')loadStaff();
   if(id==='users')loadAdminUsers();if(id==='audit')loadAuditLogs(1);
+  if(id==='contracts')loadStaffBookings();
 }
 function showTabById(id){document.querySelectorAll('.tc').forEach(t=>t.classList.remove('active'));document.getElementById('tab-'+id)?.classList.add('active');}
 
@@ -1574,6 +1602,60 @@ async function deleteListing(id){
     showToast('🗑️ تم الحذف');
     loadListings();
   }catch(e){showToast('❌ حدث خطأ');}
+}
+
+// ─── Staff Bookings (in contracts tab) ──────────────────
+let allStaffBookings = [];
+async function loadStaffBookings() {
+  try {
+    const r = await fetch('/api/bookings');
+    if (!r.ok) return;
+    const all = await r.json();
+    allStaffBookings = all.filter(b => b.building && !b.listing);
+    // populate building filter dynamically
+    const sel = document.getElementById('sbk-building');
+    if (sel) {
+      const buildings = [...new Set(allStaffBookings.map(b => b.building).filter(Boolean))].sort();
+      const cur = sel.value;
+      sel.innerHTML = '<option value="">كل المباني</option>' + buildings.map(b => `<option${b===cur?' selected':''}>${b}</option>`).join('');
+    }
+    renderStaffBookings();
+  } catch(e) {}
+}
+function renderStaffBookings() {
+  const tbody = document.getElementById('staff-bk-tbody');
+  const countEl = document.getElementById('staff-bk-count');
+  if (!tbody) return;
+  const building = document.getElementById('sbk-building')?.value || '';
+  const status   = document.getElementById('sbk-status')?.value  || '';
+  let list = allStaffBookings;
+  if (building) list = list.filter(b => b.building === building);
+  if (status)   list = list.filter(b => b.status === status);
+  if (countEl)  countEl.textContent = list.length + ' حجز';
+  const SL = {pending:'جديد',awaiting_checkin:'انتظار دخول',active:'نشط',checkout:'خروج',cancelled:'ملغي'};
+  const SC = {pending:'pm',awaiting_checkin:'pw',active:'pj',checkout:'pp',cancelled:'pcl'};
+  const BL = {daily:'يومي',annual:'شهري',inquiry:'استفسار'};
+  if (!list.length) { tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:24px;color:var(--t3);">لا توجد حجوزات من الموظفين</td></tr>'; return; }
+  tbody.innerHTML = list.map(b => {
+    const total   = b.totalPrice || 0;
+    const paid    = b.paidAmount || 0;
+    const remain  = Math.max(0, total - paid);
+    const fDate   = d => d ? new Date(d).toLocaleDateString('ar-SA', {day:'numeric',month:'short',year:'2-digit'}) : '—';
+    return `<tr>
+      <td style="font-weight:600;">${b.name||'—'}</td>
+      <td><a href="https://wa.me/${(b.phone||'').replace(/^0/,'966')}" target="_blank" style="color:var(--green);font-size:11px;">${b.phone||'—'}</a></td>
+      <td>${b.building||'—'}</td>
+      <td style="font-weight:700;color:#1a3d8f;">${b.apt||'—'}</td>
+      <td style="font-size:10px;">${BL[b.bookingType]||b.bookingType||'—'}</td>
+      <td style="font-size:10px;">${fDate(b.checkIn)}</td>
+      <td style="font-size:10px;">${fDate(b.checkOut)}</td>
+      <td style="text-align:center;">${b.nights||'—'}</td>
+      <td style="font-weight:600;">${total ? total.toLocaleString()+' ﷼' : '—'}</td>
+      <td style="color:var(--green);">${paid ? paid.toLocaleString()+' ﷼' : '—'}</td>
+      <td style="color:${remain>0?'var(--red)':'var(--t3)'};">${remain>0?remain.toLocaleString()+' ﷼':'✓'}</td>
+      <td><span class="pill ${SC[b.status]||'pm'}">${SL[b.status]||b.status}</span></td>
+    </tr>`;
+  }).join('');
 }
 
 async function loadBookings(){
