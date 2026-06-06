@@ -351,7 +351,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
     <div class="sn" onclick="goTab('housekeeping',this)" id="sn-housekeeping" style="display:<%= P.includes('housekeeping')?'flex':'none' %>"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span><span class="sn-lbl">خدمة الغرف</span></div>
     <div class="sn" onclick="goTab('activity',this)" id="sn-activity" style="display:<%= P.includes('activity')?'flex':'none' %>"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span><span class="sn-lbl">سجل الحركات</span></div>
     <div class="sn" onclick="goTab('vouchers',this)" id="sn-vouchers" style="display:<%= P.includes('vouchers')?'flex':'none' %>"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></span><span class="sn-lbl">السندات والفواتير</span></div>
-    <div class="sn" onclick="goTab('reports',this)" id="sn-reports" style="display:<%= P.includes('reports')?'flex':'none' %>"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></span><span class="sn-lbl">التقارير</span></div>
+    <div class="sn" onclick="goTab('reports',this)" id="sn-reports"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></span><span class="sn-lbl">التقارير</span></div>
     <div class="sn" onclick="goTab('calendar',this)" id="sn-calendar" style="display:<%= P.includes('reports')?'flex':'none' %>"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/></svg></span><span class="sn-lbl">التقويم</span></div>
     <div class="sn" onclick="goTab('guests',this)" id="sn-guests" style="display:<%= P.includes('guests') || staff.role==='manager' ? 'flex' : 'none' %>"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span><span class="sn-lbl">الضيوف</span></div>
     <% if(staff.role==='manager'){ %>
@@ -1140,7 +1140,16 @@ function goTab(id, el){
   if(id==='housekeeping') loadHousekeeping();
   if(id==='activity')   loadActivity();
   if(id==='vouchers')   { vouBkCache=[]; showVouCards(); }
-  if(id==='reports')    { loadReports(); loadYearlyChart(); }
+  if(id==='reports'){
+    if(!can('reports')){
+      document.getElementById('tab-reports').innerHTML=`
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;">
+          <div style="font-size:48px;margin-bottom:16px;">🔒</div>
+          <div style="font-size:17px;font-weight:700;color:var(--t1);margin-bottom:8px;">ليس لديك صلاحية</div>
+          <div style="font-size:13px;color:var(--t3);">تواصل مع المدير لتفعيل صلاحية التقارير</div>
+        </div>`;
+    } else { loadReports(); loadYearlyChart(); }
+  }
   if(id==='calendar')   loadCalendar();
   if(id==='guests')     loadGuests();
   if(id==='settings')   loadSettings();
