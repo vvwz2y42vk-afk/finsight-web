@@ -829,15 +829,5 @@ router.get('/audit-logs', auth, requireRole('admin'), async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// TEMP: delete all contracts — remove after use
-router.post('/admin/nuke-contracts', async (req, res) => {
-  try {
-    const { secret } = req.body;
-    if (secret !== (process.env.DASHBOARD_PASSWORD || '')) return res.status(403).json({ error: 'غير مصرح' });
-    const Contract = require('../models/Contract');
-    const { deletedCount } = await Contract.deleteMany({});
-    res.json({ success: true, deleted: deletedCount });
-  } catch(e) { res.status(500).json({ error: e.message }); }
-});
 
 module.exports = router;
