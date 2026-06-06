@@ -200,7 +200,10 @@ router.get('/api/bookings', reqStaff, async (req,res) => {
 router.put('/api/bookings/:id/status', reqStaff, async (req,res) => {
   try {
     const B=require('../models/Booking'), L=require('../models/Listing'), AL=require('../models/ActivityLog');
-    const bk = await B.findOne({_id:req.params.id,building:req.staff.building}).lean();
+    const statusFilter = req.staff.propertyId
+      ? {_id:req.params.id, propertyId:req.staff.propertyId}
+      : {_id:req.params.id, building:req.staff.building, propertyId:null};
+    const bk = await B.findOne(statusFilter).lean();
     if(!bk) return res.status(404).json({error:'الحجز غير موجود'});
     const {status}=req.body, prev=bk.status;
     await B.findByIdAndUpdate(bk._id,{status});
@@ -225,7 +228,10 @@ router.put('/api/bookings/:id/status', reqStaff, async (req,res) => {
 router.get('/api/bookings/:id', reqStaff, async (req,res) => {
   try {
     const B = require('../models/Booking');
-    const bk = await B.findOne({_id:req.params.id, building:req.staff.building}).lean();
+    const getFilter = req.staff.propertyId
+      ? {_id:req.params.id, propertyId:req.staff.propertyId}
+      : {_id:req.params.id, building:req.staff.building, propertyId:null};
+    const bk = await B.findOne(getFilter).lean();
     if(!bk) return res.status(404).json({error:'الحجز غير موجود'});
     res.json(bk);
   } catch(e){ res.status(500).json({error:e.message}); }
@@ -353,7 +359,10 @@ router.get('/api/customers', reqStaff, async (req,res) => {
 router.get('/api/room-info', reqStaff, async (req,res) => {
   try {
     const RI = require('../models/RoomInfo');
-    const rows = await RI.find({ building: req.staff.building }).lean();
+    const riFilter = req.staff.propertyId
+      ? { propertyId: req.staff.propertyId }
+      : { building: req.staff.building, propertyId: null };
+    const rows = await RI.find(riFilter).lean();
     const map = {};
     rows.forEach(r => { map[r.apt] = { roomType: r.roomType, beds: r.beds }; });
     res.json(map);
@@ -366,9 +375,13 @@ router.put('/api/room-info/:apt', reqStaff, async (req,res) => {
     if(!perms.includes('edit_room_info')) return res.status(403).json({error:'ليس لديك صلاحية'});
     const RI = require('../models/RoomInfo');
     const { roomType='', beds='' } = req.body;
+    const pid = req.staff.propertyId || null;
+    const riKey = req.staff.propertyId
+      ? { propertyId: pid, apt: req.params.apt }
+      : { building: req.staff.building, propertyId: null, apt: req.params.apt };
     await RI.findOneAndUpdate(
-      { building: req.staff.building, apt: req.params.apt },
-      { roomType, beds },
+      riKey,
+      { roomType, beds, building: req.staff.building, propertyId: pid },
       { upsert: true }
     );
     res.json({ success: true });

@@ -26,7 +26,15 @@ async function connectDB() {
     family: 4,
   });
   console.log('✅ MongoDB متصل');
-  if (!_seeded) { await seedAdminUsers(); _seeded = true; }
+  if (!_seeded) {
+    await seedAdminUsers();
+    // Sync indexes after schema changes (drops stale indexes, creates new ones)
+    const models = ['HousekeepingTask','RoomInfo','Guest','Booking','Voucher','ActivityLog','StaffUser','Host','Customer'];
+    for (const m of models) {
+      try { await mongoose.model(m).syncIndexes(); } catch(e) { console.warn(`syncIndexes ${m}:`, e.message); }
+    }
+    _seeded = true;
+  }
 }
 
 // ── Seed admin users on first run ────────────────────────
