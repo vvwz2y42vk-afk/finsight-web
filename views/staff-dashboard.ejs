@@ -557,7 +557,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
       <div class="apt-bld">
         <div class="tbl-wrap">
           <table class="stbl">
-            <thead><tr><th>رقم العقد</th><th>الشقة</th><th>النزيل</th><th>الجوال</th><th>نوع الإيجار</th><th>الدخول</th><th>الخروج</th><th>الإجمالي</th><th>الحالة</th><th>إجراء</th></tr></thead>
+            <thead><tr><th>#</th><th>الشقة</th><th>النزيل</th><th>الجوال</th><th>نوع الإيجار</th><th>الدخول</th><th>الخروج</th><th>الإجمالي</th><th>الحالة</th><th>إجراء</th></tr></thead>
             <tbody id="bkTbody"><tr><td colspan="10" style="text-align:center;padding:30px;color:#94a3b8;">جاري التحميل...</td></tr></tbody>
           </table>
         </div>
@@ -1801,8 +1801,8 @@ async function loadBookings(){
     const cnt=document.getElementById('bkCount');
     if(cnt) cnt.textContent=list.length?`${list.length} حجز`:'';
     if(!list.length){ tb.innerHTML='<tr><td colspan="10" style="text-align:center;padding:30px;color:#94a3b8;">لا توجد حجوزات</td></tr>'; return; }
-    tb.innerHTML=list.map(b=>`<tr>
-      <td data-label="رقم العقد" style="font-family:monospace;font-weight:700;color:#1a3d8f;">#${b.bookingNum}</td>
+    tb.innerHTML=list.map((b,i)=>`<tr>
+      <td data-label="#" style="font-family:monospace;font-weight:700;color:#94a3b8;font-size:12px;">${i+1}</td>
       <td data-label="الشقة"><b>${esc(b.apt||'—')}</b></td>
       <td data-label="النزيل"><span onclick="openGuestCard('${esc(b.phone||'')}')" style="cursor:pointer;color:#1a3d8f;font-weight:700;text-decoration:underline dotted;">${esc(b.name||'—')}</span></td>
       <td data-label="الجوال"><a href="https://wa.me/${(b.phone||'').replace(/^0/,'966')}" style="color:#1a3d8f;text-decoration:none;">${esc(b.phone||'—')}</a></td>
