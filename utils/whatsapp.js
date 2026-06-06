@@ -83,4 +83,8 @@ async function sendCheckOut(phone, name, apt) {
   return sendTemplate(phone, 'barez_check_out', [name, apt]);
 }
 
-module.exports = { send, sendBookingConfirmed, sendCheckIn, sendCheckOut };
+async function sendCheckoutReminder(phone, name, apt) {
+  return sendTemplate(phone, 'barez_checkout_reminder', [name, apt]);
+}
+
+module.exports = { send, sendBookingConfirmed, sendCheckIn, sendCheckOut, sendCheckoutReminder };

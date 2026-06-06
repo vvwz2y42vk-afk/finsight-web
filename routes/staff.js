@@ -423,62 +423,121 @@ router.get('/api/reports', reqStaff, async (req, res) => {
     const now = new Date();
     const today = new Date(now); today.setHours(0,0,0,0);
     const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const nextMonth  = new Date(now.getFullYear(), now.getMonth() + 1, 1);
 
-    // Last 30 days for daily chart
-    const chartFrom = new Date(today); chartFrom.setDate(today.getDate() - 29);
+    const selYear  = parseInt(req.query.year)  || now.getFullYear();
+    const selMonth = req.query.month !== undefined ? parseInt(req.query.month) : now.getMonth();
+    const monthStart   = new Date(selYear, selMonth, 1);
+    const nextMonth    = new Date(selYear, selMonth + 1, 1);
+    const daysInMonth  = new Date(selYear, selMonth + 1, 0).getDate();
 
-    const [allMonth, allActive, allChart] = await Promise.all([
+    const [allMonth, allActive, allDebtsRaw] = await Promise.all([
       B.find({ building: bld, checkIn: { $gte: monthStart, $lt: nextMonth }, status: { $ne: 'cancelled' } }).lean(),
       B.find({ building: bld, status: 'active' }).lean(),
-      B.find({ building: bld, checkIn: { $gte: chartFrom, $lt: tomorrow }, status: { $ne: 'cancelled' } }).lean(),
+      B.find({ building: bld, status: { $nin: ['cancelled','checkout'] }, totalPrice: { $gt: 0 } }).lean(),
     ]);
 
-    // Today
     const todayBk = allMonth.filter(b => { const d = new Date(b.checkIn); return d >= today && d < tomorrow; });
     const departuresToday = allActive.filter(b => { const d = b.checkOut ? new Date(b.checkOut) : null; return d && d >= today && d < tomorrow; });
 
-    // Month summary
-    const monthRevenue  = allMonth.reduce((s,b) => s + (b.totalPrice||0), 0);
-    const monthPaid     = allMonth.reduce((s,b) => s + (b.paidAmount||0), 0);
+    const monthRevenue   = allMonth.reduce((s,b) => s + (b.totalPrice||0), 0);
+    const monthPaid      = allMonth.reduce((s,b) => s + (b.paidAmount||0), 0);
     const monthRemaining = monthRevenue - monthPaid;
-
-    // Revenue by type
     const daily  = allMonth.filter(b => b.bookingType === 'daily');
     const annual = allMonth.filter(b => b.bookingType === 'annual');
 
-    // Daily chart: revenue per day last 30 days
     const dailyChart = [];
-    for (let i = 29; i >= 0; i--) {
-      const d = new Date(today); d.setDate(today.getDate() - i);
-      const nd = new Date(d); nd.setDate(d.getDate() + 1);
-      const rev = allChart.filter(b => { const bd = new Date(b.checkIn); return bd >= d && bd < nd; }).reduce((s,b) => s + (b.totalPrice||0), 0);
+    for (let i = 1; i <= daysInMonth; i++) {
+      const d  = new Date(selYear, selMonth, i);
+      const nd = new Date(selYear, selMonth, i + 1);
+      const rev = allMonth.filter(b => { const bd = new Date(b.checkIn); return bd >= d && bd < nd; }).reduce((s,b) => s + (b.totalPrice||0), 0);
       dailyChart.push({ label: d.toLocaleDateString('ar-SA', { day:'numeric', month:'short' }), revenue: rev });
     }
 
+    const debts = allDebtsRaw
+      .filter(b => (b.paidAmount||0) < (b.totalPrice||0))
+      .map(b => ({
+        bookingNum: b._id.toString().slice(-5).toUpperCase(),
+        name: b.name, phone: b.phone, apt: b.apt,
+        totalPrice: b.totalPrice, paidAmount: b.paidAmount||0,
+        remaining: (b.totalPrice||0) - (b.paidAmount||0),
+        status: b.status,
+      }))
+      .sort((a,b) => b.remaining - a.remaining);
+
     res.json({
+      selectedMonth: selMonth, selectedYear: selYear,
       today: {
-        arrivals: todayBk.length,
-        departures: departuresToday.length,
+        arrivals: todayBk.length, departures: departuresToday.length,
         occupied: allActive.length,
         occupancyRate: total ? Math.round(allActive.length / total * 100) : 0,
-        total,
-        revenue: todayBk.reduce((s,b) => s + (b.totalPrice||0), 0),
+        total, revenue: todayBk.reduce((s,b) => s + (b.totalPrice||0), 0),
       },
       month: {
-        bookings: allMonth.length,
-        revenue: monthRevenue,
-        paid: monthPaid,
-        remaining: monthRemaining,
-        dailyBookings: daily.length,
-        annualBookings: annual.length,
+        bookings: allMonth.length, revenue: monthRevenue, paid: monthPaid, remaining: monthRemaining,
+        dailyBookings: daily.length, annualBookings: annual.length,
         dailyRevenue: daily.reduce((s,b) => s + (b.totalPrice||0), 0),
         annualRevenue: annual.reduce((s,b) => s + (b.totalPrice||0), 0),
         avgOccupancy: total ? Math.round(allActive.length / total * 100) : 0,
       },
-      chart: dailyChart,
+      chart: dailyChart, debts,
     });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── Calendar ──────────────────────────────────────────────
+router.get('/api/calendar', reqStaff, async (req, res) => {
+  try {
+    const B = require('../models/Booking');
+    const bld = req.staff.building;
+    const selYear  = parseInt(req.query.year)  || new Date().getFullYear();
+    const selMonth = req.query.month !== undefined ? parseInt(req.query.month) : new Date().getMonth();
+    const monthStart  = new Date(selYear, selMonth, 1);
+    const monthEnd    = new Date(selYear, selMonth + 1, 0); monthEnd.setHours(23,59,59,999);
+    const daysInMonth = new Date(selYear, selMonth + 1, 0).getDate();
+
+    const [bookings, { bldgs }] = await Promise.all([
+      B.find({ building: bld, status: { $nin: ['cancelled'] }, checkIn: { $lte: monthEnd }, checkOut: { $gte: monthStart } }).lean(),
+      getBldgConfig(req.staff),
+    ]);
+
+    const bldgData = bldgs[bld];
+    const floors = bldgData ? bldgData.floors.map(f => ({ label: f.l, apts: f.r })) : [];
+    const allApts = floors.flatMap(f => f.apts);
+
+    const aptCalendar = allApts.map(apt => {
+      const aptBks = bookings.filter(b => b.apt === apt);
+      const days = [];
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dayDate = new Date(selYear, selMonth, d);
+        const nextDay = new Date(selYear, selMonth, d + 1);
+        const bk = aptBks.find(b => new Date(b.checkIn) < nextDay && new Date(b.checkOut) > dayDate);
+        if (!bk) { days.push({ s: 'v' }); continue; }
+        const cin = new Date(bk.checkIn); cin.setHours(0,0,0,0);
+        const cout = new Date(bk.checkOut); cout.setHours(0,0,0,0);
+        let s = 'o';
+        if (cin.getTime() === dayDate.getTime()) s = 'i';
+        else if (cout.getTime() === dayDate.getTime()) s = 'x';
+        days.push({ s, id: bk._id.toString().slice(-5).toUpperCase(), n: (bk.name||'').split(' ')[0] });
+      }
+      return { apt, days };
+    });
+
+    res.json({ floors, aptCalendar, daysInMonth, month: selMonth, year: selYear });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── Checkout Reminders ────────────────────────────────────
+router.post('/api/reminders/checkout', reqStaff, async (req, res) => {
+  try {
+    const B = require('../models/Booking');
+    const tomorrow = new Date(); tomorrow.setHours(0,0,0,0); tomorrow.setDate(tomorrow.getDate()+1);
+    const dayAfter  = new Date(tomorrow); dayAfter.setDate(tomorrow.getDate()+1);
+    const bookings  = await B.find({ building: req.staff.building, status: 'active', checkOut: { $gte: tomorrow, $lt: dayAfter } }).lean();
+    let sent = 0;
+    for (const bk of bookings) {
+      if (bk.phone) { await WA.sendCheckoutReminder(bk.phone, bk.name, bk.apt); sent++; }
+    }
+    res.json({ success: true, sent, total: bookings.length });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
