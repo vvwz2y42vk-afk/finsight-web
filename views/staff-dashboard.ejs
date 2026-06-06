@@ -748,6 +748,34 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
       <button onclick="addBuilding()" id="add-bld-btn" style="display:flex;align-items:center;gap:8px;padding:10px 20px;border:2px dashed #C7D9FF;border-radius:12px;background:#F0F4FF;color:#1a3d8f;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;margin-top:12px;width:100%;justify-content:center;transition:all .2s;" onmouseover="this.style.background='#E0ECFF'" onmouseout="this.style.background='#F0F4FF'">
         + إضافة مبنى
       </button>
+
+      <% if(staff.role === 'manager'){ %>
+      <!-- Plan & Migration — managers only -->
+      <div id="plan-card" style="margin-top:28px;background:linear-gradient(135deg,#1a3d8f 0%,#2563eb 100%);border-radius:16px;padding:20px 24px;color:#fff;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
+          <div>
+            <div style="font-size:11px;opacity:.7;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;">الخطة الحالية</div>
+            <div id="plan-name" style="font-size:22px;font-weight:800;margin-bottom:2px;">—</div>
+            <div id="plan-expiry" style="font-size:12px;opacity:.8;"></div>
+          </div>
+          <div style="text-align:left;">
+            <div style="font-size:11px;opacity:.7;margin-bottom:4px;">المنشأة</div>
+            <div id="plan-prop-name" style="font-size:14px;font-weight:700;"></div>
+            <div id="plan-prop-type" style="font-size:11px;opacity:.7;margin-top:2px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:16px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 20px;">
+        <div style="font-size:12px;font-weight:700;color:var(--t2);margin-bottom:8px;">أدوات المدير</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button onclick="runMigration()" style="padding:9px 18px;border-radius:9px;border:1px solid #C7D9FF;background:#EEF4FF;color:#1a3d8f;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;">
+            🔄 ربط البيانات القديمة بالمنشأة
+          </button>
+        </div>
+        <div style="font-size:11px;color:var(--t4);margin-top:8px;">يُشغَّل مرة واحدة فقط لربط الحجوزات والسجلات القديمة بحساب منشأتك.</div>
+      </div>
+      <% } %>
     </div>
 
     <!-- ── Activity ── -->
@@ -2218,7 +2246,38 @@ async function loadSettings() {
     document.getElementById('settings-internal-note').style.display = isInternalProp ? 'block' : 'none';
     document.getElementById('add-bld-btn').style.display = isInternalProp ? 'none' : 'flex';
     renderSettings();
+    renderPlanCard(prop);
   } catch(e) {}
+}
+
+function renderPlanCard(prop) {
+  const planNames = { trial:'تجريبية مجانية', basic:'أساسية', pro:'احترافية' };
+  const typeNames  = { apartment:'شقق فندقية', hotel:'فندق', mixed:'مختلط' };
+  const pn = document.getElementById('plan-name');
+  const pe = document.getElementById('plan-expiry');
+  const pp = document.getElementById('plan-prop-name');
+  const pt = document.getElementById('plan-prop-type');
+  if (!pn) return;
+  pn.textContent = planNames[prop.plan] || prop.plan || '—';
+  if (prop.planExpiry) {
+    const exp = new Date(prop.planExpiry);
+    const days = Math.ceil((exp - Date.now()) / 86400000);
+    pe.textContent = days > 0 ? `تنتهي خلال ${days} يوم (${exp.toLocaleDateString('ar-SA')})` : '⚠️ انتهت الخطة';
+    if (days <= 7) pe.style.color = '#FCA5A5';
+  }
+  if (pp) pp.textContent = prop.name || '—';
+  if (pt) pt.textContent = typeNames[prop.type] || '';
+}
+
+async function runMigration() {
+  if (!confirm('هذا سيربط جميع البيانات القديمة بمنشأتك. هل أنت متأكد؟')) return;
+  try {
+    const r = await fetch('/staff/api/admin/migrate-tenant', { method:'POST', headers:{'Content-Type':'application/json'} });
+    const d = await r.json();
+    if (d.success) {
+      toast(`✅ تم الربط: ${d.updated.bookings} حجز، ${d.updated.vouchers} سند، ${d.updated.housekeeping} خدمة غرف`);
+    } else { toast('❌ ' + (d.error||'حدث خطأ')); }
+  } catch(e) { toast('❌ تعذر تنفيذ العملية'); }
 }
 
 function renderSettings() {
