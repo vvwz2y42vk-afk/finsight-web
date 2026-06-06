@@ -150,7 +150,7 @@ router.get('/api/apartments', reqStaff, async (req,res) => {
       : { building: bld, propertyId: null };
     const bookings = await B.find({ ...tenantFilter, status:{$in:['awaiting_payment','awaiting_checkin','active']} }).lean();
     const hkTasks  = await HK.find(tenantFilter).lean();
-    const listings = await L.find({ building:bld }).select('apt title bedrooms').lean();
+    const listings = await L.find({ building:bld }).select('apt title bedrooms price_daily price_annual type').lean();
     const bmap={}, hkmap={}, lmap={};
     bookings.forEach(b=>{ if(b.apt) bmap[b.apt]=b; });
     hkTasks.forEach(t=>{ hkmap[t.apt]=t; });
@@ -167,7 +167,7 @@ router.get('/api/apartments', reqStaff, async (req,res) => {
           else if(b.status==='awaiting_checkin') status=(cin&&cin>=today&&cin<tom)?'checkin_today':'awaiting';
           else if(b.status==='awaiting_payment') status='awaiting_payment';
         }
-        return { apt, status, housekeeping:hk?.status||'clean', bookingId:b?._id||null, name:b?.name||'', phone:b?.phone||'', checkIn:b?.checkIn||null, checkOut:b?.checkOut||null, nights:b?.nights||0, totalPrice:b?.totalPrice||0, paidAmount:b?.paidAmount||0, idType:b?.idType||'', idNumber:b?.idNumber||'', bookingType:b?.bookingType||'', notes:hk?.notes||'', roomType:l?.title||'', bedrooms:l?.bedrooms||0 };
+        return { apt, status, housekeeping:hk?.status||'clean', bookingId:b?._id||null, name:b?.name||'', phone:b?.phone||'', checkIn:b?.checkIn||null, checkOut:b?.checkOut||null, nights:b?.nights||0, totalPrice:b?.totalPrice||0, paidAmount:b?.paidAmount||0, idType:b?.idType||'', idNumber:b?.idNumber||'', bookingType:b?.bookingType||l?.type||'both', notes:hk?.notes||'', roomType:l?.title||'', bedrooms:l?.bedrooms||0, priceDaily:l?.price_daily||0, priceAnnual:l?.price_annual||0 };
       }),
     }));
     res.json({ building:bld, floors });
@@ -368,6 +368,18 @@ router.get('/api/room-info', reqStaff, async (req,res) => {
     const rows = await RI.find(riFilter).lean();
     const map = {};
     rows.forEach(r => { map[r.apt] = { roomType: r.roomType, beds: r.beds, building: r.building, pricePerNight: r.pricePerNight || 0, pricePerMonth: r.pricePerMonth || 0 }; });
+
+    // Merge listing prices (authoritative source for internal users)
+    if (!req.staff.propertyId) {
+      const L = require('../models/Listing');
+      const listings = await L.find({ building: req.staff.building }).select('apt price_daily price_annual').lean();
+      listings.forEach(l => {
+        if (!l.apt) return;
+        if (!map[l.apt]) map[l.apt] = { roomType: '', beds: '', building: req.staff.building, pricePerNight: 0, pricePerMonth: 0 };
+        if (l.price_daily)  map[l.apt].pricePerNight = l.price_daily;
+        if (l.price_annual) map[l.apt].pricePerMonth = l.price_annual;
+      });
+    }
     res.json(map);
   } catch(e){ res.status(500).json({error:e.message}); }
 });
@@ -705,7 +717,7 @@ router.put('/api/room-prices', reqStaff, async (req, res) => {
     const { prices } = req.body;
     if (!Array.isArray(prices) || !prices.length) return res.status(400).json({ error: 'بيانات غير صحيحة' });
     const pid = req.staff.propertyId || null;
-    const ops = prices.map(p => ({
+    const riOps = prices.map(p => ({
       updateOne: {
         filter: pid
           ? { propertyId: pid, apt: String(p.apt) }
@@ -719,7 +731,22 @@ router.put('/api/room-prices', reqStaff, async (req, res) => {
         upsert: true,
       }
     }));
-    await RI.bulkWrite(ops);
+    await RI.bulkWrite(riOps);
+
+    // Mirror prices to Listing (internal users only — listings are linked by building+apt)
+    if (!pid) {
+      const L = require('../models/Listing');
+      const listingOps = prices.map(p => ({
+        updateOne: {
+          filter: { building: String(p.building || req.staff.building), apt: String(p.apt) },
+          update: { $set: {
+            price_daily:  Math.max(0, parseFloat(p.pricePerNight) || 0),
+            price_annual: Math.max(0, parseFloat(p.pricePerMonth) || 0),
+          }},
+        }
+      }));
+      if (listingOps.length) await L.bulkWrite(listingOps);
+    }
     res.json({ success: true });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
