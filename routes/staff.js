@@ -786,6 +786,23 @@ router.get('/api/guests/by-phone/:phone', reqStaff, async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── API: Guest booking history ───────────────────────────
+router.get('/api/guests/:id/history', reqStaff, async (req, res) => {
+  try {
+    const Guest   = require('../models/Guest');
+    const Booking = require('../models/Booking');
+    const propId  = req.staff.propertyId || null;
+    const guest   = await Guest.findOne({ _id: req.params.id, propertyId: propId }).lean();
+    if (!guest) return res.status(404).json({ error: 'الضيف غير موجود' });
+    const bkFilter = propId ? { phone: guest.phone, propertyId: propId }
+                             : { phone: guest.phone, propertyId: null, building: req.staff.building };
+    const bookings = await Booking.find(bkFilter).sort({ checkIn: -1 }).limit(100).lean();
+    const totalPaid  = bookings.reduce((s, b) => s + (b.paidAmount  || 0), 0);
+    const totalPrice = bookings.reduce((s, b) => s + (b.totalPrice  || 0), 0);
+    res.json({ guest, bookings, totalPaid, totalPrice });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 // ── API: Update full guest profile ───────────────────────
 router.put('/api/guests/:id', reqStaff, async (req, res) => {
   try {

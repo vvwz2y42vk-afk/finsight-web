@@ -1628,6 +1628,7 @@ async function openBkModal(bookingId, apt, status) {
     if (can('cancel_booking') && !['cancelled','checkout'].includes(b.status))
       html += `<button class="mbtn" style="background:#fef2f2;color:#dc2626;" onclick="cancelBk('${bookingId}')">🗑️ إلغاء</button>`;
     html += `<button class="mbtn" style="background:#f0fdf4;color:#16a34a;" onclick="closeBkModal();printBkInvoice('${bookingId}')">🖨️ فاتورة</button>`;
+    html += `<button class="mbtn" style="background:#fef9c3;color:#92400e;" onclick="closeBkModal();printContract('${bookingId}')">📄 عقد</button>`;
     html += `<button class="mbtn mbtn-cancel" onclick="closeBkModal()">إغلاق</button></div>`;
 
     document.getElementById('bkModalBody').innerHTML = html;
@@ -2415,7 +2416,7 @@ function renderGuests(list) {
     const cat = g.category || 'regular';
     const cc = catColors[cat] || catColors.regular;
     return `<tr>
-      <td><div style="font-weight:600;">${esc(g.name)}</div></td>
+      <td><div style="font-weight:600;color:#1a3d8f;cursor:pointer;text-decoration:underline dotted;" onclick="openCustomerProfile('${g._id}')">${esc(g.name)}</div></td>
       <td style="font-family:monospace;">${esc(g.phone)}</td>
       <td style="font-size:12px;color:var(--t3);">${idLabels[g.idType] || g.idType || '—'}</td>
       <td style="font-family:monospace;font-size:12px;">${esc(g.idNumber) || '—'}</td>
@@ -3193,8 +3194,267 @@ window.addEventListener('load',()=>{
   setInterval(loadApartments,30000);
   if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});
 });
+// ── Customer Full Profile ────────────────────────────────
+async function openCustomerProfile(guestId) {
+  const ov = document.getElementById('customerProfileOverlay');
+  ov.style.display = 'flex';
+  document.getElementById('cpBody').innerHTML = '<div style="text-align:center;padding:40px;color:#64748b;">⏳ جاري التحميل…</div>';
+
+  try {
+    const r = await fetch('/staff/api/guests/' + guestId + '/history');
+    if (!r.ok) throw new Error('فشل التحميل');
+    const { guest: g, bookings, totalPaid, totalPrice } = await r.json();
+
+    const catMap = { regular:{lbl:'عادي',bg:'#e0f2fe',c:'#0369a1'}, vip:{lbl:'⭐ VIP',bg:'#fef9c3',c:'#854d0e'}, blocked:{lbl:'🚫 محظور',bg:'#fee2e2',c:'#b91c1c'} };
+    const cat = catMap[g.category||'regular'];
+    const idL = { national_id:'هوية وطنية', passport:'جواز سفر', residence:'إقامة', gcc:'هوية خليجي', other:'أخرى' };
+    const ST  = { pending:'معلّق', awaiting_payment:'بانتظار الدفع', awaiting_checkin:'بانتظار الدخول', active:'مقيم', checkout:'خرج', cancelled:'ملغي' };
+    const ST_C= { active:'#16a34a', checkout:'#64748b', cancelled:'#dc2626', awaiting_checkin:'#2563eb', pending:'#f59e0b', awaiting_payment:'#f59e0b' };
+
+    const row = (lbl, val) => val ? `<div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid #f1f5f9;font-size:13px;"><span style="color:#64748b;min-width:120px;">${lbl}</span><b>${val}</b></div>` : '';
+
+    let html = `
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
+      <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#1a3d8f,#2563eb);display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;font-weight:700;flex-shrink:0;">${(g.name||'?')[0]}</div>
+      <div style="flex:1;">
+        <div style="font-size:18px;font-weight:700;">${esc(g.name)}</div>
+        <div style="font-size:12px;color:#64748b;margin-top:3px;">${esc(g.phone)} · آخر زيارة: ${g.lastSeen?new Date(g.lastSeen).toLocaleDateString('ar-SA',{year:'numeric',month:'short',day:'numeric'}):'—'}</div>
+      </div>
+      <span style="background:${cat.bg};color:${cat.c};padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;">${cat.lbl}</span>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px;">
+      <div style="background:#f0f9ff;border-radius:12px;padding:14px;text-align:center;">
+        <div style="font-size:22px;font-weight:800;color:#0369a1;">${g.totalBookings||bookings.length}</div>
+        <div style="font-size:11px;color:#64748b;margin-top:4px;">إجمالي الحجوزات</div>
+      </div>
+      <div style="background:#f0fdf4;border-radius:12px;padding:14px;text-align:center;">
+        <div style="font-size:18px;font-weight:800;color:#16a34a;">${totalPaid.toLocaleString()}</div>
+        <div style="font-size:11px;color:#64748b;margin-top:4px;">إجمالي المدفوع (ر)</div>
+      </div>
+      <div style="background:${(totalPrice-totalPaid)>0?'#fef2f2':'#f0fdf4'};border-radius:12px;padding:14px;text-align:center;">
+        <div style="font-size:18px;font-weight:800;color:${(totalPrice-totalPaid)>0?'#dc2626':'#16a34a'};">${(totalPrice-totalPaid).toLocaleString()}</div>
+        <div style="font-size:11px;color:#64748b;margin-top:4px;">المتبقي (ر)</div>
+      </div>
+    </div>
+
+    <div style="font-size:11px;font-weight:700;color:#64748b;letter-spacing:.5px;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #e2e8f0;">بيانات الهوية</div>
+    <div style="margin-bottom:18px;">
+      ${row('نوع الإثبات', idL[g.idType]||g.idType||'')}
+      ${row('رقم الإثبات', g.idNumber)}
+      ${row('الجنسية', g.nationality)}
+      ${row('جهة العمل', g.employer)}
+      ${g.email?row('البريد', `<a href="mailto:${esc(g.email)}" style="color:#2563eb;">${esc(g.email)}</a>`):''}
+    </div>
+
+    <div style="font-size:11px;font-weight:700;color:#64748b;letter-spacing:.5px;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #e2e8f0;">سجل الحجوزات (${bookings.length})</div>
+    ${bookings.length ? `
+    <div style="overflow-x:auto;">
+    <table style="width:100%;border-collapse:collapse;font-size:12px;">
+      <thead><tr style="background:#f8fafc;">
+        <th style="padding:8px 10px;text-align:right;font-weight:700;color:#475569;">الشقة</th>
+        <th style="padding:8px 10px;text-align:right;font-weight:700;color:#475569;">الدخول</th>
+        <th style="padding:8px 10px;text-align:right;font-weight:700;color:#475569;">الخروج</th>
+        <th style="padding:8px 10px;text-align:right;font-weight:700;color:#475569;">الإجمالي</th>
+        <th style="padding:8px 10px;text-align:right;font-weight:700;color:#475569;">المدفوع</th>
+        <th style="padding:8px 10px;text-align:right;font-weight:700;color:#475569;">الحالة</th>
+      </tr></thead>
+      <tbody>
+        ${bookings.map(b=>`<tr style="border-bottom:1px solid #f1f5f9;">
+          <td style="padding:8px 10px;font-weight:600;">${esc(b.apt||'—')}</td>
+          <td style="padding:8px 10px;">${fDate(b.checkIn)}</td>
+          <td style="padding:8px 10px;">${fDate(b.checkOut)}</td>
+          <td style="padding:8px 10px;">${(b.totalPrice||0).toLocaleString()}</td>
+          <td style="padding:8px 10px;color:#16a34a;">${(b.paidAmount||0).toLocaleString()}</td>
+          <td style="padding:8px 10px;"><span style="color:${ST_C[b.status]||'#64748b'};font-weight:600;font-size:11px;">${ST[b.status]||b.status}</span></td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+    </div>` : '<div style="text-align:center;padding:20px;color:#94a3b8;font-size:13px;">لا توجد حجوزات مسجّلة</div>'}
+
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
+      <a href="https://wa.me/${(g.phone||'').replace(/^0/,'966')}" target="_blank" style="padding:10px 18px;background:#dcfce7;color:#16a34a;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none;">واتساب ↗</a>
+      <button onclick="closeCustomerProfile();openGuestCard('${esc(g.phone||'')}')" style="padding:10px 18px;background:#eff6ff;color:#2563eb;border:none;border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;">✏️ تعديل البيانات</button>
+      <button onclick="closeCustomerProfile()" style="padding:10px 18px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;">إغلاق</button>
+    </div>`;
+
+    document.getElementById('cpBody').innerHTML = html;
+  } catch(e) {
+    document.getElementById('cpBody').innerHTML = `<div style="color:#dc2626;padding:20px;text-align:center;">❌ ${e.message}</div>`;
+  }
+}
+function closeCustomerProfile() { document.getElementById('customerProfileOverlay').style.display='none'; }
+
+// ── Print Contract ───────────────────────────────────────
+async function printContract(bookingId) {
+  try {
+    const r = await fetch('/staff/api/bookings/' + bookingId);
+    if (!r.ok) { toast('❌ تعذر تحميل بيانات الحجز'); return; }
+    const b = await r.json();
+
+    let g = null;
+    if (b.phone) {
+      try { const gr=await fetch('/staff/api/guests/by-phone/'+encodeURIComponent(b.phone)); if(gr.ok) g=await gr.json(); } catch(e){}
+    }
+
+    const ID_L = { national_id:'هوية وطنية', passport:'جواز سفر', residence:'إقامة', gcc:'هوية خليجي', other:'أخرى' };
+    const BT_L = { daily:'يومي', annual:'شهري', inquiry:'استفسار' };
+    const vatRate = propSettings.vatRate ?? 15;
+    const net = b.totalPrice || 0;
+    const tax = b.bookingType === 'daily' ? Math.round(net * vatRate / 100) : 0;
+    const total = net + tax;
+    const paid = b.paidAmount || 0;
+    const remain = Math.max(0, total - paid);
+    const contractNum = 'C-' + b._id.toString().slice(-6).toUpperCase();
+    const now = new Date().toLocaleDateString('ar-SA', { year:'numeric', month:'long', day:'numeric' });
+
+    const terms = (propSettings.contractTerms || '').split('\n').filter(Boolean);
+
+    const w = window.open('', '_blank');
+    w.document.write(`<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>عقد إيجار — ${contractNum}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:Cairo,sans-serif;color:#1e293b;background:#fff;padding:30px 40px;font-size:13px;line-height:1.8;}
+  .contract-header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #1a3d8f;padding-bottom:16px;margin-bottom:20px;}
+  .logo{font-size:24px;font-weight:800;color:#1a3d8f;letter-spacing:-1px;}
+  .logo span{color:#f59e0b;}
+  .contract-title{font-size:20px;font-weight:800;text-align:center;color:#1a3d8f;margin-bottom:4px;}
+  .contract-num{font-size:12px;color:#64748b;text-align:center;}
+  .section{margin-bottom:18px;}
+  .section-title{font-size:13px;font-weight:800;color:#fff;background:#1a3d8f;padding:6px 14px;border-radius:6px;margin-bottom:10px;display:inline-block;}
+  .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 20px;}
+  .info-row{display:flex;gap:8px;font-size:13px;padding:5px 0;border-bottom:1px dashed #e2e8f0;}
+  .info-row span{color:#64748b;min-width:130px;}
+  .info-row b{flex:1;}
+  .price-table{width:100%;border-collapse:collapse;font-size:13px;}
+  .price-table th{background:#1e293b;color:#fff;padding:9px 12px;text-align:right;}
+  .price-table td{padding:9px 12px;border-bottom:1px solid #f1f5f9;}
+  .price-table tr:last-child td{border-bottom:none;}
+  .total-row td{font-weight:800;font-size:14px;background:#f8fafc;}
+  .terms-list{list-style:none;padding:0;}
+  .terms-list li{padding:5px 0 5px 14px;border-bottom:1px dashed #f1f5f9;font-size:12px;color:#475569;position:relative;}
+  .terms-list li::before{content:'•';position:absolute;right:0;color:#1a3d8f;}
+  .sign-section{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:30px;padding-top:20px;border-top:2px solid #e2e8f0;}
+  .sign-box{text-align:center;}
+  .sign-line{border-top:1px solid #94a3b8;margin-top:50px;padding-top:8px;font-size:12px;color:#64748b;}
+  .print-btn{position:fixed;top:16px;left:16px;padding:10px 20px;background:#1a3d8f;color:#fff;border:none;border-radius:8px;font-family:Cairo,sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
+  @media print{.print-btn{display:none;} body{padding:20px;}}
+</style>
+</head>
+<body>
+<button class="print-btn" onclick="window.print()">🖨️ طباعة</button>
+
+<div class="contract-header">
+  <div>
+    <div class="logo">Fin<span>sight</span></div>
+    <div style="font-size:12px;color:#64748b;margin-top:4px;">${esc(BUILDING)} · نظام إدارة الشقق المفروشة</div>
+  </div>
+  <div style="text-align:center;">
+    <div class="contract-title">عقد إيجار وحدة سكنية</div>
+    <div class="contract-num">رقم العقد: ${contractNum} · التاريخ: ${now}</div>
+  </div>
+  <div style="text-align:left;font-size:11px;color:#64748b;">
+    <div>المملكة العربية السعودية</div>
+  </div>
+</div>
+
+<div class="section">
+  <span class="section-title">أطراف العقد</span>
+  <div class="info-grid">
+    <div>
+      <div style="font-size:12px;font-weight:700;color:#1a3d8f;margin-bottom:6px;">الطرف الأول — المؤجر</div>
+      <div class="info-row"><span>اسم المنشأة:</span><b>${esc(BUILDING)}</b></div>
+      <div class="info-row"><span>نوع النشاط:</span><b>شقق مفروشة</b></div>
+    </div>
+    <div>
+      <div style="font-size:12px;font-weight:700;color:#1a3d8f;margin-bottom:6px;">الطرف الثاني — المستأجر</div>
+      <div class="info-row"><span>الاسم:</span><b>${esc(b.name||'—')}</b></div>
+      <div class="info-row"><span>رقم الجوال:</span><b style="font-family:monospace;">${esc(b.phone||'—')}</b></div>
+      ${b.idType?`<div class="info-row"><span>نوع الإثبات:</span><b>${ID_L[b.idType]||b.idType}</b></div>`:''}
+      ${b.idNumber?`<div class="info-row"><span>رقم الإثبات:</span><b style="font-family:monospace;">${esc(b.idNumber)}</b></div>`:''}
+      ${g?.nationality?`<div class="info-row"><span>الجنسية:</span><b>${esc(g.nationality)}</b></div>`:''}
+      ${g?.employer?`<div class="info-row"><span>جهة العمل:</span><b>${esc(g.employer)}</b></div>`:''}
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <span class="section-title">تفاصيل الوحدة المؤجَّرة</span>
+  <div class="info-grid">
+    <div class="info-row"><span>رقم الوحدة:</span><b>${esc(b.apt||'—')}</b></div>
+    <div class="info-row"><span>المبنى:</span><b>${esc(b.building||BUILDING)}</b></div>
+    <div class="info-row"><span>نوع الإيجار:</span><b>${BT_L[b.bookingType]||b.bookingType||'—'}</b></div>
+    <div class="info-row"><span>تاريخ الدخول:</span><b>${fDate(b.checkIn)}</b></div>
+    <div class="info-row"><span>تاريخ الخروج:</span><b>${fDate(b.checkOut)}</b></div>
+    ${b.nights?`<div class="info-row"><span>المدة:</span><b>${b.nights} ${b.bookingType==='daily'?'ليلة':'شهر'}</b></div>`:''}
+    ${b.guests&&b.guests>1?`<div class="info-row"><span>عدد النزلاء:</span><b>${b.guests} أشخاص</b></div>`:''}
+  </div>
+</div>
+
+<div class="section">
+  <span class="section-title">القيمة المالية</span>
+  <table class="price-table">
+    <thead><tr>
+      <th>البيان</th>
+      <th style="text-align:left;min-width:120px;">المبلغ (ريال سعودي)</th>
+    </tr></thead>
+    <tbody>
+      <tr><td>إيجار الوحدة ${esc(b.apt||'')} — ${BT_L[b.bookingType]||''}</td><td style="text-align:left;">${net.toLocaleString()}</td></tr>
+      ${tax>0?`<tr><td>ضريبة القيمة المضافة (${vatRate}%)</td><td style="text-align:left;">${tax.toLocaleString()}</td></tr>`:''}
+      <tr class="total-row"><td>الإجمالي</td><td style="text-align:left;">${total.toLocaleString()}</td></tr>
+      <tr><td style="color:#16a34a;">المبلغ المدفوع</td><td style="text-align:left;color:#16a34a;">${paid.toLocaleString()}</td></tr>
+      <tr><td style="color:${remain>0?'#dc2626':'#16a34a'};">المبلغ المتبقي</td><td style="text-align:left;color:${remain>0?'#dc2626':'#16a34a'};">${remain.toLocaleString()} ${remain===0?'✓':''}</td></tr>
+    </tbody>
+  </table>
+</div>
+
+${terms.length ? `
+<div class="section">
+  <span class="section-title">الشروط والأحكام</span>
+  <ul class="terms-list">
+    ${terms.map(t=>`<li>${esc(t)}</li>`).join('')}
+  </ul>
+</div>` : ''}
+
+<div class="sign-section">
+  <div class="sign-box">
+    <div style="font-size:13px;font-weight:700;">توقيع الطرف الأول (المؤجر)</div>
+    <div class="sign-line">${esc(BUILDING)}</div>
+  </div>
+  <div class="sign-box">
+    <div style="font-size:13px;font-weight:700;">توقيع الطرف الثاني (المستأجر)</div>
+    <div class="sign-line">${esc(b.name||'')}</div>
+  </div>
+</div>
+
+<div style="margin-top:24px;padding-top:16px;border-top:1px solid #e2e8f0;text-align:center;font-size:11px;color:#94a3b8;">
+  تم إنشاء هذا العقد بتاريخ ${now} · ${contractNum}
+</div>
+</body></html>`);
+    w.document.close();
+  } catch(e) {
+    toast('❌ تعذر طباعة العقد: ' + e.message);
+  }
+}
+
 // re-init after tab switch in case new date inputs appeared
 </script>
+
+<!-- ══════════ Customer Full Profile Modal ══════════ -->
+<div id="customerProfileOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9998;align-items:center;justify-content:center;padding:16px;" onclick="if(event.target===this)closeCustomerProfile()">
+  <div style="background:#fff;border-radius:18px;width:100%;max-width:720px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);direction:rtl;font-family:inherit;">
+    <div style="background:linear-gradient(135deg,#1a3d8f,#2563eb);color:#fff;padding:18px 24px;border-radius:18px 18px 0 0;display:flex;align-items:center;justify-content:space-between;">
+      <div style="font-size:16px;font-weight:700;">ملف العميل</div>
+      <button onclick="closeCustomerProfile()" style="background:rgba(255,255,255,.2);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:18px;">×</button>
+    </div>
+    <div id="cpBody" style="padding:24px;"></div>
+  </div>
+</div>
 
 <!-- ══════════ Guest Profile Card Modal ══════════ -->
 <div id="guestCardOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center;padding:16px;" onclick="if(event.target===this)closeGuestCard()">
