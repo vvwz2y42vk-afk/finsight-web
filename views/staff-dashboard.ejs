@@ -2616,6 +2616,16 @@ async function saveSettings() {
 
 // ── Prop Settings ────────────────────────────────────────
 let propSettings = { vatRate: 15, contractTerms: '', expenseItems: [], peakPeriods: [] };
+const DEFAULT_CONTRACT_TERMS = `يلتزم المستأجر بسداد قيمة الإيجار كاملةً عند توقيع العقد أو وفق الاتفاق المحدد.
+لا يحق للمستأجر التنازل عن الوحدة أو تأجيرها من الباطن لأي طرف آخر دون موافقة خطية من المؤجر.
+يُسلَّم المستأجر الوحدة بحالة جيدة ويلتزم بإعادتها بالحالة ذاتها عند انتهاء مدة الإيجار.
+يتحمل المستأجر تكلفة إصلاح أي أضرار تلحق بالوحدة أو محتوياتها جراء الإهمال أو سوء الاستخدام.
+يُمنع منعاً باتاً التدخين داخل الوحدة؛ وفي حال المخالفة تُطبَّق غرامة تنظيف.
+يلتزم المستأجر بعدم إزعاج الجيران واحترام أنظمة المبنى وساعات الهدوء.
+في حال الإخلاء المبكر قبل انتهاء المدة المتفق عليها، لا يُستردّ المبلغ المدفوع إلا باتفاق مسبق.
+يحق للمؤجر فسخ العقد فوراً في حال ثبوت مخالفة أي بند من بنود هذا العقد.
+جميع الخلافات الناشئة عن هذا العقد تخضع لأنظمة المملكة العربية السعودية المعمول بها.
+يُعدّ توقيع هذا العقد إقراراً بالاطلاع على جميع بنوده والموافقة عليها.`;
 
 async function loadPropSettings() {
   try {
@@ -2631,7 +2641,7 @@ function renderPropSettings() {
   const vat = document.getElementById('ps-vat');
   if (vat) vat.value = propSettings.vatRate ?? 15;
   const terms = document.getElementById('ps-terms');
-  if (terms) terms.value = propSettings.contractTerms || '';
+  if (terms) terms.value = propSettings.contractTerms || DEFAULT_CONTRACT_TERMS;
   renderExpenseItems();
   renderPeakPeriods();
 }
