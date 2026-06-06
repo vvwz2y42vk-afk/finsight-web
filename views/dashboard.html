@@ -2018,17 +2018,19 @@ async function resetPass(id,password){
   }catch(e){showToast('❌ حدث خطأ');}
 }
 const PERM_LIST=[
-  {v:'dashboard',    l:'🏠 لوحة المعلومات'},
-  {v:'apartments',   l:'🏢 الشقق والتسكين'},
-  {v:'bookings',     l:'📅 الحجوزات'},
-  {v:'customers',    l:'👥 العملاء'},
-  {v:'housekeeping', l:'🧹 خدمة الغرف'},
-  {v:'activity',     l:'📋 سجل الحركات'},
-  {v:'new_booking',  l:'➕ إضافة حجز'},
-  {v:'edit_booking', l:'✏️ تعديل الحجز'},
-  {v:'cancel_booking',l:'🗑️ إلغاء الحجز'},
-  {v:'vouchers',        l:'🧾 السندات والفواتير'},
-  {v:'edit_room_info',  l:'🏠 تعديل بيانات الشقق'},
+  {v:'dashboard',      l:'🏠 لوحة المعلومات'},
+  {v:'apartments',     l:'🏢 الشقق والتسكين'},
+  {v:'bookings',       l:'📅 الحجوزات'},
+  {v:'customers',      l:'👥 العملاء'},
+  {v:'housekeeping',   l:'🧹 خدمة الغرف'},
+  {v:'activity',       l:'📋 سجل الحركات'},
+  {v:'reports',        l:'📊 التقارير والإحصاءات'},
+  {v:'vouchers',       l:'🧾 السندات والفواتير'},
+  {v:'guests',         l:'🧳 قاعدة الضيوف'},
+  {v:'new_booking',    l:'➕ إضافة حجز'},
+  {v:'edit_booking',   l:'✏️ تعديل الحجز'},
+  {v:'cancel_booking', l:'🗑️ إلغاء الحجز'},
+  {v:'edit_room_info', l:'🏠 تعديل بيانات الشقق'},
 ];
 let permsStaffId=null;
 function openPermsModal(id,name,idx){

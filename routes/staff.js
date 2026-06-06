@@ -84,7 +84,7 @@ router.post('/login', async (req,res) => {
     const S = require('../models/StaffUser');
     const u = await S.findOne({ username:(req.body.username||'').trim(), active:true });
     if (!u||!(await u.comparePassword(req.body.password))) return res.render('staff-login',{error:'اسم المستخدم أو كلمة المرور غير صحيحة'});
-    const perms = u.permissions?.length ? [...new Set([...u.permissions, ...DEFAULT_PERMS])] : DEFAULT_PERMS;
+    const perms = u.permissions?.length ? [...new Set(u.permissions)] : DEFAULT_PERMS;
     let planExpiry = null;
     if (u.propertyId) {
       const prop = await Property.findById(u.propertyId).select('planExpiry active').lean();
