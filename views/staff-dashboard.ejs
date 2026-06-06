@@ -1818,6 +1818,7 @@ async function loadBookings(){
         ${!['cancelled','checkout'].includes(b.status)&&can('edit_booking')?`<button onclick="editBk('${b._id}')" style="padding:4px 10px;background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;border-radius:7px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">تعديل</button>`:''}
         ${!['cancelled','checkout'].includes(b.status)&&can('cancel_booking')?`<button onclick="cancelBk('${b._id}')" style="padding:4px 10px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;border-radius:7px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">إلغاء</button>`:''}
         <button onclick="printBkInvoice('${b._id}')" style="padding:4px 10px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:7px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">🖨️</button>
+        <button onclick="printContract('${b._id}')" style="padding:4px 10px;background:#fef9c3;color:#92400e;border:1px solid #fde68a;border-radius:7px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">📄 عقد</button>
       </td>
     </tr>`).join('');
   }catch(e){
