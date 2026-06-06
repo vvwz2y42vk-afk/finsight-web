@@ -466,7 +466,7 @@ tbody td{padding:7px 5px;font-size:11px;}
         </div>
       </div>
       <div class="card"><div class="tbl-wrap"><table>
-        <thead><tr><th>النزيل</th><th>الجوال</th><th>المبنى</th><th>الشقة</th><th>النوع</th><th>الدخول</th><th>الخروج</th><th>الليالي</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th><th>الحالة</th></tr></thead>
+        <thead><tr><th>رقم العقد</th><th>النزيل</th><th>الجوال</th><th>المبنى</th><th>الشقة</th><th>النوع</th><th>الدخول</th><th>الخروج</th><th>الليالي</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th><th>الحالة</th></tr></thead>
         <tbody id="staff-bk-tbody"></tbody>
       </table></div></div>
     </div>
@@ -1635,13 +1635,15 @@ function renderStaffBookings() {
   const SL = {pending:'جديد',awaiting_checkin:'انتظار دخول',active:'نشط',checkout:'خروج',cancelled:'ملغي'};
   const SC = {pending:'pm',awaiting_checkin:'pw',active:'pj',checkout:'pp',cancelled:'pcl'};
   const BL = {daily:'يومي',annual:'شهري',inquiry:'استفسار'};
-  if (!list.length) { tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:24px;color:var(--t3);">لا توجد حجوزات من الموظفين</td></tr>'; return; }
+  if (!list.length) { tbody.innerHTML = '<tr><td colspan="13" style="text-align:center;padding:24px;color:var(--t3);">لا توجد حجوزات من الموظفين</td></tr>'; return; }
   tbody.innerHTML = list.map(b => {
     const total   = b.totalPrice || 0;
     const paid    = b.paidAmount || 0;
     const remain  = Math.max(0, total - paid);
     const fDate   = d => d ? new Date(d).toLocaleDateString('ar-SA', {day:'numeric',month:'short',year:'2-digit'}) : '—';
+    const bkNum   = b._id ? '#' + b._id.toString().slice(-5).toUpperCase() : '—';
     return `<tr>
+      <td style="font-family:monospace;font-weight:700;color:#1a3d8f;font-size:12px;">${bkNum}</td>
       <td style="font-weight:600;">${b.name||'—'}</td>
       <td><a href="https://wa.me/${(b.phone||'').replace(/^0/,'966')}" target="_blank" style="color:var(--green);font-size:11px;">${b.phone||'—'}</a></td>
       <td>${b.building||'—'}</td>
