@@ -32,5 +32,10 @@ bookingSchema.index({ status: 1 });
 bookingSchema.index({ listing: 1 });
 bookingSchema.index({ building: 1, apt: 1 });
 bookingSchema.index({ createdAt: -1 });
+bookingSchema.index({ building: 1, status: 1 });
+bookingSchema.index({ propertyId: 1, status: 1 });
+bookingSchema.index({ checkIn: 1 });
+bookingSchema.index({ checkOut: 1 });
+bookingSchema.index({ phone: 1 });
 
 module.exports = mongoose.model('Booking', bookingSchema);

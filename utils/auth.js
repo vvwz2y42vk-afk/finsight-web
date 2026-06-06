@@ -1,5 +1,9 @@
 const crypto = require('crypto');
-const SECRET = process.env.SESSION_SECRET || 'finsight_2026';
+if (!process.env.SESSION_SECRET) {
+  if (process.env.NODE_ENV === 'production') throw new Error('SESSION_SECRET env var is required in production');
+  console.warn('⚠️  SESSION_SECRET not set — using insecure fallback. Set it in .env');
+}
+const SECRET = process.env.SESSION_SECRET || 'finsight_dev_fallback_not_for_production';
 
 function createToken(payload, expiresInHours = 24) {
   const exp = Date.now() + expiresInHours * 60 * 60 * 1000;

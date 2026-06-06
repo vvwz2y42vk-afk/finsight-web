@@ -736,7 +736,7 @@ router.post('/api/admin/migrate-tenant', reqStaff, async (req, res) => {
 router.post('/api/admin/create', async (req,res) => {
   try {
     const adminToken = verifyToken(req.cookies?.fs_auth);
-    if(!adminToken) return res.status(401).json({error:'غير مصرح'});
+    if(!adminToken || adminToken.role !== 'admin') return res.status(403).json({error:'للمديرين فقط'});
     const S = require('../models/StaffUser');
     const {name,username,password,building,role} = req.body;
     if(!name||!username||!password||!building) return res.status(400).json({error:'جميع الحقول مطلوبة'});
@@ -748,7 +748,7 @@ router.post('/api/admin/create', async (req,res) => {
 router.get('/api/admin/staff', async (req,res) => {
   try {
     const adminToken = verifyToken(req.cookies?.fs_auth);
-    if(!adminToken) return res.status(401).json({error:'غير مصرح'});
+    if(!adminToken || adminToken.role !== 'admin') return res.status(403).json({error:'للمديرين فقط'});
     const S = require('../models/StaffUser');
     const list = await S.find().select('-password').sort({building:1}).lean();
     res.json(list);
@@ -758,7 +758,7 @@ router.get('/api/admin/staff', async (req,res) => {
 router.put('/api/admin/update', async (req,res) => {
   try {
     const adminToken = verifyToken(req.cookies?.fs_auth);
-    if(!adminToken) return res.status(401).json({error:'غير مصرح'});
+    if(!adminToken || adminToken.role !== 'admin') return res.status(403).json({error:'للمديرين فقط'});
     const S = require('../models/StaffUser');
     const { id, field, value } = req.body;
     if(!id||!field) return res.status(400).json({error:'بيانات ناقصة'});

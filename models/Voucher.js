@@ -15,6 +15,9 @@ const schema = new mongoose.Schema({
   dueDate:     Date,
   createdBy:   String,
   bookingId:   { type: mongoose.Schema.Types.ObjectId, ref: 'Booking' },
-  propertyId:  { type: mongoose.Schema.Types.ObjectId, ref: 'Property', index: true, default: null },
+  propertyId:  { type: mongoose.Schema.Types.ObjectId, ref: 'Property', default: null },
 }, { timestamps: true });
+schema.index({ propertyId: 1, building: 1 });
+schema.index({ building: 1, type: 1 });
+schema.index({ createdAt: -1 });
 module.exports = mongoose.model('Voucher', schema);

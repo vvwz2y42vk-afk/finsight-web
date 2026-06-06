@@ -297,16 +297,19 @@ router.get('/app/config', (req, res) => {
   });
 });
 
+const LISTING_FIELDS = ['category','building','apt','floor','location','title','description','type','price_daily','price_annual','price_sale','bedrooms','bathrooms','area','frontage','maxGuests','amenities','photos','available','featured','houseRules','checkInTime','checkOutTime','cancellationPolicy','minNights'];
+function pickListing(body) { return Object.fromEntries(LISTING_FIELDS.filter(k => k in body).map(k => [k, body[k]])); }
+
 router.post('/listings', auth, async (req, res) => {
   try {
-    const listing = await new Listing(req.body).save();
+    const listing = await new Listing(pickListing(req.body)).save();
     res.json({ success: true, listing });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 router.put('/listings/:id', auth, async (req, res) => {
   try {
-    await Listing.findByIdAndUpdate(req.params.id, req.body);
+    await Listing.findByIdAndUpdate(req.params.id, pickListing(req.body));
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -481,9 +484,9 @@ router.put('/host/bookings/:id/status', hostAuth, async (req, res) => {
   try {
     const { status } = req.body;
     // Verify this booking belongs to host
-    const listing = await Listing.findOne({ host: req.hostAccount.id });
-    if (!listing) return res.status(403).json({ error: 'غير مسموح' });
-    const booking = await Booking.findOne({ _id: req.params.id, listing: { $in: (await Listing.find({ host: req.hostAccount.id }, '_id').lean()).map(l => l._id) } }).lean();
+    const hostListingIds = (await Listing.find({ host: req.hostAccount.id }, '_id').lean()).map(l => l._id);
+    if (!hostListingIds.length) return res.status(403).json({ error: 'غير مسموح' });
+    const booking = await Booking.findOne({ _id: req.params.id, listing: { $in: hostListingIds } }).lean();
     if (!booking) return res.status(404).json({ error: 'الحجز غير موجود' });
 
     const prevStatus = booking.status;

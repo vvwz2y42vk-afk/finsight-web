@@ -10,6 +10,8 @@ const schema = new mongoose.Schema({
   permissions:{ type: [String], default: ['dashboard','apartments','bookings','customers','housekeeping','activity','new_booking','edit_booking','cancel_booking','vouchers','reports'] },
   propertyId: { type: require('mongoose').Schema.Types.ObjectId, ref: 'Property', default: null },
 }, { timestamps: true });
+schema.index({ propertyId: 1 });
+schema.index({ building: 1 });
 schema.pre('save', async function() {
   if (this.isModified('password')) this.password = await bcrypt.hash(this.password, 10);
 });
