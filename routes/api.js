@@ -350,7 +350,10 @@ router.put('/bookings/:id', auth, async (req, res) => {
     const prevStatus = booking.status;
     const newStatus  = req.body.status;
 
-    await Booking.findByIdAndUpdate(req.params.id, req.body);
+    const BOOKING_UPDATE_FIELDS = ['status','paidAmount','notes','name','phone','checkIn','checkOut','nights','totalPrice','idType','idNumber','bookingType','guests'];
+    const update = Object.fromEntries(BOOKING_UPDATE_FIELDS.filter(k => k in req.body).map(k => [k, req.body[k]]));
+    await Booking.findByIdAndUpdate(req.params.id, update);
+    audit(req, 'update', 'Booking', req.params.id, `تحديث الحجز${newStatus && newStatus !== prevStatus ? ': ' + prevStatus + ' → ' + newStatus : ''}`);
 
     if (booking.listing && newStatus && newStatus !== prevStatus) {
       // Block dates/unit when payment confirmed (awaiting_checkin)
@@ -461,7 +464,7 @@ router.put('/host/listings/:id', hostAuth, async (req, res) => {
   try {
     const listing = await Listing.findOne({ _id: req.params.id, host: req.hostAccount.id });
     if (!listing) return res.status(404).json({ error: 'غير موجود' });
-    await Listing.findByIdAndUpdate(req.params.id, req.body);
+    await Listing.findByIdAndUpdate(req.params.id, pickListing(req.body));
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -631,6 +634,7 @@ router.get('/apartments/grid', auth, async (req, res) => {
       status: { $in: ['awaiting_payment','awaiting_checkin','active'] },
       building: { $exists: true, $ne: null },
       apt: { $exists: true, $ne: null },
+      propertyId: null,
     }).lean();
 
     const map = {};
@@ -678,7 +682,8 @@ router.get('/weekly-stats', auth, async (req, res) => {
     const bookings = await Booking.find({
       status:{ $in:['active','checkout','awaiting_checkin'] },
       checkIn:{ $exists:true }, checkOut:{ $exists:true },
-    }).select('checkIn checkOut status').lean();
+      propertyId: null,
+    }).select('checkIn checkOut status').limit(2000).lean();
 
     const weekly=[];
     for(let i=6;i>=0;i--){
