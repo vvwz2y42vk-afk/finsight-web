@@ -3320,7 +3320,7 @@ async function printContract(bookingId) {
     const contractNum = 'C-' + b._id.toString().slice(-6).toUpperCase();
     const now = new Date().toLocaleDateString('ar-SA', { year:'numeric', month:'long', day:'numeric' });
 
-    const terms = (propSettings.contractTerms || '').split('\n').filter(Boolean);
+    const terms = (propSettings.contractTerms || DEFAULT_CONTRACT_TERMS).split('\n').filter(Boolean);
 
     const w = window.open('', '_blank');
     w.document.write(`<!DOCTYPE html>
