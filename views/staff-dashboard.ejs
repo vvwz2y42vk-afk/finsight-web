@@ -1550,40 +1550,90 @@ function filterApts(f,btn){
 }
 
 // ── Booking Modal ────────────────────────────────────────
-function openBkModal(bookingId,apt,status){
-  if(!bookingId||status==='vacant'){
-    toast('🟢 الشقة '+apt+' — شاغرة');return;
+async function openBkModal(bookingId, apt, status) {
+  if (!bookingId || status === 'vacant') { toast('🟢 الشقة ' + apt + ' — شاغرة'); return; }
+  document.getElementById('bkModalTitle').textContent = 'شقة ' + apt + ' — ' + esc(BUILDING);
+  document.getElementById('bkModalBody').innerHTML = '<div style="text-align:center;padding:30px;color:var(--t4);font-size:13px;">⏳ جاري تحميل البيانات...</div>';
+  document.getElementById('bkModal').style.display = 'flex';
+  try {
+    const [bkRes, guestSearchRes] = await Promise.allSettled([
+      fetch('/staff/api/bookings/' + bookingId),
+      (async () => {
+        const room = aptsRawData?.floors.flatMap(f=>f.rooms).find(r=>r.apt===apt);
+        if (!room?.phone) return null;
+        const gr = await fetch('/staff/api/guests/search?phone=' + room.phone);
+        return gr.ok ? gr.json() : null;
+      })()
+    ]);
+    if (bkRes.status === 'rejected' || !bkRes.value.ok) { document.getElementById('bkModalBody').innerHTML='<div style="color:#dc2626;padding:20px;">❌ تعذر تحميل بيانات الحجز</div>'; return; }
+    const b = await bkRes.value.json();
+    const guest = guestSearchRes.status === 'fulfilled' ? guestSearchRes.value : null;
+
+    // After we have the phone from booking, try fetching guest if we didn't get it
+    let g = guest;
+    if (!g && b.phone) {
+      try { const gr=await fetch('/staff/api/guests/search?phone='+b.phone); if(gr.ok) g=await gr.json(); } catch(e){}
+    }
+
+    const ST = { pending:{lbl:'معلّق',c:'#f59e0b'}, awaiting_payment:{lbl:'بانتظار الدفع',c:'#f59e0b'}, awaiting_checkin:{lbl:'بانتظار الدخول',c:'#3b82f6'}, active:{lbl:'مقيم',c:'#16a34a'}, checkout:{lbl:'خرج',c:'#64748b'}, cancelled:{lbl:'ملغي',c:'#dc2626'} };
+    const BT = { daily:'يومي', annual:'شهري', inquiry:'استفسار' };
+    const ID = { national_id:'هوية وطنية', passport:'جواز سفر', iqama:'إقامة', family_card:'كرت عائلة' };
+    const SRC = { direct:'مباشر', phone:'هاتف', walk_in:'حضور مباشر', website:'الموقع', airbnb:'Airbnb', booking:'Booking.com' };
+    const CAT = { vip:{lbl:'⭐ VIP',c:'#D97706',bg:'#FEF3C7'}, blocked:{lbl:'🚫 محظور',c:'#DC2626',bg:'#FEE2E2'}, regular:{lbl:'عادي',c:'#1a3d8f',bg:'#F0F4FF'} };
+    const s = ST[b.status] || {lbl:b.status,c:'#64748b'};
+    const cat = CAT[g?.category||'regular'] || CAT.regular;
+    const remain = Math.max(0, (b.totalPrice||0) - (b.paidAmount||0));
+    const bkNum = '#' + b._id.toString().slice(-5).toUpperCase();
+    const r = (lbl,val,style='') => val||val===0 ? `<div class="mrow"><span>${lbl}</span><b ${style}>${val}</b></div>` : '';
+    const sec = lbl => `<div style="font-size:10px;font-weight:800;color:var(--t4);letter-spacing:.07em;text-transform:uppercase;margin:14px 0 8px;padding-top:10px;border-top:1px solid var(--border);">${lbl}</div>`;
+
+    let html = sec('👤 بيانات النزيل');
+    html += r('الاسم', esc(b.name));
+    html += `<div class="mrow"><span>الجوال</span><b>
+      <a href="tel:${esc(b.phone)}" style="color:inherit;text-decoration:none;font-family:monospace;">${esc(b.phone)}</a>
+      <a href="https://wa.me/${(b.phone||'').replace(/^0/,'966')}" target="_blank" style="margin-right:8px;font-size:11px;padding:2px 8px;background:#dcfce7;color:#16a34a;border-radius:6px;text-decoration:none;font-weight:700;">واتساب ↗</a>
+    </b></div>`;
+    html += r('نوع الإثبات', b.idType ? (ID[b.idType]||b.idType) : '');
+    html += r('رقم الإثبات', b.idNumber ? esc(b.idNumber) : '');
+    if (g?.nationality) html += r('الجنسية', esc(g.nationality));
+    if (g) html += `<div class="mrow"><span>تصنيف الضيف</span><b><span style="padding:2px 10px;border-radius:12px;background:${cat.bg};color:${cat.c};font-size:11px;font-weight:700;">${cat.lbl}</span></b></div>`;
+    if (g?.totalBookings > 1) html += r('إجمالي زياراته', g.totalBookings + ' حجز');
+    if (g?.notes) html += r('ملاحظة الضيف', esc(g.notes));
+
+    html += sec('📋 تفاصيل الحجز');
+    html += `<div class="mrow"><span>الحالة</span><b style="color:${s.c};">${s.lbl}</b></div>`;
+    html += r('رقم الحجز', bkNum);
+    html += r('نوع الحجز', BT[b.bookingType] || b.bookingType);
+    html += r('الشقة', esc(b.apt) + (b.building?' — '+esc(b.building):''));
+    if (b.checkIn) html += r('تاريخ الدخول', fDate(b.checkIn));
+    if (b.checkOut) html += r('تاريخ الخروج', fDate(b.checkOut));
+    if (b.nights) html += r('عدد الليالي', b.nights + ' ليلة');
+    if (b.guests > 1) html += r('عدد النزلاء', b.guests + ' أشخاص');
+    if (b.source) html += r('المصدر', SRC[b.source] || b.source);
+
+    html += sec('💰 المالية');
+    html += r('إجمالي الحجز', b.totalPrice ? b.totalPrice.toLocaleString() + ' ريال' : '');
+    html += `<div class="mrow"><span>المدفوع</span><b style="color:#16a34a;">${(b.paidAmount||0).toLocaleString()} ريال</b></div>`;
+    html += `<div class="mrow"><span>المتبقي</span><b style="color:${remain>0?'#dc2626':'#16a34a'};">${remain.toLocaleString()} ريال ${remain===0?'✓':''}</b></div>`;
+
+    if (b.notes) html += `<div style="margin:12px 0 4px;padding:10px 12px;background:#f8fafc;border-radius:10px;font-size:12px;color:#475569;line-height:1.6;"><b>ملاحظات:</b> ${esc(b.notes)}</div>`;
+
+    html += `<div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;">`;
+    if (['pending','awaiting_payment','awaiting_checkin'].includes(b.status))
+      html += `<button class="mbtn mbtn-in" onclick="changeStatus('${bookingId}','active')">✅ تسجيل الدخول</button>`;
+    if (b.status === 'active')
+      html += `<button class="mbtn mbtn-out" onclick="changeStatus('${bookingId}','checkout')">🚪 تسجيل الخروج</button>`;
+    if (!['cancelled','checkout'].includes(b.status) && can('edit_booking'))
+      html += `<button class="mbtn" style="background:#eff6ff;color:#2563eb;" onclick="closeBkModal();editBk('${bookingId}')">✏️ تعديل</button>`;
+    if (can('cancel_booking') && !['cancelled','checkout'].includes(b.status))
+      html += `<button class="mbtn" style="background:#fef2f2;color:#dc2626;" onclick="cancelBk('${bookingId}')">🗑️ إلغاء</button>`;
+    html += `<button class="mbtn" style="background:#f0fdf4;color:#16a34a;" onclick="closeBkModal();printBkInvoice('${bookingId}')">🖨️ فاتورة</button>`;
+    html += `<button class="mbtn mbtn-cancel" onclick="closeBkModal()">إغلاق</button></div>`;
+
+    document.getElementById('bkModalBody').innerHTML = html;
+  } catch(e) {
+    document.getElementById('bkModalBody').innerHTML = '<div style="color:#dc2626;padding:20px;">❌ حدث خطأ في تحميل البيانات</div>';
   }
-  const room=aptsRawData?.floors.flatMap(f=>f.rooms).find(r=>r.apt===apt);
-  if(!room) return;
-  document.getElementById('bkModalTitle').textContent='شقة '+apt+' — '+esc(BUILDING);
-  const s=APT_MAP[status]||{lbl:status};
-  let html=`
-    <div class="mrow"><span>الحالة</span><b>${s.lbl}</b></div>
-    ${room.name?`<div class="mrow"><span>النزيل</span><b>${esc(room.name)}</b></div>`:''}
-    ${room.phone?`<div class="mrow"><span>الجوال</span><b><a href="https://wa.me/${room.phone.replace(/^0/,'966')}" style="color:#1a3d8f;">${esc(room.phone)}</a></b></div>`:''}
-    ${room.checkIn?`<div class="mrow"><span>تاريخ الدخول</span><b>${fDate(room.checkIn)}</b></div>`:''}
-    ${room.checkOut?`<div class="mrow"><span>تاريخ الخروج</span><b>${fDate(room.checkOut)}</b></div>`:''}
-    ${room.nights?`<div class="mrow"><span>عدد الليالي</span><b>${room.nights}</b></div>`:''}
-    ${room.totalPrice?`<div class="mrow"><span>الإجمالي</span><b>${room.totalPrice.toLocaleString()} ريال</b></div>`:''}
-    ${room.totalPrice?`<div class="mrow"><span>المدفوع</span><b style="color:#16a34a;">${(room.paidAmount||0).toLocaleString()} ريال</b></div>`:''}
-    ${room.totalPrice?`<div class="mrow"><span>المتبقي</span><b style="color:${(room.totalPrice-(room.paidAmount||0))>0?'#dc2626':'#16a34a'};">${Math.max(0,room.totalPrice-(room.paidAmount||0)).toLocaleString()} ريال</b></div>`:''}
-    ${room.idType?`<div class="mrow"><span>نوع الإثبات</span><b>${{national_id:'هوية وطنية',passport:'جواز سفر',iqama:'إقامة',family_card:'كرت عائلة'}[room.idType]||room.idType}</b></div>`:''}
-    ${room.idNumber?`<div class="mrow"><span>رقم الإثبات</span><b>${esc(room.idNumber)}</b></div>`:''}
-    <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;">`;
-  if(['awaiting','checkin_today','awaiting_checkin'].includes(status))
-    html+=`<button class="mbtn mbtn-in" onclick="changeStatus('${bookingId}','active')">✅ تسجيل الدخول</button>`;
-  if(['occupied','checkout_today'].includes(status))
-    html+=`<button class="mbtn mbtn-out" onclick="changeStatus('${bookingId}','checkout')">🚪 تسجيل الخروج</button>`;
-  if(!['cancelled','checkout'].includes(status)&&can('edit_booking'))
-    html+=`<button class="mbtn" style="background:#eff6ff;color:#2563eb;" onclick="closeBkModal();editBk('${bookingId}')">✏️ تعديل</button>`;
-  if(can('cancel_booking'))
-    html+=`<button class="mbtn" style="background:#fef2f2;color:#dc2626;" onclick="cancelBk('${bookingId}')">🗑️ إلغاء</button>`;
-  if(bookingId)
-    html+=`<button class="mbtn" style="background:#f0fdf4;color:#16a34a;" onclick="closeBkModal();printBkInvoice('${bookingId}')">🖨️ فاتورة</button>`;
-  html+=`<button class="mbtn mbtn-cancel" onclick="closeBkModal()">إغلاق</button></div>`;
-  document.getElementById('bkModalBody').innerHTML=html;
-  document.getElementById('bkModal').style.display='flex';
 }
 function closeBkModal(){ document.getElementById('bkModal').style.display='none'; }
 
