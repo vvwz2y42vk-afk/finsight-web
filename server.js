@@ -162,7 +162,7 @@ app.post('/login', loginRateLimit, dbMiddleware, async (req, res) => {
     const dbUser = await AdminUser.findOne({ username: username?.trim(), active: true });
     if (dbUser && await dbUser.comparePassword(password)) {
       const token = createToken({ username: dbUser.username, name: dbUser.name, role: dbUser.role, avatar: dbUser.avatar, allowed: dbUser.allowed });
-      res.cookie('fs_auth', token, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000, sameSite: 'lax' });
+      res.cookie('fs_auth', token, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000, sameSite: 'lax', secure: process.env.NODE_ENV === 'production' });
       AuditLog.create({ user: dbUser.username, role: dbUser.role, action: 'login', model: 'AdminUser', recordId: String(dbUser._id), summary: 'تسجيل دخول ناجح', ip: req.ip }).catch(() => {});
       return res.redirect('/dashboard');
     }
@@ -172,7 +172,7 @@ app.post('/login', loginRateLimit, dbMiddleware, async (req, res) => {
   const user = USERS.find(u => u.username === username && u.password === password);
   if (user) {
     const token = createToken({ username: user.username, name: user.name, role: user.role, avatar: user.avatar, allowed: user.allowed });
-    res.cookie('fs_auth', token, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000, sameSite: 'lax' });
+    res.cookie('fs_auth', token, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000, sameSite: 'lax', secure: process.env.NODE_ENV === 'production' });
     return res.redirect('/dashboard');
   }
 

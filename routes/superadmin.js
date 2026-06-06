@@ -1,14 +1,26 @@
 const express = require('express');
 const router = express.Router();
 const { createToken, verifyToken } = require('../utils/auth');
+const { createRateLimiter } = require('../utils/rateLimit');
 const Property = require('../models/Property');
 
+const saLoginLimit = createRateLimiter({ windowMs: 15 * 60 * 1000, max: 5, message: 'محاولات كثيرة، انتظر 15 دقيقة' });
+
 const COOKIE = 'sa_token';
-const COPTS  = { httpOnly: true, maxAge: 8 * 60 * 60 * 1000, sameSite: 'lax' };
+const IS_PROD = process.env.NODE_ENV === 'production';
+const COPTS  = { httpOnly: true, maxAge: 8 * 60 * 60 * 1000, sameSite: 'lax', secure: IS_PROD };
+
+if (!process.env.SUPERADMIN_PASSWORD) {
+  if (IS_PROD) throw new Error('SUPERADMIN_PASSWORD env var is required in production');
+  console.warn('⚠️  SUPERADMIN_PASSWORD not set — using insecure fallback');
+}
 const SA_PASS = process.env.SUPERADMIN_PASSWORD || 'Barez@Super2026';
 
 function saAuth(req, res, next) { req.sa = verifyToken(req.cookies?.[COOKIE]) || null; next(); }
-function reqSA(req, res, next)  { if (!req.sa) return res.redirect('/superadmin/login'); next(); }
+function reqSA(req, res, next)  {
+  if (!req.sa || req.sa.role !== 'superadmin') return res.redirect('/superadmin/login');
+  next();
+}
 
 router.use(saAuth);
 
@@ -17,7 +29,7 @@ router.get('/login', (req, res) => {
   res.render('superadmin-login', { error: null });
 });
 
-router.post('/login', (req, res) => {
+router.post('/login', saLoginLimit, (req, res) => {
   if ((req.body.password || '') !== SA_PASS)
     return res.render('superadmin-login', { error: 'كلمة المرور غير صحيحة' });
   res.cookie(COOKIE, createToken({ role: 'superadmin' }, 8), COPTS);

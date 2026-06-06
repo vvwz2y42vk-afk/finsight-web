@@ -1,11 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const { createToken, verifyToken } = require('../utils/auth');
+const { createRateLimiter } = require('../utils/rateLimit');
 const Property = require('../models/Property');
 const WA = require('../utils/whatsapp');
 
+const staffLoginLimit = createRateLimiter({ windowMs: 15 * 60 * 1000, max: 10, message: 'محاولات دخول كثيرة، انتظر 15 دقيقة' });
+
 const COOKIE = 'fs_staff';
-const COPTS  = { httpOnly: true, maxAge: 12 * 60 * 60 * 1000, sameSite: 'lax' };
+const COPTS  = { httpOnly: true, maxAge: 12 * 60 * 60 * 1000, sameSite: 'lax', secure: process.env.NODE_ENV === 'production' };
 
 // Hardcoded buildings for BAREZ internal (propertyId === null)
 const BLDGS = {
@@ -78,7 +81,7 @@ router.use(staffAuth);
 // ── Auth ─────────────────────────────────────────────────
 router.get('/login',(req,res)=>{ if(req.staff)return res.redirect('/staff/dashboard'); res.render('staff-login',{error:null,query:req.query}); });
 
-router.post('/login', async (req,res) => {
+router.post('/login', staffLoginLimit, async (req,res) => {
   try {
     const S = require('../models/StaffUser');
     const u = await S.findOne({ username:(req.body.username||'').trim(), active:true });
