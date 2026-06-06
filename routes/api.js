@@ -24,7 +24,7 @@ function audit(req, action, model, recordId, summary = '', changes = null) {
     summary,
     changes,
     ip: req.ip,
-  }).catch(() => {});
+  }).catch(e => console.error('audit log failed:', e.message));
 }
 
 const auth = (req, res, next) => {
@@ -167,9 +167,9 @@ async function sendEmail(subject, html) {
     await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ from: 'Barez <onboarding@resend.dev>', to: ['assisting@finsight-sa.com'], subject, html }),
+      body: JSON.stringify({ from: 'Barez <onboarding@resend.dev>', to: [process.env.NOTIFY_EMAIL || 'assisting@finsight-sa.com'], subject, html }),
     });
-  } catch(e) {}
+  } catch(e) { console.error('sendEmail failed:', e.message); }
 }
 
 // ─── Inquiries ────────────────────────────────────────────
@@ -214,7 +214,10 @@ router.get('/inquiries', auth, async (req, res) => {
 
 router.put('/inquiries/:id', auth, async (req, res) => {
   try {
-    await Inquiry.findByIdAndUpdate(req.params.id, req.body);
+    const allowed = ['status', 'notes', 'building', 'budget', 'duration'];
+    const update = Object.fromEntries(allowed.filter(k => k in req.body).map(k => [k, req.body[k]]));
+    await Inquiry.findByIdAndUpdate(req.params.id, update);
+    audit(req, 'update', 'Inquiry', req.params.id, `تحديث الاستفسار: ${update.status || ''}`);
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });

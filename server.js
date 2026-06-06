@@ -12,23 +12,21 @@ const app = express();
 
 // ── MongoDB ──────────────────────────────────────────────
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/finsight';
-let _dbConn = null;
+let _seeded = false;
 
 async function connectDB() {
-  if (mongoose.connection.readyState === 1) return mongoose.connection;
+  if (mongoose.connection.readyState === 1) return;
   if (mongoose.connection.readyState === 2) {
-    // already connecting — wait
     await new Promise(r => mongoose.connection.once('connected', r));
-    return mongoose.connection;
+    return;
   }
-  _dbConn = await mongoose.connect(MONGO_URI, {
+  await mongoose.connect(MONGO_URI, {
     serverSelectionTimeoutMS: 10000,
     socketTimeoutMS: 45000,
     family: 4,
   });
   console.log('✅ MongoDB متصل');
-  await seedAdminUsers();
-  return _dbConn;
+  if (!_seeded) { await seedAdminUsers(); _seeded = true; }
 }
 
 // ── Seed admin users on first run ────────────────────────
@@ -50,8 +48,6 @@ async function seedAdminUsers() {
 async function dbMiddleware(req, res, next) {
   try { await connectDB(); next(); }
   catch (e) {
-    _dbConn = null;
-    // force disconnect so next request gets a fresh connection
     mongoose.connection.destroy().catch(() => {});
     res.status(500).json({ error: 'فشل الاتصال بقاعدة البيانات: ' + e.message });
   }
