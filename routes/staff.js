@@ -677,8 +677,8 @@ router.post('/register', async (req, res) => {
     if (password !== password2) {
       return res.render('staff-register', { error: 'كلمتا المرور غير متطابقتين', success: false });
     }
-    if (password.length < 6) {
-      return res.render('staff-register', { error: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل', success: false });
+    if (password.length < 8) {
+      return res.render('staff-register', { error: 'كلمة المرور يجب أن تكون 8 أحرف على الأقل', success: false });
     }
     const exists = await S.findOne({ username: username.trim() });
     if (exists) return res.render('staff-register', { error: 'اسم المستخدم مستخدم بالفعل، اختر اسماً آخر', success: false });
@@ -740,6 +740,8 @@ router.post('/api/admin/create', async (req,res) => {
     const S = require('../models/StaffUser');
     const {name,username,password,building,role} = req.body;
     if(!name||!username||!password||!building) return res.status(400).json({error:'جميع الحقول مطلوبة'});
+    if(password.length < 8) return res.status(400).json({error:'كلمة المرور يجب أن تكون 8 أحرف على الأقل'});
+    if(['receptionist','manager'].indexOf(role||'receptionist') === -1) return res.status(400).json({error:'دور غير صحيح'});
     const u = await new S({name,username,password,building,role:role||'receptionist'}).save();
     res.json({success:true,id:u._id});
   } catch(e){ res.status(500).json({error:e.message}); }

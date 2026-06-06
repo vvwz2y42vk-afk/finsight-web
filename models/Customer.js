@@ -10,6 +10,8 @@ const customerSchema = new mongoose.Schema({
   nationality: { type: String, default: 'سعودي' },
 }, { timestamps: true });
 
+customerSchema.index({ createdAt: -1 });
+
 customerSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();
   this.password = await bcrypt.hash(this.password, 12);

@@ -21,6 +21,9 @@ const hostSchema = new mongoose.Schema({
   reviewCount:     { type: Number, default: 0 },
 }, { timestamps: true });
 
+hostSchema.index({ status: 1 });
+hostSchema.index({ createdAt: -1 });
+
 hostSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();
   this.password = await bcrypt.hash(this.password, 12);

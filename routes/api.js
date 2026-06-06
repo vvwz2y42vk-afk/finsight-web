@@ -549,13 +549,16 @@ router.get('/hosts', auth, async (req, res) => {
 router.put('/hosts/:id/approve', auth, requireRole('admin'), async (req, res) => {
   try {
     await Host.findByIdAndUpdate(req.params.id, { status: 'approved', rejectionReason: '' });
+    audit(req, 'update', 'Host', req.params.id, 'تمت الموافقة على المضيف');
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 router.put('/hosts/:id/reject', auth, requireRole('admin'), async (req, res) => {
   try {
-    await Host.findByIdAndUpdate(req.params.id, { status: 'rejected', rejectionReason: req.body.reason || '' });
+    const reason = req.body.reason || '';
+    await Host.findByIdAndUpdate(req.params.id, { status: 'rejected', rejectionReason: reason });
+    audit(req, 'update', 'Host', req.params.id, `رُفض المضيف: ${reason}`);
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -563,6 +566,7 @@ router.put('/hosts/:id/reject', auth, requireRole('admin'), async (req, res) => 
 router.put('/hosts/:id/suspend', auth, requireRole('admin'), async (req, res) => {
   try {
     await Host.findByIdAndUpdate(req.params.id, { status: 'suspended' });
+    audit(req, 'update', 'Host', req.params.id, 'تم تعليق حساب المضيف');
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -575,8 +579,8 @@ router.get('/staff-performance', auth, async (req, res) => {
     since.setDate(since.getDate() - 30);
 
     const [logs, bookings] = await Promise.all([
-      ActivityLog.find({ createdAt: { $gte: since } }).lean(),
-      Booking.find({ createdAt: { $gte: since } }).lean(),
+      ActivityLog.find({ createdAt: { $gte: since } }).limit(2000).lean(),
+      Booking.find({ createdAt: { $gte: since } }).limit(1000).lean(),
     ]);
 
     const map = {};
