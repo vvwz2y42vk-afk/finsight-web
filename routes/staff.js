@@ -236,7 +236,10 @@ router.put('/api/bookings/:id/edit', reqStaff, async (req,res) => {
   try {
     const B = require('../models/Booking');
     const AL = require('../models/ActivityLog');
-    const bk = await B.findOne({_id:req.params.id, building:req.staff.building});
+    const editFilter = req.staff.propertyId
+      ? { _id: req.params.id, propertyId: req.staff.propertyId }
+      : { _id: req.params.id, building: req.staff.building, propertyId: null };
+    const bk = await B.findOne(editFilter);
     if(!bk) return res.status(404).json({error:'الحجز غير موجود'});
     const { name, phone, checkIn, checkOut, months, pricePerUnit, totalPrice, paidAmount, idType, idNumber, status, notes } = req.body;
 
@@ -460,10 +463,13 @@ router.get('/api/reports', reqStaff, async (req, res) => {
     const nextMonth    = new Date(selYear, selMonth + 1, 1);
     const daysInMonth  = new Date(selYear, selMonth + 1, 0).getDate();
 
+    const rptFilter = req.staff.propertyId
+      ? { propertyId: req.staff.propertyId }
+      : { building: bld, propertyId: null };
     const [allMonth, allActive, allDebtsRaw] = await Promise.all([
-      B.find({ building: bld, checkIn: { $gte: monthStart, $lt: nextMonth }, status: { $ne: 'cancelled' } }).lean(),
-      B.find({ building: bld, status: 'active' }).lean(),
-      B.find({ building: bld, status: { $nin: ['cancelled','checkout'] }, totalPrice: { $gt: 0 } }).lean(),
+      B.find({ ...rptFilter, checkIn: { $gte: monthStart, $lt: nextMonth }, status: { $ne: 'cancelled' } }).lean(),
+      B.find({ ...rptFilter, status: 'active' }).lean(),
+      B.find({ ...rptFilter, status: { $nin: ['cancelled','checkout'] }, totalPrice: { $gt: 0 } }).lean(),
     ]);
 
     const todayBk = allMonth.filter(b => { const d = new Date(b.checkIn); return d >= today && d < tomorrow; });
@@ -558,8 +564,11 @@ router.get('/api/calendar', reqStaff, async (req, res) => {
     const monthEnd    = new Date(selYear, selMonth + 1, 0); monthEnd.setHours(23,59,59,999);
     const daysInMonth = new Date(selYear, selMonth + 1, 0).getDate();
 
+    const calFilter = req.staff.propertyId
+      ? { propertyId: req.staff.propertyId }
+      : { building: bld, propertyId: null };
     const [bookings, { bldgs }] = await Promise.all([
-      B.find({ building: bld, status: { $nin: ['cancelled'] }, checkIn: { $lte: monthEnd }, checkOut: { $gte: monthStart } }).lean(),
+      B.find({ ...calFilter, status: { $nin: ['cancelled'] }, checkIn: { $lte: monthEnd }, checkOut: { $gte: monthStart } }).lean(),
       getBldgConfig(req.staff),
     ]);
 
@@ -595,7 +604,10 @@ router.post('/api/reminders/checkout', reqStaff, async (req, res) => {
     const B = require('../models/Booking');
     const tomorrow = new Date(); tomorrow.setHours(0,0,0,0); tomorrow.setDate(tomorrow.getDate()+1);
     const dayAfter  = new Date(tomorrow); dayAfter.setDate(tomorrow.getDate()+1);
-    const bookings  = await B.find({ building: req.staff.building, status: 'active', checkOut: { $gte: tomorrow, $lt: dayAfter } }).lean();
+    const remFilter = req.staff.propertyId
+      ? { propertyId: req.staff.propertyId }
+      : { building: req.staff.building, propertyId: null };
+    const bookings  = await B.find({ ...remFilter, status: 'active', checkOut: { $gte: tomorrow, $lt: dayAfter } }).lean();
     let sent = 0;
     for (const bk of bookings) {
       if (bk.phone) { await WA.sendCheckoutReminder(bk.phone, bk.name, bk.apt); sent++; }
