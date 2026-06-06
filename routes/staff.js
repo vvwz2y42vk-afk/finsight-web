@@ -367,7 +367,7 @@ router.get('/api/room-info', reqStaff, async (req,res) => {
       : { building: req.staff.building, propertyId: null };
     const rows = await RI.find(riFilter).lean();
     const map = {};
-    rows.forEach(r => { map[r.apt] = { roomType: r.roomType, beds: r.beds }; });
+    rows.forEach(r => { map[r.apt] = { roomType: r.roomType, beds: r.beds, building: r.building, pricePerNight: r.pricePerNight || 0, pricePerMonth: r.pricePerMonth || 0 }; });
     res.json(map);
   } catch(e){ res.status(500).json({error:e.message}); }
 });
@@ -377,14 +377,14 @@ router.put('/api/room-info/:apt', reqStaff, async (req,res) => {
     const perms = req.staff.permissions||[];
     if(!perms.includes('edit_room_info')) return res.status(403).json({error:'ليس لديك صلاحية'});
     const RI = require('../models/RoomInfo');
-    const { roomType='', beds='' } = req.body;
+    const { roomType='', beds='', pricePerNight=0, pricePerMonth=0 } = req.body;
     const pid = req.staff.propertyId || null;
     const riKey = req.staff.propertyId
       ? { propertyId: pid, apt: req.params.apt }
       : { building: req.staff.building, propertyId: null, apt: req.params.apt };
     await RI.findOneAndUpdate(
       riKey,
-      { roomType, beds, building: req.staff.building, propertyId: pid },
+      { roomType, beds, pricePerNight: parseFloat(pricePerNight)||0, pricePerMonth: parseFloat(pricePerMonth)||0, building: req.staff.building, propertyId: pid },
       { upsert: true }
     );
     res.json({ success: true });
@@ -664,6 +664,66 @@ router.put('/api/property/buildings', reqStaff, async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── API: Property Settings (VAT, contract terms, expense items, peak periods) ──
+router.get('/api/prop-settings', reqStaff, async (req, res) => {
+  try {
+    const Config = require('../models/Config');
+    const key = req.staff.propertyId ? req.staff.propertyId.toString() : 'internal';
+    const cfg = await Config.findOne({ key }).lean();
+    res.json(cfg || { vatRate: 15, contractTerms: '', expenseItems: [], peakPeriods: [] });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+router.put('/api/prop-settings', reqStaff, async (req, res) => {
+  try {
+    if (req.staff.role !== 'manager') return res.status(403).json({ error: 'المديرون فقط' });
+    const Config = require('../models/Config');
+    const key = req.staff.propertyId ? req.staff.propertyId.toString() : 'internal';
+    const { vatRate, contractTerms, expenseItems, peakPeriods } = req.body;
+    const update = {};
+    if (vatRate !== undefined) update.vatRate = Math.max(0, Math.min(100, parseFloat(vatRate) || 0));
+    if (contractTerms !== undefined) update.contractTerms = String(contractTerms).slice(0, 2000);
+    if (Array.isArray(expenseItems)) update.expenseItems = expenseItems.map(x => String(x).trim()).filter(Boolean).slice(0, 50);
+    if (Array.isArray(peakPeriods)) {
+      update.peakPeriods = peakPeriods.slice(0, 20).filter(p => p.startDate && p.endDate).map(p => ({
+        name: String(p.name || '').slice(0, 100),
+        startDate: new Date(p.startDate),
+        endDate: new Date(p.endDate),
+        multiplier: Math.max(1, Math.min(5, parseFloat(p.multiplier) || 1.5)),
+      }));
+    }
+    await Config.findOneAndUpdate({ key }, { $set: update }, { upsert: true, new: true });
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── API: Room Prices (bulk save) ─────────────────────────
+router.put('/api/room-prices', reqStaff, async (req, res) => {
+  try {
+    if (req.staff.role !== 'manager') return res.status(403).json({ error: 'المديرون فقط' });
+    const RI = require('../models/RoomInfo');
+    const { prices } = req.body;
+    if (!Array.isArray(prices) || !prices.length) return res.status(400).json({ error: 'بيانات غير صحيحة' });
+    const pid = req.staff.propertyId || null;
+    const ops = prices.map(p => ({
+      updateOne: {
+        filter: pid
+          ? { propertyId: pid, apt: String(p.apt) }
+          : { building: String(p.building || req.staff.building), propertyId: null, apt: String(p.apt) },
+        update: { $set: {
+          pricePerNight: Math.max(0, parseFloat(p.pricePerNight) || 0),
+          pricePerMonth: Math.max(0, parseFloat(p.pricePerMonth) || 0),
+          building: String(p.building || req.staff.building),
+          propertyId: pid,
+        }},
+        upsert: true,
+      }
+    }));
+    await RI.bulkWrite(ops);
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 // ── Guests ────────────────────────────────────────────────
 router.get('/api/guests', reqStaff, async (req, res) => {
   try {
@@ -686,6 +746,19 @@ router.get('/api/guests/search', reqStaff, async (req, res) => {
     if (phone.length < 9) return res.json(null);
     const guest = await Guest.findOne({ phone, propertyId: req.staff.propertyId || null }).lean();
     res.json(guest || null);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── API: Guest Category ──────────────────────────────────
+router.put('/api/guests/:id/category', reqStaff, async (req, res) => {
+  try {
+    const Guest = require('../models/Guest');
+    const { category } = req.body;
+    if (!['regular', 'vip', 'blocked'].includes(category)) return res.status(400).json({ error: 'تصنيف غير صحيح' });
+    const filter = { _id: req.params.id, propertyId: req.staff.propertyId || null };
+    const guest = await Guest.findOneAndUpdate(filter, { category }, { new: true });
+    if (!guest) return res.status(404).json({ error: 'الضيف غير موجود' });
+    res.json({ success: true });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 

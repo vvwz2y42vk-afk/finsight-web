@@ -11,6 +11,7 @@ const schema = new mongoose.Schema({
   building:   { type: String, default: '' },
   totalBookings: { type: Number, default: 1 },
   lastSeen:   { type: Date, default: Date.now },
+  category:   { type: String, enum: ['regular', 'vip', 'blocked'], default: 'regular' },
 }, { timestamps: true });
 
 schema.index({ phone: 1, propertyId: 1 }, { unique: true });
