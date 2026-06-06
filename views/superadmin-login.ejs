@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Super Admin — BAREZ</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Cairo',sans-serif;background:#0a0f1e;min-height:100vh;display:flex;align-items:center;justify-content:center;}
+.card{background:#111827;border:1px solid #1e2d4a;border-radius:20px;padding:40px 36px;width:100%;max-width:380px;box-shadow:0 24px 60px rgba(0,0,0,.5);}
+.logo{text-align:center;margin-bottom:28px;}
+.logo-icon{width:52px;height:52px;background:linear-gradient(135deg,#1a3d8f,#2563eb);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 12px;}
+.logo-title{font-size:18px;font-weight:800;color:#fff;}
+.logo-sub{font-size:12px;color:#4b5563;margin-top:2px;}
+label{display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:6px;}
+input[type=password]{width:100%;padding:12px 14px;background:#1f2937;border:1.5px solid #374151;border-radius:10px;font-family:'Cairo',sans-serif;font-size:14px;color:#fff;outline:none;transition:border .2s;margin-bottom:20px;}
+input:focus{border-color:#2563eb;}
+button{width:100%;padding:13px;background:linear-gradient(135deg,#1a3d8f,#2563eb);border:none;border-radius:10px;font-family:'Cairo',sans-serif;font-size:14px;font-weight:700;color:#fff;cursor:pointer;transition:opacity .2s;}
+button:hover{opacity:.9;}
+.err{background:rgba(185,28,28,.15);border:1px solid rgba(185,28,28,.3);color:#FCA5A5;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px;}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">
+    <div class="logo-icon">⚡</div>
+    <div class="logo-title">Super Admin</div>
+    <div class="logo-sub">BAREZ Platform Control</div>
+  </div>
+  <% if(error){ %><div class="err">⚠️ <%= error %></div><% } %>
+  <form method="POST" action="/superadmin/login">
+    <label>كلمة المرور</label>
+    <input type="password" name="password" placeholder="••••••••••••" required autofocus>
+    <button type="submit">دخول</button>
+  </form>
+</div>
+</body>
+</html>

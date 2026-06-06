@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Super Admin — BAREZ Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Cairo',sans-serif;background:#0d1117;color:#e6edf3;min-height:100vh;direction:rtl;}
+:root{--brand:#2563eb;--surface:#161b22;--border:#30363d;--t2:#8b949e;--green:#3fb950;--red:#f85149;--yellow:#d29922;}
+
+/* Topbar */
+.topbar{background:#161b22;border-bottom:1px solid var(--border);padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.tb-logo{font-size:16px;font-weight:800;color:#fff;display:flex;align-items:center;gap:10px;}
+.tb-logo span{background:linear-gradient(135deg,#1a3d8f,#2563eb);border-radius:8px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:14px;}
+.tb-right{display:flex;align-items:center;gap:16px;}
+.tb-badge{background:#1f2937;border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:600;color:var(--t2);}
+.logout-btn{font-size:12px;color:var(--t2);text-decoration:none;padding:6px 14px;border-radius:8px;border:1px solid var(--border);transition:all .2s;}
+.logout-btn:hover{color:#fff;border-color:#555;}
+
+/* Layout */
+.main{padding:28px;}
+
+/* KPI cards */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px;}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;}
+.kpi-label{font-size:11px;color:var(--t2);font-weight:600;margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em;}
+.kpi-val{font-size:28px;font-weight:800;color:#fff;line-height:1;}
+.kpi-sub{font-size:11px;color:var(--t2);margin-top:5px;}
+.kpi.green .kpi-val{color:var(--green);}
+.kpi.red   .kpi-val{color:var(--red);}
+.kpi.yellow .kpi-val{color:var(--yellow);}
+
+/* Table */
+.tbl-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;}
+.tbl-header{padding:16px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);}
+.tbl-title{font-size:14px;font-weight:700;color:#fff;}
+.tbl-sub{font-size:12px;color:var(--t2);}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{padding:10px 16px;text-align:right;font-weight:600;font-size:11px;color:var(--t2);text-transform:uppercase;letter-spacing:.06em;background:#0d1117;border-bottom:1px solid var(--border);}
+td{padding:14px 16px;border-bottom:1px solid #1c2128;color:#cdd9e5;vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(255,255,255,.02);}
+
+/* Badges */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+.badge.active {background:rgba(63,185,80,.15);color:var(--green);border:1px solid rgba(63,185,80,.2);}
+.badge.trial  {background:rgba(210,153,34,.12);color:var(--yellow);border:1px solid rgba(210,153,34,.2);}
+.badge.expired{background:rgba(248,81,73,.12);color:var(--red);border:1px solid rgba(248,81,73,.2);}
+.badge.stopped{background:rgba(139,148,158,.1);color:var(--t2);border:1px solid var(--border);}
+
+/* Plan badge */
+.plan-pill{display:inline-block;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:700;}
+.plan-trial{background:#1c2333;color:var(--yellow);}
+.plan-basic{background:#1b2838;color:#58a6ff;}
+.plan-pro{background:#1b2d1b;color:var(--green);}
+
+/* Actions */
+.act-btn{padding:5px 12px;border-radius:7px;border:1px solid var(--border);background:transparent;font-family:'Cairo',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;color:#cdd9e5;}
+.act-btn:hover{background:#1f2937;border-color:#555;}
+.act-btn.danger{color:var(--red);border-color:rgba(248,81,73,.3);}
+.act-btn.danger:hover{background:rgba(248,81,73,.1);}
+.act-btn.success{color:var(--green);border-color:rgba(63,185,80,.3);}
+.act-btn.success:hover{background:rgba(63,185,80,.08);}
+
+/* Modal */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:center;justify-content:center;}
+.modal-bg.open{display:flex;}
+.modal{background:#1c2128;border:1px solid var(--border);border-radius:16px;padding:28px;width:100%;max-width:420px;}
+.modal h3{font-size:15px;font-weight:700;color:#fff;margin-bottom:20px;}
+.modal label{display:block;font-size:12px;font-weight:600;color:var(--t2);margin-bottom:6px;}
+.modal select,.modal input{width:100%;padding:10px 12px;background:#0d1117;border:1.5px solid var(--border);border-radius:9px;font-family:'Cairo',sans-serif;font-size:13px;color:#fff;outline:none;margin-bottom:14px;}
+.modal select:focus,.modal input:focus{border-color:var(--brand);}
+.modal-btns{display:flex;gap:10px;justify-content:flex-end;margin-top:6px;}
+.btn-primary{padding:9px 20px;background:var(--brand);border:none;border-radius:9px;font-family:'Cairo',sans-serif;font-size:13px;font-weight:700;color:#fff;cursor:pointer;}
+.btn-cancel{padding:9px 16px;background:transparent;border:1px solid var(--border);border-radius:9px;font-family:'Cairo',sans-serif;font-size:13px;color:var(--t2);cursor:pointer;}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#1f2937;border:1px solid var(--border);border-radius:12px;padding:12px 20px;font-size:13px;font-weight:600;color:#fff;z-index:300;transition:transform .3s;white-space:nowrap;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+@media(max-width:900px){.kpi-row{grid-template-columns:1fr 1fr;} }
+@media(max-width:600px){.kpi-row{grid-template-columns:1fr;} th{display:none;} td{display:block;} }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tb-logo"><span>⚡</span> BAREZ Platform</div>
+  <div class="tb-right">
+    <span class="tb-badge">Super Admin</span>
+    <a href="/superadmin/logout" class="logout-btn">خروج</a>
+  </div>
+</div>
+
+<div class="main">
+  <!-- KPIs -->
+  <div class="kpi-row" id="kpi-row">
+    <div class="kpi"><div class="kpi-label">إجمالي المنشآت</div><div class="kpi-val" id="kpi-total">—</div><div class="kpi-sub">مسجّل في المنصة</div></div>
+    <div class="kpi green"><div class="kpi-label">نشطة ومدفوعة</div><div class="kpi-val" id="kpi-active">—</div><div class="kpi-sub">اشتراك ساري</div></div>
+    <div class="kpi yellow"><div class="kpi-label">تجريبية</div><div class="kpi-val" id="kpi-trial">—</div><div class="kpi-sub">30 يوم مجاني</div></div>
+    <div class="kpi red"><div class="kpi-label">منتهية الصلاحية</div><div class="kpi-val" id="kpi-expired">—</div><div class="kpi-sub">تحتاج تجديد</div></div>
+  </div>
+
+  <!-- Tenants Table -->
+  <div class="tbl-card">
+    <div class="tbl-header">
+      <div>
+        <div class="tbl-title">جميع المنشآت</div>
+        <div class="tbl-sub" id="tbl-count"></div>
+      </div>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>المنشأة</th>
+          <th>النوع</th>
+          <th>الخطة</th>
+          <th>الحالة</th>
+          <th>انتهاء الاشتراك</th>
+          <th>تاريخ التسجيل</th>
+          <th>إجراءات</th>
+        </tr>
+      </thead>
+      <tbody id="tenants-tbody">
+        <% properties.forEach(p => {
+          const now = new Date();
+          const expiry = p.planExpiry ? new Date(p.planExpiry) : null;
+          const isExpired = expiry && expiry < now;
+          const daysLeft = expiry ? Math.ceil((expiry - now) / 86400000) : null;
+          const statusClass = !p.active ? 'stopped' : isExpired ? 'expired' : p.plan === 'trial' ? 'trial' : 'active';
+          const statusLabel = !p.active ? 'موقوف' : isExpired ? 'منتهي' : p.plan === 'trial' ? 'تجريبي' : 'نشط';
+          const typeMap = { apartment:'شقق', hotel:'فندق', mixed:'مختلط' };
+        %>
+        <tr id="row-<%= p._id %>">
+          <td>
+            <div style="font-weight:700;color:#fff;"><%= p.name %></div>
+            <div style="font-size:11px;color:var(--t2)"><%= p.city || '—' %></div>
+          </td>
+          <td><%= typeMap[p.type] || p.type %></td>
+          <td><span class="plan-pill plan-<%= p.plan %>"><%= p.plan === 'trial' ? 'تجريبية' : p.plan === 'basic' ? 'أساسية' : 'احترافية' %></span></td>
+          <td><span class="badge <%= statusClass %>"><%= statusLabel %></span></td>
+          <td>
+            <% if (expiry) { %>
+              <div style="<%= isExpired ? 'color:var(--red)' : daysLeft <= 7 ? 'color:var(--yellow)' : '' %>">
+                <%= expiry.toLocaleDateString('ar-SA') %>
+              </div>
+              <% if (!isExpired) { %><div style="font-size:11px;color:var(--t2)"><%= daysLeft %> يوم متبقي</div><% } %>
+            <% } else { %><span style="color:var(--t2)">—</span><% } %>
+          </td>
+          <td style="font-size:12px;color:var(--t2)"><%= new Date(p.createdAt).toLocaleDateString('ar-SA') %></td>
+          <td>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <button class="act-btn success" onclick="openExtend('<%= p._id %>','<%= p.name %>')">تمديد</button>
+              <button class="act-btn <%= p.active ? 'danger' : '' %>" onclick="toggleTenant('<%= p._id %>',this)" id="toggle-<%= p._id %>">
+                <%= p.active ? 'إيقاف' : 'تفعيل' %>
+              </button>
+            </div>
+          </td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Extend Modal -->
+<div class="modal-bg" id="extend-modal">
+  <div class="modal">
+    <h3>تمديد اشتراك: <span id="modal-prop-name"></span></h3>
+    <input type="hidden" id="modal-prop-id">
+    <label>الخطة</label>
+    <select id="modal-plan">
+      <option value="trial">تجريبية</option>
+      <option value="basic">أساسية</option>
+      <option value="pro">احترافية</option>
+    </select>
+    <label>عدد الأيام المضافة</label>
+    <input type="number" id="modal-days" value="30" min="1" max="365">
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">إلغاء</button>
+      <button class="btn-primary" onclick="submitExtend()">تأكيد التمديد</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// Load KPIs
+fetch('/superadmin/api/stats').then(r=>r.json()).then(d => {
+  document.getElementById('kpi-total').textContent   = d.total   ?? '—';
+  document.getElementById('kpi-active').textContent  = d.active  ?? '—';
+  document.getElementById('kpi-trial').textContent   = d.trial   ?? '—';
+  document.getElementById('kpi-expired').textContent = d.expired ?? '—';
+  document.getElementById('tbl-count').textContent   = `${d.total} منشأة مسجّلة`;
+});
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function openExtend(id, name) {
+  document.getElementById('modal-prop-id').value = id;
+  document.getElementById('modal-prop-name').textContent = name;
+  document.getElementById('extend-modal').classList.add('open');
+}
+function closeModal() { document.getElementById('extend-modal').classList.remove('open'); }
+
+async function submitExtend() {
+  const id   = document.getElementById('modal-prop-id').value;
+  const plan = document.getElementById('modal-plan').value;
+  const days = document.getElementById('modal-days').value;
+  try {
+    const r = await fetch('/superadmin/api/extend', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, plan, days })
+    });
+    const d = await r.json();
+    if (d.success) {
+      toast('✅ تم التمديد بنجاح');
+      closeModal();
+      setTimeout(() => location.reload(), 1200);
+    } else { toast('❌ ' + d.error); }
+  } catch(e) { toast('❌ حدث خطأ'); }
+}
+
+async function toggleTenant(id, btn) {
+  if (!confirm('هل أنت متأكد؟')) return;
+  try {
+    const r = await fetch('/superadmin/api/toggle', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    });
+    const d = await r.json();
+    if (d.success) {
+      btn.textContent = d.active ? 'إيقاف' : 'تفعيل';
+      btn.classList.toggle('danger', d.active);
+      toast(d.active ? '✅ تم تفعيل المنشأة' : '⛔ تم إيقاف المنشأة');
+    }
+  } catch(e) { toast('❌ حدث خطأ'); }
+}
+</script>
+</body>
+</html>

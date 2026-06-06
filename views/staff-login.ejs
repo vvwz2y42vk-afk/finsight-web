@@ -155,6 +155,11 @@ button:active{transform:translateY(0);}
   <div class="brand">BAREZ</div>
   <div class="brand-sub">بوابة الموظفين</div>
   <% if (error) { %><div class="err">⚠️ <%= error %></div><% } %>
+  <% if (typeof query !== 'undefined' && query?.expired) { %>
+  <div class="err" style="background:rgba(180,83,9,.15);border-color:rgba(180,83,9,.4);color:#FCD34D;">
+    ⏰ انتهت صلاحية اشتراكك — تواصل مع الإدارة لتجديده
+  </div>
+  <% } %>
   <form method="POST" action="/staff/login">
     <label>اسم المستخدم</label>
     <input type="text" name="username" placeholder="username" required autofocus>

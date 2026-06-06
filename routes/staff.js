@@ -37,7 +37,17 @@ function totalAptsFromConfig(bldgs, bldName) {
 const totalApts = b => (BLDGS[b]?.floors||[]).reduce((s,f)=>s+f.r.length,0);
 
 function staffAuth(req,res,next){ req.staff=verifyToken(req.cookies?.[COOKIE])||null; next(); }
-function reqStaff(req,res,next){ if(!req.staff)return res.redirect('/staff/login'); next(); }
+function reqStaff(req,res,next){
+  if(!req.staff) return res.redirect('/staff/login');
+  // Subscription check for registered properties
+  if(req.staff.propertyId && req.staff.planExpiry) {
+    if(Date.now() > new Date(req.staff.planExpiry).getTime()) {
+      res.clearCookie(COOKIE);
+      return res.redirect('/staff/login?expired=1');
+    }
+  }
+  next();
+}
 const DEFAULT_PERMS=['dashboard','apartments','bookings','customers','housekeeping','activity','new_booking','edit_booking','cancel_booking','vouchers','reports','guests'];
 
 function buildBookingFilter(staff, { sf='open', apt='', booking_type='', date_from='', date_to='' }) {
@@ -67,7 +77,7 @@ function buildBookingFilter(staff, { sf='open', apt='', booking_type='', date_fr
 router.use(staffAuth);
 
 // ── Auth ─────────────────────────────────────────────────
-router.get('/login',(req,res)=>{ if(req.staff)return res.redirect('/staff/dashboard'); res.render('staff-login',{error:null}); });
+router.get('/login',(req,res)=>{ if(req.staff)return res.redirect('/staff/dashboard'); res.render('staff-login',{error:null,query:req.query}); });
 
 router.post('/login', async (req,res) => {
   try {
@@ -75,7 +85,13 @@ router.post('/login', async (req,res) => {
     const u = await S.findOne({ username:(req.body.username||'').trim(), active:true });
     if (!u||!(await u.comparePassword(req.body.password))) return res.render('staff-login',{error:'اسم المستخدم أو كلمة المرور غير صحيحة'});
     const perms = u.permissions?.length ? [...new Set([...u.permissions, ...DEFAULT_PERMS])] : DEFAULT_PERMS;
-    res.cookie(COOKIE, createToken({id:u._id,name:u.name,building:u.building,role:u.role,permissions:perms,propertyId:u.propertyId||null}), COPTS);
+    let planExpiry = null;
+    if (u.propertyId) {
+      const prop = await Property.findById(u.propertyId).select('planExpiry active').lean();
+      if (!prop || !prop.active) return res.render('staff-login', { error: 'هذا الحساب موقوف. تواصل مع الإدارة.' });
+      planExpiry = prop?.planExpiry || null;
+    }
+    res.cookie(COOKIE, createToken({id:u._id,name:u.name,building:u.building,role:u.role,permissions:perms,propertyId:u.propertyId||null,planExpiry}), COPTS);
     res.redirect('/staff/dashboard');
   } catch(e){ res.render('staff-login',{error:'حدث خطأ'}); }
 });
