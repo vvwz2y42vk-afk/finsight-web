@@ -15,5 +15,6 @@ const schema = new mongoose.Schema({
   dueDate:     Date,
   createdBy:   String,
   bookingId:   { type: mongoose.Schema.Types.ObjectId, ref: 'Booking' },
+  propertyId:  { type: mongoose.Schema.Types.ObjectId, ref: 'Property', index: true, default: null },
 }, { timestamps: true });
 module.exports = mongoose.model('Voucher', schema);

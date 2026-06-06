@@ -25,6 +25,7 @@ const bookingSchema = new mongoose.Schema({
   source:       String,
   pricePerNight: Number,
   pricePerMonth: Number,
+  propertyId:   { type: mongoose.Schema.Types.ObjectId, ref: 'Property', index: true, default: null },
 }, { timestamps: true });
 
 bookingSchema.index({ status: 1 });

@@ -6,6 +6,7 @@ const schema = new mongoose.Schema({
   apt:       String,
   guestName: String,
   bookingId: mongoose.Schema.Types.ObjectId,
-  details:   String,
+  details:    String,
+  propertyId: { type: require('mongoose').Schema.Types.ObjectId, ref: 'Property', default: null },
 }, { timestamps: true });
 module.exports = mongoose.model('ActivityLog', schema);

@@ -43,7 +43,9 @@ const DEFAULT_PERMS=['dashboard','apartments','bookings','customers','housekeepi
 function buildBookingFilter(staff, { sf='open', apt='', booking_type='', date_from='', date_to='' }) {
   const today = new Date(); today.setHours(0,0,0,0);
   const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate()+1);
-  const filter = { building: staff.building };
+  const filter = staff.propertyId
+    ? { propertyId: staff.propertyId }
+    : { building: staff.building, propertyId: null };
   if      (sf==='open')                  filter.status = { $nin:['cancelled','checkout'] };
   else if (sf==='active')                filter.status = 'active';
   else if (sf==='pending_checkin')       filter.status = { $in:['pending','awaiting_payment','awaiting_checkin'] };
@@ -73,7 +75,7 @@ router.post('/login', async (req,res) => {
     const u = await S.findOne({ username:(req.body.username||'').trim(), active:true });
     if (!u||!(await u.comparePassword(req.body.password))) return res.render('staff-login',{error:'اسم المستخدم أو كلمة المرور غير صحيحة'});
     const perms = u.permissions?.length ? [...new Set([...u.permissions, ...DEFAULT_PERMS])] : DEFAULT_PERMS;
-    res.cookie(COOKIE, createToken({id:u._id,name:u.name,building:u.building,role:u.role,permissions:perms}), COPTS);
+    res.cookie(COOKIE, createToken({id:u._id,name:u.name,building:u.building,role:u.role,permissions:perms,propertyId:u.propertyId||null}), COPTS);
     res.redirect('/staff/dashboard');
   } catch(e){ res.render('staff-login',{error:'حدث خطأ'}); }
 });
@@ -275,9 +277,10 @@ router.post('/api/bookings/new', reqStaff, async (req,res) => {
       status: status||'awaiting_checkin',
       notes: notes||'',
       source: 'manual',
+      propertyId: req.staff.propertyId || null,
     }).save();
 
-    AL.create({building:req.staff.building,staffName:req.staff.name,action:'booking_add',apt,guestName:name,bookingId:bk._id,details:'حجز يدوي'}).catch(()=>{});
+    AL.create({building:req.staff.building,staffName:req.staff.name,action:'booking_add',apt,guestName:name,bookingId:bk._id,details:'حجز يدوي',propertyId:req.staff.propertyId||null}).catch(()=>{});
     // Upsert guest record
     const Guest = require('../models/Guest');
     Guest.findOneAndUpdate(
@@ -352,7 +355,8 @@ router.get('/api/housekeeping', reqStaff, async (req,res) => {
   try {
     const HK = require('../models/HousekeepingTask');
     const bld = req.staff.building;
-    const tasks = await HK.find({building:bld}).lean();
+    const hkFilter = req.staff.propertyId ? { propertyId: req.staff.propertyId, building: bld } : { building: bld, propertyId: null };
+    const tasks = await HK.find(hkFilter).lean();
     const map={}; tasks.forEach(t=>map[t.apt]=t);
     const result=[];
     (BLDGS[bld]?.floors||[]).forEach(f=>f.r.forEach(apt=>result.push(map[apt]||{apt,building:bld,status:'clean',notes:''})));
@@ -365,8 +369,9 @@ router.put('/api/housekeeping/:apt', reqStaff, async (req,res) => {
     const HK = require('../models/HousekeepingTask');
     const AL = require('../models/ActivityLog');
     const {status,notes}=req.body;
-    await HK.findOneAndUpdate({building:req.staff.building,apt:req.params.apt},{status,notes:notes||'',updatedBy:req.staff.name,building:req.staff.building,apt:req.params.apt},{upsert:true,new:true});
-    AL.create({building:req.staff.building,staffName:req.staff.name,action:'housekeeping',apt:req.params.apt,details:status}).catch(()=>{});
+    const pid = req.staff.propertyId || null;
+    await HK.findOneAndUpdate({building:req.staff.building,apt:req.params.apt,propertyId:pid},{status,notes:notes||'',updatedBy:req.staff.name,building:req.staff.building,apt:req.params.apt,propertyId:pid},{upsert:true,new:true});
+    AL.create({building:req.staff.building,staffName:req.staff.name,action:'housekeeping',apt:req.params.apt,details:status,propertyId:pid}).catch(()=>{});
     res.json({success:true});
   } catch(e){ res.status(500).json({error:e.message}); }
 });
@@ -375,7 +380,8 @@ router.put('/api/housekeeping/:apt', reqStaff, async (req,res) => {
 router.get('/api/activity', reqStaff, async (req,res) => {
   try {
     const AL = require('../models/ActivityLog');
-    const logs = await AL.find({building:req.staff.building}).sort({createdAt:-1}).limit(100).lean();
+    const alFilter = req.staff.propertyId ? { propertyId: req.staff.propertyId } : { building: req.staff.building, propertyId: null };
+    const logs = await AL.find(alFilter).sort({createdAt:-1}).limit(100).lean();
     res.json(logs);
   } catch(e){ res.status(500).json({error:e.message}); }
 });
@@ -384,7 +390,7 @@ router.get('/api/activity', reqStaff, async (req,res) => {
 router.get('/api/vouchers', reqStaff, async (req,res) => {
   try {
     const V = require('../models/Voucher');
-    const filter = { building: req.staff.building };
+    const filter = req.staff.propertyId ? { propertyId: req.staff.propertyId } : { building: req.staff.building, propertyId: null };
     if(req.query.type) filter.type = req.query.type;
     const list = await V.find(filter).sort({ createdAt: -1 }).lean();
     res.json(list);
@@ -396,10 +402,11 @@ router.post('/api/vouchers', reqStaff, async (req,res) => {
     const V = require('../models/Voucher');
     const { type, date, name, phone, apt, amount, description, notes, checkNumber, bankName, dueDate, bookingId } = req.body;
     if(!type||!amount) return res.status(400).json({error:'نوع الوثيقة والمبلغ مطلوبان'});
-    const count = await V.countDocuments({ building: req.staff.building, type });
+    const pid = req.staff.propertyId || null;
+    const count = await V.countDocuments({ building: req.staff.building, type, propertyId: pid });
     const prefixes = { receipt:'QBD', invoice:'INV', disbursement:'SRF', check:'KMB', tax:'ZRB' };
     const number = (prefixes[type]||'DOC') + '-' + String(count+1).padStart(4,'0');
-    const v = await new V({ building:req.staff.building, type, number, date:date?new Date(date):new Date(), name, phone, apt, amount:parseFloat(amount)||0, description, notes, checkNumber, bankName, dueDate:dueDate?new Date(dueDate):undefined, bookingId:bookingId||undefined, createdBy:req.staff.name }).save();
+    const v = await new V({ building:req.staff.building, type, number, date:date?new Date(date):new Date(), name, phone, apt, amount:parseFloat(amount)||0, description, notes, checkNumber, bankName, dueDate:dueDate?new Date(dueDate):undefined, bookingId:bookingId||undefined, createdBy:req.staff.name, propertyId:pid }).save();
     res.json({ success:true, id:v._id, number:v.number });
   } catch(e){ res.status(500).json({error:e.message}); }
 });
@@ -407,7 +414,8 @@ router.post('/api/vouchers', reqStaff, async (req,res) => {
 router.delete('/api/vouchers/:id', reqStaff, async (req,res) => {
   try {
     const V = require('../models/Voucher');
-    await V.findOneAndDelete({ _id:req.params.id, building:req.staff.building });
+    const vFilter = req.staff.propertyId ? { _id:req.params.id, propertyId:req.staff.propertyId } : { _id:req.params.id, building:req.staff.building };
+    await V.findOneAndDelete(vFilter);
     res.json({ success:true });
   } catch(e){ res.status(500).json({error:e.message}); }
 });
@@ -643,6 +651,30 @@ router.post('/register', async (req, res) => {
   } catch(e) {
     res.render('staff-register', { error: 'حدث خطأ أثناء التسجيل، حاول مرة أخرى', success: false });
   }
+});
+
+// ── Admin: migrate legacy data to tenant ─────────────────
+router.post('/api/admin/migrate-tenant', reqStaff, async (req, res) => {
+  if (req.staff.role !== 'manager') return res.status(403).json({ error: 'للمديرين فقط' });
+  if (!req.staff.propertyId) return res.status(400).json({ error: 'لا يوجد propertyId في حسابك' });
+  try {
+    const pid = req.staff.propertyId;
+    const { bldgs } = await getBldgConfig(req.staff);
+    const buildings = Object.keys(bldgs);
+    const B  = require('../models/Booking');
+    const HK = require('../models/HousekeepingTask');
+    const AL = require('../models/ActivityLog');
+    const V  = require('../models/Voucher');
+    const S  = require('../models/StaffUser');
+    const [b, hk, al, v, s] = await Promise.all([
+      B.updateMany( { building:{$in:buildings}, propertyId:null }, { $set:{propertyId:pid} }),
+      HK.updateMany({ building:{$in:buildings}, propertyId:null }, { $set:{propertyId:pid} }),
+      AL.updateMany({ building:{$in:buildings}, propertyId:null }, { $set:{propertyId:pid} }),
+      V.updateMany( { building:{$in:buildings}, propertyId:null }, { $set:{propertyId:pid} }),
+      S.updateMany( { building:{$in:buildings}, propertyId:null }, { $set:{propertyId:pid} }),
+    ]);
+    res.json({ success:true, updated:{ bookings:b.modifiedCount, housekeeping:hk.modifiedCount, activity:al.modifiedCount, vouchers:v.modifiedCount, staff:s.modifiedCount } });
+  } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
 // ── Admin: create staff user ──────────────────────────────
