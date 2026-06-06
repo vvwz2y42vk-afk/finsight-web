@@ -1804,7 +1804,7 @@ async function loadBookings(){
     tb.innerHTML=list.map(b=>`<tr>
       <td data-label="رقم العقد" style="font-family:monospace;font-weight:700;color:#1a3d8f;">#${b.bookingNum}</td>
       <td data-label="الشقة"><b>${esc(b.apt||'—')}</b></td>
-      <td data-label="النزيل">${esc(b.name||'—')}</td>
+      <td data-label="النزيل"><span onclick="openGuestCard('${esc(b.phone||'')}')" style="cursor:pointer;color:#1a3d8f;font-weight:700;text-decoration:underline dotted;">${esc(b.name||'—')}</span></td>
       <td data-label="الجوال"><a href="https://wa.me/${(b.phone||'').replace(/^0/,'966')}" style="color:#1a3d8f;text-decoration:none;">${esc(b.phone||'—')}</a></td>
       <td data-label="نوع الإيجار"><span style="font-size:10px;padding:2px 8px;border-radius:8px;background:rgba(26,61,143,.08);color:#1a3d8f;font-weight:600;">${b.bookingType==='daily'?'يومي':b.bookingType==='annual'?'شهري':'استفسار'}</span></td>
       <td data-label="الدخول">${fDate(b.checkIn)}</td>
@@ -3194,6 +3194,206 @@ window.addEventListener('load',()=>{
   if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});
 });
 // re-init after tab switch in case new date inputs appeared
+</script>
+
+<!-- ══════════ Guest Profile Card Modal ══════════ -->
+<div id="guestCardOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center;padding:16px;" onclick="if(event.target===this)closeGuestCard()">
+  <div style="background:#fff;border-radius:18px;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);direction:rtl;font-family:inherit;">
+    <!-- Header -->
+    <div style="background:linear-gradient(135deg,#1a3d8f,#2563eb);color:#fff;padding:20px 24px;border-radius:18px 18px 0 0;display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-size:18px;font-weight:700;" id="gcHeaderName">بيانات النزيل</div>
+        <div style="font-size:12px;opacity:.8;margin-top:4px;" id="gcHeaderSub"></div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span id="gcCategoryBadge"></span>
+        <button onclick="closeGuestCard()" style="background:rgba(255,255,255,.2);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:18px;line-height:1;display:flex;align-items:center;justify-content:center;">×</button>
+      </div>
+    </div>
+    <!-- Body -->
+    <div style="padding:24px;">
+      <input type="hidden" id="gcId">
+      <!-- Row helper -->
+      <!-- Section: الهوية -->
+      <div style="font-size:11px;font-weight:700;color:#64748b;letter-spacing:.5px;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid #e2e8f0;">بيانات الهوية</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+        <div>
+          <label style="font-size:11px;color:#64748b;display:block;margin-bottom:4px;">الاسم</label>
+          <input id="gcName" type="text" style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-family:inherit;font-size:13px;">
+        </div>
+        <div>
+          <label style="font-size:11px;color:#64748b;display:block;margin-bottom:4px;">نوع الإثبات</label>
+          <select id="gcIdType" style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-family:inherit;font-size:13px;background:#fff;">
+            <option value="">—</option>
+            <option value="national_id">هوية وطنية</option>
+            <option value="residence">إقامة</option>
+            <option value="passport">جواز سفر</option>
+            <option value="gcc">هوية خليجي</option>
+            <option value="other">أخرى</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11px;color:#64748b;display:block;margin-bottom:4px;">رقم الإثبات</label>
+          <input id="gcIdNumber" type="text" style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-family:inherit;font-size:13px;">
+        </div>
+        <div>
+          <label style="font-size:11px;color:#64748b;display:block;margin-bottom:4px;">مكان الإصدار</label>
+          <input id="gcIdIssuePlace" type="text" style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-family:inherit;font-size:13px;">
+        </div>
+        <div>
+          <label style="font-size:11px;color:#64748b;display:block;margin-bottom:4px;">تاريخ الانتهاء</label>
+          <input id="gcIdExpiry" type="date" style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-family:inherit;font-size:13px;">
+        </div>
+        <div>
+          <label style="font-size:11px;color:#64748b;display:block;margin-bottom:4px;">الجنسية</label>
+          <input id="gcNationality" type="text" style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-family:inherit;font-size:13px;">
+        </div>
+      </div>
+      <!-- Section: التواصل -->
+      <div style="font-size:11px;font-weight:700;color:#64748b;letter-spacing:.5px;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid #e2e8f0;">بيانات التواصل</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+        <div>
+          <label style="font-size:11px;color:#64748b;display:block;margin-bottom:4px;">الجوال</label>
+          <input id="gcPhone" type="tel" style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-family:monospace;font-size:13px;">
+        </div>
+        <div>
+          <label style="font-size:11px;color:#64748b;display:block;margin-bottom:4px;">البريد الإلكتروني</label>
+          <input id="gcEmail" type="email" style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-family:inherit;font-size:13px;">
+        </div>
+        <div>
+          <label style="font-size:11px;color:#64748b;display:block;margin-bottom:4px;">جهة العمل</label>
+          <input id="gcEmployer" type="text" style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-family:inherit;font-size:13px;">
+        </div>
+        <div>
+          <label style="font-size:11px;color:#64748b;display:block;margin-bottom:4px;">جوال العمل</label>
+          <input id="gcWorkPhone" type="tel" style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-family:monospace;font-size:13px;">
+        </div>
+      </div>
+      <!-- Section: العنوان الوطني -->
+      <div style="font-size:11px;font-weight:700;color:#64748b;letter-spacing:.5px;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid #e2e8f0;">العنوان الوطني</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+        <div>
+          <label style="font-size:11px;color:#64748b;display:block;margin-bottom:4px;">رقم المبنى</label>
+          <input id="gcBuildingNo" type="text" style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-family:monospace;font-size:13px;">
+        </div>
+        <div>
+          <label style="font-size:11px;color:#64748b;display:block;margin-bottom:4px;">الرقم الفرعي</label>
+          <input id="gcSubNo" type="text" style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-family:monospace;font-size:13px;">
+        </div>
+        <div>
+          <label style="font-size:11px;color:#64748b;display:block;margin-bottom:4px;">الحي</label>
+          <input id="gcDistrict" type="text" style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-family:inherit;font-size:13px;">
+        </div>
+        <div>
+          <label style="font-size:11px;color:#64748b;display:block;margin-bottom:4px;">الدولة</label>
+          <input id="gcCountry" type="text" style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-family:inherit;font-size:13px;">
+        </div>
+        <div>
+          <label style="font-size:11px;color:#64748b;display:block;margin-bottom:4px;">الرمز البريدي</label>
+          <input id="gcPostalCode" type="text" style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-family:monospace;font-size:13px;">
+        </div>
+      </div>
+      <!-- Actions -->
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+        <button onclick="closeGuestCard()" style="padding:10px 20px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;">إغلاق</button>
+        <a id="gcWaLink" href="#" target="_blank" style="padding:10px 20px;background:#dcfce7;color:#16a34a;border:none;border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;">واتساب ↗</a>
+        <button onclick="saveGuestCard()" style="padding:10px 24px;background:#1a3d8f;color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;">حفظ البيانات</button>
+      </div>
+      <div id="gcSaveStatus" style="text-align:center;margin-top:10px;font-size:12px;min-height:18px;"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+async function openGuestCard(phone) {
+  if (!phone) return;
+  const overlay = document.getElementById('guestCardOverlay');
+  overlay.style.display = 'flex';
+  document.getElementById('gcSaveStatus').textContent = '';
+  document.getElementById('gcHeaderName').textContent = 'جاري التحميل…';
+  document.getElementById('gcHeaderSub').textContent = '';
+  document.getElementById('gcId').value = '';
+
+  try {
+    const r = await fetch('/staff/api/guests/by-phone/' + encodeURIComponent(phone));
+    const g = r.ok ? await r.json() : null;
+    if (!g) {
+      document.getElementById('gcHeaderName').textContent = 'نزيل غير مسجل';
+      document.getElementById('gcHeaderSub').textContent = phone;
+      ['gcName','gcIdNumber','gcIdIssuePlace','gcNationality','gcEmail','gcEmployer','gcWorkPhone','gcBuildingNo','gcSubNo','gcDistrict','gcCountry','gcPostalCode'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+      document.getElementById('gcPhone').value = phone;
+      document.getElementById('gcIdType').value = '';
+      document.getElementById('gcIdExpiry').value = '';
+      document.getElementById('gcWaLink').href = 'https://wa.me/' + phone.replace(/^0/,'966');
+      const badge = document.getElementById('gcCategoryBadge');
+      if (badge) badge.innerHTML = '';
+      return;
+    }
+    document.getElementById('gcId').value = g._id;
+    document.getElementById('gcHeaderName').textContent = g.name || '—';
+    document.getElementById('gcHeaderSub').textContent = g.phone + (g.totalBookings ? ` · ${g.totalBookings} حجز` : '');
+    const catMap = { regular: { lbl: 'عادي', bg: '#e0f2fe', color: '#0369a1' }, vip: { lbl: 'VIP', bg: '#fef9c3', color: '#854d0e' }, blocked: { lbl: 'محظور', bg: '#fee2e2', color: '#b91c1c' } };
+    const cat = catMap[g.category] || catMap.regular;
+    document.getElementById('gcCategoryBadge').innerHTML = `<span style="background:${cat.bg};color:${cat.color};padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">${cat.lbl}</span>`;
+    document.getElementById('gcName').value = g.name || '';
+    document.getElementById('gcIdType').value = g.idType || '';
+    document.getElementById('gcIdNumber').value = g.idNumber || '';
+    document.getElementById('gcIdIssuePlace').value = g.idIssuePlace || '';
+    document.getElementById('gcIdExpiry').value = g.idExpiry ? g.idExpiry.substring(0,10) : '';
+    document.getElementById('gcNationality').value = g.nationality || '';
+    document.getElementById('gcPhone').value = g.phone || '';
+    document.getElementById('gcEmail').value = g.email || '';
+    document.getElementById('gcEmployer').value = g.employer || '';
+    document.getElementById('gcWorkPhone').value = g.workPhone || '';
+    document.getElementById('gcBuildingNo').value = g.buildingNo || '';
+    document.getElementById('gcSubNo').value = g.subNo || '';
+    document.getElementById('gcDistrict').value = g.district || '';
+    document.getElementById('gcCountry').value = g.country || '';
+    document.getElementById('gcPostalCode').value = g.postalCode || '';
+    document.getElementById('gcWaLink').href = 'https://wa.me/' + (g.phone||phone).replace(/^0/,'966');
+  } catch(e) {
+    document.getElementById('gcHeaderName').textContent = '⚠️ تعذر التحميل';
+  }
+}
+
+async function saveGuestCard() {
+  const id = document.getElementById('gcId').value;
+  const statusEl = document.getElementById('gcSaveStatus');
+  if (!id) { statusEl.textContent = '⚠️ لا يمكن الحفظ — النزيل غير مسجل في قاعدة البيانات'; statusEl.style.color='#f97316'; return; }
+  const idTypeMap = { national_id:'هوية وطنية', residence:'إقامة', passport:'جواز سفر', gcc:'هوية خليجي', other:'أخرى' };
+  const body = {
+    name:         document.getElementById('gcName').value.trim(),
+    phone:        document.getElementById('gcPhone').value.trim(),
+    idType:       document.getElementById('gcIdType').value,
+    idNumber:     document.getElementById('gcIdNumber').value.trim(),
+    idIssuePlace: document.getElementById('gcIdIssuePlace').value.trim(),
+    idExpiry:     document.getElementById('gcIdExpiry').value || '',
+    nationality:  document.getElementById('gcNationality').value.trim(),
+    email:        document.getElementById('gcEmail').value.trim(),
+    employer:     document.getElementById('gcEmployer').value.trim(),
+    workPhone:    document.getElementById('gcWorkPhone').value.trim(),
+    buildingNo:   document.getElementById('gcBuildingNo').value.trim(),
+    subNo:        document.getElementById('gcSubNo').value.trim(),
+    district:     document.getElementById('gcDistrict').value.trim(),
+    country:      document.getElementById('gcCountry').value.trim(),
+    postalCode:   document.getElementById('gcPostalCode').value.trim(),
+  };
+  try {
+    statusEl.textContent = 'جاري الحفظ…'; statusEl.style.color='#64748b';
+    const r = await fetch('/staff/api/guests/'+id, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error||'خطأ');
+    statusEl.textContent = '✅ تم حفظ البيانات'; statusEl.style.color='#16a34a';
+    document.getElementById('gcHeaderName').textContent = body.name || '—';
+    setTimeout(()=>{ statusEl.textContent=''; }, 3000);
+  } catch(e) {
+    statusEl.textContent = '❌ ' + e.message; statusEl.style.color='#dc2626';
+  }
+}
+
+function closeGuestCard() {
+  document.getElementById('guestCardOverlay').style.display = 'none';
+}
 </script>
 </body>
 </html>

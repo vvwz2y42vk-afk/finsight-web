@@ -776,6 +776,31 @@ router.get('/api/guests/search', reqStaff, async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── API: Guest full profile by phone ─────────────────────
+router.get('/api/guests/by-phone/:phone', reqStaff, async (req, res) => {
+  try {
+    const Guest = require('../models/Guest');
+    const filter = { phone: req.params.phone, propertyId: req.staff.propertyId || null };
+    const guest = await Guest.findOne(filter).lean();
+    res.json(guest || null);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── API: Update full guest profile ───────────────────────
+router.put('/api/guests/:id', reqStaff, async (req, res) => {
+  try {
+    const Guest = require('../models/Guest');
+    const ALLOWED = ['name','phone','idType','idNumber','idIssuePlace','idExpiry','nationality','email','employer','workPhone','buildingNo','subNo','district','country','postalCode','notes','category'];
+    const update = {};
+    ALLOWED.forEach(f => { if (req.body[f] !== undefined) update[f] = req.body[f]; });
+    if (update.idExpiry === '') update.idExpiry = null;
+    const filter = { _id: req.params.id, propertyId: req.staff.propertyId || null };
+    const guest = await Guest.findOneAndUpdate(filter, update, { new: true });
+    if (!guest) return res.status(404).json({ error: 'الضيف غير موجود' });
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 // ── API: Guest Category ──────────────────────────────────
 router.put('/api/guests/:id/category', reqStaff, async (req, res) => {
   try {
