@@ -845,4 +845,39 @@ router.get('/audit-logs', auth, requireRole('admin'), async (req, res) => {
 });
 
 
+// ─── Cron: Checkout Reminders (called by Vercel Cron daily 8AM KSA) ──────────
+router.get('/cron/checkout-reminders', async (req, res) => {
+  // Verify Vercel cron secret
+  const authHeader = req.headers['authorization'] || '';
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  try {
+    const WA = require('../utils/whatsapp');
+    const tomorrow = new Date(); tomorrow.setHours(0,0,0,0); tomorrow.setDate(tomorrow.getDate()+1);
+    const dayAfter  = new Date(tomorrow); dayAfter.setDate(tomorrow.getDate()+1);
+
+    const bookings = await Booking.find({
+      status: 'active',
+      checkOut: { $gte: tomorrow, $lt: dayAfter },
+    }).select('phone name apt').lean();
+
+    let sent = 0, failed = 0;
+    for (const bk of bookings) {
+      if (!bk.phone) continue;
+      try {
+        await WA.sendCheckoutReminder(bk.phone, bk.name, bk.apt);
+        sent++;
+      } catch { failed++; }
+    }
+
+    console.log(`✅ Cron checkout-reminders: ${sent} sent, ${failed} failed`);
+    res.json({ success: true, sent, failed, total: bookings.length });
+  } catch (e) {
+    console.error('Cron checkout-reminders error:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 module.exports = router;
