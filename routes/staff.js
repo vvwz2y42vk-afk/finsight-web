@@ -508,6 +508,39 @@ router.get('/api/reports', reqStaff, async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── Yearly Revenue Chart ─────────────────────────────────
+router.get('/api/reports/yearly', reqStaff, async (req, res) => {
+  try {
+    const B = require('../models/Booking');
+    const now = new Date();
+    const yearAgo = new Date(now.getFullYear() - 1, now.getMonth(), 1);
+    const baseFilter = req.staff.propertyId
+      ? { propertyId: req.staff.propertyId }
+      : { building: req.staff.building, propertyId: null };
+
+    const bookings = await B.find({
+      ...baseFilter,
+      checkIn: { $gte: yearAgo },
+      status: { $ne: 'cancelled' },
+    }, 'checkIn totalPrice bookingType').lean();
+
+    const months = [];
+    for (let i = 11; i >= 0; i--) {
+      const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const end   = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
+      const mBk   = bookings.filter(b => { const d = new Date(b.checkIn); return d >= start && d < end; });
+      months.push({
+        label:    start.toLocaleDateString('ar-SA', { month: 'short' }) + ' ' + String(start.getFullYear()).slice(2),
+        revenue:  mBk.reduce((s, b) => s + (b.totalPrice || 0), 0),
+        count:    mBk.length,
+        daily:    mBk.filter(b => b.bookingType === 'daily').reduce((s, b) => s + (b.totalPrice || 0), 0),
+        annual:   mBk.filter(b => b.bookingType === 'annual').reduce((s, b) => s + (b.totalPrice || 0), 0),
+      });
+    }
+    res.json({ months });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 // ── Calendar ──────────────────────────────────────────────
 router.get('/api/calendar', reqStaff, async (req, res) => {
   try {

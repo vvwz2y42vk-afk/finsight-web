@@ -679,6 +679,16 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
         <canvas id="revenueChart" style="width:100%;height:200px;"></canvas>
       </div>
 
+      <!-- مخطط مقارنة الأشهر -->
+      <div class="chart-card" style="margin-bottom:24px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <div class="chart-title" style="margin-bottom:0;">مقارنة الإيرادات — آخر 12 شهر</div>
+          <div id="yearly-total" style="font-size:13px;font-weight:700;color:var(--green);"></div>
+        </div>
+        <canvas id="yearlyChart" style="width:100%;height:220px;"></canvas>
+        <div id="yearly-summary" style="display:flex;gap:16px;margin-top:14px;flex-wrap:wrap;"></div>
+      </div>
+
       <!-- المديونيات -->
       <div style="font-size:11px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">المديونيات — المبالغ المتبقية</div>
       <div id="rpt-debts-wrap"></div>
@@ -1130,7 +1140,7 @@ function goTab(id, el){
   if(id==='housekeeping') loadHousekeeping();
   if(id==='activity')   loadActivity();
   if(id==='vouchers')   { vouBkCache=[]; showVouCards(); }
-  if(id==='reports')    loadReports();
+  if(id==='reports')    { loadReports(); loadYearlyChart(); }
   if(id==='calendar')   loadCalendar();
   if(id==='guests')     loadGuests();
   if(id==='settings')   loadSettings();
@@ -2454,6 +2464,7 @@ async function saveSettings() {
 
 // ── Reports ──────────────────────────────────────────────
 let revenueChartInst = null;
+let yearlyChartInst  = null;
 let rptData = null;
 let rptMonth = new Date().getMonth();
 let rptYear  = new Date().getFullYear();
@@ -2483,6 +2494,74 @@ async function loadReports() {
     rptData = await r.json();
     renderReports();
   } catch(e) { toast('❌ تعذر تحميل التقارير'); }
+}
+
+async function loadYearlyChart() {
+  try {
+    const r = await fetch('/staff/api/reports/yearly');
+    if (!r.ok) return;
+    const { months } = await r.json();
+    if (!months?.length) return;
+
+    const totalRev = months.reduce((s, m) => s + m.revenue, 0);
+    const bestMonth = months.reduce((a, b) => b.revenue > a.revenue ? b : a, months[0]);
+    const el = document.getElementById('yearly-total');
+    if (el) el.textContent = 'إجمالي السنة: ' + fmt(totalRev) + ' ﷼';
+
+    const summary = document.getElementById('yearly-summary');
+    if (summary) summary.innerHTML = `
+      <div style="flex:1;min-width:140px;background:var(--green-bg);border-radius:10px;padding:10px 14px;">
+        <div style="font-size:11px;color:var(--t3);margin-bottom:2px;">أعلى شهر</div>
+        <div style="font-size:13px;font-weight:700;color:var(--green);">${bestMonth.label} — ${fmt(bestMonth.revenue)} ﷼</div>
+      </div>
+      <div style="flex:1;min-width:140px;background:var(--brand-m);border-radius:10px;padding:10px 14px;">
+        <div style="font-size:11px;color:var(--t3);margin-bottom:2px;">متوسط شهري</div>
+        <div style="font-size:13px;font-weight:700;color:var(--brand);">${fmt(Math.round(totalRev / 12))} ﷼</div>
+      </div>
+      <div style="flex:1;min-width:140px;background:var(--purple-bg);border-radius:10px;padding:10px 14px;">
+        <div style="font-size:11px;color:var(--t3);margin-bottom:2px;">إجمالي الحجوزات</div>
+        <div style="font-size:13px;font-weight:700;color:var(--purple);">${months.reduce((s,m)=>s+m.count,0)} حجز</div>
+      </div>`;
+
+    const canvas = document.getElementById('yearlyChart');
+    if (!canvas) return;
+    canvas.width = canvas.parentElement.clientWidth || 700;
+    canvas.height = 220;
+    if (yearlyChartInst) yearlyChartInst.destroy();
+    yearlyChartInst = new Chart(canvas.getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: months.map(m => m.label),
+        datasets: [
+          {
+            label: 'يومي',
+            data: months.map(m => m.daily),
+            backgroundColor: 'rgba(26,61,143,.75)',
+            borderRadius: 5,
+            stack: 'rev',
+          },
+          {
+            label: 'شهري',
+            data: months.map(m => m.annual),
+            backgroundColor: 'rgba(139,92,246,.75)',
+            borderRadius: 5,
+            stack: 'rev',
+          },
+        ]
+      },
+      options: {
+        responsive: false,
+        plugins: {
+          legend: { display: true, position: 'top', align: 'end', labels: { font: { family: 'Cairo', size: 11 }, boxWidth: 12, padding: 12 } },
+          tooltip: { rtl: true, bodyFont: { family: 'Cairo' }, callbacks: { label: ctx => ctx.dataset.label + ': ' + fmt(ctx.parsed.y) + ' ﷼' } }
+        },
+        scales: {
+          x: { stacked: true, ticks: { font: { family: 'Cairo', size: 10 }, maxRotation: 45 }, grid: { display: false } },
+          y: { stacked: true, beginAtZero: true, ticks: { font: { family: 'Cairo', size: 10 }, callback: v => fmt(v) }, grid: { color: 'rgba(0,0,0,.04)' } }
+        }
+      }
+    });
+  } catch(e) { /* silent */ }
 }
 
 function fmt(n) { return (n||0).toLocaleString('ar-SA'); }
