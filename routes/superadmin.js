@@ -58,6 +58,14 @@ router.post('/api/toggle', reqSA, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// API: public stats (for landing page counter)
+router.get('/api/public-stats', async (req, res) => {
+  try {
+    const total = await Property.countDocuments({ active: true });
+    res.json({ total });
+  } catch(e) { res.json({ total: 0 }); }
+});
+
 // API: stats summary
 router.get('/api/stats', reqSA, async (req, res) => {
   try {
