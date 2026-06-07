@@ -84,8 +84,12 @@ router.get('/login',(req,res)=>{ if(req.staff)return res.redirect('/staff/dashbo
 router.post('/login', staffLoginLimit, async (req,res) => {
   try {
     const S = require('../models/StaffUser');
+    const { logSecEvent } = require('../middleware/securityLog');
     const u = await S.findOne({ username:(req.body.username||'').trim(), active:true });
-    if (!u||!(await u.comparePassword(req.body.password))) return res.render('staff-login',{error:'اسم المستخدم أو كلمة المرور غير صحيحة'});
+    if (!u||!(await u.comparePassword(req.body.password))) {
+      logSecEvent('LOGIN_FAIL', req, { username: req.body.username, summary: `فشل دخول موظف: ${req.body.username}` });
+      return res.render('staff-login',{error:'اسم المستخدم أو كلمة المرور غير صحيحة'});
+    }
     const perms = u.permissions?.length ? [...new Set(u.permissions)] : DEFAULT_PERMS;
     let planExpiry = null;
     if (u.propertyId) {

@@ -5,7 +5,8 @@ const cookieParser = require('cookie-parser');
 const path = require('path');
 const { createToken, verifyToken } = require('./utils/auth');
 const { createRateLimiter } = require('./utils/rateLimit');
-const { securityHeaders, sanitizeBody } = require('./middleware/security');
+const { securityHeaders, sanitizeBody, noSQLGuard } = require('./middleware/security');
+const { logSecEvent, securityAuditInterceptor } = require('./middleware/securityLog');
 const AdminUser = require('./models/AdminUser');
 const AuditLog = require('./models/AuditLog');
 
@@ -77,6 +78,8 @@ app.use(securityHeaders);
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 app.use(sanitizeBody);
+app.use(noSQLGuard);
+app.use(securityAuditInterceptor);
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -177,9 +180,11 @@ app.post('/login', loginRateLimit, dbMiddleware, async (req, res) => {
   if (user) {
     const token = createToken({ username: user.username, name: user.name, role: user.role, avatar: user.avatar, allowed: user.allowed });
     res.cookie('fs_auth', token, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000, sameSite: 'lax', secure: process.env.NODE_ENV === 'production' });
+    logSecEvent('LOGIN_SUCCESS', req, { username, summary: `دخول ناجح (fallback): ${username}` });
     return res.redirect('/dashboard');
   }
 
+  logSecEvent('LOGIN_FAIL', req, { username, summary: `فشل تسجيل دخول: ${username}` });
   res.render('login', { error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
 });
 
