@@ -644,6 +644,27 @@ router.post('/api/reminders/checkout', reqStaff, async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── API: Manual WhatsApp send ────────────────────────────
+router.post('/api/whatsapp/send', reqStaff, async (req, res) => {
+  try {
+    const { phone, type, message, name, apt, building, checkIn, checkOut, total } = req.body;
+    if (!phone) return res.status(400).json({ error: 'رقم الجوال مطلوب' });
+    if (type === 'free') {
+      if (!message?.trim()) return res.status(400).json({ error: 'الرسالة فارغة' });
+      await WA.send(phone, message.trim());
+    } else if (type === 'booking_confirmed') {
+      await WA.sendBookingConfirmed(phone, name, apt, building || req.staff.building, checkIn, checkOut, total);
+    } else if (type === 'check_in') {
+      await WA.sendCheckIn(phone, name, building || req.staff.building, apt);
+    } else if (type === 'check_out') {
+      await WA.sendCheckOut(phone, name, apt);
+    } else {
+      return res.status(400).json({ error: 'نوع غير صحيح' });
+    }
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 // ── Property Settings ────────────────────────────────────
 router.get('/api/property', reqStaff, async (req, res) => {
   try {
