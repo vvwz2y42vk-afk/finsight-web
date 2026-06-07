@@ -1,18 +1,38 @@
 const express = require('express');
 const router  = express.Router();
-const { verifyToken } = require('../utils/auth');
 const WaMessage = require('../models/WaMessage');
 const WA = require('../utils/whatsapp');
 
 const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN || 'barez_verify_2024';
-const OWN_PHONE    = process.env.WHATSAPP_OWN_PHONE   || '966590561057'; // رقم بارز
+const OWN_PHONE    = process.env.WHATSAPP_OWN_PHONE   || '966590561057';
+const WA_PASSWORD  = process.env.WA_INBOX_PASSWORD    || 'barez2024';
+const WA_COOKIE    = 'fs_wa';
+const WA_COPTS     = { httpOnly: true, maxAge: 12 * 60 * 60 * 1000, sameSite: 'lax', secure: process.env.NODE_ENV === 'production' };
 
-// ── Auth middleware (admin or staff) ─────────────────────
+// ── Auth middleware (standalone — own cookie) ─────────────
 function reqAuth(req, res, next) {
-  req.authUser = verifyToken(req.cookies?.fs_auth) || verifyToken(req.cookies?.fs_staff) || null;
-  if (!req.authUser) return res.redirect('/staff/login');
-  next();
+  if (req.cookies?.[WA_COOKIE] === 'ok') return next();
+  res.redirect('/wa-login');
 }
+
+// ── Login page ────────────────────────────────────────────
+router.get('/wa-login', (req, res) => {
+  if (req.cookies?.[WA_COOKIE] === 'ok') return res.redirect('/wa-inbox');
+  res.render('wa-login', { error: null });
+});
+
+router.post('/wa-login', (req, res) => {
+  if (req.body.password === WA_PASSWORD) {
+    res.cookie(WA_COOKIE, 'ok', WA_COPTS);
+    return res.redirect('/wa-inbox');
+  }
+  res.render('wa-login', { error: 'كلمة المرور غير صحيحة' });
+});
+
+router.get('/wa-logout', (req, res) => {
+  res.clearCookie(WA_COOKIE);
+  res.redirect('/wa-login');
+});
 
 // ═══════════════════════════════════════════════════════
 //  WEBHOOK — Meta verification (GET)
