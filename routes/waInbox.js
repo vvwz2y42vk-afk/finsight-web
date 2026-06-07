@@ -46,39 +46,64 @@ router.get('/webhooks/whatsapp', (req, res) => {
 // ═══════════════════════════════════════════════════════
 //  WEBHOOK — receive messages (POST)
 // ═══════════════════════════════════════════════════════
-router.post('/webhooks/whatsapp', express.json(), async (req, res) => {
-  res.sendStatus(200); // always 200 fast
+router.post('/webhooks/whatsapp', async (req, res) => {
   try {
-    const entry = req.body?.entry?.[0];
+    const entry  = req.body?.entry?.[0];
     const change = entry?.changes?.[0]?.value;
-    if (!change) return;
+    if (!change) return res.sendStatus(200);
 
     const messages = change.messages || [];
-    const contacts = change.contacts || [];
+    console.log('[WA Webhook] payload received, messages:', messages.length, JSON.stringify(req.body).slice(0, 300));
 
     for (const msg of messages) {
-      const from = msg.from;
+      const from        = msg.from;
       const waMessageId = msg.id;
-      const sentAt = new Date(Number(msg.timestamp) * 1000);
-      let body = '';
-      let msgType = msg.type;
+      const sentAt      = new Date(Number(msg.timestamp) * 1000);
+      let body = '', msgType = msg.type;
 
-      if (msg.type === 'text')       body = msg.text?.body || '';
-      else if (msg.type === 'image') body = msg.image?.caption || '[صورة]';
+      if (msg.type === 'text')         body = msg.text?.body || '';
+      else if (msg.type === 'image')   body = msg.image?.caption || '[صورة]';
       else if (msg.type === 'document') body = msg.document?.filename || '[ملف]';
-      else if (msg.type === 'audio') body = '[تسجيل صوتي]';
-      else if (msg.type === 'video') body = '[فيديو]';
+      else if (msg.type === 'audio')   body = '[تسجيل صوتي]';
+      else if (msg.type === 'video')   body = '[فيديو]';
       else if (msg.type === 'sticker') body = '[ملصق]';
       else if (msg.type === 'location') body = '[موقع]';
       else body = `[${msg.type}]`;
 
-      await WaMessage.findOneAndUpdate(
-        { waMessageId },
-        { waMessageId, from, to: OWN_PHONE, body, direction: 'in', msgType, sentAt, read: false },
-        { upsert: true, new: true, setDefaultsOnInsert: true }
-      ).catch(() => {});
+      try {
+        await WaMessage.create({ waMessageId, from, to: OWN_PHONE, body, direction: 'in', msgType, sentAt, read: false });
+        console.log('[WA Webhook] saved message from', from);
+      } catch (saveErr) {
+        if (saveErr.code === 11000) {
+          console.log('[WA Webhook] duplicate message, skipped:', waMessageId);
+        } else {
+          console.error('[WA Webhook] save error:', saveErr.message);
+        }
+      }
     }
-  } catch (e) { console.error('[WA Webhook]', e.message); }
+  } catch (e) {
+    console.error('[WA Webhook] error:', e.message, JSON.stringify(req.body || {}).slice(0, 200));
+  }
+  res.sendStatus(200);
+});
+
+// ═══════════════════════════════════════════════════════
+//  API — subscribe app to WABA (run once after setup)
+// ═══════════════════════════════════════════════════════
+router.get('/api/wa/subscribe', reqAuth, async (req, res) => {
+  const WABA_ID = process.env.WHATSAPP_WABA_ID || '947360117882906';
+  const TOKEN   = process.env.WHATSAPP_TOKEN;
+  try {
+    const r = await fetch(`https://graph.facebook.com/v21.0/${WABA_ID}/subscribed_apps`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${TOKEN}` },
+    });
+    const data = await r.json();
+    console.log('[WA Subscribe]', JSON.stringify(data));
+    res.json({ ok: r.ok, status: r.status, data });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // ═══════════════════════════════════════════════════════
