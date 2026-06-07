@@ -136,9 +136,13 @@ app.get('/webhooks/whatsapp', (req, res) => {
 
 app.post('/webhooks/whatsapp', async (req, res) => {
   res.sendStatus(200); // respond immediately — never let Meta timeout
+  console.log('[WA] webhook hit:', JSON.stringify(req.body).slice(0, 400));
   try {
     const change = req.body?.entry?.[0]?.changes?.[0]?.value;
-    if (!change?.messages?.length) return;
+    if (!change?.messages?.length) {
+      console.log('[WA] no messages in payload, field:', change?.messaging_product || 'unknown');
+      return;
+    }
     await connectDB();
     for (const msg of change.messages) {
       const body =
