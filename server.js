@@ -123,50 +123,6 @@ function hostMiddleware(req, res, next) {
   next();
 }
 
-// ── WhatsApp Webhook (NO dbMiddleware — must respond 200 instantly) ──
-const WaMessage = require('./models/WaMessage');
-const WA_VERIFY  = process.env.WHATSAPP_VERIFY_TOKEN || 'barez_verify_2024';
-const WA_OWN     = process.env.WHATSAPP_OWN_PHONE   || '966590561057';
-
-app.get('/webhooks/whatsapp', (req, res) => {
-  const { 'hub.mode': mode, 'hub.verify_token': token, 'hub.challenge': challenge } = req.query;
-  if (mode === 'subscribe' && token === WA_VERIFY) return res.send(challenge);
-  res.sendStatus(403);
-});
-
-app.post('/webhooks/whatsapp', async (req, res) => {
-  res.sendStatus(200); // respond immediately — never let Meta timeout
-  console.log('[WA] webhook hit:', JSON.stringify(req.body).slice(0, 400));
-  try {
-    const change = req.body?.entry?.[0]?.changes?.[0]?.value;
-    if (!change?.messages?.length) {
-      console.log('[WA] no messages in payload, field:', change?.messaging_product || 'unknown');
-      return;
-    }
-    await connectDB();
-    for (const msg of change.messages) {
-      const body =
-        msg.type === 'text'     ? msg.text?.body || '' :
-        msg.type === 'image'    ? msg.image?.caption || '[صورة]' :
-        msg.type === 'document' ? msg.document?.filename || '[ملف]' :
-        msg.type === 'audio'    ? '[تسجيل صوتي]' :
-        msg.type === 'video'    ? '[فيديو]' :
-        msg.type === 'sticker'  ? '[ملصق]' :
-        msg.type === 'location' ? '[موقع]' : `[${msg.type}]`;
-      await WaMessage.create({
-        waMessageId: msg.id,
-        from: msg.from,
-        to: WA_OWN,
-        body,
-        direction: 'in',
-        msgType: msg.type,
-        sentAt: new Date(Number(msg.timestamp) * 1000),
-        read: false,
-      }).catch(e => { if (e.code !== 11000) console.error('[WA]', e.message); });
-    }
-  } catch(e) { console.error('[WA Webhook]', e.message); }
-});
-
 // ── Routes ───────────────────────────────────────────────
 app.use('/api', dbMiddleware, apiRateLimit, (req, res, next) => {
   req.user = verifyToken(req.cookies?.fs_auth);
@@ -176,10 +132,7 @@ app.use('/account', dbMiddleware, customerMiddleware, require('./routes/account'
 app.use('/host', dbMiddleware, hostMiddleware, require('./routes/host'));
 app.use('/staff', dbMiddleware, require('./routes/staff'));
 app.use('/superadmin', dbMiddleware, require('./routes/superadmin'));
-// WhatsApp Workspace (enterprise omnichannel — /ws/*)
-app.use('/', dbMiddleware, require('./routes/waWorkspace').router);
-// WhatsApp inbox & webhook (webhook is public, page requires auth)
-app.use('/', dbMiddleware, require('./routes/waInbox'));
+
 app.use('/', dbMiddleware, customerMiddleware, require('./routes/client'));
 app.use('/api', require('./routes/api'));
 
