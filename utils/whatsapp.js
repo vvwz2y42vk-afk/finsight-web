@@ -1,6 +1,6 @@
 const PHONE_ID = process.env.WHATSAPP_PHONE_ID;
 const TOKEN    = process.env.WHATSAPP_TOKEN;
-const API_URL  = `https://graph.facebook.com/v19.0/${PHONE_ID}/messages`;
+const API_URL  = `https://graph.facebook.com/v21.0/${PHONE_ID}/messages`;
 
 function formatPhone(phone) {
   const clean = (phone || '').replace(/\D/g, '');
@@ -42,7 +42,7 @@ async function sendTemplate(phone, templateName, params) {
       }),
     });
     const data = await res.json();
-    if (!res.ok) console.error('[WA] error:', templateName, JSON.stringify(data));
+    if (!res.ok) console.error('[WA] error:', templateName, 'to:', to, JSON.stringify(data));
     else console.log('[WA] sent:', templateName, '->', to);
   } catch(e) { console.error('[WA] fetch error:', e.message); }
 }
