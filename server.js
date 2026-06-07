@@ -5,6 +5,7 @@ const cookieParser = require('cookie-parser');
 const path = require('path');
 const { createToken, verifyToken } = require('./utils/auth');
 const { createRateLimiter } = require('./utils/rateLimit');
+const { securityHeaders, sanitizeBody } = require('./middleware/security');
 const AdminUser = require('./models/AdminUser');
 const AuditLog = require('./models/AuditLog');
 
@@ -72,8 +73,10 @@ const apiRateLimit = createRateLimiter({
 });
 
 // ── Middleware ───────────────────────────────────────────
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(securityHeaders);
+app.use(express.json({ limit: '2mb' }));
+app.use(express.urlencoded({ extended: true, limit: '2mb' }));
+app.use(sanitizeBody);
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -183,6 +186,19 @@ app.post('/login', loginRateLimit, dbMiddleware, async (req, res) => {
 app.get('/logout', (req, res) => {
   res.clearCookie('fs_auth');
   res.redirect('/login');
+});
+
+// ── Global error handler ─────────────────────────────────
+// Catches any unhandled error thrown or passed to next(err) in any route.
+// Prevents Express from leaking stack traces to the client in production.
+app.use((err, req, res, _next) => {
+  const status = err.status || err.statusCode || 500;
+  if (status >= 500) console.error('[Server Error]', err.message, err.stack?.split('\n')[1] || '');
+  if (res.headersSent) return;
+  if (req.accepts('json') || req.path.startsWith('/api')) {
+    return res.status(status).json({ error: process.env.NODE_ENV === 'production' ? 'حدث خطأ في الخادم' : err.message });
+  }
+  res.status(status).send(process.env.NODE_ENV === 'production' ? 'حدث خطأ في الخادم' : err.message);
 });
 
 // ── Start ────────────────────────────────────────────────
