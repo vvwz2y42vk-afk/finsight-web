@@ -162,4 +162,11 @@ router.post('/api/wa/send', reqAuth, async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── DEBUG: check DB (remove after fix) ───────────────────
+router.get('/api/wa/debug', reqAuth, async (req, res) => {
+  const count = await WaMessage.countDocuments();
+  const last5 = await WaMessage.find().sort({ createdAt: -1 }).limit(5).lean();
+  res.json({ count, last5 });
+});
+
 module.exports = router;
