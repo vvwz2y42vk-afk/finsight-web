@@ -34,58 +34,7 @@ router.get('/wa-logout', (req, res) => {
   res.redirect('/wa-login');
 });
 
-// ═══════════════════════════════════════════════════════
-//  WEBHOOK — Meta verification (GET)
-// ═══════════════════════════════════════════════════════
-router.get('/webhooks/whatsapp', (req, res) => {
-  const { 'hub.mode': mode, 'hub.verify_token': token, 'hub.challenge': challenge } = req.query;
-  if (mode === 'subscribe' && token === VERIFY_TOKEN) return res.send(challenge);
-  res.sendStatus(403);
-});
-
-// ═══════════════════════════════════════════════════════
-//  WEBHOOK — receive messages (POST)
-// ═══════════════════════════════════════════════════════
-router.post('/webhooks/whatsapp', async (req, res) => {
-  try {
-    const entry  = req.body?.entry?.[0];
-    const change = entry?.changes?.[0]?.value;
-    if (!change) return res.sendStatus(200);
-
-    const messages = change.messages || [];
-    console.log('[WA Webhook] payload received, messages:', messages.length, JSON.stringify(req.body).slice(0, 300));
-
-    for (const msg of messages) {
-      const from        = msg.from;
-      const waMessageId = msg.id;
-      const sentAt      = new Date(Number(msg.timestamp) * 1000);
-      let body = '', msgType = msg.type;
-
-      if (msg.type === 'text')         body = msg.text?.body || '';
-      else if (msg.type === 'image')   body = msg.image?.caption || '[صورة]';
-      else if (msg.type === 'document') body = msg.document?.filename || '[ملف]';
-      else if (msg.type === 'audio')   body = '[تسجيل صوتي]';
-      else if (msg.type === 'video')   body = '[فيديو]';
-      else if (msg.type === 'sticker') body = '[ملصق]';
-      else if (msg.type === 'location') body = '[موقع]';
-      else body = `[${msg.type}]`;
-
-      try {
-        await WaMessage.create({ waMessageId, from, to: OWN_PHONE, body, direction: 'in', msgType, sentAt, read: false });
-        console.log('[WA Webhook] saved message from', from);
-      } catch (saveErr) {
-        if (saveErr.code === 11000) {
-          console.log('[WA Webhook] duplicate message, skipped:', waMessageId);
-        } else {
-          console.error('[WA Webhook] save error:', saveErr.message);
-        }
-      }
-    }
-  } catch (e) {
-    console.error('[WA Webhook] error:', e.message, JSON.stringify(req.body || {}).slice(0, 200));
-  }
-  res.sendStatus(200);
-});
+// Webhook handled in server.js directly (outside dbMiddleware)
 
 // ═══════════════════════════════════════════════════════
 //  API — subscribe app to WABA (run once after setup)
