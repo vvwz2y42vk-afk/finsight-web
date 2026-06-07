@@ -187,11 +187,38 @@ router.post('/api/wa/send', reqAuth, async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-// ── DEBUG: check DB (remove after fix) ───────────────────
+// ── DEBUG: check DB + token status ───────────────────────
 router.get('/api/wa/debug', reqAuth, async (req, res) => {
   const count = await WaMessage.countDocuments();
   const last5 = await WaMessage.find().sort({ createdAt: -1 }).limit(5).lean();
-  res.json({ count, last5 });
+
+  // Check token validity
+  let tokenStatus = 'unknown';
+  try {
+    const TOKEN = process.env.WHATSAPP_TOKEN;
+    const r = await fetch(`https://graph.facebook.com/v21.0/me?access_token=${TOKEN}`);
+    const d = await r.json();
+    tokenStatus = r.ok ? `valid (${d.name || d.id})` : `EXPIRED/INVALID: ${d.error?.message}`;
+  } catch(e) { tokenStatus = 'fetch error: ' + e.message; }
+
+  res.json({ count, tokenStatus, last5 });
+});
+
+// ── DEBUG: inject test message ────────────────────────────
+router.get('/api/wa/test-msg', reqAuth, async (req, res) => {
+  try {
+    const msg = await WaMessage.create({
+      waMessageId: 'test_' + Date.now(),
+      from: '966500000000',
+      to: OWN_PHONE,
+      body: 'رسالة تجريبية — اختبار النظام',
+      direction: 'in',
+      msgType: 'text',
+      sentAt: new Date(),
+      read: false,
+    });
+    res.json({ ok: true, msg });
+  } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
 module.exports = router;
