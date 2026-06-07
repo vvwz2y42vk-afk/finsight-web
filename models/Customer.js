@@ -8,6 +8,7 @@ const customerSchema = new mongoose.Schema({
   email:       { type: String, trim: true },
   nationalId:  { type: String, trim: true },
   nationality: { type: String, default: 'سعودي' },
+  notes:       { type: String, default: '' },
 }, { timestamps: true });
 
 customerSchema.index({ createdAt: -1 });
