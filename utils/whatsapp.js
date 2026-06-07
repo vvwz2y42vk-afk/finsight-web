@@ -19,11 +19,11 @@ function param(text) {
 }
 
 async function sendTemplate(phone, templateName, params) {
-  if (!PHONE_ID || !TOKEN) return;
+  if (!PHONE_ID || !TOKEN) { console.warn('[WA] missing PHONE_ID or TOKEN'); return; }
   const to = formatPhone(phone);
-  if (!to || to.length < 10) return;
+  if (!to || to.length < 10) { console.warn('[WA] invalid phone:', phone); return; }
   try {
-    await fetch(API_URL, {
+    const res = await fetch(API_URL, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${TOKEN}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -41,7 +41,10 @@ async function sendTemplate(phone, templateName, params) {
         },
       }),
     });
-  } catch(e) { /* fire and forget */ }
+    const data = await res.json();
+    if (!res.ok) console.error('[WA] error:', templateName, JSON.stringify(data));
+    else console.log('[WA] sent:', templateName, '->', to);
+  } catch(e) { console.error('[WA] fetch error:', e.message); }
 }
 
 // للرسائل النصية العادية (داخل نافذة الـ 24 ساعة فقط)
