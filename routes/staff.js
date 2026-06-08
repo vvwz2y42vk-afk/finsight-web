@@ -204,6 +204,17 @@ router.get('/api/bookings', reqStaff, async (req,res) => {
   } catch(e){ res.status(500).json({error:e.message}); }
 });
 
+// Allowed status transitions — prevents arbitrary state manipulation
+const STATUS_TRANSITIONS = {
+  pending:           ['active','awaiting_payment','awaiting_checkin','cancelled'],
+  awaiting_payment:  ['pending','awaiting_checkin','cancelled'],
+  awaiting_checkin:  ['active','cancelled'],
+  active:            ['checkout'],
+  checkout:          [],
+  cancelled:         [],
+};
+const VALID_STATUSES = Object.keys(STATUS_TRANSITIONS);
+
 router.put('/api/bookings/:id/status', reqStaff, async (req,res) => {
   try {
     const B=require('../models/Booking'), L=require('../models/Listing'), AL=require('../models/ActivityLog');
@@ -212,7 +223,17 @@ router.put('/api/bookings/:id/status', reqStaff, async (req,res) => {
       : {_id:req.params.id, building:req.staff.building, propertyId:null};
     const bk = await B.findOne(statusFilter).lean();
     if(!bk) return res.status(404).json({error:'الحجز غير موجود'});
+
     const {status}=req.body, prev=bk.status;
+
+    // Validate target status is a known value
+    if(!VALID_STATUSES.includes(status))
+      return res.status(400).json({error:'حالة غير مدعومة: '+status});
+
+    // Validate the transition is allowed
+    if(status !== prev && !STATUS_TRANSITIONS[prev]?.includes(status))
+      return res.status(400).json({error:`لا يمكن الانتقال من "${prev}" إلى "${status}"`});
+
     await B.findByIdAndUpdate(bk._id,{status});
     if(bk.listing&&status!==prev){
       if(status==='awaiting_checkin'&&bk.bookingType==='daily'&&bk.checkIn&&bk.checkOut)
@@ -265,6 +286,16 @@ router.put('/api/bookings/:id/edit', reqStaff, async (req,res) => {
       nights = (parseInt(months)||1)*30;
     }
 
+    // If status change requested via edit, enforce transition matrix too
+    let safeStatus = bk.status;
+    if(status && status !== bk.status) {
+      if(!VALID_STATUSES.includes(status))
+        return res.status(400).json({error:'حالة غير مدعومة: '+status});
+      if(!STATUS_TRANSITIONS[bk.status]?.includes(status))
+        return res.status(400).json({error:`لا يمكن الانتقال من "${bk.status}" إلى "${status}"`});
+      safeStatus = status;
+    }
+
     await B.findByIdAndUpdate(bk._id, {
       name: name||bk.name, phone: phone||bk.phone,
       checkIn: checkIn?new Date(checkIn):bk.checkIn,
@@ -272,7 +303,7 @@ router.put('/api/bookings/:id/edit', reqStaff, async (req,res) => {
       nights, totalPrice: parseFloat(totalPrice)||bk.totalPrice,
       paidAmount: parseFloat(paidAmount)||0,
       idType: idType||bk.idType, idNumber: idNumber||bk.idNumber,
-      status: status||bk.status, notes: notes !== undefined ? notes : bk.notes,
+      status: safeStatus, notes: notes !== undefined ? notes : bk.notes,
     });
     AL.create({building:req.staff.building,staffName:req.staff.name,action:'status_change',apt:bk.apt,guestName:name||bk.name,bookingId:bk._id,details:'تعديل الحجز'}).catch(()=>{});
     res.json({success:true});

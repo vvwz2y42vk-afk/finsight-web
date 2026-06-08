@@ -1,15 +1,34 @@
 const mongoose = require('mongoose');
 
 const schema = new mongoose.Schema({
-  user:     { type: String, required: true },
-  role:     { type: String },
-  action:   { type: String, required: true, enum: ['create', 'update', 'delete', 'login', 'approve', 'reject'] },
-  model:    { type: String, required: true },
-  recordId: { type: String },
-  summary:  { type: String },
-  changes:  { type: mongoose.Schema.Types.Mixed },
-  ip:       { type: String },
+  user:     { type: String, required: true, immutable: true },
+  role:     { type: String,                 immutable: true },
+  action:   { type: String, required: true, immutable: true, enum: ['create', 'update', 'delete', 'login', 'approve', 'reject'] },
+  model:    { type: String, required: true, immutable: true },
+  recordId: { type: String,                 immutable: true },
+  summary:  { type: String,                 immutable: true },
+  changes:  { type: mongoose.Schema.Types.Mixed, immutable: true },
+  ip:       { type: String,                 immutable: true },
 }, { timestamps: true });
+
+// ── Immutability guards ──────────────────────────────────
+// Audit log records must never be modified or deleted after creation.
+schema.pre('save', function (next) {
+  if (!this.isNew) return next(new Error('AuditLog: تعديل السجلات محظور'));
+  next();
+});
+
+['findOneAndUpdate', 'updateOne', 'updateMany', 'findByIdAndUpdate', 'replaceOne'].forEach(op => {
+  schema.pre(op, function (next) {
+    next(new Error('AuditLog: تعديل السجلات محظور'));
+  });
+});
+
+['findOneAndDelete', 'deleteOne', 'deleteMany', 'findByIdAndDelete'].forEach(op => {
+  schema.pre(op, function (next) {
+    next(new Error('AuditLog: حذف السجلات محظور'));
+  });
+});
 
 schema.index({ user: 1 });
 schema.index({ model: 1, action: 1 });

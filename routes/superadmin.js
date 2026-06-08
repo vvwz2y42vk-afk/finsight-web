@@ -5,8 +5,44 @@ const { createToken, verifyToken } = require('../utils/auth');
 const { createRateLimiter }        = require('../utils/rateLimit');
 const Property  = require('../models/Property');
 const StaffUser = require('../models/StaffUser');
+const AuditLog  = require('../models/AuditLog');
 
-const saLoginLimit = createRateLimiter({ windowMs: 15 * 60 * 1000, max: 5, message: 'محاولات كثيرة، انتظر 15 دقيقة' });
+const saLoginLimit      = createRateLimiter({ windowMs: 15 * 60 * 1000, max: 5,  message: 'محاولات كثيرة، انتظر 15 دقيقة' });
+const saDestructiveLimit = createRateLimiter({ windowMs: 60 * 1000,     max: 20, message: 'عمليات كثيرة جداً، انتظر دقيقة' });
+
+// ── Security helpers ─────────────────────────────────────────────────
+// Masks last octet of IPv4 or last segment of IPv6 before sending to client
+function maskIP(ip) {
+  if (!ip) return '—';
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(ip)) return ip.replace(/\.\d+$/, '.***');
+  if (ip.startsWith('::ffff:')) {
+    const v4 = ip.slice(7);
+    if (/^\d{1,3}(\.\d{1,3}){3}$/.test(v4)) return '::ffff:' + v4.replace(/\.\d+$/, '.***');
+  }
+  return ip.replace(/:[0-9a-fA-F]+$/, ':***');
+}
+
+// Redacts any hint of password values from log summaries before sending to client
+function maskSummary(s) {
+  if (!s) return '';
+  return s
+    .replace(/(password|كلمة المرور|كلمة_المرور)\s*[:=\s]\s*\S+/gi, '$1: ***')
+    .replace(/\b([A-Za-z0-9@#$%^&*]{8,})\b(?=.*(?:password|مرور))/gi, '***');
+}
+
+// Fires audit log entry without blocking the response
+function audit(req, action, model, recordId, summary, extra = {}) {
+  AuditLog.create({
+    user:     'superadmin',
+    role:     'superadmin',
+    action,
+    model,
+    recordId: String(recordId || ''),
+    summary,
+    ip:       req.ip || req.headers['x-forwarded-for'] || '',
+    ...extra,
+  }).catch(() => {});
+}
 
 const COOKIE  = 'sa_token';
 const IS_PROD = process.env.NODE_ENV === 'production';
@@ -25,6 +61,19 @@ function reqSA(req, res, next)  {
 }
 function reqSAJson(req, res, next) {
   if (!req.sa || req.sa.role !== 'superadmin') return res.status(401).json({ error: 'غير مصرح' });
+  // CSRF defense-in-depth: for state-changing requests, verify Origin matches host
+  if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method)) {
+    const origin = req.headers.origin;
+    const host   = req.headers.host;
+    if (origin && host) {
+      try {
+        const originHost = new URL(origin).host;
+        if (originHost !== host) {
+          return res.status(403).json({ error: 'مصدر الطلب غير مصرح (CSRF)' });
+        }
+      } catch { /* invalid Origin header — block it */ return res.status(403).json({ error: 'رأس Origin غير صحيح' }); }
+    }
+  }
   next();
 }
 
@@ -110,7 +159,7 @@ router.get('/api/properties', reqSAJson, async (req, res) => {
 });
 
 // ── API: Create property ─────────────────────────────────────────────
-router.post('/api/properties', reqSAJson, async (req, res) => {
+router.post('/api/properties', reqSAJson, saDestructiveLimit, async (req, res) => {
   try {
     const { name, type, city, phone, adminEmail, plan, days } = req.body;
     if (!name?.trim()) return res.status(400).json({ error: 'اسم المنشأة مطلوب' });
@@ -124,24 +173,26 @@ router.post('/api/properties', reqSAJson, async (req, res) => {
       adminEmail: adminEmail?.trim() || '',
       plan: plan || 'trial', planExpiry: expiry, active: true,
     });
+    audit(req, 'create', 'Property', prop._id, `إنشاء منشأة: ${prop.name}`);
     res.json({ success: true, property: prop });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // ── API: Update property ─────────────────────────────────────────────
-router.put('/api/properties/:id', reqSAJson, async (req, res) => {
+router.put('/api/properties/:id', reqSAJson, saDestructiveLimit, async (req, res) => {
   try {
     const allowed = ['name', 'type', 'city', 'phone', 'adminEmail', 'plan', 'planExpiry', 'active'];
     const updates = {};
     allowed.forEach(k => { if (req.body[k] !== undefined) updates[k] = req.body[k]; });
     const prop = await Property.findByIdAndUpdate(req.params.id, updates, { new: true });
     if (!prop) return res.status(404).json({ error: 'المنشأة غير موجودة' });
+    audit(req, 'update', 'Property', prop._id, `تعديل منشأة: ${prop.name}`);
     res.json({ success: true, property: prop });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // ── API: Extend plan ─────────────────────────────────────────────────
-router.post('/api/extend', reqSAJson, async (req, res) => {
+router.post('/api/extend', reqSAJson, saDestructiveLimit, async (req, res) => {
   try {
     const { id, days, plan } = req.body;
     const prop = await Property.findById(id);
@@ -152,28 +203,31 @@ router.post('/api/extend', reqSAJson, async (req, res) => {
     if (plan) prop.plan = plan;
     prop.active = true;
     await prop.save();
+    audit(req, 'update', 'Property', prop._id, `تمديد اشتراك: ${prop.name} — ${days} يوم — حتى ${base.toLocaleDateString('ar-SA')}`);
     res.json({ success: true, newExpiry: prop.planExpiry });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // ── API: Toggle active ───────────────────────────────────────────────
-router.post('/api/toggle', reqSAJson, async (req, res) => {
+router.post('/api/toggle', reqSAJson, saDestructiveLimit, async (req, res) => {
   try {
     const prop = await Property.findById(req.body.id);
     if (!prop) return res.status(404).json({ error: 'منشأة غير موجودة' });
     prop.active = !prop.active;
     await prop.save();
+    audit(req, 'update', 'Property', prop._id, `${prop.active ? 'تفعيل' : 'إيقاف'} منشأة: ${prop.name}`);
     res.json({ success: true, active: prop.active });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // ── API: Delete property ─────────────────────────────────────────────
-router.delete('/api/properties/:id', reqSAJson, async (req, res) => {
+router.delete('/api/properties/:id', reqSAJson, saDestructiveLimit, async (req, res) => {
   try {
     const prop = await Property.findByIdAndDelete(req.params.id);
     if (!prop) return res.status(404).json({ error: 'المنشأة غير موجودة' });
-    // remove all staff linked to this property
+    const staffDeleted = await StaffUser.countDocuments({ propertyId: req.params.id });
     await StaffUser.deleteMany({ propertyId: req.params.id });
+    audit(req, 'delete', 'Property', req.params.id, `حذف منشأة: ${prop.name} — ${staffDeleted} موظف`);
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -188,7 +242,7 @@ router.get('/api/properties/:id/staff', reqSAJson, async (req, res) => {
 });
 
 // ── API: Create staff for property ───────────────────────────────────
-router.post('/api/properties/:id/staff', reqSAJson, async (req, res) => {
+router.post('/api/properties/:id/staff', reqSAJson, saDestructiveLimit, async (req, res) => {
   try {
     const prop = await Property.findById(req.params.id).lean();
     if (!prop) return res.status(404).json({ error: 'المنشأة غير موجودة' });
@@ -206,31 +260,34 @@ router.post('/api/properties/:id/staff', reqSAJson, async (req, res) => {
       building, role: role || 'receptionist',
       propertyId: prop._id, active: true,
     });
+    audit(req, 'create', 'StaffUser', staff._id, `إضافة موظف: ${staff.name} (${staff.username}) — ${prop.name}`);
     res.json({ success: true, staff: { ...staff.toObject(), password: undefined } });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // ── API: Toggle staff active ─────────────────────────────────────────
-router.post('/api/staff/:id/toggle', reqSAJson, async (req, res) => {
+router.post('/api/staff/:id/toggle', reqSAJson, saDestructiveLimit, async (req, res) => {
   try {
     const s = await StaffUser.findById(req.params.id);
     if (!s) return res.status(404).json({ error: 'الموظف غير موجود' });
     s.active = !s.active;
     await s.save();
+    audit(req, 'update', 'StaffUser', s._id, `${s.active ? 'تفعيل' : 'إيقاف'} موظف: ${s.name} (${s.username})`);
     res.json({ success: true, active: s.active });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // ── API: Delete staff ────────────────────────────────────────────────
-router.delete('/api/staff/:id', reqSAJson, async (req, res) => {
+router.delete('/api/staff/:id', reqSAJson, saDestructiveLimit, async (req, res) => {
   try {
-    await StaffUser.findByIdAndDelete(req.params.id);
+    const s = await StaffUser.findByIdAndDelete(req.params.id);
+    if (s) audit(req, 'delete', 'StaffUser', req.params.id, `حذف موظف: ${s.name} (${s.username})`);
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // ── API: Reset staff password ────────────────────────────────────────
-router.post('/api/staff/:id/reset-password', reqSAJson, async (req, res) => {
+router.post('/api/staff/:id/reset-password', reqSAJson, saDestructiveLimit, async (req, res) => {
   try {
     const { password } = req.body;
     if (!password || password.length < 8) return res.status(400).json({ error: 'كلمة المرور 8 أحرف على الأقل' });
@@ -238,6 +295,8 @@ router.post('/api/staff/:id/reset-password', reqSAJson, async (req, res) => {
     if (!s) return res.status(404).json({ error: 'الموظف غير موجود' });
     s.password = password;
     await s.save();
+    // Log the reset action WITHOUT logging the new password value
+    audit(req, 'update', 'StaffUser', s._id, `إعادة تعيين كلمة مرور: ${s.name} (${s.username})`);
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -255,10 +314,17 @@ router.get('/api/activity', reqSAJson, async (req, res) => {
     if (req.query.user)   filter.user   = { $regex: req.query.user, $options: 'i' };
     if (req.query.model)  filter.model  = req.query.model;
 
-    const [logs, total] = await Promise.all([
+    const [rawLogs, total] = await Promise.all([
       AuditLog.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
       AuditLog.countDocuments(filter),
     ]);
+    // Mask sensitive fields before sending to client
+    const logs = rawLogs.map(l => ({
+      ...l,
+      ip:      maskIP(l.ip),
+      summary: maskSummary(l.summary),
+      changes: undefined,   // never expose raw change diffs to the browser
+    }));
     res.json({ logs, total, page, pages: Math.ceil(total / limit) });
   } catch (e) { res.json({ logs: [], total: 0, page: 1, pages: 1 }); }
 });
