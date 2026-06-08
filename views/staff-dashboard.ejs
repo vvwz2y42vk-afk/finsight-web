@@ -110,8 +110,6 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
 .tb-info-name{font-size:13px;font-weight:600;color:var(--t2);}
 .tb-info-role{font-size:11px;color:var(--t4);margin-top:1px;}
 .content{padding:28px;flex:1;}
-.tab-section{display:none;}.tab-section.active{display:block;}
-
 /* ══ KPI Cards ══ */
 .kpi-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;margin-bottom:28px;}
 .kpi-c{
@@ -261,7 +259,60 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
 .occ-stat{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:500;}
 
 /* ══ Toast ══ */
-#toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:rgba(15,23,42,.92);backdrop-filter:blur(12px);color:#fff;padding:12px 24px;border-radius:12px;font-size:13px;font-weight:600;opacity:0;transition:opacity .3s,transform .3s;z-index:9999;pointer-events:none;box-shadow:0 8px 28px rgba(0,0,0,.3);letter-spacing:.01em;border:1px solid rgba(255,255,255,.08);}
+#toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(8px);background:rgba(15,23,42,.93);backdrop-filter:blur(16px);color:#fff;padding:13px 26px;border-radius:14px;font-size:13px;font-weight:600;opacity:0;transition:opacity .28s,transform .28s cubic-bezier(.34,1.56,.64,1);z-index:9999;pointer-events:none;box-shadow:0 12px 32px rgba(0,0,0,.28);letter-spacing:.01em;border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:8px;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+#toast.toast-success{background:linear-gradient(135deg,rgba(4,120,87,.95),rgba(5,150,105,.95));border-color:rgba(52,211,153,.3);}
+#toast.toast-error{background:linear-gradient(135deg,rgba(185,28,28,.95),rgba(220,38,38,.95));border-color:rgba(252,165,165,.3);}
+
+/* ══ Success Overlay ══ */
+#successOverlay{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;pointer-events:none;}
+.success-burst{
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+  background:rgba(255,255,255,.96);backdrop-filter:blur(20px);
+  border-radius:24px;padding:28px 40px;
+  box-shadow:0 24px 60px rgba(4,120,87,.2), 0 0 0 1px rgba(4,120,87,.15);
+  transform:scale(.7);opacity:0;
+  transition:all .3s cubic-bezier(.34,1.56,.64,1);
+}
+.success-burst.show{transform:scale(1);opacity:1;}
+.success-burst svg{filter:drop-shadow(0 4px 12px rgba(4,120,87,.4));}
+.success-burst span{font-size:14px;font-weight:700;color:#047857;}
+
+/* ══ Smart Form Validation ══ */
+@keyframes shake{
+  0%,100%{transform:translateX(0);}
+  15%{transform:translateX(-7px);}
+  30%{transform:translateX(6px);}
+  45%{transform:translateX(-5px);}
+  60%{transform:translateX(4px);}
+  75%{transform:translateX(-3px);}
+  90%{transform:translateX(2px);}
+}
+@keyframes fieldGlow{
+  0%,100%{box-shadow:0 0 0 3px rgba(220,38,38,.08);}
+  50%{box-shadow:0 0 0 5px rgba(220,38,38,.14);}
+}
+.f-req-star{color:#EF4444;font-size:14px;margin-right:2px;line-height:1;}
+.field-wrap{position:relative;}
+.field-hint{font-size:11px;font-weight:600;padding:4px 0 0 2px;min-height:18px;transition:all .2s;}
+.field-hint.err{color:#EF4444;}
+.field-hint.ok {color:#059669;}
+
+/* Valid state */
+.f-valid{border-color:#10B981 !important;background:rgba(16,185,129,.03) !important;box-shadow:0 0 0 3px rgba(16,185,129,.1) !important;}
+/* Error state */
+.f-error{border-color:#EF4444 !important;background:rgba(239,68,68,.03) !important;animation:shake .45s ease, fieldGlow 1.2s ease 2 !important;}
+/* Idle required */
+.f-idle{border-color:#E2E8F0 !important;}
+
+/* ══ Tab Transition ══ */
+.tab-section{display:none;}
+.tab-section.active{display:block;animation:tabFadeIn .22s ease both;}
+@keyframes tabFadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+/* ══ Modal Animate ══ */
+@keyframes modalIn{from{opacity:0;transform:scale(.94) translateY(12px);}to{opacity:1;transform:scale(1) translateY(0);}}
+.overlay .modal,.overlay>div{animation:modalIn .25s cubic-bezier(.34,1.2,.64,1) both;}
 
 /* ══ Vouchers ══ */
 .vou-cards{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:28px;}
@@ -1081,20 +1132,23 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
     <div class="mhd"><div class="mhd-title">➕ حجز جديد</div><button class="mclose" onclick="closeNewBkModal()">×</button></div>
     <div class="mbody" style="max-height:80vh;overflow-y:auto;">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        <div style="grid-column:1/-1;">
-          <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">الشقة *</label>
-          <select id="nb-apt" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;" onchange="updateNbPrice()"></select>
+        <div class="field-wrap" id="fw-apt" style="grid-column:1/-1;">
+          <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;"><span class="f-req-star">*</span> الشقة</label>
+          <select id="nb-apt" class="f-idle" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;" onchange="updateNbPrice();validateField('nb-apt','fw-apt','fh-apt','اختر الشقة')"></select>
+          <div class="field-hint" id="fh-apt"></div>
         </div>
-        <div style="grid-column:1/-1;">
-          <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">الاسم الكامل *</label>
-          <input id="nb-name" type="text" placeholder="اسم النزيل" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;">
+        <div class="field-wrap" id="fw-name" style="grid-column:1/-1;">
+          <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;"><span class="f-req-star">*</span> الاسم الكامل</label>
+          <input id="nb-name" type="text" placeholder="اسم النزيل" class="f-idle" oninput="validateField('nb-name','fw-name','fh-name','أدخل اسم النزيل')" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;">
+          <div class="field-hint" id="fh-name"></div>
         </div>
-        <div>
-          <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">رقم الجوال *</label>
+        <div class="field-wrap" id="fw-phone">
+          <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;"><span class="f-req-star">*</span> رقم الجوال</label>
           <div style="position:relative;">
-            <input id="nb-phone" type="tel" inputmode="numeric" maxlength="10" placeholder="05xxxxxxxx" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,10);onPhoneInput(this.value)" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;">
+            <input id="nb-phone" type="tel" inputmode="numeric" maxlength="10" placeholder="05xxxxxxxx" class="f-idle" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,10);onPhoneInput(this.value);validatePhone()" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;">
             <span id="nb-guest-badge" style="display:none;position:absolute;left:8px;top:50%;transform:translateY(-50%);background:#047857;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;">ضيف سابق ✓</span>
           </div>
+          <div class="field-hint" id="fh-phone"></div>
         </div>
         <div>
           <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">نوع الحجز *</label>
@@ -1103,21 +1157,24 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
             <option value="annual">شهري</option>
           </select>
         </div>
-        <div>
-          <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">تاريخ الدخول *</label>
-          <input id="nb-checkin" type="date" onchange="calcNbTotal()" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;">
+        <div class="field-wrap" id="fw-checkin">
+          <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;"><span class="f-req-star">*</span> تاريخ الدخول</label>
+          <input id="nb-checkin" type="date" class="f-idle" onchange="calcNbTotal();validateField('nb-checkin','fw-checkin','fh-checkin','اختر تاريخ الدخول')" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;">
+          <div class="field-hint" id="fh-checkin"></div>
         </div>
-        <div id="nb-checkout-grp">
-          <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">تاريخ الخروج *</label>
-          <input id="nb-checkout" type="date" onchange="calcNbTotal()" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;">
+        <div class="field-wrap" id="nb-checkout-grp">
+          <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;"><span class="f-req-star">*</span> تاريخ الخروج</label>
+          <input id="nb-checkout" type="date" class="f-idle" onchange="calcNbTotal();validateField('nb-checkout','nb-checkout-grp','fh-checkout','اختر تاريخ الخروج')" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;">
+          <div class="field-hint" id="fh-checkout"></div>
         </div>
         <div id="nb-months-grp" style="display:none;">
           <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">عدد الأشهر *</label>
           <input id="nb-months" type="number" value="1" min="1" onchange="calcNbTotal()" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;">
         </div>
-        <div>
-          <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">السعر (ريال) *</label>
-          <input id="nb-price" type="number" placeholder="0" onchange="calcNbTotal()" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;">
+        <div class="field-wrap" id="fw-price">
+          <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;"><span class="f-req-star">*</span> السعر (ريال)</label>
+          <input id="nb-price" type="number" placeholder="0" class="f-idle" oninput="calcNbTotal();validateField('nb-price','fw-price','fh-price','أدخل السعر')" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;">
+          <div class="field-hint" id="fh-price"></div>
         </div>
         <div>
           <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">الإجمالي</label>
@@ -1165,6 +1222,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
 </div>
 
 <div id="toast"></div>
+<div id="successOverlay"><div class="success-burst" id="successBurst"></div></div>
 
 <!-- مودال تعديل بيانات الشقة -->
 <div id="roomInfoModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:900;align-items:center;justify-content:center;">
@@ -1195,7 +1253,39 @@ let weeklyChartInst=null, donutChartInst=null, hkDonutInst=null;
 let hkCurrentApt=null;
 
 // ── Utils ────────────────────────────────────────────────
-function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.style.opacity='1'; setTimeout(()=>t.style.opacity='0',2500); }
+function toast(msg, type='info'){
+  const t=document.getElementById('toast');
+  t.className='show';
+  if(type==='success') t.classList.add('toast-success');
+  if(type==='error')   t.classList.add('toast-error');
+  t.innerHTML=msg;
+  clearTimeout(t._tmr);
+  t._tmr=setTimeout(()=>t.classList.remove('show','toast-success','toast-error'),2800);
+}
+function setFieldState(inputId,wrapId,hintId,state,msg=''){
+  const inp=document.getElementById(inputId);
+  const hint=document.getElementById(hintId);
+  if(!inp) return;
+  inp.classList.remove('f-idle','f-valid','f-error');
+  inp.classList.add(state==='valid'?'f-valid':state==='error'?'f-error':'f-idle');
+  if(hint){hint.textContent=msg;hint.className='field-hint '+(state==='error'?'err':state==='valid'?'ok':'');}
+}
+function shakeField(inputId,wrapId,hintId,errMsg){
+  const inp=document.getElementById(inputId);
+  if(inp){inp.classList.remove('f-error');void inp.offsetWidth;inp.classList.add('f-error');}
+  setFieldState(inputId,wrapId,hintId,'error',errMsg);
+}
+function validateField(inputId,wrapId,hintId,errMsg){
+  const el=document.getElementById(inputId); if(!el) return;
+  const val=el.tagName==='SELECT'?el.value:el.value.trim();
+  setFieldState(inputId,wrapId,hintId,val?'valid':'idle','');
+}
+function validatePhone(){
+  const v=document.getElementById('nb-phone').value;
+  if(v.length===10&&/^\d{10}$/.test(v)) setFieldState('nb-phone','fw-phone','fh-phone','valid','');
+  else if(v.length===0) setFieldState('nb-phone','fw-phone','fh-phone','idle','');
+  else setFieldState('nb-phone','fw-phone','fh-phone','idle','');
+}
 
 function animateNum(el, target, suffix=''){
   if(!el||isNaN(target)) return;
@@ -1221,7 +1311,8 @@ function statusBadge(s){
 function goTab(id, el){
   document.querySelectorAll('.tab-section').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.sn').forEach(n=>n.classList.remove('active'));
-  document.getElementById('tab-'+id).classList.add('active');
+  const tab=document.getElementById('tab-'+id);
+  tab.classList.add('active');
   el.classList.add('active');
   const labels={dashboard:'لوحة المعلومات',apartments:'الشقق والتسكين',bookings:'الحجوزات',customers:'العملاء',housekeeping:'خدمة الغرف',activity:'سجل الحركات',vouchers:'السندات والفواتير',reports:'التقارير والإحصاءات',calendar:'التقويم الشهري',guests:'قاعدة الضيوف'};
   document.getElementById('tbTitle').innerHTML=`${esc(BUILDING)} — <span>${labels[id]||id}</span>`;
@@ -1810,8 +1901,8 @@ async function cancelBk(id){
   try{
     const r=await fetch('/staff/api/bookings/'+id+'/status',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'cancelled'})});
     const d=await r.json();
-    if(d.success){ toast('🗑️ تم إلغاء الحجز'); closeBkModal(); loadApartments(); loadStats(); loadBookings(); }
-    else toast('❌ '+d.error);
+    if(d.success){ toast('🗑️ تم إلغاء الحجز','success'); closeBkModal(); loadApartments(); loadStats(); loadBookings(); }
+    else toast('❌ '+d.error,'error');
   }catch(e){ toast('❌ حدث خطأ'); }
 }
 
@@ -1819,8 +1910,8 @@ async function changeStatus(id,status){
   try{
     const r=await fetch('/staff/api/bookings/'+id+'/status',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({status})});
     const d=await r.json();
-    if(d.success){ toast(status==='active'?'✅ تم تسجيل الدخول':'🚪 تم تسجيل الخروج'); closeBkModal(); loadApartments(); loadStats(); }
-    else toast('❌ '+d.error);
+    if(d.success){ toast(status==='active'?'✅ تم تسجيل الدخول':'🚪 تم تسجيل الخروج','success'); closeBkModal(); loadApartments(); loadStats(); }
+    else toast('❌ '+d.error,'error');
   }catch(e){ toast('❌ حدث خطأ'); }
 }
 
@@ -2062,6 +2153,14 @@ function closeNewBkModal(){
   editBkId=null;
   document.getElementById('nb-apt').disabled=false;
   document.querySelector('#newBkModal .mhd-title').textContent='➕ حجز جديد';
+  ['nb-apt','nb-name','nb-phone','nb-checkin','nb-checkout','nb-price'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){el.classList.remove('f-valid','f-error');el.classList.add('f-idle');}
+  });
+  ['fh-apt','fh-name','fh-phone','fh-checkin','fh-checkout','fh-price'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){el.textContent='';el.className='field-hint';}
+  });
 }
 
 function toggleNbType(){
@@ -2119,13 +2218,15 @@ async function submitNewBk(){
   const status=document.getElementById('nb-status').value;
   const notes=document.getElementById('nb-notes').value.trim();
   const errEl=document.getElementById('nb-err');
-  if(!apt||!name||!phone||!checkin||(type==='daily'&&!checkout)||!price){
-    errEl.textContent='يرجى تعبئة جميع الحقول المطلوبة'; errEl.style.display='block'; return;
-  }
-  if(!/^\d{10}$/.test(phone)){
-    errEl.textContent='رقم الجوال يجب أن يتكون من 10 أرقام'; errEl.style.display='block';
-    document.getElementById('nb-phone').focus(); return;
-  }
+  errEl.style.display='none';
+  let valid=true;
+  if(!apt)  { shakeField('nb-apt','fw-apt','fh-apt','اختر الشقة'); valid=false; }
+  if(!name) { shakeField('nb-name','fw-name','fh-name','أدخل اسم النزيل الكامل'); valid=false; }
+  if(!phone||!/^\d{10}$/.test(phone)){ shakeField('nb-phone','fw-phone','fh-phone','رقم جوال صحيح مطلوب (10 أرقام)'); valid=false; }
+  if(!checkin){ shakeField('nb-checkin','fw-checkin','fh-checkin','اختر تاريخ الدخول'); valid=false; }
+  if(type==='daily'&&!checkout){ shakeField('nb-checkout','nb-checkout-grp','fh-checkout','اختر تاريخ الخروج'); valid=false; }
+  if(!price){ shakeField('nb-price','fw-price','fh-price','أدخل سعر الإيجار'); valid=false; }
+  if(!valid) return;
   try{
     const body={apt,name,phone,bookingType:type,checkIn:checkin,checkOut:checkout,months,pricePerUnit:price,totalPrice:total,paidAmount:paid,idType,idNumber,status,notes};
     const url=editBkId?`/staff/api/bookings/${editBkId}/edit`:'/staff/api/bookings/new';
@@ -2134,7 +2235,7 @@ async function submitNewBk(){
     const d=await r.json();
     if(!r.ok){errEl.textContent=d.error||'حدث خطأ';errEl.style.display='block';return;}
     closeNewBkModal();
-    toast(editBkId?'✏️ تم تعديل الحجز':'✅ تم إضافة الحجز بنجاح');
+    toast(editBkId?'✏️ تم تعديل الحجز':'✅ تم إضافة الحجز بنجاح','success');
     loadApartments(); loadStats(); loadBookings();
   }catch(e){errEl.textContent='حدث خطأ';errEl.style.display='block';}
 }
@@ -2259,7 +2360,7 @@ async function submitVoucher(){
     const d=await r.json();
     if(!r.ok){errEl.textContent=d.error||'حدث خطأ';errEl.style.display='block';return;}
     closeVouModal();
-    toast('✅ تم الحفظ — رقم الوثيقة: '+d.number);
+    toast('✅ تم الحفظ — رقم الوثيقة: '+d.number,'success');
     loadVouList(vouModalType);
   }catch(e){errEl.textContent='حدث خطأ';errEl.style.display='block';}
 }
@@ -2777,7 +2878,7 @@ async function savePropSettings() {
     if (!r.ok) { toast('❌ ' + (d.error||'حدث خطأ')); return; }
     propSettings.vatRate = vatVal;
     propSettings.contractTerms = termsVal;
-    toast('✅ تم حفظ إعدادات المنشأة');
+    toast('✅ تم حفظ إعدادات المنشأة','success');
   } catch(e) { toast('❌ حدث خطأ'); }
 }
 
@@ -2843,7 +2944,7 @@ async function saveRoomPrices() {
     if (!r.ok) { toast('❌ ' + (d.error||'حدث خطأ')); return; }
     apts.forEach(apt => { if (!roomInfoMap[apt]) roomInfoMap[apt]={}; Object.assign(roomInfoMap[apt], roomPriceEdits[apt]); });
     roomPriceEdits = {};
-    toast('✅ تم حفظ الأسعار');
+    toast('✅ تم حفظ الأسعار','success');
   } catch(e) { toast('❌ حدث خطأ'); }
 }
 
