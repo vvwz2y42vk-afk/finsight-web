@@ -297,6 +297,54 @@ tbody td{padding:11px 12px;font-size:12px;vertical-align:middle;}
 .audit-login{background:#EDE9FE;color:#5B21B6;}
 .audit-approve{background:#DCFCE7;color:#166534;}
 .audit-reject{background:#FEE2E2;color:#991B1B;}
+
+/* ═══════════════════════════════════════════════════
+   BAREZ PRO — Visual Overhaul v3 (unmistakable)
+   ═══════════════════════════════════════════════════ */
+
+/* ── Page background ────────────────────────────── */
+body{background:linear-gradient(160deg,#eef2fb 0%,#e8eef8 40%,#f0f4fb 100%)!important;}
+
+/* ── Topbar hero strip ──────────────────────────── */
+.topbar{background:linear-gradient(135deg,#0b1f52 0%,#1a3d8f 55%,#2563eb 100%);padding:18px 22px;border-radius:18px;margin-bottom:18px;box-shadow:0 8px 32px rgba(26,61,143,.35);}
+.page-title{color:#fff!important;font-size:20px!important;font-weight:900!important;letter-spacing:-.3px!important;}
+.page-title span{color:#93c5fd!important;}
+.topbar-right .btn{background:rgba(255,255,255,.13);border-color:rgba(255,255,255,.22);color:#fff;}
+.topbar-right .btn:hover{background:rgba(255,255,255,.22);}
+.sync-badge.ok{background:rgba(16,185,129,.2);border-color:rgba(16,185,129,.4);color:#a7f3d0;}
+.sync-badge.syncing{background:rgba(245,158,11,.2);border-color:rgba(245,158,11,.4);color:#fde68a;}
+.sync-badge.err{background:rgba(239,68,68,.2);border-color:rgba(239,68,68,.4);color:#fca5a5;}
+
+/* ── KPI colored gradient cards ─────────────────── */
+.kpi.c1{background:linear-gradient(145deg,#1a3d8f,#2563eb);border:none;box-shadow:0 10px 30px rgba(26,61,143,.4);}
+.kpi.c2{background:linear-gradient(145deg,#0f6b3d,#16a34a);border:none;box-shadow:0 10px 30px rgba(15,107,61,.4);}
+.kpi.c3{background:linear-gradient(145deg,#991b1b,#dc2626);border:none;box-shadow:0 10px 30px rgba(153,27,27,.4);}
+.kpi.c4{background:linear-gradient(145deg,#5b21b6,#7c3aed);border:none;box-shadow:0 10px 30px rgba(91,33,182,.4);}
+.kpi.c5{background:linear-gradient(145deg,#0e7490,#0891b2);border:none;box-shadow:0 10px 30px rgba(14,116,144,.4);}
+.kpi.c1::before,.kpi.c2::before,.kpi.c3::before,.kpi.c4::before,.kpi.c5::before{display:none;}
+.kpi.c1 .kpi-val,.kpi.c2 .kpi-val,.kpi.c3 .kpi-val,.kpi.c4 .kpi-val,.kpi.c5 .kpi-val{color:#fff!important;font-size:28px!important;font-weight:900!important;}
+.kpi.c1 .kpi-lbl,.kpi.c2 .kpi-lbl,.kpi.c3 .kpi-lbl,.kpi.c4 .kpi-lbl,.kpi.c5 .kpi-lbl{color:rgba(255,255,255,.75)!important;}
+.kpi.c1 .kpi-note,.kpi.c2 .kpi-note,.kpi.c3 .kpi-note,.kpi.c4 .kpi-note,.kpi.c5 .kpi-note{color:rgba(255,255,255,.6)!important;}
+.kpi.c1 .kpi-ico,.kpi.c2 .kpi-ico,.kpi.c3 .kpi-ico,.kpi.c4 .kpi-ico,.kpi.c5 .kpi-ico{color:rgba(255,255,255,.85)!important;}
+.kpi:hover{transform:translateY(-6px) scale(1.02)!important;box-shadow:0 20px 50px rgba(0,0,0,.25)!important;}
+
+/* ── Table redesign ─────────────────────────────── */
+.tbl-wrap{border:none!important;border-radius:16px!important;box-shadow:0 4px 24px rgba(26,61,143,.1)!important;overflow:hidden!important;}
+thead th{background:linear-gradient(135deg,#1a3d8f,#2563eb)!important;color:#fff!important;border-bottom:none!important;font-size:10.5px!important;padding:13px 14px!important;}
+tbody tr:nth-child(even) td{background:rgba(26,61,143,.03)!important;}
+tbody tr:hover{background:rgba(26,61,143,.07)!important;}
+tbody td{border-bottom:1px solid rgba(26,61,143,.06)!important;padding:12px 14px!important;}
+
+/* ── Cards with top accent ──────────────────────── */
+.card{background:#fff;border:1px solid rgba(26,61,143,.1)!important;border-top:3px solid #1a3d8f!important;border-radius:16px!important;box-shadow:0 4px 20px rgba(26,61,143,.07)!important;}
+.card:hover{box-shadow:0 10px 36px rgba(26,61,143,.14)!important;transform:translateY(-3px);}
+.card-title{font-size:13px!important;font-weight:700!important;color:var(--t)!important;}
+
+/* ── Section headers ─────────────────────────────── */
+.card-hd{border-bottom:1px solid rgba(26,61,143,.06);padding-bottom:10px;margin-bottom:12px;}
+
+/* ── Mobile topbar fix ──────────────────────────── */
+@media(max-width:900px){.topbar{padding:14px 16px;border-radius:14px;}}
 </style>
 </head>
 <body>
