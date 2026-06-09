@@ -51,7 +51,7 @@ const COPTS   = { httpOnly: true, maxAge: 8 * 60 * 60 * 1000, sameSite: 'lax', s
 if (!process.env.SUPERADMIN_PASSWORD) {
   if (IS_PROD) throw new Error('SUPERADMIN_PASSWORD env var is required in production');
 }
-const SA_PASS = process.env.SUPERADMIN_PASSWORD || 'Barez@Super2026';
+const SA_PASS = process.env.SUPERADMIN_PASSWORD || 'Barez2026';
 
 function saAuth(req, res, next) { req.sa = verifyToken(req.cookies?.[COOKIE]) || null; next(); }
 function reqSA(req, res, next)  {
