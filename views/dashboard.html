@@ -237,21 +237,22 @@ tbody td{padding:11px 12px;font-size:12px;vertical-align:middle;}
 }
 ::-webkit-scrollbar{width:4px;height:4px;}::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px;}
 
-/* ── Sidebar BAREZ Dark ─────────────────── */
-.sidebar{background:#1a2a3f;border-left:1px solid rgba(255,255,255,.07);}
-.sb-logo{border-bottom:1px solid rgba(255,255,255,.07);padding:14px 14px 12px;}
+/* ── Sidebar Dark Pro ────────────────────────────────── */
+.sidebar{background:#112240;border-left:1px solid rgba(255,255,255,.06);}
+.sb-logo{border-bottom:1px solid rgba(255,255,255,.06);padding:14px 16px;}
 .sb-logo img{filter:brightness(0) invert(1);}
-.nav{padding:6px 0;}
-/* direction:ltr + row-reverse = أيقون يمين نص يساره بشكل مضمون */
-.ni{color:rgba(255,255,255,.5);font-size:12px;padding:9px 14px;border-radius:0!important;direction:ltr!important;flex-direction:row-reverse!important;}
-.ni:hover{background:rgba(59,130,246,.1);color:rgba(255,255,255,.85);}
-.ni.active{background:#1e3a5f;color:#93c5fd;font-weight:600;border-right:3px solid #3b82f6;padding-right:11px;}
+.nav{padding:8px;display:flex;flex-direction:column;gap:2px;}
+.ni{color:#8899aa;font-size:13px!important;padding:10px 16px!important;border-radius:6px!important;direction:ltr!important;flex-direction:row-reverse!important;gap:8px!important;transition:background .2s,color .2s!important;}
+.ni:hover{background:#1a3050;color:rgba(255,255,255,.85);}
+.ni.active{background:#1e3a5f;color:#fff;font-weight:600;border-right:3px solid #4f9cf9;border-radius:8px!important;box-shadow:inset 0 0 20px rgba(79,156,249,.08);padding-right:13px!important;}
 .ni.active::before{display:none;}
-.ni-badge{background:rgba(59,130,246,.2);color:#93c5fd;margin-right:0;margin-left:auto;}
-.ni-badge.red{background:rgba(239,68,68,.2);color:#fca5a5;}
-.ni-ico{opacity:.55;flex-shrink:0;margin-left:8px;margin-right:0;}
-.ni.active .ni-ico{opacity:1;color:#3b82f6;}
-.sb-user{border-top:1px solid rgba(255,255,255,.07);padding:10px 12px;}
+.ni-ico{color:#8899aa;flex-shrink:0;}
+.ni.active .ni-ico{color:#4f9cf9!important;}
+/* نقطة الإشعار — مخفية بالافتراضي، تظهر عند .show */
+.ni-badge{width:8px;height:8px;min-width:8px;border-radius:50%;background:#4f9cf9;display:none;padding:0;margin:0;font-size:0;line-height:1;align-self:center;flex-shrink:0;}
+.ni-badge.show{display:block;}
+.ni-badge.red{background:#ef4444;}
+.sb-user{border-top:1px solid rgba(255,255,255,.06);padding:10px 12px;}
 .user-row{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);}
 .user-name{color:rgba(255,255,255,.85);font-size:12px;}
 .user-role{color:rgba(255,255,255,.3);font-size:9px;}
@@ -304,7 +305,7 @@ tbody td{padding:11px 12px;font-size:12px;vertical-align:middle;}
    ═══════════════════════════════════════════════════ */
 
 /* ── Page background: warm off-white ───────────────── */
-body{background:#F2F5FB!important;}
+body{background:#0a1628!important;}
 
 /* ── Topbar: flat deep navy, no multi-gradient ──────── */
 .topbar{background:#1a3d8f;padding:16px 22px;border-radius:16px;margin-bottom:16px;box-shadow:0 4px 20px rgba(26,61,143,.22);}
@@ -370,20 +371,20 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
 
   <nav class="nav">
     <button id="nav-dashboard" class="ni active" onclick="go('dashboard',this)"><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>لوحة التحكم</button>
-    <button id="nav-contracts" class="ni" onclick="go('contracts',this)"><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>العقود<span class="ni-badge" id="nb-total">—</span></button>
+    <button id="nav-contracts" class="ni" onclick="go('contracts',this)"><span class="ni-badge" id="nb-total"></span><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>العقود</button>
     <button id="nav-commissions" class="ni" onclick="go('commissions',this)"><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span>العمولات</button>
-    <button id="nav-collection" class="ni" onclick="go('collection',this)"><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>التحصيل<span class="ni-badge" id="nb-debt">—</span></button>
+    <button id="nav-collection" class="ni" onclick="go('collection',this)"><span class="ni-badge" id="nb-debt"></span><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>التحصيل</button>
     <button id="nav-expiry" class="ni" onclick="go('expiry',this)"><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>المنتهية</button>
     <button id="nav-performance" class="ni" onclick="go('performance',this)"><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></span>الأداء</button>
     <button id="nav-sources" class="ni" onclick="go('sources',this)"><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>المصادر</button>
     <button id="nav-reports" class="ni" onclick="go('reports',this)"><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>التقارير</button>
     <div style="height:1px;background:rgba(255,255,255,.07);margin:6px 8px;"></div>
-    <button id="nav-listings" class="ni" onclick="go('listings',this)"><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span>الإعلانات<span class="ni-badge" id="nb-listings">—</span></button>
-    <button id="nav-bookings" class="ni" onclick="go('bookings',this)"><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="9" y1="16" x2="15" y2="16"/><line x1="12" y1="13" x2="12" y2="19"/></svg></span>الحجوزات<span class="ni-badge" id="nb-bookings">—</span></button>
-    <button id="nav-customers" class="ni" onclick="go('customers',this)"><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>العملاء<span class="ni-badge" id="nb-customers">—</span></button>
-    <button id="nav-hosts" class="ni" onclick="go('hosts',this)"><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/></svg></span>المضيفون<span class="ni-badge" id="nb-hosts">—</span></button>
-    <button id="nav-msgs" class="ni" onclick="go('msgs',this)"><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>الرسائل<span class="ni-badge" id="nb-msgs">—</span></button>
-    <button id="nav-apts" class="ni" onclick="go('apts',this)"><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg></span>الشقق<span class="ni-badge" id="nb-apts">—</span></button>
+    <button id="nav-listings" class="ni" onclick="go('listings',this)"><span class="ni-badge" id="nb-listings"></span><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span>الإعلانات</button>
+    <button id="nav-bookings" class="ni" onclick="go('bookings',this)"><span class="ni-badge" id="nb-bookings"></span><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="9" y1="16" x2="15" y2="16"/><line x1="12" y1="13" x2="12" y2="19"/></svg></span>الحجوزات</button>
+    <button id="nav-customers" class="ni" onclick="go('customers',this)"><span class="ni-badge" id="nb-customers"></span><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>العملاء</button>
+    <button id="nav-hosts" class="ni" onclick="go('hosts',this)"><span class="ni-badge" id="nb-hosts"></span><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/></svg></span>المضيفون</button>
+    <button id="nav-msgs" class="ni" onclick="go('msgs',this)"><span class="ni-badge" id="nb-msgs"></span><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>الرسائل</button>
+    <button id="nav-apts" class="ni" onclick="go('apts',this)"><span class="ni-badge" id="nb-apts"></span><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg></span>الشقق</button>
     <button id="nav-staff" class="ni" onclick="go('staff',this)"><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/><line x1="19" y1="8" x2="23" y2="8"/><line x1="21" y1="6" x2="21" y2="10"/></svg></span>الموظفون</button>
     <div style="height:1px;background:rgba(255,255,255,.07);margin:6px 8px;" id="admin-sep" style="display:none;"></div>
     <button id="nav-users" class="ni" onclick="go('users',this)" style="display:none"><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="23" y1="11" x2="17" y2="11"/><line x1="20" y1="8" x2="20" y2="14"/></svg></span>مستخدمو النظام</button>
@@ -1134,7 +1135,7 @@ function renderAll(){
   set('k0',toAr(allC.filter(c=>c.n).length));set('k1',fmt(Math.round(tp/1000))+'ك');set('k1n',Math.round(tp/(tv||1)*100)+'٪ تحصيل');
   set('k2',fmt(Math.round(tr/1000))+'ك');set('k3',fmt(amT)+' ﷼');set('k3n',toAr(amN)+' عقد');
   set('k4',toAr(op));set('k4n',toAr(cl)+' مغلق');
-  set('nb-total',toAr(allC.filter(c=>c.n).length));set('nb-debt',toAr(allC.filter(c=>c.r>0).length));
+  const _tot=allC.filter(c=>c.n).length,_dbt=allC.filter(c=>c.r>0).length;set('nb-total',toAr(_tot));set('nb-debt',toAr(_dbt));dot('nb-total',_tot);dot('nb-debt',_dbt,true);
   const exp7=allC.filter(c=>c.st==='مفتوح'&&c.ex).map(c=>({...c,d:daysTo(c.ex)})).filter(c=>c.d>=0&&c.d<=7);
   set('alerts-wrap',exp7.length?`<div class="alert-box"><span>⏰</span><span>تنبيه: ${toAr(exp7.length)} عقد تنتهي خلال ٧ أيام — <strong>${exp7.map(c=>c.n).join('، ')}</strong></span></div>`:'');
   const dbs=allC.filter(c=>c.r>0).sort((a,b)=>b.r-a.r).slice(0,5);
@@ -1386,6 +1387,7 @@ function closeMobNav(){
 }
 
 const PUBLIC_SECTIONS=['listings','bookings','customers','hosts','msgs','apts','staff','users','audit'];
+function dot(id,val,red){const el=document.getElementById(id);if(!el)return;const v=parseInt(val)||0;el.classList.toggle('show',v>0);el.classList.toggle('red',!!red&&v>0);}
 function go(id,el){
   if(currentUser&&!currentUser.allowed.includes(id)&&!PUBLIC_SECTIONS.includes(id)){showToast('⛔ ليس لديك صلاحية لعرض هذا القسم');return;}
   if((id==='users'||id==='audit')&&currentUser?.role!=='admin'){showToast('⛔ هذا القسم للمدير العام فقط');return;}
@@ -1430,7 +1432,7 @@ async function loadListings(){
     if(!r.ok)return;
     allListings=await r.json();
     const nb=document.getElementById('nb-listings');
-    if(nb)nb.textContent=allListings.length||'—';
+    if(nb){nb.textContent=allListings.length||'—';dot('nb-listings',allListings.length);}
     renderListings();
   }catch(e){}
 }
@@ -1748,7 +1750,7 @@ async function loadBookings(){
     const awaiting_checkin=allBookings.filter(b=>b.status==='awaiting_checkin').length;
     const active=allBookings.filter(b=>b.status==='active').length;
     const nb=document.getElementById('nb-bookings');
-    if(nb){nb.textContent=(pending+awaiting_payment)||'—';nb.className=(pending+awaiting_payment)>0?'ni-badge red':'ni-badge';}
+    if(nb){nb.textContent=(pending+awaiting_payment)||'—';dot('nb-bookings',pending+awaiting_payment,true);}
     const ep=document.getElementById('bk-pending');if(ep)ep.textContent=pending;
     const eap=document.getElementById('bk-awaiting_payment');if(eap)eap.textContent=awaiting_payment;
     const eac=document.getElementById('bk-awaiting_checkin');if(eac)eac.textContent=awaiting_checkin;
@@ -2030,7 +2032,7 @@ async function loadCustomers(){
     if(!r.ok)return;
     allCustomers=await r.json();
     const nb=document.getElementById('nb-customers');
-    if(nb)nb.textContent=allCustomers.length||'—';
+    if(nb){nb.textContent=allCustomers.length||'—';dot('nb-customers',allCustomers.length);}
     const sa=allCustomers.filter(c=>c.nationality==='سعودي').length;
     const non=allCustomers.length-sa;
     const ct=document.getElementById('cust-total');if(ct)ct.textContent=allCustomers.length;
@@ -2059,7 +2061,7 @@ async function loadHosts(){
     const pending=allHosts.filter(h=>h.status==='pending').length;
     const approved=allHosts.filter(h=>h.status==='approved').length;
     const nb=document.getElementById('nb-hosts');
-    if(nb){nb.textContent=pending||'—';nb.className=pending>0?'ni-badge red':'ni-badge';}
+    if(nb){nb.textContent=pending||'—';dot('nb-hosts',pending,true);}
     const hp=document.getElementById('hosts-pending');if(hp)hp.textContent=pending;
     const ha=document.getElementById('hosts-approved');if(ha)ha.textContent=approved;
     const ht=document.getElementById('hosts-total');if(ht)ht.textContent=allHosts.length;
@@ -2273,7 +2275,7 @@ function updateAptsBadges(){
   let totOcc=0,totAll=0;
   Object.values(aptsData).forEach(b=>{totOcc+=b.occupied;totAll+=b.total;b.floors.forEach(f=>f.rooms.forEach(r=>{c[r.status]=(c[r.status]||0)+1;}));});
   Object.keys(c).forEach(k=>{const el=document.getElementById('ac-'+k);if(el)el.textContent=c[k]||0;});
-  const nb=document.getElementById('nb-apts');if(nb)nb.textContent=totOcc||'—';
+  const nb=document.getElementById('nb-apts');if(nb){nb.textContent=totOcc||'—';dot('nb-apts',totOcc);}
   const rate=totAll?Math.round(totOcc/totAll*100):0;
   const ro=document.getElementById('aptsOccRate');
   if(ro)ro.innerHTML=`نسبة الإشغال: <span style="color:var(--gold);font-size:16px;">${rate}%</span> <span style="font-weight:400;font-size:11px;">(${totOcc}/${totAll})</span>`;
@@ -2504,7 +2506,7 @@ async function loadMessages(){
     const convs=await r.json();
     const el=document.getElementById('adminMsgList');
     const unread=convs.reduce((s,c)=>s+(c.unreadAdmin||0),0);
-    const nb=document.getElementById('nb-msgs');if(nb)nb.textContent=unread||'—';
+    const nb=document.getElementById('nb-msgs');if(nb){nb.textContent=unread||'—';dot('nb-msgs',unread,true);}
     if(nb&&unread>0)nb.style.color='#e74c3c';else if(nb)nb.style.color='';
     if(!convs.length){el.innerHTML='<div style="padding:24px;text-align:center;color:var(--t3);font-size:13px;">لا توجد محادثات</div>';return;}
     el.innerHTML=convs.map(c=>`
