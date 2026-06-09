@@ -299,52 +299,64 @@ tbody td{padding:11px 12px;font-size:12px;vertical-align:middle;}
 .audit-reject{background:#FEE2E2;color:#991B1B;}
 
 /* ═══════════════════════════════════════════════════
-   BAREZ PRO — Visual Overhaul v3 (unmistakable)
+   BAREZ PRO — Visual Overhaul v4 (refined & easy-on-eyes)
    ═══════════════════════════════════════════════════ */
 
-/* ── Page background ────────────────────────────── */
-body{background:linear-gradient(160deg,#eef2fb 0%,#e8eef8 40%,#f0f4fb 100%)!important;}
+/* ── Page background: warm off-white ───────────────── */
+body{background:#F2F5FB!important;}
 
-/* ── Topbar hero strip ──────────────────────────── */
-.topbar{background:linear-gradient(135deg,#0b1f52 0%,#1a3d8f 55%,#2563eb 100%);padding:18px 22px;border-radius:18px;margin-bottom:18px;box-shadow:0 8px 32px rgba(26,61,143,.35);}
-.page-title{color:#fff!important;font-size:20px!important;font-weight:900!important;letter-spacing:-.3px!important;}
-.page-title span{color:#93c5fd!important;}
-.topbar-right .btn{background:rgba(255,255,255,.13);border-color:rgba(255,255,255,.22);color:#fff;}
-.topbar-right .btn:hover{background:rgba(255,255,255,.22);}
-.sync-badge.ok{background:rgba(16,185,129,.2);border-color:rgba(16,185,129,.4);color:#a7f3d0;}
-.sync-badge.syncing{background:rgba(245,158,11,.2);border-color:rgba(245,158,11,.4);color:#fde68a;}
-.sync-badge.err{background:rgba(239,68,68,.2);border-color:rgba(239,68,68,.4);color:#fca5a5;}
+/* ── Topbar: flat deep navy, no multi-gradient ──────── */
+.topbar{background:#1a3d8f;padding:16px 22px;border-radius:16px;margin-bottom:16px;box-shadow:0 4px 20px rgba(26,61,143,.22);}
+.page-title{color:#fff!important;font-size:19px!important;font-weight:800!important;letter-spacing:-.2px!important;}
+.page-title span{color:#a5c0ff!important;}
+.topbar-right .btn{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.2);color:#e8efff;}
+.topbar-right .btn:hover{background:rgba(255,255,255,.2);}
+.sync-badge.ok{background:rgba(34,197,94,.18);border-color:rgba(34,197,94,.35);color:#86efac;}
+.sync-badge.syncing{background:rgba(234,179,8,.18);border-color:rgba(234,179,8,.35);color:#fde68a;}
+.sync-badge.err{background:rgba(239,68,68,.18);border-color:rgba(239,68,68,.35);color:#fca5a5;}
 
-/* ── KPI colored gradient cards ─────────────────── */
-.kpi.c1{background:linear-gradient(145deg,#1a3d8f,#2563eb);border:none;box-shadow:0 10px 30px rgba(26,61,143,.4);}
-.kpi.c2{background:linear-gradient(145deg,#0f6b3d,#16a34a);border:none;box-shadow:0 10px 30px rgba(15,107,61,.4);}
-.kpi.c3{background:linear-gradient(145deg,#991b1b,#dc2626);border:none;box-shadow:0 10px 30px rgba(153,27,27,.4);}
-.kpi.c4{background:linear-gradient(145deg,#5b21b6,#7c3aed);border:none;box-shadow:0 10px 30px rgba(91,33,182,.4);}
-.kpi.c5{background:linear-gradient(145deg,#0e7490,#0891b2);border:none;box-shadow:0 10px 30px rgba(14,116,144,.4);}
-.kpi.c1::before,.kpi.c2::before,.kpi.c3::before,.kpi.c4::before,.kpi.c5::before{display:none;}
-.kpi.c1 .kpi-val,.kpi.c2 .kpi-val,.kpi.c3 .kpi-val,.kpi.c4 .kpi-val,.kpi.c5 .kpi-val{color:#fff!important;font-size:28px!important;font-weight:900!important;}
-.kpi.c1 .kpi-lbl,.kpi.c2 .kpi-lbl,.kpi.c3 .kpi-lbl,.kpi.c4 .kpi-lbl,.kpi.c5 .kpi-lbl{color:rgba(255,255,255,.75)!important;}
-.kpi.c1 .kpi-note,.kpi.c2 .kpi-note,.kpi.c3 .kpi-note,.kpi.c4 .kpi-note,.kpi.c5 .kpi-note{color:rgba(255,255,255,.6)!important;}
-.kpi.c1 .kpi-ico,.kpi.c2 .kpi-ico,.kpi.c3 .kpi-ico,.kpi.c4 .kpi-ico,.kpi.c5 .kpi-ico{color:rgba(255,255,255,.85)!important;}
-.kpi:hover{transform:translateY(-6px) scale(1.02)!important;box-shadow:0 20px 50px rgba(0,0,0,.25)!important;}
+/* ── KPI cards: white + soft tinted icon bubble + colored value ── */
+.kpi{background:#fff;border:1.5px solid #e2e8f4!important;border-radius:16px;box-shadow:0 2px 12px rgba(26,61,143,.06)!important;}
+.kpi::before{display:none!important;}
+.kpi-val{font-size:26px!important;font-weight:900!important;letter-spacing:-.5px;}
+.kpi:hover{transform:translateY(-4px)!important;box-shadow:0 8px 28px rgba(26,61,143,.13)!important;}
 
-/* ── Table redesign ─────────────────────────────── */
-.tbl-wrap{border:none!important;border-radius:16px!important;box-shadow:0 4px 24px rgba(26,61,143,.1)!important;overflow:hidden!important;}
-thead th{background:linear-gradient(135deg,#1a3d8f,#2563eb)!important;color:#fff!important;border-bottom:none!important;font-size:10.5px!important;padding:13px 14px!important;}
-tbody tr:nth-child(even) td{background:rgba(26,61,143,.03)!important;}
-tbody tr:hover{background:rgba(26,61,143,.07)!important;}
-tbody td{border-bottom:1px solid rgba(26,61,143,.06)!important;padding:12px 14px!important;}
+/* c1 — navy blue */
+.kpi.c1{border-top:3px solid #3b5bdb!important;}
+.kpi.c1 .kpi-val{color:#1e3a8a!important;}
+.kpi.c1 .kpi-ico{color:#3b5bdb;}
+/* c2 — emerald green */
+.kpi.c2{border-top:3px solid #16a34a!important;}
+.kpi.c2 .kpi-val{color:#14532d!important;}
+.kpi.c2 .kpi-ico{color:#16a34a;}
+/* c3 — rose red */
+.kpi.c3{border-top:3px solid #e11d48!important;}
+.kpi.c3 .kpi-val{color:#9f1239!important;}
+.kpi.c3 .kpi-ico{color:#e11d48;}
+/* c4 — amber gold */
+.kpi.c4{border-top:3px solid #d97706!important;}
+.kpi.c4 .kpi-val{color:#92400e!important;}
+.kpi.c4 .kpi-ico{color:#d97706;}
+/* c5 — teal */
+.kpi.c5{border-top:3px solid #0891b2!important;}
+.kpi.c5 .kpi-val{color:#164e63!important;}
+.kpi.c5 .kpi-ico{color:#0891b2;}
 
-/* ── Cards with top accent ──────────────────────── */
-.card{background:#fff;border:1px solid rgba(26,61,143,.1)!important;border-top:3px solid #1a3d8f!important;border-radius:16px!important;box-shadow:0 4px 20px rgba(26,61,143,.07)!important;}
-.card:hover{box-shadow:0 10px 36px rgba(26,61,143,.14)!important;transform:translateY(-3px);}
-.card-title{font-size:13px!important;font-weight:700!important;color:var(--t)!important;}
+/* ── Table redesign: slate header ───────────────────── */
+.tbl-wrap{border:none!important;border-radius:14px!important;box-shadow:0 2px 16px rgba(26,61,143,.08)!important;overflow:hidden!important;}
+thead th{background:#334155!important;color:#e2e8f0!important;border-bottom:none!important;font-size:10.5px!important;padding:12px 14px!important;letter-spacing:.5px;}
+tbody tr:nth-child(even) td{background:rgba(26,61,143,.025)!important;}
+tbody tr:hover{background:rgba(26,61,143,.055)!important;}
+tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
 
-/* ── Section headers ─────────────────────────────── */
-.card-hd{border-bottom:1px solid rgba(26,61,143,.06);padding-bottom:10px;margin-bottom:12px;}
+/* ── Cards ──────────────────────────────────────────── */
+.card{background:#fff;border:1.5px solid #e2e8f4!important;border-radius:16px!important;box-shadow:0 2px 12px rgba(26,61,143,.06)!important;}
+.card:hover{box-shadow:0 8px 28px rgba(26,61,143,.12)!important;transform:translateY(-2px);}
+.card-hd{border-bottom:1px solid #f0f3fb;padding-bottom:10px;margin-bottom:12px;}
+.card-title{font-size:13px!important;font-weight:700!important;}
 
-/* ── Mobile topbar fix ──────────────────────────── */
-@media(max-width:900px){.topbar{padding:14px 16px;border-radius:14px;}}
+/* ── Mobile topbar fix ──────────────────────────────── */
+@media(max-width:900px){.topbar{padding:12px 14px;border-radius:12px;}}
 </style>
 </head>
 <body>
