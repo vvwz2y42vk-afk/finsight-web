@@ -272,10 +272,9 @@ body{
 .atbl tbody tr:last-child td{border-bottom:none;}
 .atbl tbody tr:nth-child(even) td{background:rgba(255,255,255,.013);}
 .atbl tbody tr:hover td{background:rgba(59,130,246,.05);}
-.atbl tbody tr:hover td:first-child{border-right:2px solid rgba(59,130,246,.4);padding-right:12px;}
+.atbl tbody tr:hover td:last-child{border-left:2px solid rgba(59,130,246,.4);padding-left:12px;}
 
 /* Props table column widths */
-#props-tbody ~ * ,
 .props-table col:nth-child(1){width:22%;}
 .props-table col:nth-child(2){width:7%;}
 .props-table col:nth-child(3){width:9%;}
@@ -1164,6 +1163,11 @@ async function loadStaff(){
   const tbody=document.getElementById('staff-tbody');
   tbody.innerHTML=skelRows(6,'skel-staff-row',6);
   try{
+    // إذا _allProps فارغة (فُتح التاب قبل ما تكتمل نظرة عامة) — اجلبهم أولاً
+    if(!_allProps.length){
+      const props=await fetch('/superadmin/api/properties').then(r=>r.json()).catch(()=>[]);
+      _allProps.length=0;(props||[]).forEach(p=>_allProps.push(p));_buildPropFilter();
+    }
     const propFilter=document.getElementById('staff-prop-filter')?.value||'all';
     const roleFilter=document.getElementById('staff-role-filter')?.value||'all';
     const q=document.getElementById('staff-search')?.value.toLowerCase()||'';
