@@ -7,89 +7,65 @@
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-/* ═══════════════════════════════════════════════════════════
-   BAREZ ADMIN — PHASE 3: LUXURY SaaS UI
-   ═══════════════════════════════════════════════════════════ */
 :root{
   --bg:#060B16;
   --s1:#0A1020;--s2:#0E1628;--s3:#121D32;--s4:#172338;--s5:#1C2A42;
   --border:#1C2B42;--border-s:#111E30;--border-h:#243550;
   --t1:#ECF2FF;--t2:#A8BEDD;--t3:#5B7BA0;--t4:#2E4566;
-  --brand:#2563EB;--brand-l:#3B82F6;--brand-d:#1D4ED8;--brand-g:linear-gradient(135deg,#1D4ED8,#3B82F6);
+  --brand:#2563EB;--brand-l:#3B82F6;--brand-d:#1D4ED8;
+  --brand-g:linear-gradient(135deg,#1D4ED8,#3B82F6);
   --green:#10B981;--green-d:#059669;--green-bg:rgba(16,185,129,.08);--green-b:rgba(16,185,129,.18);
-  --amber:#F59E0B;--amber-d:#D97706;--amber-bg:rgba(245,158,11,.08);--amber-b:rgba(245,158,11,.18);
-  --red:#EF4444;--red-d:#DC2626;--red-bg:rgba(239,68,68,.08);--red-b:rgba(239,68,68,.18);
-  --purple:#8B5CF6;--purple-d:#6D28D9;--purple-bg:rgba(139,92,246,.08);
+  --amber:#F59E0B;--amber-bg:rgba(245,158,11,.08);--amber-b:rgba(245,158,11,.18);
+  --red:#EF4444;--red-bg:rgba(239,68,68,.08);--red-b:rgba(239,68,68,.18);
+  --purple:#8B5CF6;--purple-bg:rgba(139,92,246,.08);
   --r:10px;--r-lg:14px;--r-xl:18px;
-  --sh:0 8px 32px rgba(0,0,0,.45);
-  --sh-sm:0 2px 10px rgba(0,0,0,.3);
   --ease:cubic-bezier(.4,0,.2,1);
   --ease-spring:cubic-bezier(.34,1.3,.64,1);
   --sb:224px;
-  --topbar:56px;
+  --tr:all 200ms ease-in-out;
 }
 
 *{box-sizing:border-box;margin:0;padding:0;}
-html{scroll-behavior:smooth;}
 body{
-  font-family:'Cairo',sans-serif;
-  background:var(--bg);direction:rtl;display:flex;
-  min-height:100vh;color:var(--t1);
-  -webkit-font-smoothing:antialiased;
+  font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;
+  display:flex;min-height:100vh;color:var(--t1);-webkit-font-smoothing:antialiased;
   background-image:
     radial-gradient(ellipse 80% 50% at 50% -10%,rgba(37,99,235,.12),transparent),
     url("data:image/svg+xml,%3Csvg width='32' height='32' viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='1' cy='1' r='.6' fill='%23162035'/%3E%3C/svg%3E");
-  background-size:auto, 32px 32px;
+  background-size:auto,32px 32px;
 }
-
-/* ══ Scrollbar ══════════════════════════════════════════════ */
 ::-webkit-scrollbar{width:4px;height:4px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--s4);border-radius:4px;}
-::-webkit-scrollbar-thumb:hover{background:var(--t4);}
 
 /* ══ Sidebar ════════════════════════════════════════════════ */
 .sb{
   width:var(--sb);
-  background:linear-gradient(180deg,var(--s1) 0%,rgba(10,16,32,.98) 100%);
+  background:linear-gradient(180deg,var(--s1),rgba(10,16,32,.98));
   border-left:1px solid var(--border);
   display:flex;flex-direction:column;
-  position:fixed;top:0;right:0;bottom:0;z-index:100;
-  overflow:hidden;
+  position:fixed;top:0;right:0;bottom:0;z-index:100;overflow:hidden;
 }
 .sb::before{
   content:'';position:absolute;top:0;right:0;width:1px;height:100%;
   background:linear-gradient(180deg,transparent,rgba(59,130,246,.25) 30%,rgba(59,130,246,.1) 70%,transparent);
 }
-
-.sb-brand{
-  display:flex;align-items:center;gap:11px;
-  padding:22px 18px 18px;
-  border-bottom:1px solid var(--border);
-  position:relative;
-}
+.sb-brand{display:flex;align-items:center;gap:11px;padding:22px 18px 18px;border-bottom:1px solid var(--border);}
 .sb-logo{
   width:36px;height:36px;border-radius:10px;flex-shrink:0;
   background:linear-gradient(135deg,#0f2d7a,#2563EB,#60a5fa);
   display:flex;align-items:center;justify-content:center;
-  font-size:18px;font-weight:900;color:#fff;
-  box-shadow:0 4px 14px rgba(37,99,235,.45);
-  letter-spacing:-.04em;
+  font-size:18px;font-weight:900;color:#fff;box-shadow:0 4px 14px rgba(37,99,235,.45);
 }
-.sb-brand-txt{}
 .sb-brand-name{font-size:15px;font-weight:900;color:var(--t1);letter-spacing:-.03em;line-height:1.1;}
 .sb-brand-sub{font-size:9px;color:var(--t4);letter-spacing:.12em;text-transform:uppercase;margin-top:2px;}
-
 .sb-sep{height:1px;background:var(--border);margin:8px 16px;}
 .sb-label{font-size:9px;font-weight:700;color:var(--t4);letter-spacing:.12em;text-transform:uppercase;padding:12px 18px 6px;}
-
 .sb-nav{flex:1;overflow-y:auto;padding:4px 10px;}
 .sn{
-  display:flex;align-items:center;gap:10px;
-  padding:9px 10px;border-radius:9px;cursor:pointer;
-  color:var(--t3);font-size:12.5px;font-weight:500;
-  transition:all .16s var(--ease);margin-bottom:1px;
-  white-space:nowrap;position:relative;text-decoration:none;
+  display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;cursor:pointer;
+  color:var(--t3);font-size:12.5px;font-weight:500;transition:var(--tr);
+  margin-bottom:1px;white-space:nowrap;position:relative;text-decoration:none;
 }
 .sn:hover{background:rgba(255,255,255,.04);color:var(--t2);}
 .sn.active{
@@ -97,148 +73,89 @@ body{
   color:#93C5FD;font-weight:600;
   box-shadow:inset 0 0 0 1px rgba(59,130,246,.2),0 2px 12px rgba(37,99,235,.1);
 }
-.sn.active::after{
-  content:'';position:absolute;left:0;top:25%;bottom:25%;
-  width:2.5px;border-radius:2px;
-  background:linear-gradient(180deg,var(--brand-l),rgba(59,130,246,.4));
-}
-.sn-ico{
-  width:22px;height:22px;display:flex;align-items:center;justify-content:center;
-  flex-shrink:0;border-radius:6px;
-  transition:background .15s;
-}
+.sn.active::after{content:'';position:absolute;left:0;top:25%;bottom:25%;width:2.5px;border-radius:2px;background:var(--brand-g);}
+.sn-ico{width:22px;height:22px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border-radius:6px;transition:var(--tr);}
 .sn.active .sn-ico{background:rgba(59,130,246,.15);}
-.sn-badge{
-  margin-right:auto;font-size:10px;font-weight:700;
-  background:rgba(37,99,235,.18);color:#93C5FD;
-  padding:1px 8px;border-radius:20px;
-  border:1px solid rgba(59,130,246,.2);
-  min-width:22px;text-align:center;
-}
-.sn-badge.red{background:rgba(239,68,68,.15);color:#FCA5A5;border-color:rgba(239,68,68,.2);}
-
+.sn-badge{margin-right:auto;font-size:10px;font-weight:700;background:rgba(37,99,235,.18);color:#93C5FD;padding:1px 8px;border-radius:20px;border:1px solid rgba(59,130,246,.2);min-width:22px;text-align:center;}
 .sb-foot{padding:10px 10px 14px;border-top:1px solid var(--border);}
 
 /* ══ Main ═══════════════════════════════════════════════════ */
-.main{margin-right:var(--sb);flex:1;display:flex;flex-direction:column;min-height:100vh;min-width:0;}
+.main{margin-right:var(--sb);flex:1;display:flex;flex-direction:column;min-height:100vh;min-width:0;width:calc(100% - var(--sb));}
 
 /* ══ Topbar ═════════════════════════════════════════════════ */
 .topbar{
   background:rgba(6,11,22,.9);backdrop-filter:blur(24px) saturate(180%);
-  border-bottom:1px solid var(--border);
-  height:var(--topbar);padding:0 28px;
+  border-bottom:1px solid var(--border);height:56px;padding:0 28px;
   display:flex;align-items:center;justify-content:space-between;
   position:sticky;top:0;z-index:50;
 }
-.topbar::after{
-  content:'';position:absolute;bottom:-1px;left:0;right:0;height:1px;
-  background:linear-gradient(90deg,transparent,rgba(59,130,246,.2) 40%,rgba(59,130,246,.1) 60%,transparent);
-}
+.topbar::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(59,130,246,.2) 40%,rgba(59,130,246,.1) 60%,transparent);}
 .tb-title{font-size:15px;font-weight:800;color:var(--t1);letter-spacing:-.02em;}
-.tb-title .hi{
-  background:linear-gradient(135deg,var(--brand-l),#93C5FD);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-}
+.tb-title .hi{background:linear-gradient(135deg,var(--brand-l),#93C5FD);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
 .tb-right{display:flex;align-items:center;gap:12px;}
-.tb-clock{
-  font-size:11px;color:var(--t4);font-variant-numeric:tabular-nums;
-  letter-spacing:.04em;background:var(--s2);border:1px solid var(--border);
-  padding:4px 10px;border-radius:7px;
-}
-.tb-avatar{
-  width:32px;height:32px;border-radius:8px;
-  background:linear-gradient(135deg,var(--brand-d),var(--brand-l));
-  display:flex;align-items:center;justify-content:center;
-  font-size:12px;font-weight:800;color:#fff;
-  box-shadow:0 2px 8px rgba(37,99,235,.3);
-  border:1px solid rgba(59,130,246,.25);
-}
-.tb-logout{
-  font-size:11px;color:var(--t3);text-decoration:none;
-  padding:5px 12px;border-radius:7px;border:1px solid var(--border);
-  background:var(--s2);transition:all .15s;font-weight:600;
-}
+.tb-clock{font-size:11px;color:var(--t4);font-variant-numeric:tabular-nums;letter-spacing:.04em;background:var(--s2);border:1px solid var(--border);padding:4px 10px;border-radius:7px;}
+.tb-avatar{width:32px;height:32px;border-radius:8px;background:var(--brand-g);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;box-shadow:0 2px 8px rgba(37,99,235,.3);border:1px solid rgba(59,130,246,.25);}
+.tb-logout{font-size:11px;color:var(--t3);text-decoration:none;padding:5px 12px;border-radius:7px;border:1px solid var(--border);background:var(--s2);transition:var(--tr);font-weight:600;}
 .tb-logout:hover{color:var(--red);border-color:var(--red-b);background:var(--red-bg);}
 
-/* ══ Content ════════════════════════════════════════════════ */
-.content{padding:26px 28px;flex:1;}
+/* Offline alert */
+#offline-alert{
+  display:none;align-items:center;gap:8px;
+  background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);
+  color:#FCA5A5;font-size:11px;font-weight:700;
+  padding:5px 12px;border-radius:8px;
+  animation:pulse-alert 2s infinite;
+}
+@keyframes pulse-alert{0%,100%{opacity:1;}50%{opacity:.65;}}
 
-/* ══ Tab fade ═══════════════════════════════════════════════ */
+/* ══ Content ════════════════════════════════════════════════ */
+.content{padding:26px 28px;flex:1;width:100%;}
+
+/* ══ Tab ════════════════════════════════════════════════════ */
 .tab-sec{display:none;}
 .tab-sec.active{display:block;animation:fadeUp .22s var(--ease) both;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
 
-/* ══ KPI cards ══════════════════════════════════════════════ */
+/* ══ KPI ════════════════════════════════════════════════════ */
 .kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:22px;}
-.kpi{
-  background:var(--s2);border:1px solid var(--border);border-radius:var(--r-lg);
-  padding:18px 18px 16px;position:relative;overflow:hidden;
-  transition:border-color .2s,transform .2s,box-shadow .2s;cursor:default;
-}
-.kpi:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3);}
-.kpi-glow{
-  position:absolute;top:-20px;left:-20px;
-  width:80px;height:80px;border-radius:50%;
-  opacity:.12;filter:blur(20px);pointer-events:none;
-  transition:opacity .25s;
-}
+.kpi{background:var(--s2);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px 18px 16px;position:relative;overflow:hidden;transition:var(--tr);cursor:default;}
+.kpi:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3);border-color:var(--border-h);}
+.kpi-glow{position:absolute;top:-20px;left:-20px;width:80px;height:80px;border-radius:50%;opacity:.12;filter:blur(20px);pointer-events:none;transition:var(--tr);}
 .kpi:hover .kpi-glow{opacity:.22;}
-.k-blue  .kpi-glow{background:var(--brand-l);}
+.k-blue .kpi-glow{background:var(--brand-l);}
 .k-green .kpi-glow{background:var(--green);}
 .k-amber .kpi-glow{background:var(--amber);}
-.k-red   .kpi-glow{background:var(--red);}
-.k-purple.kpi-glow{background:var(--purple);}
+.k-red .kpi-glow{background:var(--red);}
 .k-purple .kpi-glow{background:var(--purple);}
 .kpi-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;}
-.kpi-icon{
-  width:32px;height:32px;border-radius:9px;
-  display:flex;align-items:center;justify-content:center;flex-shrink:0;
-}
-.k-blue  .kpi-icon{background:rgba(37,99,235,.15);color:var(--brand-l);}
+.kpi-icon{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.k-blue .kpi-icon{background:rgba(37,99,235,.15);color:var(--brand-l);}
 .k-green .kpi-icon{background:rgba(16,185,129,.12);color:var(--green);}
 .k-amber .kpi-icon{background:rgba(245,158,11,.12);color:var(--amber);}
-.k-red   .kpi-icon{background:rgba(239,68,68,.12);color:var(--red);}
+.k-red .kpi-icon{background:rgba(239,68,68,.12);color:var(--red);}
 .k-purple .kpi-icon{background:rgba(139,92,246,.12);color:var(--purple);}
 .kpi-label{font-size:10px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:.08em;line-height:1.3;}
 .kpi-val{font-size:34px;font-weight:900;line-height:1;letter-spacing:-.05em;margin-bottom:6px;font-variant-numeric:tabular-nums;}
-.kpi-val.blue  {color:var(--brand-l);}
-.kpi-val.green {color:var(--green);}
-.kpi-val.amber {color:var(--amber);}
-.kpi-val.red   {color:var(--red);}
+.kpi-val.blue{color:var(--brand-l);}
+.kpi-val.green{color:var(--green);}
+.kpi-val.amber{color:var(--amber);}
+.kpi-val.red{color:var(--red);}
 .kpi-val.purple{color:var(--purple);}
 .kpi-sub{font-size:10px;color:var(--t4);}
-.kpi-bar{
-  position:absolute;bottom:0;left:0;right:0;height:2px;
-  background:linear-gradient(90deg,transparent,currentColor);
-  opacity:0;transition:opacity .25s;
-}
+.kpi-bar{position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,currentColor);opacity:0;transition:var(--tr);}
 .kpi:hover .kpi-bar{opacity:.5;}
-.k-blue   .kpi-bar{color:var(--brand-l);}
-.k-green  .kpi-bar{color:var(--green);}
-.k-amber  .kpi-bar{color:var(--amber);}
-.k-red    .kpi-bar{color:var(--red);}
+.k-blue .kpi-bar{color:var(--brand-l);}
+.k-green .kpi-bar{color:var(--green);}
+.k-amber .kpi-bar{color:var(--amber);}
+.k-red .kpi-bar{color:var(--red);}
 .k-purple .kpi-bar{color:var(--purple);}
 
-/* ══ Charts row ═════════════════════════════════════════════ */
+/* ══ Charts ═════════════════════════════════════════════════ */
 .charts-row{display:grid;grid-template-columns:1fr 300px;gap:14px;margin-bottom:22px;}
-.chart-card{
-  background:var(--s2);border:1px solid var(--border);border-radius:var(--r-xl);
-  padding:22px 22px 18px;position:relative;overflow:hidden;
-}
-.chart-card::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:1px;
-  background:linear-gradient(90deg,transparent,rgba(59,130,246,.3),transparent);
-}
-.chart-ttl{
-  font-size:12px;font-weight:800;color:var(--t2);
-  margin-bottom:18px;display:flex;align-items:center;gap:9px;
-  letter-spacing:-.01em;
-}
-.chart-ttl-dot{
-  width:6px;height:20px;border-radius:3px;flex-shrink:0;
-  background:var(--brand-g);
-  box-shadow:0 0 10px rgba(59,130,246,.5);
-}
+.chart-card{background:var(--s2);border:1px solid var(--border);border-radius:var(--r-xl);padding:22px 22px 18px;position:relative;overflow:hidden;}
+.chart-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(59,130,246,.3),transparent);}
+.chart-ttl{font-size:12px;font-weight:800;color:var(--t2);margin-bottom:18px;display:flex;align-items:center;gap:9px;letter-spacing:-.01em;}
+.chart-ttl-dot{width:6px;height:20px;border-radius:3px;flex-shrink:0;background:var(--brand-g);box-shadow:0 0 10px rgba(59,130,246,.5);}
 
 /* ══ Feed ═══════════════════════════════════════════════════ */
 .feed-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border-s);}
@@ -247,7 +164,7 @@ body{
 .feed-content{flex:1;min-width:0;}
 .feed-main{font-size:12px;color:var(--t2);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .feed-sub{font-size:10px;color:var(--t4);margin-top:2px;}
-.feed-time{font-size:10px;color:var(--t4);white-space:nowrap;margin-top:3px;flex-shrink:0;}
+.feed-time{font-size:10px;color:var(--t4);white-space:nowrap;flex-shrink:0;}
 
 /* ══ Section header ════════════════════════════════════════ */
 .sec-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:12px;flex-wrap:wrap;}
@@ -255,365 +172,282 @@ body{
 .sec-sub{font-size:11px;color:var(--t4);margin-top:1px;}
 
 /* ══ Card ═══════════════════════════════════════════════════ */
-.card{
-  background:var(--s2);border:1px solid var(--border);border-radius:var(--r-xl);
-  overflow:hidden;width:100%;
-  box-shadow:0 4px 20px rgba(0,0,0,.2);
-}
-.card-hd{
-  padding:14px 18px;
-  display:flex;align-items:center;justify-content:space-between;gap:12px;
-  border-bottom:1px solid var(--border);
-  background:linear-gradient(180deg,rgba(255,255,255,.025),transparent);
-  flex-wrap:wrap;
-}
+.card{background:var(--s2);border:1px solid var(--border);border-radius:var(--r-xl);overflow:hidden;width:100%;box-shadow:0 4px 20px rgba(0,0,0,.2);}
+.card-hd{padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--border);background:linear-gradient(180deg,rgba(255,255,255,.025),transparent);flex-wrap:wrap;}
 .card-hd-title{font-size:13px;font-weight:700;color:var(--t1);}
 .card-hd-sub{font-size:10px;color:var(--t4);margin-top:2px;}
 
 /* ══ Filter bar ════════════════════════════════════════════ */
 .filter-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
-.fi{
-  padding:7px 12px;border-radius:8px;
-  border:1px solid var(--border);background:var(--s3);
-  font-family:'Cairo',sans-serif;font-size:12px;color:var(--t2);
-  outline:none;transition:border-color .15s,box-shadow .15s,background .15s;
-  height:34px;
-}
+.fi{padding:7px 12px;border-radius:8px;border:1px solid var(--border);background:var(--s3);font-family:'Cairo',sans-serif;font-size:12px;color:var(--t2);outline:none;transition:var(--tr);height:34px;}
 .fi:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(37,99,235,.12);background:var(--s2);}
 .fi::placeholder{color:var(--t4);}
 .fi-select{min-width:130px;cursor:pointer;}
-.fi select option{background:var(--s2);}
 
 /* ══ Buttons ════════════════════════════════════════════════ */
-.btn{
-  display:inline-flex;align-items:center;gap:6px;
-  padding:7px 14px;border-radius:8px;border:none;height:34px;
-  font-family:'Cairo',sans-serif;font-size:12px;font-weight:700;
-  cursor:pointer;transition:all .16s;white-space:nowrap;
-  position:relative;overflow:hidden;
-}
-.btn::after{
-  content:'';position:absolute;inset:0;
-  background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.08) 50%,transparent 60%);
-  transform:translateX(-100%);transition:transform .4s;pointer-events:none;
-}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;border:none;height:34px;font-family:'Cairo',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:var(--tr);white-space:nowrap;position:relative;overflow:hidden;}
+.btn::after{content:'';position:absolute;inset:0;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.08) 50%,transparent 60%);transform:translateX(-100%);transition:transform .4s;pointer-events:none;}
 .btn:hover::after{transform:translateX(100%);}
-.btn-primary{
-  background:var(--brand-g);color:#fff;
-  box-shadow:0 2px 10px rgba(37,99,235,.35);
-}
+.btn-primary{background:var(--brand-g);color:#fff;box-shadow:0 2px 10px rgba(37,99,235,.35);}
 .btn-primary:hover{box-shadow:0 4px 18px rgba(37,99,235,.5);transform:translateY(-1px);}
 .btn-sm{padding:5px 10px;font-size:11px;height:30px;}
 .btn-ghost{background:var(--s3);color:var(--t3);border:1px solid var(--border);}
 .btn-ghost:hover{background:var(--s4);color:var(--t2);border-color:var(--border-h);}
-.btn-danger{background:var(--red-bg);color:var(--red);border:1px solid var(--red-b);}
-.btn-danger:hover{background:rgba(239,68,68,.15);}
-.btn-success{background:var(--green-bg);color:var(--green);border:1px solid var(--green-b);}
-.btn-success:hover{background:rgba(16,185,129,.14);}
 .btn-amber{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-b);}
 .btn-amber:hover{background:rgba(245,158,11,.14);}
 
-/* ══ Table ══════════════════════════════════════════════════ */
+/* ══ Tables — full-width, proportional columns ══════════════ */
 .tbl-wrap{overflow-x:auto;width:100%;}
-.atbl{width:100%;border-collapse:collapse;font-size:12.5px;}
+.atbl{width:100%;border-collapse:collapse;font-size:12.5px;table-layout:fixed;}
 .atbl th{
-  padding:10px 16px;text-align:right;
+  padding:10px 14px;text-align:right;
   font-size:9.5px;font-weight:800;color:var(--t4);
   text-transform:uppercase;letter-spacing:.08em;
   background:var(--s1);border-bottom:1px solid var(--border);
-  white-space:nowrap;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
 .atbl td{
-  padding:12px 16px;border-bottom:1px solid var(--border-s);
+  padding:12px 14px;border-bottom:1px solid var(--border-s);
   color:var(--t2);vertical-align:middle;
+  overflow:hidden;text-overflow:ellipsis;
 }
-.atbl tbody tr{transition:background .12s;}
+.atbl tbody tr{transition:var(--tr);}
 .atbl tbody tr:last-child td{border-bottom:none;}
 .atbl tbody tr:nth-child(even) td{background:rgba(255,255,255,.013);}
 .atbl tbody tr:hover td{background:rgba(59,130,246,.05);}
-.atbl tbody tr:hover td:first-child{
-  border-right:2px solid rgba(59,130,246,.4);
-  padding-right:14px;
-}
+.atbl tbody tr:hover td:first-child{border-right:2px solid rgba(59,130,246,.4);padding-right:12px;}
+
+/* Props table column widths */
+#props-tbody ~ * ,
+.props-table col:nth-child(1){width:22%;}
+.props-table col:nth-child(2){width:7%;}
+.props-table col:nth-child(3){width:9%;}
+.props-table col:nth-child(4){width:9%;}
+.props-table col:nth-child(5){width:13%;}
+.props-table col:nth-child(6){width:6%;}
+.props-table col:nth-child(7){width:7%;}
+.props-table col:nth-child(8){width:7%;}
+
+/* Staff table column widths */
+.staff-table col:nth-child(1){width:24%;}
+.staff-table col:nth-child(2){width:20%;}
+.staff-table col:nth-child(3){width:10%;}
+.staff-table col:nth-child(4){width:9%;}
+.staff-table col:nth-child(5){width:14%;}
+.staff-table col:nth-child(6){width:7%;}
+
+/* Log table column widths */
+.log-table col:nth-child(1){width:12%;}
+.log-table col:nth-child(2){width:9%;}
+.log-table col:nth-child(3){width:8%;}
+.log-table col:nth-child(4){width:9%;}
+.log-table col:nth-child(5){width:30%;}
+.log-table col:nth-child(6){width:12%;}
+.log-table col:nth-child(7){width:13%;}
 
 /* ══ Badges ═════════════════════════════════════════════════ */
 .bdg{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap;}
 .bdg-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
-.bdg-active {background:var(--green-bg);color:var(--green);border:1px solid var(--green-b);}
+.bdg-active{background:var(--green-bg);color:var(--green);border:1px solid var(--green-b);}
 .bdg-active .bdg-dot{background:var(--green);animation:pulse-dot 2s infinite;}
-.bdg-trial  {background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-b);}
+.bdg-trial{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-b);}
 .bdg-trial .bdg-dot{background:var(--amber);}
 .bdg-expired{background:var(--red-bg);color:var(--red);border:1px solid var(--red-b);}
 .bdg-expired .bdg-dot{background:var(--red);}
 .bdg-stopped{background:rgba(46,69,102,.15);color:var(--t3);border:1px solid var(--border);}
 .bdg-stopped .bdg-dot{background:var(--t4);}
-@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.5;transform:scale(.7);}}
+@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.4;transform:scale(.65);}}
 
 .plan-pill{display:inline-block;padding:2px 9px;border-radius:6px;font-size:10px;font-weight:700;}
-.plan-trial {background:rgba(245,158,11,.1);color:#FCD34D;border:1px solid rgba(245,158,11,.15);}
-.plan-basic {background:rgba(59,130,246,.1);color:#93C5FD;border:1px solid rgba(59,130,246,.15);}
-.plan-pro   {background:rgba(16,185,129,.1);color:#6EE7B7;border:1px solid rgba(16,185,129,.15);}
-
+.plan-trial{background:rgba(245,158,11,.1);color:#FCD34D;border:1px solid rgba(245,158,11,.15);}
+.plan-basic{background:rgba(59,130,246,.1);color:#93C5FD;border:1px solid rgba(59,130,246,.15);}
+.plan-pro{background:rgba(16,185,129,.1);color:#6EE7B7;border:1px solid rgba(16,185,129,.15);}
 .role-pill{display:inline-block;padding:2px 9px;border-radius:6px;font-size:10px;font-weight:700;}
-.role-manager     {background:rgba(139,92,246,.1);color:#C4B5FD;border:1px solid rgba(139,92,246,.15);}
+.role-manager{background:rgba(139,92,246,.1);color:#C4B5FD;border:1px solid rgba(139,92,246,.15);}
 .role-receptionist{background:rgba(59,130,246,.08);color:#93C5FD;border:1px solid rgba(59,130,246,.12);}
+.ac{display:inline-flex;padding:2px 9px;border-radius:6px;font-size:10px;font-weight:700;}
+.ac-create{background:rgba(16,185,129,.1);color:#6EE7B7;}
+.ac-update{background:rgba(59,130,246,.1);color:#93C5FD;}
+.ac-delete{background:rgba(239,68,68,.1);color:#FCA5A5;}
+.ac-login{background:rgba(139,92,246,.1);color:#C4B5FD;}
+.ac-approve{background:rgba(16,185,129,.1);color:#6EE7B7;}
+.ac-reject{background:rgba(239,68,68,.1);color:#FCA5A5;}
+
+/* ══ Three-dot dropdown menu ════════════════════════════════ */
+.dd-wrap{position:relative;display:inline-block;}
+.dd-trigger{
+  width:30px;height:30px;border-radius:8px;border:1px solid var(--border);
+  background:var(--s3);cursor:pointer;color:var(--t3);
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;font-weight:900;letter-spacing:.05em;
+  transition:var(--tr);flex-shrink:0;font-family:monospace;
+  line-height:1;
+}
+.dd-trigger:hover{background:var(--s4);color:var(--t1);border-color:var(--border-h);}
+.dd-trigger.open{background:var(--s4);color:var(--brand-l);border-color:rgba(59,130,246,.3);}
+.dd-menu{
+  position:absolute;top:calc(100% + 5px);left:0;
+  background:var(--s3);border:1px solid var(--border-h);
+  border-radius:11px;padding:5px;min-width:170px;
+  z-index:90;opacity:0;transform:scale(.94) translateY(-6px);
+  pointer-events:none;transition:var(--tr);
+  box-shadow:0 12px 32px rgba(0,0,0,.5),0 0 0 1px rgba(59,130,246,.05);
+}
+.dd-menu.open{opacity:1;transform:scale(1) translateY(0);pointer-events:auto;}
+.dd-item{
+  display:flex;align-items:center;gap:9px;
+  padding:8px 12px;border-radius:7px;
+  cursor:pointer;font-size:12px;font-weight:600;color:var(--t2);
+  transition:var(--tr);white-space:nowrap;
+  border:none;background:none;width:100%;text-align:right;
+  font-family:'Cairo',sans-serif;direction:rtl;
+}
+.dd-item:hover{background:var(--s4);color:var(--t1);}
+.dd-item svg{flex-shrink:0;opacity:.7;}
+.dd-item:hover svg{opacity:1;}
+.dd-item.dd-amber{color:var(--amber);}
+.dd-item.dd-amber:hover{background:var(--amber-bg);}
+.dd-item.dd-green{color:var(--green);}
+.dd-item.dd-green:hover{background:var(--green-bg);}
+.dd-item.dd-red{color:var(--red);}
+.dd-item.dd-red:hover{background:var(--red-bg);}
+.dd-sep{height:1px;background:var(--border);margin:4px 0;}
 
 /* ══ Skeleton ═══════════════════════════════════════════════ */
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-.skel{
-  background:linear-gradient(90deg,var(--s3) 25%,var(--s4) 50%,var(--s3) 75%);
-  background-size:200% 100%;animation:shimmer 1.8s infinite;
-  border-radius:5px;display:block;
-}
-.skel-row{display:flex;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border-s);align-items:center;}
+.skel{background:linear-gradient(90deg,var(--s3) 25%,var(--s4) 50%,var(--s3) 75%);background-size:200% 100%;animation:shimmer 1.8s infinite;border-radius:5px;display:block;}
+.skel-row{display:flex;gap:12px;padding:12px 14px;border-bottom:1px solid var(--border-s);align-items:center;}
 .skel-row:last-child{border-bottom:none;}
-.skel-prop-row .skel:nth-child(1){width:140px;height:13px;}
-.skel-prop-row .skel:nth-child(2){width:55px;height:13px;}
-.skel-prop-row .skel:nth-child(3){width:65px;height:18px;border-radius:20px;}
-.skel-prop-row .skel:nth-child(4){width:65px;height:18px;border-radius:20px;}
-.skel-prop-row .skel:nth-child(5){width:80px;height:13px;}
-.skel-prop-row .skel:nth-child(6){flex:1;height:13px;}
-.skel-prop-row .skel:nth-child(7){width:75px;height:26px;border-radius:7px;}
-.skel-staff-row .skel:nth-child(1){width:110px;height:13px;}
-.skel-staff-row .skel:nth-child(2){width:90px;height:13px;}
-.skel-staff-row .skel:nth-child(3){width:75px;height:18px;border-radius:20px;}
-.skel-staff-row .skel:nth-child(4){width:65px;height:18px;border-radius:20px;}
+.skel-prop-row .skel:nth-child(1){flex:2;height:13px;}
+.skel-prop-row .skel:nth-child(2){flex:1;height:13px;}
+.skel-prop-row .skel:nth-child(3){flex:1;height:18px;border-radius:20px;}
+.skel-prop-row .skel:nth-child(4){flex:1;height:18px;border-radius:20px;}
+.skel-prop-row .skel:nth-child(5){flex:1.5;height:13px;}
+.skel-prop-row .skel:nth-child(6){flex:.7;height:13px;}
+.skel-prop-row .skel:nth-child(7){width:30px;height:30px;border-radius:8px;flex-shrink:0;}
+.skel-staff-row .skel:nth-child(1){flex:2;height:13px;}
+.skel-staff-row .skel:nth-child(2){flex:1.5;height:13px;}
+.skel-staff-row .skel:nth-child(3){flex:1;height:18px;border-radius:20px;}
+.skel-staff-row .skel:nth-child(4){flex:.8;height:18px;border-radius:20px;}
 .skel-staff-row .skel:nth-child(5){flex:1;height:13px;}
-.skel-staff-row .skel:nth-child(6){width:56px;height:26px;border-radius:7px;}
-.skel-log-row .skel:nth-child(1){width:70px;height:13px;}
-.skel-log-row .skel:nth-child(2){width:48px;height:18px;border-radius:20px;}
-.skel-log-row .skel:nth-child(3){width:48px;height:18px;border-radius:20px;}
-.skel-log-row .skel:nth-child(4){flex:1;height:13px;}
-.skel-log-row .skel:nth-child(5){width:80px;height:11px;}
+.skel-staff-row .skel:nth-child(6){width:30px;height:30px;border-radius:8px;flex-shrink:0;}
+.skel-log-row .skel:nth-child(1){flex:1;height:13px;}
+.skel-log-row .skel:nth-child(2){flex:.8;height:18px;border-radius:20px;}
+.skel-log-row .skel:nth-child(3){flex:.7;height:18px;border-radius:20px;}
+.skel-log-row .skel:nth-child(4){flex:2.5;height:13px;}
+.skel-log-row .skel:nth-child(5){flex:1;height:11px;}
 
 /* ══ Pagination ═════════════════════════════════════════════ */
-.pag{
-  display:flex;align-items:center;gap:6px;
-  padding:14px 18px;justify-content:space-between;
-  border-top:1px solid var(--border);
-  background:linear-gradient(180deg,transparent,rgba(0,0,0,.08));
-}
-.pag-info{font-size:11px;color:var(--t4);}
+.pag{display:flex;align-items:center;gap:6px;padding:12px 18px;justify-content:space-between;border-top:1px solid var(--border);background:linear-gradient(180deg,transparent,rgba(0,0,0,.06));}
+.pag-left{display:flex;align-items:center;gap:12px;}
+.pag-total{font-size:11px;color:var(--t4);}
+.pag-info{font-size:11px;color:var(--t3);}
 .pag-btns{display:flex;gap:4px;}
-.pag-btn{
-  min-width:30px;height:30px;border-radius:7px;border:1px solid var(--border);
-  background:var(--s3);cursor:pointer;color:var(--t3);font-size:12px;font-weight:600;
-  display:flex;align-items:center;justify-content:center;transition:all .12s;
-  font-family:'Cairo',sans-serif;padding:0 8px;
-}
+.pag-btn{min-width:30px;height:30px;border-radius:7px;border:1px solid var(--border);background:var(--s3);cursor:pointer;color:var(--t3);font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;transition:var(--tr);font-family:'Cairo',sans-serif;padding:0 8px;}
 .pag-btn:hover:not(:disabled){background:var(--s4);color:var(--t1);border-color:var(--border-h);}
 .pag-btn.active{background:var(--brand);border-color:var(--brand);color:#fff;box-shadow:0 2px 8px rgba(37,99,235,.3);}
 .pag-btn:disabled{opacity:.3;cursor:not-allowed;}
 
-/* ══ Action icon buttons ════════════════════════════════════ */
-.ia-row{display:inline-flex;gap:4px;}
-.ia{
-  width:27px;height:27px;border-radius:7px;border:none;cursor:pointer;
-  display:inline-flex;align-items:center;justify-content:center;
-  font-size:12px;transition:all .15s;position:relative;flex-shrink:0;
-}
-.ia::after{
-  content:attr(data-tip);position:absolute;bottom:calc(100%+6px);left:50%;
-  transform:translateX(-50%);
-  background:rgba(0,8,20,.9);backdrop-filter:blur(8px);
-  color:var(--t1);font-size:10px;font-weight:600;
-  padding:4px 9px;border-radius:6px;white-space:nowrap;
-  pointer-events:none;opacity:0;transition:opacity .12s;
-  font-family:'Cairo',sans-serif;z-index:20;
-  border:1px solid var(--border);
-  box-shadow:0 4px 12px rgba(0,0,0,.4);
-}
-.ia:hover::after{opacity:1;}
-.ia:hover{transform:scale(1.15);}
-.ia-ext {background:rgba(245,158,11,.1);color:var(--amber);  border:1px solid rgba(245,158,11,.15);}
-.ia-tog {background:rgba(16,185,129,.08);color:var(--green); border:1px solid rgba(16,185,129,.12);}
-.ia-tog.off{background:rgba(239,68,68,.08);color:var(--red);  border:1px solid rgba(239,68,68,.12);}
-.ia-del {background:rgba(239,68,68,.08);color:var(--red);   border:1px solid rgba(239,68,68,.12);}
-.ia-view{background:rgba(59,130,246,.08);color:#93C5FD;     border:1px solid rgba(59,130,246,.12);}
-.ia-pwd {background:rgba(139,92,246,.08);color:var(--purple);border:1px solid rgba(139,92,246,.12);}
-
-/* ══ Log action chips ═══════════════════════════════════════ */
-.ac{display:inline-flex;padding:2px 9px;border-radius:6px;font-size:10px;font-weight:700;}
-.ac-create {background:rgba(16,185,129,.1);color:#6EE7B7;}
-.ac-update {background:rgba(59,130,246,.1);color:#93C5FD;}
-.ac-delete {background:rgba(239,68,68,.1);color:#FCA5A5;}
-.ac-login  {background:rgba(139,92,246,.1);color:#C4B5FD;}
-.ac-approve{background:rgba(16,185,129,.1);color:#6EE7B7;}
-.ac-reject {background:rgba(239,68,68,.1);color:#FCA5A5;}
-
-/* ══ Empty state ════════════════════════════════════════════ */
-.empty{text-align:center;padding:52px 20px;display:flex;flex-direction:column;align-items:center;gap:10px;}
-.empty-ico{
-  width:52px;height:52px;border-radius:16px;
-  background:linear-gradient(135deg,var(--s3),var(--s4));
-  border:1px solid var(--border);
-  display:flex;align-items:center;justify-content:center;margin-bottom:2px;
-  font-size:22px;
-}
-.empty-ttl{font-size:13px;font-weight:700;color:var(--t2);}
-.empty-sub{font-size:11.5px;color:var(--t4);max-width:240px;}
-
-/* ══ Toast ══════════════════════════════════════════════════ */
-#toast{
-  position:fixed;bottom:24px;left:50%;
-  transform:translateX(-50%) translateY(70px);
-  background:var(--s3);border:1px solid var(--border-h);
-  border-radius:12px;padding:10px 18px 10px 16px;
-  font-size:13px;font-weight:600;color:var(--t1);
-  z-index:600;transition:transform .3s var(--ease-spring);
-  white-space:nowrap;box-shadow:0 12px 40px rgba(0,0,0,.5);
-  display:flex;align-items:center;gap:9px;
-  backdrop-filter:blur(12px);
-}
-#toast.show{transform:translateX(-50%) translateY(0);}
-#toast.ok {background:linear-gradient(135deg,rgba(4,108,78,.95),rgba(16,185,129,.9));border-color:rgba(52,211,153,.25);}
-#toast.err{background:linear-gradient(135deg,rgba(153,27,27,.95),rgba(239,68,68,.9));border-color:rgba(252,165,165,.25);}
-
 /* ══ Modal ══════════════════════════════════════════════════ */
-.mover{
-  display:none;position:fixed;inset:0;
-  background:rgba(0,5,15,.7);backdrop-filter:blur(8px) saturate(150%);
-  z-index:200;align-items:center;justify-content:center;
-}
+.mover{display:none;position:fixed;inset:0;background:rgba(0,5,15,.72);backdrop-filter:blur(8px) saturate(150%);z-index:200;align-items:center;justify-content:center;}
 .mover.open{display:flex;}
-.mdl{
-  background:linear-gradient(160deg,var(--s3),var(--s2));
-  border:1px solid var(--border-h);border-radius:var(--r-xl);
-  width:100%;max-width:460px;max-height:90vh;overflow:auto;
-  box-shadow:0 32px 80px rgba(0,0,0,.6),0 0 0 1px rgba(59,130,246,.06);
-  animation:mdlIn .22s var(--ease-spring) both;
-  position:relative;
-}
-.mdl::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:1px;
-  background:linear-gradient(90deg,transparent,rgba(59,130,246,.5) 50%,transparent);border-radius:var(--r-xl) var(--r-xl) 0 0;
-}
+.mdl{background:linear-gradient(160deg,var(--s3),var(--s2));border:1px solid var(--border-h);border-radius:var(--r-xl);width:100%;max-width:460px;max-height:90vh;overflow:auto;box-shadow:0 32px 80px rgba(0,0,0,.6);animation:mdlIn .22s var(--ease-spring) both;position:relative;}
+.mdl::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(59,130,246,.5) 50%,transparent);border-radius:var(--r-xl) var(--r-xl) 0 0;}
 @keyframes mdlIn{from{opacity:0;transform:scale(.93) translateY(14px);}to{opacity:1;transform:scale(1) translateY(0);}}
 .mdl-hd{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;}
 .mdl-title{font-size:14px;font-weight:800;color:var(--t1);letter-spacing:-.01em;}
-.mdl-close{background:var(--s4);border:1px solid var(--border);color:var(--t3);width:28px;height:28px;border-radius:7px;font-size:16px;cursor:pointer;line-height:1;transition:all .12s;display:flex;align-items:center;justify-content:center;}
+.mdl-close{background:var(--s4);border:1px solid var(--border);color:var(--t3);width:28px;height:28px;border-radius:7px;font-size:16px;cursor:pointer;line-height:1;transition:var(--tr);display:flex;align-items:center;justify-content:center;}
 .mdl-close:hover{color:var(--t1);background:var(--s5);}
 .mdl-body{padding:22px;}
 .mdl-footer{padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;background:rgba(0,0,0,.1);}
 
-/* ══ Form fields ════════════════════════════════════════════ */
+/* ══ Form ═══════════════════════════════════════════════════ */
 .fg{margin-bottom:14px;}
 .fg label{display:block;font-size:11px;font-weight:700;color:var(--t3);margin-bottom:6px;letter-spacing:.04em;text-transform:uppercase;}
-.fg input,.fg select,.fg textarea{
-  width:100%;padding:9px 12px;
-  background:var(--s1);border:1.5px solid var(--border);border-radius:8px;
-  font-family:'Cairo',sans-serif;font-size:13px;color:var(--t1);outline:none;
-  transition:border-color .15s,box-shadow .15s,background .15s;
-  height:38px;
-}
-.fg textarea{height:auto;}
-.fg input:focus,.fg select:focus,.fg textarea:focus{
-  border-color:var(--brand);box-shadow:0 0 0 3px rgba(37,99,235,.12);background:var(--s2);
-}
-.fg input::placeholder,.fg textarea::placeholder{color:var(--t4);}
+.fg input,.fg select{width:100%;padding:9px 12px;background:var(--s1);border:1.5px solid var(--border);border-radius:8px;font-family:'Cairo',sans-serif;font-size:13px;color:var(--t1);outline:none;transition:var(--tr);height:38px;}
+.fg input:focus,.fg select:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(37,99,235,.12);background:var(--s2);}
+.fg input::placeholder{color:var(--t4);}
 .fg select option{background:var(--s2);color:var(--t1);}
 .fg-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 
+/* ══ Empty ══════════════════════════════════════════════════ */
+.empty{text-align:center;padding:52px 20px;display:flex;flex-direction:column;align-items:center;gap:10px;}
+.empty-ico{width:52px;height:52px;border-radius:16px;background:linear-gradient(135deg,var(--s3),var(--s4));border:1px solid var(--border);display:flex;align-items:center;justify-content:center;margin-bottom:2px;font-size:22px;}
+.empty-ttl{font-size:13px;font-weight:700;color:var(--t2);}
+.empty-sub{font-size:11.5px;color:var(--t4);max-width:240px;}
+
 /* ══ Drawer ═════════════════════════════════════════════════ */
-.drawer{
-  position:fixed;top:0;left:0;bottom:0;width:440px;
-  background:linear-gradient(180deg,var(--s2),var(--s1));
-  border-right:1px solid var(--border);
-  z-index:300;transform:translateX(-100%);transition:transform .3s var(--ease);
-  display:flex;flex-direction:column;box-shadow:8px 0 40px rgba(0,0,0,.5);
-}
+.drawer{position:fixed;top:0;left:0;bottom:0;width:440px;background:linear-gradient(180deg,var(--s2),var(--s1));border-right:1px solid var(--border);z-index:300;transform:translateX(-100%);transition:transform .3s var(--ease);display:flex;flex-direction:column;box-shadow:8px 0 40px rgba(0,0,0,.5);}
 .drawer.open{transform:translateX(0);}
-.drawer-hd{
-  padding:18px 20px;border-bottom:1px solid var(--border);
-  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
-  background:linear-gradient(180deg,rgba(255,255,255,.02),transparent);
-}
-.drawer-title{font-size:14px;font-weight:800;color:var(--t1);letter-spacing:-.01em;}
-.drawer-body{flex:1;overflow-y:auto;padding:16px 20px;}
-.drawer-footer{padding:14px 20px;border-top:1px solid var(--border);flex-shrink:0;}
+.drawer-hd{padding:18px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:linear-gradient(180deg,rgba(255,255,255,.02),transparent);}
+.drawer-title{font-size:14px;font-weight:800;color:var(--t1);}
+.drawer-body{flex:1;overflow-y:auto;padding:14px 16px;}
+.drawer-footer{padding:14px 16px;border-top:1px solid var(--border);flex-shrink:0;}
 .drawer-bg{display:none;position:fixed;inset:0;background:rgba(0,5,15,.55);z-index:290;backdrop-filter:blur(3px);}
 .drawer-bg.open{display:block;}
-
-/* ══ Staff card in drawer ═══════════════════════════════════ */
-.staff-item{
-  display:flex;align-items:center;gap:12px;
-  padding:12px;border-radius:10px;
-  border:1px solid var(--border);background:var(--s3);
-  margin-bottom:8px;transition:border-color .15s,background .15s;
-}
+.staff-item{display:flex;align-items:center;gap:11px;padding:11px;border-radius:10px;border:1px solid var(--border);background:var(--s3);margin-bottom:8px;transition:var(--tr);}
 .staff-item:hover{border-color:var(--border-h);background:var(--s4);}
-.staff-avatar{
-  width:38px;height:38px;border-radius:10px;flex-shrink:0;
-  background:var(--brand-g);display:flex;align-items:center;justify-content:center;
-  font-size:15px;font-weight:800;color:#fff;
-  box-shadow:0 2px 8px rgba(37,99,235,.25);
-}
+.staff-avatar{width:36px;height:36px;border-radius:9px;flex-shrink:0;background:var(--brand-g);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;}
+
+/* ══ Toast ══════════════════════════════════════════════════ */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(70px);background:var(--s3);border:1px solid var(--border-h);border-radius:12px;padding:10px 18px;font-size:13px;font-weight:600;color:var(--t1);z-index:600;transition:transform .3s var(--ease-spring);white-space:nowrap;box-shadow:0 12px 40px rgba(0,0,0,.5);display:flex;align-items:center;gap:9px;backdrop-filter:blur(12px);}
+#toast.show{transform:translateX(-50%) translateY(0);}
+#toast.ok{background:linear-gradient(135deg,rgba(4,108,78,.95),rgba(16,185,129,.9));border-color:rgba(52,211,153,.25);}
+#toast.err{background:linear-gradient(135deg,rgba(153,27,27,.95),rgba(239,68,68,.9));border-color:rgba(252,165,165,.25);}
 </style>
 </head>
 <body>
 
-<!-- ══ Sidebar ═══════════════════════════════════════════════ -->
+<!-- Sidebar -->
 <aside class="sb">
   <div class="sb-brand">
     <div class="sb-logo">B</div>
-    <div class="sb-brand-txt">
+    <div>
       <div class="sb-brand-name">BAREZ</div>
       <div class="sb-brand-sub">Admin Control</div>
     </div>
   </div>
-
   <nav class="sb-nav">
     <div class="sb-label">الرئيسية</div>
     <div class="sn active" onclick="goTab('overview',this)">
-      <span class="sn-ico">
-        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
-      </span>
+      <span class="sn-ico"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
       نظرة عامة
     </div>
-
     <div class="sb-sep" style="margin-top:10px;"></div>
     <div class="sb-label">إدارة النظام</div>
-
     <div class="sn" onclick="goTab('properties',this)">
-      <span class="sn-ico">
-        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-      </span>
+      <span class="sn-ico"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
       المنشآت
       <span class="sn-badge" id="sb-props-cnt">—</span>
     </div>
-
     <div class="sn" onclick="goTab('staff',this)">
-      <span class="sn-ico">
-        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      </span>
+      <span class="sn-ico"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
       الموظفون
       <span class="sn-badge" id="sb-staff-cnt">—</span>
     </div>
-
     <div class="sn" onclick="goTab('log',this)">
-      <span class="sn-ico">
-        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-      </span>
+      <span class="sn-ico"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>
       سجل العمليات
     </div>
   </nav>
-
   <div class="sb-foot">
-    <a href="/superadmin/logout" class="sn" style="color:#F87171;">
-      <span class="sn-ico">
-        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-      </span>
+    <a href="/superadmin/logout" class="sn" style="color:#F87171;text-decoration:none;">
+      <span class="sn-ico"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></span>
       تسجيل خروج
     </a>
   </div>
 </aside>
 
-<!-- ══ Main ══════════════════════════════════════════════════ -->
+<!-- Main -->
 <div class="main">
-
   <header class="topbar">
     <div class="tb-title" id="tb-title">نظرة <span class="hi">عامة</span></div>
     <div class="tb-right">
+      <!-- Offline alert — shown only when navigator.onLine === false -->
+      <div id="offline-alert">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        غير متصل
+      </div>
       <div class="tb-clock" id="clock"></div>
       <div class="tb-avatar">SA</div>
       <a href="/superadmin/logout" class="tb-logout">خروج</a>
@@ -622,70 +456,54 @@ body{
 
   <div class="content">
 
-    <!-- ══════════════ TAB: Overview ═════════════════════════ -->
+    <!-- TAB: Overview -->
     <div class="tab-sec active" id="tab-overview">
-
-      <!-- KPI cards -->
       <div class="kpi-row">
         <div class="kpi k-blue">
           <div class="kpi-glow"></div>
           <div class="kpi-top">
             <div class="kpi-label">إجمالي<br>المنشآت</div>
-            <div class="kpi-icon">
-              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-            </div>
+            <div class="kpi-icon"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
           </div>
           <div class="kpi-val blue" id="kpi-total"><span class="skel" style="width:48px;height:34px;display:inline-block;border-radius:6px;"></span></div>
           <div class="kpi-sub">مسجّل في المنصة</div>
           <div class="kpi-bar"></div>
         </div>
-
         <div class="kpi k-green">
           <div class="kpi-glow"></div>
           <div class="kpi-top">
             <div class="kpi-label">نشطة<br>ومدفوعة</div>
-            <div class="kpi-icon">
-              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-            </div>
+            <div class="kpi-icon"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
           </div>
           <div class="kpi-val green" id="kpi-active"><span class="skel" style="width:40px;height:34px;display:inline-block;border-radius:6px;"></span></div>
           <div class="kpi-sub">اشتراك ساري</div>
           <div class="kpi-bar"></div>
         </div>
-
         <div class="kpi k-amber">
           <div class="kpi-glow"></div>
           <div class="kpi-top">
             <div class="kpi-label">تجريبية<br>&nbsp;</div>
-            <div class="kpi-icon">
-              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            </div>
+            <div class="kpi-icon"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
           </div>
           <div class="kpi-val amber" id="kpi-trial"><span class="skel" style="width:40px;height:34px;display:inline-block;border-radius:6px;"></span></div>
           <div class="kpi-sub">30 يوم مجاني</div>
           <div class="kpi-bar"></div>
         </div>
-
         <div class="kpi k-red">
           <div class="kpi-glow"></div>
           <div class="kpi-top">
             <div class="kpi-label">منتهية<br>الصلاحية</div>
-            <div class="kpi-icon">
-              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-            </div>
+            <div class="kpi-icon"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
           </div>
           <div class="kpi-val red" id="kpi-expired"><span class="skel" style="width:40px;height:34px;display:inline-block;border-radius:6px;"></span></div>
           <div class="kpi-sub">تحتاج تجديد</div>
           <div class="kpi-bar"></div>
         </div>
-
         <div class="kpi k-purple">
           <div class="kpi-glow"></div>
           <div class="kpi-top">
             <div class="kpi-label">موظفون<br>نشطون</div>
-            <div class="kpi-icon">
-              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
-            </div>
+            <div class="kpi-icon"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
           </div>
           <div class="kpi-val purple" id="kpi-staff"><span class="skel" style="width:40px;height:34px;display:inline-block;border-radius:6px;"></span></div>
           <div class="kpi-sub">في كل المنشآت</div>
@@ -693,7 +511,6 @@ body{
         </div>
       </div>
 
-      <!-- Charts + Feed -->
       <div class="charts-row">
         <div class="chart-card">
           <div class="chart-ttl"><div class="chart-ttl-dot"></div>الحجوزات — آخر 12 شهر</div>
@@ -715,7 +532,6 @@ body{
         </div>
       </div>
 
-      <!-- Expiring soon -->
       <div class="card">
         <div class="card-hd">
           <div>
@@ -725,19 +541,17 @@ body{
           <button class="btn btn-ghost btn-sm" onclick="goTab('properties',document.querySelectorAll('.sn')[1])">عرض الكل</button>
         </div>
         <div class="tbl-wrap">
-          <table class="atbl">
+          <table class="atbl" style="table-layout:auto;">
             <thead><tr><th>المنشأة</th><th>الخطة</th><th>الحالة</th><th>ينتهي في</th><th>إجراء</th></tr></thead>
             <tbody id="expiring-tbody">
-              <tr><td colspan="5"><div class="skel-row skel-prop-row">
-                <span class="skel"></span><span class="skel"></span><span class="skel"></span><span class="skel"></span><span class="skel"></span>
-              </div></td></tr>
+              <tr><td colspan="5"><div class="skel-row"><span class="skel" style="flex:2;height:13px;"></span><span class="skel" style="flex:1;height:18px;border-radius:20px;"></span><span class="skel" style="flex:1;height:18px;border-radius:20px;"></span><span class="skel" style="flex:1;height:13px;"></span><span class="skel" style="width:60px;height:26px;border-radius:7px;"></span></div></td></tr>
             </tbody>
           </table>
         </div>
       </div>
     </div>
 
-    <!-- ══════════════ TAB: Properties ══════════════════════ -->
+    <!-- TAB: Properties -->
     <div class="tab-sec" id="tab-properties">
       <div class="sec-hd">
         <div>
@@ -767,9 +581,14 @@ body{
       </div>
       <div class="card">
         <div class="tbl-wrap">
-          <table class="atbl">
+          <table class="atbl props-table">
+            <colgroup>
+              <col style="width:22%"><col style="width:7%"><col style="width:9%">
+              <col style="width:9%"><col style="width:13%"><col style="width:7%">
+              <col style="width:8%"><col style="width:7%">
+            </colgroup>
             <thead>
-              <tr><th>المنشأة</th><th>النوع</th><th>الخطة</th><th>الحالة</th><th>انتهاء الاشتراك</th><th>الموظفون</th><th>الحجوزات</th><th>إجراءات</th></tr>
+              <tr><th>المنشأة</th><th>النوع</th><th>الخطة</th><th>الحالة</th><th>انتهاء الاشتراك</th><th>موظفون</th><th>حجوزات</th><th>إجراءات</th></tr>
             </thead>
             <tbody id="props-tbody">
               <% for(let i=0;i<6;i++){ %>
@@ -784,7 +603,7 @@ body{
       </div>
     </div>
 
-    <!-- ══════════════ TAB: Staff ════════════════════════════ -->
+    <!-- TAB: Staff -->
     <div class="tab-sec" id="tab-staff">
       <div class="sec-hd">
         <div>
@@ -793,9 +612,7 @@ body{
         </div>
         <div class="filter-bar">
           <input class="fi" id="staff-search" placeholder="بحث بالاسم أو المستخدم..." style="width:210px;" oninput="debounceLoadStaff()">
-          <select class="fi fi-select" id="staff-prop-filter" onchange="loadStaff()">
-            <option value="all">كل المنشآت</option>
-          </select>
+          <select class="fi fi-select" id="staff-prop-filter" onchange="loadStaff()"><option value="all">كل المنشآت</option></select>
           <select class="fi fi-select" id="staff-role-filter" onchange="loadStaff()">
             <option value="all">كل الأدوار</option>
             <option value="manager">مدير</option>
@@ -805,7 +622,11 @@ body{
       </div>
       <div class="card">
         <div class="tbl-wrap">
-          <table class="atbl">
+          <table class="atbl staff-table">
+            <colgroup>
+              <col style="width:24%"><col style="width:20%"><col style="width:11%">
+              <col style="width:10%"><col style="width:15%"><col style="width:7%">
+            </colgroup>
             <thead>
               <tr><th>الموظف</th><th>المنشأة</th><th>الدور</th><th>الحالة</th><th>تاريخ الإضافة</th><th>إجراءات</th></tr>
             </thead>
@@ -822,12 +643,11 @@ body{
       </div>
     </div>
 
-    <!-- ══════════════ TAB: Audit Log ════════════════════════ -->
+    <!-- TAB: Audit Log -->
     <div class="tab-sec" id="tab-log">
       <div class="sec-hd">
         <div>
           <div class="sec-ttl">سجل العمليات</div>
-          <div class="sec-sub" id="log-count-sub">—</div>
         </div>
         <div class="filter-bar">
           <input class="fi" id="log-user" placeholder="بحث بالمستخدم..." style="width:180px;" oninput="debounceLoadLog()">
@@ -848,7 +668,11 @@ body{
       </div>
       <div class="card">
         <div class="tbl-wrap">
-          <table class="atbl">
+          <table class="atbl log-table">
+            <colgroup>
+              <col style="width:12%"><col style="width:9%"><col style="width:8%">
+              <col style="width:9%"><col style="width:32%"><col style="width:12%"><col style="width:13%">
+            </colgroup>
             <thead>
               <tr><th>المستخدم</th><th>الدور</th><th>العملية</th><th>النموذج</th><th>الملخص</th><th>IP</th><th>التاريخ</th></tr>
             </thead>
@@ -862,8 +686,12 @@ body{
             </tbody>
           </table>
         </div>
+        <!-- Pagination WITH total count -->
         <div class="pag" id="log-pag" style="display:none;">
-          <div class="pag-info" id="log-pag-info"></div>
+          <div class="pag-left">
+            <span class="pag-total" id="log-total-txt"></span>
+            <span class="pag-info" id="log-pag-info"></span>
+          </div>
           <div class="pag-btns" id="log-pag-btns"></div>
         </div>
       </div>
@@ -872,16 +700,14 @@ body{
   </div>
 </div>
 
-<!-- ══ Drawer: Staff per property ════════════════════════════ -->
+<!-- Drawer -->
 <div class="drawer-bg" id="drawer-bg" onclick="closeDrawer()"></div>
 <div class="drawer" id="staff-drawer">
   <div class="drawer-hd">
     <div class="drawer-title" id="drawer-title">موظفو المنشأة</div>
     <button class="mdl-close" onclick="closeDrawer()">✕</button>
   </div>
-  <div class="drawer-body" id="drawer-body">
-    <div class="empty"><div class="empty-ico">👤</div><div class="empty-sub">جاري التحميل...</div></div>
-  </div>
+  <div class="drawer-body" id="drawer-body"></div>
   <div class="drawer-footer">
     <button class="btn btn-primary" style="width:100%;" onclick="openAddStaff()">
       <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -890,17 +716,14 @@ body{
   </div>
 </div>
 
-<!-- ══ Modal: Create Property ════════════════════════════════ -->
+<!-- Modal: Create Property -->
 <div class="mover" id="create-prop-modal">
   <div class="mdl" style="max-width:500px;">
-    <div class="mdl-hd">
-      <div class="mdl-title">إضافة منشأة جديدة</div>
-      <button class="mdl-close" onclick="closeModal('create-prop-modal')">✕</button>
-    </div>
+    <div class="mdl-hd"><div class="mdl-title">إضافة منشأة جديدة</div><button class="mdl-close" onclick="closeModal('create-prop-modal')">✕</button></div>
     <div class="mdl-body">
       <div class="fg-row">
-        <div class="fg"><label>اسم المنشأة *</label><input id="cp-name" type="text" placeholder="مثال: برج الساحل"></div>
-        <div class="fg"><label>المدينة</label><input id="cp-city" type="text" placeholder="الرياض"></div>
+        <div class="fg"><label>اسم المنشأة *</label><input id="cp-name" placeholder="مثال: برج الساحل"></div>
+        <div class="fg"><label>المدينة</label><input id="cp-city" placeholder="الرياض"></div>
       </div>
       <div class="fg-row">
         <div class="fg"><label>النوع</label><select id="cp-type"><option value="apartment">شقق سكنية</option><option value="hotel">فندق</option><option value="mixed">مختلط</option></select></div>
@@ -910,7 +733,7 @@ body{
         <div class="fg"><label>البريد الإلكتروني</label><input id="cp-email" type="email" placeholder="admin@example.com"></div>
         <div class="fg"><label>رقم الجوال</label><input id="cp-phone" type="tel" placeholder="05xxxxxxxx"></div>
       </div>
-      <div class="fg"><label>عدد أيام الاشتراك</label><input id="cp-days" type="number" value="30" min="1" max="730"></div>
+      <div class="fg"><label>أيام الاشتراك</label><input id="cp-days" type="number" value="30" min="1" max="730"></div>
     </div>
     <div class="mdl-footer">
       <button class="btn btn-ghost" onclick="closeModal('create-prop-modal')">إلغاء</button>
@@ -919,13 +742,10 @@ body{
   </div>
 </div>
 
-<!-- ══ Modal: Extend Plan ═════════════════════════════════════ -->
+<!-- Modal: Extend -->
 <div class="mover" id="extend-modal">
   <div class="mdl" style="max-width:380px;">
-    <div class="mdl-hd">
-      <div class="mdl-title">تمديد: <span id="ext-name" style="color:#93C5FD;"></span></div>
-      <button class="mdl-close" onclick="closeModal('extend-modal')">✕</button>
-    </div>
+    <div class="mdl-hd"><div class="mdl-title">تمديد: <span id="ext-name" style="color:#93C5FD;"></span></div><button class="mdl-close" onclick="closeModal('extend-modal')">✕</button></div>
     <div class="mdl-body">
       <input type="hidden" id="ext-id">
       <div class="fg"><label>الخطة</label><select id="ext-plan"><option value="trial">تجريبية</option><option value="basic">أساسية</option><option value="pro">احترافية</option></select></div>
@@ -938,21 +758,18 @@ body{
   </div>
 </div>
 
-<!-- ══ Modal: Add Staff ═══════════════════════════════════════ -->
+<!-- Modal: Add Staff -->
 <div class="mover" id="add-staff-modal">
   <div class="mdl" style="max-width:420px;">
-    <div class="mdl-hd">
-      <div class="mdl-title">موظف جديد — <span id="as-prop-name" style="color:#93C5FD;"></span></div>
-      <button class="mdl-close" onclick="closeModal('add-staff-modal')">✕</button>
-    </div>
+    <div class="mdl-hd"><div class="mdl-title">موظف جديد — <span id="as-prop-name" style="color:#93C5FD;"></span></div><button class="mdl-close" onclick="closeModal('add-staff-modal')">✕</button></div>
     <div class="mdl-body">
       <input type="hidden" id="as-prop-id">
       <div class="fg-row">
-        <div class="fg"><label>الاسم الكامل *</label><input id="as-name" type="text" placeholder="اسم الموظف"></div>
-        <div class="fg"><label>اسم المستخدم *</label><input id="as-username" type="text" placeholder="username" style="direction:ltr;text-align:left;"></div>
+        <div class="fg"><label>الاسم الكامل *</label><input id="as-name" placeholder="اسم الموظف"></div>
+        <div class="fg"><label>اسم المستخدم *</label><input id="as-username" placeholder="username" style="direction:ltr;text-align:left;"></div>
       </div>
       <div class="fg-row">
-        <div class="fg"><label>كلمة المرور * (8+ أحرف)</label><input id="as-password" type="password" placeholder="••••••••"></div>
+        <div class="fg"><label>كلمة المرور * (8+)</label><input id="as-password" type="password" placeholder="••••••••"></div>
         <div class="fg"><label>الدور</label><select id="as-role"><option value="receptionist">موظف استقبال</option><option value="manager">مدير</option></select></div>
       </div>
     </div>
@@ -963,13 +780,10 @@ body{
   </div>
 </div>
 
-<!-- ══ Modal: Reset Password ══════════════════════════════════ -->
+<!-- Modal: Reset Password -->
 <div class="mover" id="reset-pwd-modal">
   <div class="mdl" style="max-width:360px;">
-    <div class="mdl-hd">
-      <div class="mdl-title">إعادة تعيين كلمة المرور</div>
-      <button class="mdl-close" onclick="closeModal('reset-pwd-modal')">✕</button>
-    </div>
+    <div class="mdl-hd"><div class="mdl-title">إعادة تعيين كلمة المرور</div><button class="mdl-close" onclick="closeModal('reset-pwd-modal')">✕</button></div>
     <div class="mdl-body">
       <input type="hidden" id="rp-id">
       <div class="fg"><label>كلمة المرور الجديدة (8+ أحرف)</label><input id="rp-pwd" type="password" placeholder="••••••••"></div>
@@ -985,88 +799,140 @@ body{
 
 <script>
 /* ═══════════════════════════════════════════════════════════
-   BAREZ ADMIN — CLIENT ENGINE
+   BAREZ ADMIN ENGINE
    ═══════════════════════════════════════════════════════════ */
 const _allProps = [];
-let   _logPage  = 1;
-let   _drawerPropId = null;
+let _logPage = 1;
+let _drawerPropId = null;
 const _debTimer = {};
+const _loaded = {};
 
 // ── Clock ────────────────────────────────────────────────
 (function(){
-  const el = document.getElementById('clock');
-  const tick = () => { el.textContent = new Date().toLocaleString('ar-SA',{hour:'2-digit',minute:'2-digit',second:'2-digit',day:'2-digit',month:'short'}); };
-  tick(); setInterval(tick, 1000);
+  const el=document.getElementById('clock');
+  const t=()=>el.textContent=new Date().toLocaleString('ar-SA',{hour:'2-digit',minute:'2-digit',second:'2-digit',day:'2-digit',month:'short'});
+  t(); setInterval(t,1000);
 })();
 
-// ── Animated number counter ──────────────────────────────
-function animateNum(el, target, dur=800){
-  const start = Date.now();
-  const tick = () => {
-    const p = Math.min(1,(Date.now()-start)/dur);
-    const ease = 1-Math.pow(1-p,3); // ease-out cubic
-    el.textContent = Math.round(ease * target);
-    if(p<1) requestAnimationFrame(tick);
-    else el.textContent = target;
+// ── Offline detection ─────────────────────────────────────
+(function(){
+  const el=document.getElementById('offline-alert');
+  const check=()=>el.style.display=navigator.onLine?'none':'flex';
+  window.addEventListener('online',check);
+  window.addEventListener('offline',check);
+  check();
+})();
+
+// ── Animated counter ─────────────────────────────────────
+function animateNum(el,target,dur=900){
+  const start=Date.now();
+  const tick=()=>{
+    const p=Math.min(1,(Date.now()-start)/dur);
+    const ease=1-Math.pow(1-p,3);
+    el.textContent=Math.round(ease*target);
+    if(p<1) requestAnimationFrame(tick); else el.textContent=target;
   };
   requestAnimationFrame(tick);
 }
 
-// ── Helpers ───────────────────────────────────────────────
-function toast(msg, type='info'){
-  const t = document.getElementById('toast');
-  t.className = type==='ok' ? 'show ok' : type==='err' ? 'show err' : 'show';
-  t.textContent = msg;
-  clearTimeout(t._tmr);
-  t._tmr = setTimeout(() => t.className = '', 2800);
+// ── Dropdown menu ─────────────────────────────────────────
+function toggleDD(e,id){
+  e.stopPropagation();
+  const menu=document.getElementById(id);
+  const trigger=menu.previousElementSibling;
+  const isOpen=menu.classList.contains('open');
+  closeAllDD();
+  if(!isOpen){
+    menu.classList.add('open');
+    trigger.classList.add('open');
+    // Flip if near bottom
+    const rect=menu.getBoundingClientRect();
+    if(rect.bottom>window.innerHeight-20){
+      menu.style.top='auto';menu.style.bottom='calc(100% + 5px)';
+    } else { menu.style.top=''; menu.style.bottom=''; }
+  }
 }
-function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function fDate(d){ return d ? new Date(d).toLocaleDateString('ar-SA',{year:'numeric',month:'short',day:'numeric'}) : '—'; }
-function daysLeft(exp){ if(!exp) return null; return Math.ceil((new Date(exp)-new Date())/86400000); }
-function debounce(fn, key, ms=320){ clearTimeout(_debTimer[key]); _debTimer[key] = setTimeout(fn, ms); }
-function debounceLoadProps(){ debounce(loadProps,'props'); }
-function debounceLoadStaff(){ debounce(loadStaff,'staff'); }
-function debounceLoadLog(){   debounce(()=>loadLog(1),'log'); }
-function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+function closeAllDD(){
+  document.querySelectorAll('.dd-menu.open').forEach(m=>{
+    m.classList.remove('open');
+    if(m.previousElementSibling) m.previousElementSibling.classList.remove('open');
+  });
+}
+document.addEventListener('click',closeAllDD);
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeAllDD(); });
+
+// ── Helpers ───────────────────────────────────────────────
+function toast(msg,type='info'){
+  const t=document.getElementById('toast');
+  t.className=type==='ok'?'show ok':type==='err'?'show err':'show';
+  t.textContent=msg;
+  clearTimeout(t._tmr);
+  t._tmr=setTimeout(()=>t.className='',2800);
+}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function fDate(d){return d?new Date(d).toLocaleDateString('ar-SA',{year:'numeric',month:'short',day:'numeric'}):'—';}
+function daysLeft(exp){if(!exp)return null;return Math.ceil((new Date(exp)-new Date())/86400000);}
+function debounce(fn,key,ms=320){clearTimeout(_debTimer[key]);_debTimer[key]=setTimeout(fn,ms);}
+function debounceLoadProps(){debounce(loadProps,'props');}
+function debounceLoadStaff(){debounce(loadStaff,'staff');}
+function debounceLoadLog(){debounce(()=>loadLog(1),'log');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
 
 function statusInfo(p){
-  const now=new Date(), exp=p.planExpiry?new Date(p.planExpiry):null;
-  if(!p.active) return {cls:'bdg-stopped',lbl:'موقوفة'};
-  if(exp&&exp<now) return {cls:'bdg-expired',lbl:'منتهية'};
-  if(p.plan==='trial') return {cls:'bdg-trial',lbl:'تجريبية'};
-  return {cls:'bdg-active',lbl:'نشطة'};
+  const now=new Date(),exp=p.planExpiry?new Date(p.planExpiry):null;
+  if(!p.active) return{cls:'bdg-stopped',lbl:'موقوفة'};
+  if(exp&&exp<now) return{cls:'bdg-expired',lbl:'منتهية'};
+  if(p.plan==='trial') return{cls:'bdg-trial',lbl:'تجريبية'};
+  return{cls:'bdg-active',lbl:'نشطة'};
 }
 function planPill(plan){
   const m={trial:['plan-trial','تجريبية'],basic:['plan-basic','أساسية'],pro:['plan-pro','احترافية']};
   const[cls,lbl]=m[plan]||['plan-trial','تجريبية'];
-  return `<span class="plan-pill ${cls}">${lbl}</span>`;
+  return`<span class="plan-pill ${cls}">${lbl}</span>`;
 }
-function badge(cls, lbl){ return `<span class="bdg ${cls}"><span class="bdg-dot"></span>${lbl}</span>`; }
-function skelRows(n, cls, cols){
+function badge(cls,lbl){return`<span class="bdg ${cls}"><span class="bdg-dot"></span>${lbl}</span>`;}
+function skelRows(n,cls,cols){
   return Array.from({length:n},()=>`<tr><td colspan="${cols}"><div class="skel-row ${cls}">${
     Array.from({length:cols-1},()=>'<span class="skel"></span>').join('')
   }</div></td></tr>`).join('');
 }
 
-// ── Tab navigation ────────────────────────────────────────
-const TAB_TITLE = {
+// Clean audit summary: remove model-type words already shown in model column
+function cleanSummary(s,model){
+  if(!s) return'—';
+  const STRIP={
+    Property:['منشأة','عقار','مبنى'],
+    StaffUser:['موظف','مستخدم'],
+    Booking:['حجز','عقد'],
+    Customer:['عميل','ضيف'],
+    AuditLog:['سجل'],
+  };
+  let clean=s;
+  (STRIP[model]||[]).forEach(w=>{
+    clean=clean.replace(new RegExp('(إنشاء|تعديل|حذف|تمديد|تفعيل|إيقاف)\\s+'+w+'\\s*:?\\s*','g'),'$1: ');
+    clean=clean.replace(new RegExp('^'+w+'\\s*:?\\s*','g'),'');
+  });
+  return clean.replace(/:\s*$/,'').replace(/\s{2,}/g,' ').trim()||s;
+}
+
+// ── Tab navigation ─────────────────────────────────────────
+const TAB_TITLE={
   overview:'نظرة <span class="hi">عامة</span>',
   properties:'إدارة <span class="hi">المنشآت</span>',
   staff:'إدارة <span class="hi">الموظفين</span>',
   log:'سجل <span class="hi">العمليات</span>',
 };
-const _loaded = {};
-function goTab(id, el){
+function goTab(id,el){
   document.querySelectorAll('.tab-sec').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.sn').forEach(n=>n.classList.remove('active'));
   document.getElementById('tab-'+id).classList.add('active');
   if(el) el.classList.add('active');
-  document.getElementById('tb-title').innerHTML = TAB_TITLE[id]||id;
+  document.getElementById('tb-title').innerHTML=TAB_TITLE[id]||id;
   if(!_loaded[id]){
     _loaded[id]=true;
     if(id==='properties') loadProps();
-    if(id==='staff')      loadStaff();
-    if(id==='log')        loadLog(1);
+    if(id==='staff') loadStaff();
+    if(id==='log') loadLog(1);
   }
 }
 
@@ -1075,131 +941,82 @@ function goTab(id, el){
 // ═══════════════════════════════════════════════════════════
 async function loadOverview(){
   try{
-    const [stats, chart, activity, props] = await Promise.all([
+    const[stats,chart,activity,props]=await Promise.all([
       fetch('/superadmin/api/stats').then(r=>r.json()),
       fetch('/superadmin/api/chart').then(r=>r.json()),
       fetch('/superadmin/api/activity?limit=8').then(r=>r.json()),
       fetch('/superadmin/api/properties').then(r=>r.json()),
     ]);
 
-    // KPIs with animated counters
-    const kpiMap = {
-      'kpi-total':{val:stats.total??0,cls:'blue'},
-      'kpi-active':{val:stats.active??0,cls:'green'},
-      'kpi-trial':{val:stats.trial??0,cls:'amber'},
-      'kpi-expired':{val:stats.expired??0,cls:'red'},
-      'kpi-staff':{val:stats.staffCount??0,cls:'purple'},
-    };
-    Object.entries(kpiMap).forEach(([id,{val,cls}])=>{
-      const el = document.getElementById(id);
-      el.innerHTML = `<span class="kpi-val ${cls}" style="font-size:34px;font-weight:900;letter-spacing:-.05em;">0</span>`;
-      animateNum(el.querySelector('span'), val, 900);
+    // KPIs
+    [{id:'kpi-total',val:stats.total??0,cls:'blue'},{id:'kpi-active',val:stats.active??0,cls:'green'},
+     {id:'kpi-trial',val:stats.trial??0,cls:'amber'},{id:'kpi-expired',val:stats.expired??0,cls:'red'},
+     {id:'kpi-staff',val:stats.staffCount??0,cls:'purple'}
+    ].forEach(({id,val,cls})=>{
+      const el=document.getElementById(id);
+      el.innerHTML=`<span class="kpi-val ${cls}" style="font-size:34px;font-weight:900;letter-spacing:-.05em;">0</span>`;
+      animateNum(el.querySelector('span'),val);
     });
-
-    // Sidebar badges
-    document.getElementById('sb-props-cnt').textContent = stats.total??'—';
-    document.getElementById('sb-staff-cnt').textContent = stats.staffCount??'—';
+    document.getElementById('sb-props-cnt').textContent=stats.total??'—';
+    document.getElementById('sb-staff-cnt').textContent=stats.staffCount??'—';
 
     // Chart
-    const ctx = document.getElementById('bookingsChart').getContext('2d');
-    const grad = ctx.createLinearGradient(0,0,0,108);
-    grad.addColorStop(0,'rgba(59,130,246,.28)');
-    grad.addColorStop(1,'rgba(59,130,246,.01)');
-    new Chart(ctx,{
-      type:'line',
-      data:{
-        labels:chart.labels,
-        datasets:[{
-          data:chart.data,
-          borderColor:'#3B82F6',
-          backgroundColor:grad,
-          borderWidth:2,tension:.42,fill:true,
-          pointRadius:3,pointBackgroundColor:'#3B82F6',
-          pointBorderColor:'#0e1628',pointBorderWidth:2,
-        }]
-      },
-      options:{
-        responsive:true,
-        plugins:{legend:{display:false},tooltip:{
-          backgroundColor:'rgba(0,8,20,.9)',borderColor:'rgba(59,130,246,.3)',borderWidth:1,
-          titleFont:{family:'Cairo',size:11},bodyFont:{family:'Cairo',size:12},
-          callbacks:{label:ctx=>' '+ctx.parsed.y+' حجز'}
-        }},
-        scales:{
-          x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#2E4566',font:{size:10,family:'Cairo'}}},
-          y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#2E4566',font:{size:10,family:'Cairo'}}},
-        }
-      }
-    });
+    const ctx=document.getElementById('bookingsChart').getContext('2d');
+    const grad=ctx.createLinearGradient(0,0,0,108);
+    grad.addColorStop(0,'rgba(59,130,246,.28)');grad.addColorStop(1,'rgba(59,130,246,.01)');
+    new Chart(ctx,{type:'line',data:{labels:chart.labels,datasets:[{data:chart.data,borderColor:'#3B82F6',backgroundColor:grad,borderWidth:2,tension:.42,fill:true,pointRadius:3,pointBackgroundColor:'#3B82F6',pointBorderColor:'#0e1628',pointBorderWidth:2}]},options:{responsive:true,plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(0,8,20,.9)',borderColor:'rgba(59,130,246,.3)',borderWidth:1,titleFont:{family:'Cairo',size:11},bodyFont:{family:'Cairo',size:12},callbacks:{label:c=>' '+c.parsed.y+' حجز'}}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#2E4566',font:{size:10,family:'Cairo'}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#2E4566',font:{size:10,family:'Cairo'}}}}}});
 
     // Feed
     const DOT={create:'#10B981',update:'#3B82F6',delete:'#EF4444',login:'#8B5CF6',approve:'#10B981',reject:'#EF4444'};
-    const feedEl = document.getElementById('feed-list');
-    const acts = activity.logs||[];
-    feedEl.innerHTML = acts.length ? acts.map(l=>`
+    const feedEl=document.getElementById('feed-list');
+    const acts=activity.logs||[];
+    feedEl.innerHTML=acts.length?acts.map(l=>`
       <div class="feed-item">
-        <div class="feed-dot" style="background:${DOT[l.action]||'#2E4566'};box-shadow:0 0 5px ${DOT[l.action]||'#2E4566'}66;"></div>
+        <div class="feed-dot" style="background:${DOT[l.action]||'#2E4566'};box-shadow:0 0 5px ${DOT[l.action]||'#2E4566'}55;"></div>
         <div class="feed-content">
-          <div class="feed-main">${esc(l.user)} · ${esc(l.summary||l.action)}</div>
+          <div class="feed-main">${esc(l.user)} · ${esc(cleanSummary(l.summary,l.model)||l.action)}</div>
           <div class="feed-sub">${esc(l.model||'')}${l.ip?' · '+esc(l.ip):''}</div>
         </div>
         <div class="feed-time">${new Date(l.createdAt).toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'})}</div>
-      </div>`).join('') :
+      </div>`).join(''):
       `<div class="empty" style="padding:20px;"><div class="empty-sub">لا توجد عمليات بعد</div></div>`;
 
     // Expiring soon
-    const expiring = (props||[]).filter(p=>{ const d=daysLeft(p.planExpiry); return p.active&&d!==null&&d>=0&&d<=7; });
-    document.getElementById('expiring-sub').textContent = `${expiring.length} منشأة تنتهي خلال أسبوع`;
-    const tbody = document.getElementById('expiring-tbody');
-    tbody.innerHTML = expiring.length ? expiring.map(p=>{
-      const d=daysLeft(p.planExpiry), s=statusInfo(p);
-      const dStr = d===0?'<span style="color:var(--red);font-weight:700;">اليوم</span>':
-                   d<=2?`<span style="color:var(--red);">${d} يوم</span>`:`<span style="color:var(--amber);">${d} يوم</span>`;
-      return `<tr>
-        <td><div style="font-weight:700;color:var(--t1);">${esc(p.name)}</div><div style="font-size:10px;color:var(--t4);">${esc(p.city||'—')}</div></td>
-        <td>${planPill(p.plan)}</td>
-        <td>${badge(s.cls,s.lbl)}</td>
-        <td>${dStr}</td>
-        <td><button class="btn btn-amber btn-sm" onclick="openExtend('${p._id}','${esc(p.name)}','${p.plan}')">تمديد</button></td>
-      </tr>`;
-    }).join('') :
-    `<tr><td colspan="5"><div class="empty">
-      <div class="empty-ico"><svg width="22" height="22" fill="none" stroke="var(--green)" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-      <div class="empty-ttl">لا توجد اشتراكات تنتهي قريباً</div>
-    </div></td></tr>`;
+    const expiring=(props||[]).filter(p=>{const d=daysLeft(p.planExpiry);return p.active&&d!==null&&d>=0&&d<=7;});
+    document.getElementById('expiring-sub').textContent=`${expiring.length} منشأة تنتهي خلال أسبوع`;
+    const tbody=document.getElementById('expiring-tbody');
+    tbody.innerHTML=expiring.length?expiring.map(p=>{
+      const d=daysLeft(p.planExpiry),s=statusInfo(p);
+      const dStr=d===0?'<span style="color:var(--red);font-weight:700;">اليوم</span>':d<=2?`<span style="color:var(--red);">${d} يوم</span>`:`<span style="color:var(--amber);">${d} يوم</span>`;
+      return`<tr><td><div style="font-weight:700;color:var(--t1);">${esc(p.name)}</div><div style="font-size:10px;color:var(--t4);">${esc(p.city||'—')}</div></td><td>${planPill(p.plan)}</td><td>${badge(s.cls,s.lbl)}</td><td>${dStr}</td><td><button class="btn btn-amber btn-sm" onclick="openExtend('${p._id}','${esc(p.name)}','${p.plan}')">تمديد</button></td></tr>`;
+    }).join(''):
+    `<tr><td colspan="5"><div class="empty"><div class="empty-ico"><svg width="22" height="22" fill="none" stroke="var(--green)" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="empty-ttl">لا اشتراكات تنتهي قريباً</div></div></td></tr>`;
 
-    _allProps.length = 0;
-    (props||[]).forEach(p=>_allProps.push(p));
-    _buildPropFilter();
-
-  }catch(e){ toast('❌ تعذر تحميل البيانات','err'); console.error(e); }
+    _allProps.length=0;(props||[]).forEach(p=>_allProps.push(p));_buildPropFilter();
+  }catch(e){toast('❌ تعذر تحميل البيانات','err');}
 }
 
 // ═══════════════════════════════════════════════════════════
 //  PROPERTIES
 // ═══════════════════════════════════════════════════════════
 async function loadProps(){
-  const tbody = document.getElementById('props-tbody');
-  tbody.innerHTML = skelRows(6,'skel-prop-row',8);
+  const tbody=document.getElementById('props-tbody');
+  tbody.innerHTML=skelRows(6,'skel-prop-row',8);
   const q=document.getElementById('prop-search')?.value||'';
   const status=document.getElementById('prop-status')?.value||'all';
   const plan=document.getElementById('prop-plan')?.value||'all';
   try{
-    const list = await fetch('/superadmin/api/properties?'+new URLSearchParams({q,status,plan})).then(r=>r.json());
-    document.getElementById('props-count-sub').textContent = `${list.length} منشأة`;
+    const list=await fetch('/superadmin/api/properties?'+new URLSearchParams({q,status,plan})).then(r=>r.json());
+    document.getElementById('props-count-sub').textContent=`${list.length} منشأة`;
     if(!list.length){
-      tbody.innerHTML=`<tr><td colspan="8"><div class="empty">
-        <div class="empty-ico">🏢</div>
-        <div class="empty-ttl">لا توجد منشآت</div>
-        <div class="empty-sub">اضغط "منشأة جديدة" للبدء</div>
-      </div></td></tr>`;
+      tbody.innerHTML=`<tr><td colspan="8"><div class="empty"><div class="empty-ico">🏢</div><div class="empty-ttl">لا توجد منشآت</div><div class="empty-sub">اضغط "منشأة جديدة" للبدء</div></div></td></tr>`;
       return;
     }
-    tbody.innerHTML = list.map(p=>{
-      const s=statusInfo(p), d=daysLeft(p.planExpiry);
-      const dStr = d===null?'—':d<0?`<span style="color:var(--red);">منتهي</span>`:
-                   d<=7?`<span style="color:var(--amber);">${d} يوم</span>`:`${d} يوم`;
-      return `<tr>
+    tbody.innerHTML=list.map(p=>{
+      const s=statusInfo(p),d=daysLeft(p.planExpiry);
+      const dStr=d===null?'—':d<0?`<span style="color:var(--red);">منتهي</span>`:d<=7?`<span style="color:var(--amber);">${d} يوم</span>`:`${d} يوم`;
+      const isActive=p.active;
+      return`<tr>
         <td>
           <div style="font-weight:700;color:var(--t1);margin-bottom:2px;">${esc(p.name)}</div>
           <div style="font-size:10px;color:var(--t4);">${esc(p.city||'—')}${p.adminEmail?' · '+esc(p.adminEmail):''}</div>
@@ -1207,90 +1024,80 @@ async function loadProps(){
         <td style="color:var(--t3);font-size:11px;">${{apartment:'شقق',hotel:'فندق',mixed:'مختلط'}[p.type]||p.type}</td>
         <td>${planPill(p.plan)}</td>
         <td>${badge(s.cls,s.lbl)}</td>
-        <td><div style="font-size:12px;">${fDate(p.planExpiry)}</div><div style="font-size:10px;color:var(--t4);margin-top:2px;">${dStr}</div></td>
-        <td><span style="font-weight:700;color:var(--t1);">${p.staffCount||0}</span></td>
-        <td><span style="font-weight:700;color:var(--t1);">${p.bookingCount||0}</span></td>
+        <td><div style="font-size:12px;">${fDate(p.planExpiry)}</div><div style="font-size:10px;color:var(--t4);margin-top:1px;">${dStr}</div></td>
+        <td style="font-weight:700;color:var(--t1);text-align:center;">${p.staffCount||0}</td>
+        <td style="font-weight:700;color:var(--t1);text-align:center;">${p.bookingCount||0}</td>
         <td>
-          <div class="ia-row">
-            <button class="ia ia-view" data-tip="موظفو المنشأة" onclick="openDrawer('${p._id}','${esc(p.name)}')">
-              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-            </button>
-            <button class="ia ia-ext" data-tip="تمديد الاشتراك" onclick="openExtend('${p._id}','${esc(p.name)}','${p.plan}')">
-              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            </button>
-            <button class="ia ia-tog ${!p.active?'off':''}" data-tip="${p.active?'إيقاف تشغيل':'تفعيل'}" onclick="toggleProp('${p._id}',this)">
-              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
-            </button>
-            <button class="ia ia-del" data-tip="حذف المنشأة" onclick="deleteProp('${p._id}','${esc(p.name)}')">
-              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6m4-6v6"/></svg>
-            </button>
+          <div class="dd-wrap">
+            <button class="dd-trigger" onclick="toggleDD(event,'pdd-${p._id}')" title="الإجراءات">⋮</button>
+            <div class="dd-menu" id="pdd-${p._id}">
+              <button class="dd-item" onclick="closeAllDD();openDrawer('${p._id}','${esc(p.name)}')">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                عرض الموظفين
+              </button>
+              <button class="dd-item dd-amber" onclick="closeAllDD();openExtend('${p._id}','${esc(p.name)}','${p.plan}')">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                تمديد الاشتراك
+              </button>
+              <button class="dd-item ${isActive?'dd-red':'dd-green'}" onclick="closeAllDD();toggleProp('${p._id}')">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
+                ${isActive?'إيقاف تشغيل':'تفعيل'}
+              </button>
+              <div class="dd-sep"></div>
+              <button class="dd-item dd-red" onclick="closeAllDD();deleteProp('${p._id}','${esc(p.name)}')">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6m4-6v6"/></svg>
+                حذف المنشأة
+              </button>
+            </div>
           </div>
         </td>
       </tr>`;
     }).join('');
-    _allProps.length=0; list.forEach(p=>_allProps.push(p));
-    _buildPropFilter();
-  }catch(e){ toast('❌ تعذر تحميل المنشآت','err'); }
+    _allProps.length=0;list.forEach(p=>_allProps.push(p));_buildPropFilter();
+  }catch(e){toast('❌ تعذر تحميل المنشآت','err');}
 }
-
 function _buildPropFilter(){
-  const sel = document.getElementById('staff-prop-filter'); if(!sel) return;
-  const cur = sel.value;
-  sel.innerHTML = '<option value="all">كل المنشآت</option>'+
-    _allProps.map(p=>`<option value="${p._id}"${p._id===cur?' selected':''}>${esc(p.name)}</option>`).join('');
+  const sel=document.getElementById('staff-prop-filter');if(!sel)return;
+  const cur=sel.value;
+  sel.innerHTML='<option value="all">كل المنشآت</option>'+_allProps.map(p=>`<option value="${p._id}"${p._id===cur?' selected':''}>${esc(p.name)}</option>`).join('');
 }
-
-function openCreateProp(){ document.getElementById('create-prop-modal').classList.add('open'); }
+function openCreateProp(){document.getElementById('create-prop-modal').classList.add('open');}
 async function submitCreateProp(){
-  const name = document.getElementById('cp-name').value.trim();
-  if(!name){ toast('اسم المنشأة مطلوب','err'); return; }
+  const name=document.getElementById('cp-name').value.trim();
+  if(!name){toast('اسم المنشأة مطلوب','err');return;}
   try{
-    const r = await fetch('/superadmin/api/properties',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-      name,city:document.getElementById('cp-city').value.trim(),
-      type:document.getElementById('cp-type').value,plan:document.getElementById('cp-plan').value,
-      adminEmail:document.getElementById('cp-email').value.trim(),phone:document.getElementById('cp-phone').value.trim(),
-      days:document.getElementById('cp-days').value,
-    })});
-    const d = await r.json();
-    if(d.success){ toast('✅ تم إنشاء المنشأة','ok'); closeModal('create-prop-modal'); loadProps(); loadOverview(); }
+    const r=await fetch('/superadmin/api/properties',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,city:document.getElementById('cp-city').value.trim(),type:document.getElementById('cp-type').value,plan:document.getElementById('cp-plan').value,adminEmail:document.getElementById('cp-email').value.trim(),phone:document.getElementById('cp-phone').value.trim(),days:document.getElementById('cp-days').value})});
+    const d=await r.json();
+    if(d.success){toast('✅ تم إنشاء المنشأة','ok');closeModal('create-prop-modal');loadProps();loadOverview();}
     else toast('❌ '+d.error,'err');
-  }catch(e){ toast('❌ حدث خطأ','err'); }
+  }catch(e){toast('❌ حدث خطأ','err');}
 }
-
-function openExtend(id,name,plan){
-  document.getElementById('ext-id').value=id;
-  document.getElementById('ext-name').textContent=name;
-  document.getElementById('ext-plan').value=plan||'trial';
-  document.getElementById('extend-modal').classList.add('open');
-}
+function openExtend(id,name,plan){document.getElementById('ext-id').value=id;document.getElementById('ext-name').textContent=name;document.getElementById('ext-plan').value=plan||'trial';document.getElementById('extend-modal').classList.add('open');}
 async function submitExtend(){
-  const id=document.getElementById('ext-id').value;
-  const plan=document.getElementById('ext-plan').value;
-  const days=document.getElementById('ext-days').value;
+  const id=document.getElementById('ext-id').value,plan=document.getElementById('ext-plan').value,days=document.getElementById('ext-days').value;
   try{
     const r=await fetch('/superadmin/api/extend',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,plan,days})});
     const d=await r.json();
-    if(d.success){ toast('✅ تمديد حتى '+new Date(d.newExpiry).toLocaleDateString('ar-SA'),'ok'); closeModal('extend-modal'); loadProps(); loadOverview(); }
+    if(d.success){toast('✅ تمديد حتى '+new Date(d.newExpiry).toLocaleDateString('ar-SA'),'ok');closeModal('extend-modal');loadProps();loadOverview();}
     else toast('❌ '+d.error,'err');
-  }catch(e){ toast('❌ حدث خطأ','err'); }
+  }catch(e){toast('❌ حدث خطأ','err');}
 }
-async function toggleProp(id,btn){
-  if(!btn.classList.contains('off')&&!confirm('إيقاف المنشأة سيحجب الموظفين. متأكد؟')) return;
+async function toggleProp(id){
   try{
     const r=await fetch('/superadmin/api/toggle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});
     const d=await r.json();
-    if(d.success){ toast(d.active?'✅ تم التفعيل':'🔴 تم الإيقاف',d.active?'ok':'err'); loadProps(); }
+    if(d.success){toast(d.active?'✅ تم التفعيل':'🔴 تم الإيقاف',d.active?'ok':'err');loadProps();}
     else toast('❌ '+d.error,'err');
-  }catch(e){ toast('❌ حدث خطأ','err'); }
+  }catch(e){toast('❌ حدث خطأ','err');}
 }
 async function deleteProp(id,name){
-  if(!confirm(`حذف "${name}" نهائياً؟\nسيُحذف جميع الموظفين المرتبطين.`)) return;
+  if(!confirm(`حذف "${name}" نهائياً؟\nسيُحذف جميع الموظفين المرتبطين.`))return;
   try{
     const r=await fetch('/superadmin/api/properties/'+id,{method:'DELETE'});
     const d=await r.json();
-    if(d.success){ toast('تم الحذف','ok'); loadProps(); }
+    if(d.success){toast('تم الحذف','ok');loadProps();}
     else toast('❌ '+d.error,'err');
-  }catch(e){ toast('❌ حدث خطأ','err'); }
+  }catch(e){toast('❌ حدث خطأ','err');}
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1316,10 +1123,7 @@ async function loadStaff(){
     if(roleFilter!=='all') filtered=filtered.filter(s=>s.role===roleFilter);
     if(q) filtered=filtered.filter(s=>s.name?.toLowerCase().includes(q)||s.username?.toLowerCase().includes(q));
     document.getElementById('staff-count-sub').textContent=`${filtered.length} موظف`;
-    if(!filtered.length){
-      tbody.innerHTML=`<tr><td colspan="6"><div class="empty"><div class="empty-ico">👥</div><div class="empty-ttl">لا يوجد موظفون</div></div></td></tr>`;
-      return;
-    }
+    if(!filtered.length){tbody.innerHTML=`<tr><td colspan="6"><div class="empty"><div class="empty-ico">👥</div><div class="empty-ttl">لا يوجد موظفون</div></div></td></tr>`;return;}
     tbody.innerHTML=filtered.map(s=>`<tr>
       <td>
         <div style="display:flex;align-items:center;gap:10px;">
@@ -1330,54 +1134,60 @@ async function loadStaff(){
           </div>
         </div>
       </td>
-      <td style="font-size:11px;color:var(--t3);">${esc(s._propName||s.building||'—')}</td>
+      <td style="font-size:11.5px;color:var(--t3);">${esc(s._propName||s.building||'—')}</td>
       <td><span class="role-pill role-${s.role}">${s.role==='manager'?'مدير':'استقبال'}</span></td>
       <td>${badge(s.active?'bdg-active':'bdg-stopped',s.active?'نشط':'موقوف')}</td>
       <td style="font-size:11px;color:var(--t4);">${fDate(s.createdAt)}</td>
       <td>
-        <div class="ia-row">
-          <button class="ia ia-pwd" data-tip="إعادة تعيين كلمة المرور" onclick="openResetPwd('${s._id}')">
-            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          </button>
-          <button class="ia ia-tog ${!s.active?'off':''}" data-tip="${s.active?'إيقاف':'تفعيل'}" onclick="toggleStaff('${s._id}')">
-            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
-          </button>
-          <button class="ia ia-del" data-tip="حذف الموظف" onclick="deleteStaff('${s._id}','${esc(s.name)}')">
-            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
-          </button>
+        <div class="dd-wrap">
+          <button class="dd-trigger" onclick="toggleDD(event,'sdd-${s._id}')" title="الإجراءات">⋮</button>
+          <div class="dd-menu" id="sdd-${s._id}">
+            <button class="dd-item" onclick="closeAllDD();openResetPwd('${s._id}')">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              إعادة تعيين كلمة المرور
+            </button>
+            <button class="dd-item ${s.active?'dd-red':'dd-green'}" onclick="closeAllDD();toggleStaff('${s._id}')">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
+              ${s.active?'إيقاف الحساب':'تفعيل الحساب'}
+            </button>
+            <div class="dd-sep"></div>
+            <button class="dd-item dd-red" onclick="closeAllDD();deleteStaff('${s._id}','${esc(s.name)}')">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+              حذف الموظف
+            </button>
+          </div>
         </div>
       </td>
     </tr>`).join('');
-  }catch(e){ toast('❌ تعذر تحميل الموظفين','err'); }
+  }catch(e){toast('❌ تعذر تحميل الموظفين','err');}
 }
-
 async function toggleStaff(id){
   try{
     const r=await fetch('/superadmin/api/staff/'+id+'/toggle',{method:'POST'});
     const d=await r.json();
-    if(d.success){ toast(d.active?'✅ تم التفعيل':'🔴 تم الإيقاف',d.active?'ok':'err'); loadStaff(); if(document.getElementById('staff-drawer').classList.contains('open')) loadDrawer(_drawerPropId); }
+    if(d.success){toast(d.active?'✅ تم التفعيل':'🔴 تم الإيقاف',d.active?'ok':'err');loadStaff();if(_drawerPropId)loadDrawer(_drawerPropId);}
     else toast('❌ '+d.error,'err');
-  }catch(e){ toast('❌ حدث خطأ','err'); }
+  }catch(e){toast('❌ حدث خطأ','err');}
 }
 async function deleteStaff(id,name){
-  if(!confirm(`حذف الموظف "${name}"؟`)) return;
+  if(!confirm(`حذف الموظف "${name}"؟`))return;
   try{
     const r=await fetch('/superadmin/api/staff/'+id,{method:'DELETE'});
     const d=await r.json();
-    if(d.success){ toast('تم الحذف','ok'); loadStaff(); if(_drawerPropId) loadDrawer(_drawerPropId); }
+    if(d.success){toast('تم الحذف','ok');loadStaff();if(_drawerPropId)loadDrawer(_drawerPropId);}
     else toast('❌ '+d.error,'err');
-  }catch(e){ toast('❌ حدث خطأ','err'); }
+  }catch(e){toast('❌ حدث خطأ','err');}
 }
-function openResetPwd(id){ document.getElementById('rp-id').value=id; document.getElementById('rp-pwd').value=''; document.getElementById('reset-pwd-modal').classList.add('open'); }
+function openResetPwd(id){document.getElementById('rp-id').value=id;document.getElementById('rp-pwd').value='';document.getElementById('reset-pwd-modal').classList.add('open');}
 async function submitResetPwd(){
-  const id=document.getElementById('rp-id').value, pwd=document.getElementById('rp-pwd').value;
-  if(pwd.length<8){ toast('كلمة المرور 8 أحرف على الأقل','err'); return; }
+  const id=document.getElementById('rp-id').value,pwd=document.getElementById('rp-pwd').value;
+  if(pwd.length<8){toast('كلمة المرور 8 أحرف على الأقل','err');return;}
   try{
     const r=await fetch('/superadmin/api/staff/'+id+'/reset-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pwd})});
     const d=await r.json();
-    if(d.success){ toast('✅ تم تغيير كلمة المرور','ok'); closeModal('reset-pwd-modal'); }
+    if(d.success){toast('✅ تم تغيير كلمة المرور','ok');closeModal('reset-pwd-modal');}
     else toast('❌ '+d.error,'err');
-  }catch(e){ toast('❌ حدث خطأ','err'); }
+  }catch(e){toast('❌ حدث خطأ','err');}
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1390,14 +1200,13 @@ async function openDrawer(propId,propName){
   document.getElementById('staff-drawer').classList.add('open');
   await loadDrawer(propId);
 }
-function closeDrawer(){ document.getElementById('drawer-bg').classList.remove('open'); document.getElementById('staff-drawer').classList.remove('open'); }
-
+function closeDrawer(){document.getElementById('drawer-bg').classList.remove('open');document.getElementById('staff-drawer').classList.remove('open');}
 async function loadDrawer(propId){
   const body=document.getElementById('drawer-body');
   body.innerHTML='<div class="empty"><div class="empty-sub">جاري التحميل...</div></div>';
   try{
     const list=await fetch('/superadmin/api/properties/'+propId+'/staff').then(r=>r.json());
-    if(!list.length){ body.innerHTML=`<div class="empty"><div class="empty-ico">👥</div><div class="empty-ttl">لا يوجد موظفون</div><div class="empty-sub">اضغط الزر أدناه للإضافة</div></div>`; return; }
+    if(!list.length){body.innerHTML=`<div class="empty"><div class="empty-ico">👥</div><div class="empty-ttl">لا يوجد موظفون</div><div class="empty-sub">اضغط الزر أدناه للإضافة</div></div>`;return;}
     body.innerHTML=list.map(s=>`
       <div class="staff-item">
         <div class="staff-avatar">${esc(s.name?.charAt(0)||'?')}</div>
@@ -1406,19 +1215,24 @@ async function loadDrawer(propId){
           <div style="font-size:10px;color:var(--t4);direction:ltr;text-align:right;">${esc(s.username)} · ${s.role==='manager'?'مدير':'استقبال'}</div>
         </div>
         ${badge(s.active?'bdg-active':'bdg-stopped',s.active?'نشط':'موقوف')}
-        <div class="ia-row">
-          <button class="ia ia-pwd" data-tip="إعادة تعيين" onclick="openResetPwd('${s._id}')">
-            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          </button>
-          <button class="ia ia-del" data-tip="حذف" onclick="deleteStaff('${s._id}','${esc(s.name)}')">
-            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
-          </button>
+        <div class="dd-wrap">
+          <button class="dd-trigger" onclick="toggleDD(event,'ddd-${s._id}')">⋮</button>
+          <div class="dd-menu" id="ddd-${s._id}">
+            <button class="dd-item" onclick="closeAllDD();openResetPwd('${s._id}')">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              إعادة تعيين كلمة المرور
+            </button>
+            <button class="dd-item dd-red" onclick="closeAllDD();deleteStaff('${s._id}','${esc(s.name)}')">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+              حذف
+            </button>
+          </div>
         </div>
       </div>`).join('');
-  }catch(e){ body.innerHTML='<div class="empty"><div class="empty-sub" style="color:var(--red);">تعذر التحميل</div></div>'; }
+  }catch(e){body.innerHTML='<div class="empty"><div class="empty-sub" style="color:var(--red);">تعذر التحميل</div></div>';}
 }
 function openAddStaff(){
-  if(!_drawerPropId){ toast('اختر منشأة أولاً','err'); return; }
+  if(!_drawerPropId){toast('اختر منشأة أولاً','err');return;}
   const prop=_allProps.find(p=>p._id===_drawerPropId);
   document.getElementById('as-prop-id').value=_drawerPropId;
   document.getElementById('as-prop-name').textContent=prop?.name||'';
@@ -1428,18 +1242,19 @@ function openAddStaff(){
 async function submitAddStaff(){
   const body={name:document.getElementById('as-name').value.trim(),username:document.getElementById('as-username').value.trim(),password:document.getElementById('as-password').value,role:document.getElementById('as-role').value};
   const propId=document.getElementById('as-prop-id').value;
-  if(!body.name||!body.username||!body.password){ toast('الحقول المطلوبة ناقصة','err'); return; }
+  if(!body.name||!body.username||!body.password){toast('الحقول المطلوبة ناقصة','err');return;}
   try{
     const r=await fetch('/superadmin/api/properties/'+propId+'/staff',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     const d=await r.json();
-    if(d.success){ toast('✅ تم إضافة الموظف','ok'); closeModal('add-staff-modal'); loadDrawer(propId); }
+    if(d.success){toast('✅ تم إضافة الموظف','ok');closeModal('add-staff-modal');loadDrawer(propId);}
     else toast('❌ '+d.error,'err');
-  }catch(e){ toast('❌ حدث خطأ','err'); }
+  }catch(e){toast('❌ حدث خطأ','err');}
 }
 
 // ═══════════════════════════════════════════════════════════
 //  AUDIT LOG
 // ═══════════════════════════════════════════════════════════
+const ACT_LABELS={create:'إنشاء',update:'تعديل',delete:'حذف',login:'دخول',approve:'موافقة',reject:'رفض'};
 async function loadLog(page=1){
   _logPage=page;
   const tbody=document.getElementById('log-tbody');
@@ -1449,36 +1264,47 @@ async function loadLog(page=1){
   const user=document.getElementById('log-user')?.value||'';
   try{
     const d=await fetch('/superadmin/api/activity?'+new URLSearchParams({page,limit:20,action,user})).then(r=>r.json());
-    const logs=d.logs||[], total=d.total||0, pages=d.pages||1;
-    document.getElementById('log-count-sub').textContent=`${total} سجل`;
-    const ACT={create:'إنشاء',update:'تعديل',delete:'حذف',login:'دخول',approve:'موافقة',reject:'رفض'};
+    const logs=d.logs||[],total=d.total||0,pages=d.pages||1;
+
     if(!logs.length){
       tbody.innerHTML=`<tr><td colspan="7"><div class="empty"><div class="empty-ico">📋</div><div class="empty-ttl">لا توجد سجلات</div></div></td></tr>`;
     }else{
-      tbody.innerHTML=logs.map(l=>`<tr>
-        <td style="font-weight:700;color:var(--t1);">${esc(l.user)}</td>
-        <td><span class="role-pill role-${l.role||'receptionist'}">${l.role==='manager'?'مدير':l.role==='superadmin'?'سوبر':l.role||'—'}</span></td>
-        <td><span class="ac ac-${l.action}">${ACT[l.action]||l.action}</span></td>
-        <td style="font-size:11px;color:var(--t4);">${esc(l.model||'—')}</td>
-        <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;">${esc(l.summary||'—')}</td>
-        <td style="font-size:10.5px;color:var(--t4);direction:ltr;text-align:right;font-variant-numeric:tabular-nums;">${esc(l.ip||'—')}</td>
-        <td style="font-size:11px;color:var(--t4);white-space:nowrap;">${new Date(l.createdAt).toLocaleString('ar-SA',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</td>
-      </tr>`).join('');
+      tbody.innerHTML=logs.map(l=>{
+        const roleLbl=l.role==='manager'?'مدير':l.role==='superadmin'?'سوبر أدمن':l.role||'—';
+        // Clean summary: remove model-type prefix already shown in model column
+        const summary=cleanSummary(l.summary,l.model);
+        return`<tr>
+          <td style="font-weight:700;color:var(--t1);">${esc(l.user)}</td>
+          <td><span class="role-pill role-${l.role||'receptionist'}" style="${l.role==='superadmin'?'background:rgba(245,158,11,.1);color:#FCD34D;border-color:rgba(245,158,11,.15);':''}">${roleLbl}</span></td>
+          <td><span class="ac ac-${l.action}">${ACT_LABELS[l.action]||l.action}</span></td>
+          <td style="font-size:11px;color:var(--t4);">${esc(l.model||'—')}</td>
+          <td style="font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(summary)}">${esc(summary)}</td>
+          <td style="font-size:10.5px;color:var(--t4);direction:ltr;text-align:right;font-variant-numeric:tabular-nums;">${esc(l.ip||'—')}</td>
+          <td style="font-size:11px;color:var(--t4);white-space:nowrap;">${new Date(l.createdAt).toLocaleString('ar-SA',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</td>
+        </tr>`;
+      }).join('');
     }
-    if(pages>1){
-      const pag=document.getElementById('log-pag'); pag.style.display='flex';
-      document.getElementById('log-pag-info').textContent=`صفحة ${page} من ${pages} · ${total} سجل`;
-      const btns=document.getElementById('log-pag-btns');
-      let html=`<button class="pag-btn" onclick="loadLog(${page-1})" ${page<=1?'disabled':''}>‹</button>`;
-      const s=Math.max(1,page-3), e=Math.min(pages,s+6);
-      for(let i=s;i<=e;i++) html+=`<button class="pag-btn ${i===page?'active':''}" onclick="loadLog(${i})">${i}</button>`;
-      html+=`<button class="pag-btn" onclick="loadLog(${page+1})" ${page>=pages?'disabled':''}>›</button>`;
-      btns.innerHTML=html;
+
+    if(total>0){
+      const pag=document.getElementById('log-pag');pag.style.display='flex';
+      // Total count lives here, NOT in the filter bar
+      document.getElementById('log-total-txt').textContent=`${total} سجل إجمالاً`;
+      document.getElementById('log-pag-info').textContent=pages>1?`صفحة ${page} من ${pages}`:'';
+      if(pages>1){
+        const btns=document.getElementById('log-pag-btns');
+        let html=`<button class="pag-btn" onclick="loadLog(${page-1})" ${page<=1?'disabled':''}>‹</button>`;
+        const s=Math.max(1,page-3),e=Math.min(pages,s+6);
+        for(let i=s;i<=e;i++) html+=`<button class="pag-btn ${i===page?'active':''}" onclick="loadLog(${i})">${i}</button>`;
+        html+=`<button class="pag-btn" onclick="loadLog(${page+1})" ${page>=pages?'disabled':''}>›</button>`;
+        btns.innerHTML=html;
+      }else{
+        document.getElementById('log-pag-btns').innerHTML='';
+      }
     }
-  }catch(e){ toast('❌ تعذر تحميل السجل','err'); }
+  }catch(e){toast('❌ تعذر تحميل السجل','err');}
 }
 
-// ── Init ─────────────────────────────────────────────────
+// Init
 loadOverview();
 </script>
 </body>
