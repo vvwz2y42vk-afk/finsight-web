@@ -41,43 +41,90 @@ body{
 /* ══ Sidebar ════════════════════════════════════════════════ */
 .sb{
   width:var(--sb);
-  background:linear-gradient(180deg,var(--s1),rgba(10,16,32,.98));
-  border-left:1px solid var(--border);
+  background:linear-gradient(180deg,#071224 0%,#060F1E 45%,#040B18 100%);
+  border-left:1px solid rgba(255,255,255,.06);
   display:flex;flex-direction:column;
   position:fixed;top:0;right:0;bottom:0;z-index:100;overflow:hidden;
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  box-shadow:-6px 0 40px rgba(0,0,0,.5), inset -1px 0 0 rgba(255,255,255,.04);
 }
+/* شريط ضوء زجاجي على الحافة اليسرى */
 .sb::before{
-  content:'';position:absolute;top:0;right:0;width:1px;height:100%;
-  background:linear-gradient(180deg,transparent,rgba(59,130,246,.25) 30%,rgba(59,130,246,.1) 70%,transparent);
+  content:'';position:absolute;top:0;left:0;width:1px;height:100%;
+  background:linear-gradient(180deg,
+    transparent 0%,
+    rgba(96,165,250,.55) 18%,
+    rgba(59,130,246,.35) 50%,
+    rgba(96,165,250,.2) 82%,
+    transparent 100%);
+  z-index:2;
 }
-.sb-brand{display:flex;align-items:center;gap:11px;padding:22px 18px 18px;border-bottom:1px solid var(--border);}
+/* بقعة ضوء علوية (ambient glow) */
+.sb::after{
+  content:'';position:absolute;top:-60px;right:-40px;
+  width:220px;height:220px;border-radius:50%;
+  background:radial-gradient(circle,rgba(37,99,235,.18) 0%,transparent 65%);
+  pointer-events:none;
+}
+.sb-brand{
+  display:flex;align-items:center;gap:11px;padding:22px 18px 18px;
+  border-bottom:1px solid rgba(255,255,255,.06);
+  background:linear-gradient(180deg,rgba(255,255,255,.025),transparent);
+  position:relative;z-index:3;
+}
 .sb-logo{
   width:36px;height:36px;border-radius:10px;flex-shrink:0;
   background:linear-gradient(135deg,#0f2d7a,#2563EB,#60a5fa);
   display:flex;align-items:center;justify-content:center;
-  font-size:18px;font-weight:900;color:#fff;box-shadow:0 4px 14px rgba(37,99,235,.45);
+  font-size:18px;font-weight:900;color:#fff;
+  box-shadow:0 4px 14px rgba(37,99,235,.55), 0 0 0 1px rgba(96,165,250,.25);
 }
 .sb-brand-name{font-size:15px;font-weight:900;color:var(--t1);letter-spacing:-.03em;line-height:1.1;}
 .sb-brand-sub{font-size:9px;color:var(--t4);letter-spacing:.12em;text-transform:uppercase;margin-top:2px;}
-.sb-sep{height:1px;background:var(--border);margin:8px 16px;}
-.sb-label{font-size:9px;font-weight:700;color:var(--t4);letter-spacing:.12em;text-transform:uppercase;padding:12px 18px 6px;}
-.sb-nav{flex:1;overflow-y:auto;padding:4px 10px;}
+.sb-sep{height:1px;background:rgba(255,255,255,.05);margin:8px 16px;}
+.sb-label{font-size:9px;font-weight:700;color:rgba(255,255,255,.2);letter-spacing:.12em;text-transform:uppercase;padding:12px 18px 6px;position:relative;z-index:3;}
+.sb-nav{flex:1;overflow-y:auto;padding:4px 10px;position:relative;z-index:3;}
 .sn{
   display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;cursor:pointer;
-  color:var(--t3);font-size:12.5px;font-weight:500;transition:var(--tr);
-  margin-bottom:1px;white-space:nowrap;position:relative;text-decoration:none;
+  color:rgba(255,255,255,.35);font-size:12.5px;font-weight:500;transition:var(--tr);
+  margin-bottom:1px;white-space:nowrap;position:relative;text-decoration:none;overflow:hidden;
 }
-.sn:hover{background:rgba(255,255,255,.04);color:var(--t2);}
+.sn:hover{
+  background:rgba(255,255,255,.055);
+  color:rgba(255,255,255,.75);
+}
 .sn.active{
-  background:linear-gradient(135deg,rgba(37,99,235,.18),rgba(59,130,246,.08));
-  color:#93C5FD;font-weight:600;
-  box-shadow:inset 0 0 0 1px rgba(59,130,246,.2),0 2px 12px rgba(37,99,235,.1);
+  background:linear-gradient(135deg,rgba(37,99,235,.28),rgba(26,61,143,.18));
+  color:#BFDBFE;font-weight:600;
+  box-shadow:
+    inset 0 0 0 1px rgba(59,130,246,.3),
+    0 0 20px rgba(59,130,246,.12),
+    0 2px 8px rgba(0,0,0,.2);
 }
-.sn.active::after{content:'';position:absolute;left:0;top:25%;bottom:25%;width:2.5px;border-radius:2px;background:var(--brand-g);}
+/* LED strip — خط ضوء نيون على يمين العنصر النشط */
+.sn.active::after{
+  content:'';position:absolute;right:0;top:12%;bottom:12%;
+  width:3px;border-radius:2px 0 0 2px;
+  background:linear-gradient(180deg,#93C5FD,#3B82F6,#93C5FD);
+  box-shadow:
+    0 0 8px  rgba(96,165,250,1),
+    0 0 18px rgba(59,130,246,.85),
+    0 0 32px rgba(37,99,235,.5);
+}
+/* بقعة ضوء خلف العنصر النشط */
+.sn.active::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 70% 100% at 85% 50%,rgba(59,130,246,.1),transparent);
+  border-radius:inherit;pointer-events:none;
+}
 .sn-ico{width:22px;height:22px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border-radius:6px;transition:var(--tr);}
-.sn.active .sn-ico{background:rgba(59,130,246,.15);}
-.sn-badge{margin-right:auto;font-size:10px;font-weight:700;background:rgba(37,99,235,.18);color:#93C5FD;padding:1px 8px;border-radius:20px;border:1px solid rgba(59,130,246,.2);min-width:22px;text-align:center;}
-.sb-foot{padding:10px 10px 14px;border-top:1px solid var(--border);}
+.sn.active .sn-ico{
+  background:rgba(59,130,246,.18);
+  box-shadow:0 0 8px rgba(59,130,246,.25);
+  color:#93C5FD;
+}
+.sn-badge{margin-right:auto;font-size:10px;font-weight:700;background:rgba(37,99,235,.2);color:#93C5FD;padding:1px 8px;border-radius:20px;border:1px solid rgba(59,130,246,.25);min-width:22px;text-align:center;}
+.sb-foot{padding:10px 10px 14px;border-top:1px solid rgba(255,255,255,.06);position:relative;z-index:3;}
 
 /* ══ Main ═══════════════════════════════════════════════════ */
 .main{margin-right:var(--sb);flex:1;display:flex;flex-direction:column;min-height:100vh;min-width:0;width:calc(100% - var(--sb));}
