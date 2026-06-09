@@ -228,8 +228,7 @@ body{
 
 /* ══ Section header ════════════════════════════════════════ */
 .sec-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:12px;flex-wrap:wrap;}
-.sec-ttl{font-size:15px;font-weight:800;color:var(--t1);letter-spacing:-.02em;}
-.sec-sub{font-size:11px;color:var(--t4);margin-top:1px;}
+.sec-sub{font-size:11px;color:var(--t4);margin-top:2px;}
 
 /* ══ Card ═══════════════════════════════════════════════════ */
 .card{background:var(--s2);border:1px solid var(--border);border-radius:var(--r-xl);overflow:hidden;width:100%;box-shadow:0 4px 20px rgba(0,0,0,.2);}
@@ -331,6 +330,66 @@ body{
 .ac-login{background:rgba(139,92,246,.1);color:#C4B5FD;}
 .ac-approve{background:rgba(16,185,129,.1);color:#6EE7B7;}
 .ac-reject{background:rgba(239,68,68,.1);color:#FCA5A5;}
+
+/* ══ Property Cards Grid ════════════════════════════════════ */
+.props-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(290px,1fr));
+  gap:14px;padding:18px;
+}
+.prop-card{
+  background:var(--s2);border:1px solid var(--border);border-radius:var(--r-xl);
+  padding:18px;transition:var(--tr);position:relative;overflow:hidden;
+  display:flex;flex-direction:column;gap:14px;
+}
+.prop-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:var(--brand-g);opacity:.4;transition:var(--tr);
+}
+.prop-card:hover{
+  border-color:var(--border-h);transform:translateY(-2px);
+  box-shadow:0 12px 40px rgba(0,0,0,.35);
+}
+.prop-card:hover::before{opacity:1;}
+.prop-card-hd{display:flex;align-items:flex-start;gap:12px;}
+.prop-avatar{
+  width:44px;height:44px;border-radius:12px;flex-shrink:0;
+  background:linear-gradient(135deg,rgba(37,99,235,.2),rgba(96,165,250,.15));
+  border:1px solid rgba(59,130,246,.2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;font-weight:900;color:#93C5FD;
+  box-shadow:0 0 20px rgba(37,99,235,.1);
+}
+.prop-info{flex:1;min-width:0;}
+.prop-name{font-size:13.5px;font-weight:800;color:var(--t1);margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.prop-meta{font-size:10.5px;color:var(--t4);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.prop-card-stats{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  background:var(--s1);border:1px solid var(--border-s);border-radius:10px;
+  padding:12px 0;
+}
+.prop-stat{text-align:center;padding:0 10px;}
+.prop-stat+.prop-stat{border-right:1px solid var(--border-s);}
+.prop-stat-val{font-size:22px;font-weight:900;color:var(--t1);line-height:1;letter-spacing:-.05em;margin-bottom:4px;font-variant-numeric:tabular-nums;}
+.prop-stat-lbl{font-size:9px;color:var(--t4);font-weight:700;text-transform:uppercase;letter-spacing:.06em;}
+.prop-card-foot{
+  display:flex;align-items:center;gap:6px;flex-wrap:wrap;
+  padding-top:12px;border-top:1px solid var(--border-s);
+}
+.prop-foot-date{font-size:10px;color:var(--t4);margin-right:auto;}
+.prop-expiry-warn{
+  font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;
+}
+.prop-expiry-warn.soon{background:rgba(245,158,11,.1);color:var(--amber);}
+.prop-expiry-warn.urgent{background:rgba(239,68,68,.1);color:var(--red);}
+
+/* ══ Section header accent ══════════════════════════════════ */
+.sec-ttl{font-size:15px;font-weight:800;color:var(--t1);letter-spacing:-.02em;display:flex;align-items:center;gap:9px;}
+.sec-ttl::before{content:'';display:block;width:3px;height:16px;border-radius:2px;background:var(--brand-g);box-shadow:0 0 8px rgba(59,130,246,.5);flex-shrink:0;}
+
+/* ══ Filter bar container ═══════════════════════════════════ */
+.filter-wrap{background:var(--s2);border:1px solid var(--border);border-radius:var(--r-lg);padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+.filter-wrap .filter-bar{flex:1;}
 
 /* ══ Three-dot dropdown menu ════════════════════════════════ */
 .dd-wrap{position:relative;display:inline-block;}
@@ -612,7 +671,7 @@ body{
 
     <!-- TAB: Properties -->
     <div class="tab-sec" id="tab-properties">
-      <div class="sec-hd">
+      <div class="filter-wrap">
         <div>
           <div class="sec-ttl">المنشآت</div>
           <div class="sec-sub" id="props-count-sub">جاري التحميل...</div>
@@ -638,33 +697,37 @@ body{
           </button>
         </div>
       </div>
-      <div class="card">
-        <div class="tbl-wrap">
-          <table class="atbl props-table">
-            <colgroup>
-              <col style="width:22%"><col style="width:7%"><col style="width:9%">
-              <col style="width:9%"><col style="width:13%"><col style="width:7%">
-              <col style="width:8%"><col style="width:7%">
-            </colgroup>
-            <thead>
-              <tr><th>المنشأة</th><th>النوع</th><th>الخطة</th><th>الحالة</th><th>انتهاء الاشتراك</th><th>موظفون</th><th>حجوزات</th><th>إجراءات</th></tr>
-            </thead>
-            <tbody id="props-tbody">
-              <% for(let i=0;i<6;i++){ %>
-              <tr><td colspan="8"><div class="skel-row skel-prop-row">
-                <span class="skel"></span><span class="skel"></span><span class="skel"></span>
-                <span class="skel"></span><span class="skel"></span><span class="skel"></span><span class="skel"></span>
-              </div></td></tr>
-              <% } %>
-            </tbody>
-          </table>
+      <div id="props-grid" class="props-grid">
+        <% for(let i=0;i<6;i++){ %>
+        <div class="prop-card" style="pointer-events:none;">
+          <div class="prop-card-hd">
+            <span class="skel" style="width:44px;height:44px;border-radius:12px;flex-shrink:0;"></span>
+            <div style="flex:1;padding-right:12px;">
+              <span class="skel" style="width:65%;height:14px;display:block;margin-bottom:6px;"></span>
+              <span class="skel" style="width:45%;height:10px;display:block;"></span>
+            </div>
+            <span class="skel" style="width:30px;height:30px;border-radius:8px;flex-shrink:0;"></span>
+          </div>
+          <div class="prop-card-stats">
+            <% for(let j=0;j<3;j++){ %>
+            <div class="prop-stat">
+              <span class="skel" style="width:32px;height:22px;margin:0 auto 5px;display:block;border-radius:4px;"></span>
+              <span class="skel" style="width:40px;height:9px;margin:0 auto;display:block;"></span>
+            </div>
+            <% } %>
+          </div>
+          <div class="prop-card-foot">
+            <span class="skel" style="width:56px;height:20px;border-radius:20px;"></span>
+            <span class="skel" style="width:44px;height:20px;border-radius:20px;"></span>
+          </div>
         </div>
+        <% } %>
       </div>
     </div>
 
     <!-- TAB: Staff -->
     <div class="tab-sec" id="tab-staff">
-      <div class="sec-hd">
+      <div class="filter-wrap">
         <div>
           <div class="sec-ttl">الموظفون</div>
           <div class="sec-sub" id="staff-count-sub">جاري التحميل...</div>
@@ -704,9 +767,10 @@ body{
 
     <!-- TAB: Audit Log -->
     <div class="tab-sec" id="tab-log">
-      <div class="sec-hd">
+      <div class="filter-wrap">
         <div>
           <div class="sec-ttl">سجل العمليات</div>
+          <div class="sec-sub" id="log-count-sub">جاري التحميل...</div>
         </div>
         <div class="filter-bar">
           <input class="fi" id="log-user" placeholder="بحث بالمستخدم..." style="width:180px;" oninput="debounceLoadLog()">
@@ -1058,8 +1122,26 @@ async function loadOverview(){
 //  PROPERTIES
 // ═══════════════════════════════════════════════════════════
 async function loadProps(){
-  const tbody=document.getElementById('props-tbody');
-  tbody.innerHTML=skelRows(6,'skel-prop-row',8);
+  const grid=document.getElementById('props-grid');
+  // skeleton cards
+  grid.innerHTML=Array.from({length:6},()=>`
+    <div class="prop-card" style="pointer-events:none;">
+      <div class="prop-card-hd">
+        <span class="skel" style="width:44px;height:44px;border-radius:12px;flex-shrink:0;"></span>
+        <div style="flex:1;padding-right:12px;">
+          <span class="skel" style="width:65%;height:14px;display:block;margin-bottom:6px;"></span>
+          <span class="skel" style="width:45%;height:10px;display:block;"></span>
+        </div>
+        <span class="skel" style="width:30px;height:30px;border-radius:8px;flex-shrink:0;"></span>
+      </div>
+      <div class="prop-card-stats">
+        ${[0,1,2].map(()=>`<div class="prop-stat"><span class="skel" style="width:32px;height:22px;margin:0 auto 5px;display:block;border-radius:4px;"></span><span class="skel" style="width:40px;height:9px;margin:0 auto;display:block;"></span></div>`).join('')}
+      </div>
+      <div class="prop-card-foot">
+        <span class="skel" style="width:56px;height:20px;border-radius:20px;"></span>
+        <span class="skel" style="width:44px;height:20px;border-radius:20px;"></span>
+      </div>
+    </div>`).join('');
   const q=document.getElementById('prop-search')?.value||'';
   const status=document.getElementById('prop-status')?.value||'all';
   const plan=document.getElementById('prop-plan')?.value||'all';
@@ -1067,25 +1149,26 @@ async function loadProps(){
     const list=await fetch('/superadmin/api/properties?'+new URLSearchParams({q,status,plan})).then(r=>r.json());
     document.getElementById('props-count-sub').textContent=`${list.length} منشأة`;
     if(!list.length){
-      tbody.innerHTML=`<tr><td colspan="8"><div class="empty"><div class="empty-ico">🏢</div><div class="empty-ttl">لا توجد منشآت</div><div class="empty-sub">اضغط "منشأة جديدة" للبدء</div></div></td></tr>`;
+      grid.innerHTML=`<div style="grid-column:1/-1;"><div class="empty"><div class="empty-ico">🏢</div><div class="empty-ttl">لا توجد منشآت</div><div class="empty-sub">اضغط "منشأة جديدة" للبدء</div></div></div>`;
       return;
     }
-    tbody.innerHTML=list.map(p=>{
+    const TYPE_AR={apartment:'شقق',hotel:'فندق',mixed:'مختلط'};
+    grid.innerHTML=list.map(p=>{
       const s=statusInfo(p),d=daysLeft(p.planExpiry);
-      const dStr=d===null?'—':d<0?`<span style="color:var(--red);">منتهي</span>`:d<=7?`<span style="color:var(--amber);">${d} يوم</span>`:`${d} يوم`;
       const isActive=p.active;
-      return`<tr>
-        <td>
-          <div style="font-weight:700;color:var(--t1);margin-bottom:2px;">${esc(p.name)}</div>
-          <div style="font-size:10px;color:var(--t4);">${esc(p.city||'—')}${p.adminEmail?' · '+esc(p.adminEmail):''}</div>
-        </td>
-        <td style="color:var(--t3);font-size:11px;">${{apartment:'شقق',hotel:'فندق',mixed:'مختلط'}[p.type]||p.type}</td>
-        <td>${planPill(p.plan)}</td>
-        <td>${badge(s.cls,s.lbl)}</td>
-        <td><div style="font-size:12px;">${fDate(p.planExpiry)}</div><div style="font-size:10px;color:var(--t4);margin-top:1px;">${dStr}</div></td>
-        <td style="font-weight:700;color:var(--t1);text-align:center;">${p.staffCount||0}</td>
-        <td style="font-weight:700;color:var(--t1);text-align:center;">${p.bookingCount||0}</td>
-        <td>
+      let expiryTag='';
+      if(d!==null){
+        if(d<0) expiryTag=`<span class="prop-expiry-warn urgent">منتهي</span>`;
+        else if(d<=3) expiryTag=`<span class="prop-expiry-warn urgent">${d} يوم</span>`;
+        else if(d<=7) expiryTag=`<span class="prop-expiry-warn soon">${d} يوم</span>`;
+      }
+      return`<div class="prop-card">
+        <div class="prop-card-hd">
+          <div class="prop-avatar">${esc(p.name?.charAt(0)||'?')}</div>
+          <div class="prop-info">
+            <div class="prop-name">${esc(p.name)}</div>
+            <div class="prop-meta">${esc(p.city||'—')}${p.adminEmail?' · '+esc(p.adminEmail):''} · ${TYPE_AR[p.type]||p.type}</div>
+          </div>
           <div class="dd-wrap">
             <button class="dd-trigger" onclick="toggleDD(event,'pdd-${p._id}')" title="الإجراءات">⋮</button>
             <div class="dd-menu" id="pdd-${p._id}">
@@ -1108,8 +1191,28 @@ async function loadProps(){
               </button>
             </div>
           </div>
-        </td>
-      </tr>`;
+        </div>
+        <div class="prop-card-stats">
+          <div class="prop-stat">
+            <div class="prop-stat-val">${p.staffCount||0}</div>
+            <div class="prop-stat-lbl">موظفون</div>
+          </div>
+          <div class="prop-stat">
+            <div class="prop-stat-val">${p.bookingCount||0}</div>
+            <div class="prop-stat-lbl">حجوزات</div>
+          </div>
+          <div class="prop-stat">
+            <div class="prop-stat-val" style="${d!==null&&d<=7&&d>=0?'color:var(--amber);':d!==null&&d<0?'color:var(--red);':''}">${d!==null?Math.max(d,0):'—'}</div>
+            <div class="prop-stat-lbl">يوم متبقٍ</div>
+          </div>
+        </div>
+        <div class="prop-card-foot">
+          ${planPill(p.plan)}
+          ${badge(s.cls,s.lbl)}
+          ${expiryTag}
+          <span class="prop-foot-date">${fDate(p.planExpiry)}</span>
+        </div>
+      </div>`;
     }).join('');
     _allProps.length=0;list.forEach(p=>_allProps.push(p));_buildPropFilter();
   }catch(e){toast('❌ تعذر تحميل المنشآت','err');}
@@ -1319,7 +1422,6 @@ async function submitAddStaff(){
 // ═══════════════════════════════════════════════════════════
 const ACT_LABELS={create:'إنشاء',update:'تعديل',delete:'حذف',login:'دخول',approve:'موافقة',reject:'رفض'};
 async function loadLog(page=1){
-  _logPage=page;
   const tbody=document.getElementById('log-tbody');
   tbody.innerHTML=skelRows(8,'skel-log-row',7);
   document.getElementById('log-pag').style.display='none';
@@ -1328,6 +1430,8 @@ async function loadLog(page=1){
   try{
     const d=await fetch('/superadmin/api/activity?'+new URLSearchParams({page,limit:20,action,user})).then(r=>r.json());
     const logs=d.logs||[],total=d.total||0,pages=d.pages||1;
+    const subEl=document.getElementById('log-count-sub');
+    if(subEl) subEl.textContent=total?`${total} سجل`:'لا توجد سجلات';
 
     if(!logs.length){
       tbody.innerHTML=`<tr><td colspan="7"><div class="empty"><div class="empty-ico">📋</div><div class="empty-ttl">لا توجد سجلات</div></div></td></tr>`;
