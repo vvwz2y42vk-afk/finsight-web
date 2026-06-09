@@ -217,7 +217,7 @@ tbody td{padding:11px 12px;font-size:12px;vertical-align:middle;}
 .ai-send{background:var(--gold);border:none;border-radius:8px;width:30px;height:30px;cursor:pointer;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;}
 .toast{position:fixed;bottom:14px;right:50%;transform:translateX(50%) translateY(100px);background:var(--gold);color:#fff;padding:8px 16px;border-radius:10px;font-size:12px;font-weight:600;z-index:9999;transition:transform .3s;pointer-events:none;}
 .toast.show{transform:translateX(50%) translateY(0);}
-.charts-row-admin{display:grid;grid-template-columns:1fr 230px 230px;gap:12px;margin-bottom:10px;}
+.charts-row-admin{display:grid;grid-template-columns:1fr 230px;gap:12px;margin-bottom:10px;}
 /* ── Mobile hamburger ── */
 .mob-ham{display:none;flex-direction:column;gap:5px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;cursor:pointer;padding:7px 8px;margin-left:8px;}
 .mob-ham span{display:block;width:18px;height:2px;background:rgba(255,255,255,.8);border-radius:2px;transition:all .25s;}
@@ -474,20 +474,6 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
           <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:rgba(4,120,87,.55);margin-left:4px;"></span>شاغر <b id="donut-vac">—</b></span>
         </div>
       </div>
-      <!-- ══ حالة خدمة الغرف ══ -->
-      <div class="card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
-        <div class="card-hd" style="width:100%;"><div class="card-title">حالة خدمة الغرف</div></div>
-        <div style="position:relative;display:inline-flex;align-items:center;justify-content:center;margin:8px auto;">
-          <canvas id="adminHkChart" width="180" height="180"></canvas>
-          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;">
-            <div style="font-size:12px;font-weight:700;color:#1a3d8f;background:#1a3d8f;color:#fff;padding:5px 12px;border-radius:8px;cursor:pointer;" onclick="go('apts',document.getElementById('nav-apts'))">عرض</div>
-          </div>
-        </div>
-        <div style="display:flex;gap:12px;font-size:11px;margin-bottom:8px;">
-          <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:rgba(4,120,87,.5);margin-left:4px;"></span>نظيف <b id="hk-clean">—</b></span>
-          <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:rgba(234,179,8,.5);margin-left:4px;"></span>غير نظيف <b id="hk-dirty">—</b></span>
-        </div>
-      </div>
     </div>
 
     <div id="alerts-wrap"></div>
@@ -507,17 +493,9 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
       <div class="card"><div class="card-hd"><div><div class="card-title">أكبر الديون</div></div><span class="badge b-red" id="bd-count">—</span></div><div id="top-debts"></div></div>
     </div>
 
-    <!-- ══ العقود المنتهية + ملخص المباني ══ -->
-    <div class="g2" style="margin-bottom:10px;">
+    <!-- ══ العقود المنتهية ══ -->
+    <div style="margin-bottom:10px;">
       <div class="card"><div class="card-hd"><div><div class="card-title">تنتهي قريباً</div></div><span class="badge b-gold" id="exp-count">—</span></div><div id="top-expiry"></div></div>
-      <div class="card"><div class="card-hd"><div class="card-title">ملخص العقود</div></div>
-        <div class="g2" style="gap:6px;margin:0;">
-          <div><div class="card-title" style="font-size:10px;"><span class="pill pm">المنارا</span></div><div id="sum-m"></div></div>
-          <div><div class="card-title" style="font-size:10px;"><span class="pill pj">جوان ان</span></div><div id="sum-j"></div></div>
-          <div><div class="card-title" style="font-size:10px;"><span class="pill pa">الماسة</span></div><div id="sum-a"></div></div>
-          <div><div class="card-title" style="font-size:10px;"><span class="pill pw">الواحة</span></div><div id="sum-w"></div></div>
-        </div>
-      </div>
     </div>
     <!-- ══ Pipeline + Staff Leaderboard ══ -->
     <div class="g2" style="margin-bottom:10px;">
@@ -1163,10 +1141,6 @@ function renderAll(){
   const exps=allC.filter(c=>c.st==='مفتوح'&&c.ex).map(c=>({...c,d:daysTo(c.ex)})).filter(c=>c.d>=0&&c.d<=30).sort((a,b)=>a.d-b.d).slice(0,5);
   set('exp-count',toAr(exps.length)+' عقد');
   set('top-expiry',exps.map(c=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--b);"><div><div style="font-size:11px;font-weight:600;">${c.n}</div><div style="font-size:9px;color:var(--t3);">شقة ${c.a} · ${c.ex}</div></div><div style="font-size:12px;font-weight:700;color:${c.d<=7?'var(--red)':c.d<=15?'var(--gold)':'var(--green)'};">${toAr(c.d)} يوم</div></div>`).join(''));
-  SHEETS.forEach((sh,i)=>{
-    const cs=allC.filter(c=>c.sheet===sh&&c.n),p=cs.reduce((a,c)=>a+c.p,0),r=cs.reduce((a,c)=>a+c.r,0),pct=Math.round(p/((p+r)||1)*100);
-    set(['sum-m','sum-j','sum-a','sum-w'][i],`<div class="ssr"><span style="color:var(--t3)">العقود</span><span style="font-weight:600;">${toAr(cs.length)}</span></div><div class="ssr"><span style="color:var(--t3)">محصّل</span><span style="font-weight:600;color:var(--green);">${fmt(p)} ﷼</span></div><div class="ssr" style="border:none"><span style="color:var(--t3)">متبقي</span><span style="font-weight:600;color:var(--red);">${fmt(r)} ﷼</span></div><div style="background:var(--b);border-radius:20px;height:4px;margin-top:6px;overflow:hidden;"><div style="width:${pct}%;height:100%;background:var(--gold);border-radius:20px;"></div></div><div style="font-size:9px;color:var(--t3);margin-top:2px;">${toAr(pct)}٪ تحصيل</div>`);
-  });
   renderContracts();renderCommissions();renderCollection();renderExpiry();renderMap();renderPerformance();renderSources();renderReports();
 }
 
@@ -2611,45 +2585,6 @@ async function adminCloseConv(id){
   }catch(e){}
 }
 
-// ── Housekeeping Donut ────────────────────────────────────
-let adminHkInst=null;
-
-async function loadHkStats(){
-  try{
-    const r=await fetch('/api/housekeeping-stats');
-    if(!r.ok)return;
-    const d=await r.json();
-    renderAdminHkChart(d.clean,d.dirty);
-    const c=document.getElementById('hk-clean');if(c)c.textContent=d.clean;
-    const di=document.getElementById('hk-dirty');if(di)di.textContent=d.dirty;
-  }catch(e){}
-}
-
-function renderAdminHkChart(clean,dirty){
-  const canvas=document.getElementById('adminHkChart');
-  if(!canvas)return;
-  const ctx=canvas.getContext('2d');
-  if(adminHkInst) adminHkInst.destroy();
-  adminHkInst=new Chart(ctx,{
-    type:'doughnut',
-    data:{
-      labels:['نظيف','غير نظيف'],
-      datasets:[{
-        data:[clean,dirty],
-        backgroundColor:['rgba(4,120,87,.45)','rgba(234,179,8,.45)'],
-        hoverBackgroundColor:['rgba(4,120,87,.7)','rgba(234,179,8,.7)'],
-        borderWidth:0,borderRadius:4,
-      }]
-    },
-    options:{
-      responsive:false,cutout:'68%',
-      plugins:{
-        legend:{display:false},
-        tooltip:{rtl:true,bodyFont:{family:'IBM Plex Sans Arabic'},callbacks:{label:ctx=>`${ctx.label}: ${ctx.parsed}`}},
-      },
-    }
-  });
-}
 
 // ── Donut Chart ───────────────────────────────────────────
 let adminDonutInst=null;
@@ -2894,7 +2829,7 @@ function toggleDD(id){
 function closeDD(id){const wrap=document.getElementById(id);if(wrap)wrap.classList.remove('open');}
 document.addEventListener('click',e=>{if(!e.target.closest('.dd-wrap'))document.querySelectorAll('.dd-wrap.open').forEach(w=>w.classList.remove('open'));});
 
-window.addEventListener('load',()=>{loadUser();loadData();loadListings();loadBookings();loadHosts();loadMessages();loadApts();loadActivity();loadStaffPerformance();loadWeeklyStats();loadHkStats();setInterval(loadData,60000);setInterval(loadMessages,30000);setInterval(loadApts,30000);setInterval(loadBookings,30000);setInterval(loadActivity,30000);setInterval(loadStaffPerformance,120000);setInterval(loadWeeklyStats,300000);setInterval(loadHkStats,60000);if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});});
+window.addEventListener('load',()=>{loadUser();loadData();loadListings();loadBookings();loadHosts();loadMessages();loadApts();loadActivity();loadStaffPerformance();loadWeeklyStats();setInterval(loadData,60000);setInterval(loadMessages,30000);setInterval(loadApts,30000);setInterval(loadBookings,30000);setInterval(loadActivity,30000);setInterval(loadStaffPerformance,120000);setInterval(loadWeeklyStats,300000);if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});});
 </script>
 </body>
 </html>
