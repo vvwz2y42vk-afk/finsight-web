@@ -374,14 +374,7 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
   <div class="sb-logo" style="gap:12px;">
     <img src="/images/logo-dark.png" alt="Barez" style="height:48px;width:auto;">
   </div>
-  <div class="occ-strip">
-    <div class="occ-strip-row">
-      <span class="occ-strip-lbl">الإشغال الحالي</span>
-      <span class="occ-strip-unit" id="sb-occ-unit">—/—</span>
-    </div>
-    <div class="occ-bar"><div class="occ-bar-fill" id="sb-occ-bar"></div></div>
-    <div class="occ-strip-pct" id="sb-occ-pct">—%</div>
-  </div>
+
   <nav class="nav">
     <button id="nav-dashboard" class="ni active" onclick="go('dashboard',this)"><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>لوحة التحكم</button>
     <button id="nav-contracts" class="ni" onclick="go('contracts',this)"><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>العقود<span class="ni-badge" id="nb-total">—</span></button>
@@ -2291,9 +2284,6 @@ function updateAptsBadges(){
   const rate=totAll?Math.round(totOcc/totAll*100):0;
   const ro=document.getElementById('aptsOccRate');
   if(ro)ro.innerHTML=`نسبة الإشغال: <span style="color:var(--gold);font-size:16px;">${rate}%</span> <span style="font-weight:400;font-size:11px;">(${totOcc}/${totAll})</span>`;
-  const sbUnit=document.getElementById('sb-occ-unit');if(sbUnit)sbUnit.textContent=`${totOcc}/${totAll} وحدة`;
-  const sbBar=document.getElementById('sb-occ-bar');if(sbBar)sbBar.style.width=rate+'%';
-  const sbPct=document.getElementById('sb-occ-pct');if(sbPct)sbPct.textContent=rate+'%';
   renderBuildingCards();
   renderPipeline();
   renderAdminDonut(totOcc,totAll);
