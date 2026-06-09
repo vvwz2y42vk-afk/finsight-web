@@ -18,17 +18,13 @@ schema.pre('save', function (next) {
   next();
 });
 
-['findOneAndUpdate', 'updateOne', 'updateMany', 'findByIdAndUpdate', 'replaceOne'].forEach(op => {
-  schema.pre(op, function (next) {
-    next(new Error('AuditLog: تعديل السجلات محظور'));
-  });
-});
-
-['findOneAndDelete', 'deleteOne', 'deleteMany', 'findByIdAndDelete'].forEach(op => {
-  schema.pre(op, function (next) {
-    next(new Error('AuditLog: حذف السجلات محظور'));
-  });
-});
+const BLOCKED_OPS = {
+  'AuditLog: تعديل السجلات محظور': ['findOneAndUpdate','updateOne','updateMany','findByIdAndUpdate','replaceOne'],
+  'AuditLog: حذف السجلات محظور':  ['findOneAndDelete','deleteOne','deleteMany','findByIdAndDelete'],
+};
+Object.entries(BLOCKED_OPS).forEach(([msg, ops]) =>
+  ops.forEach(op => schema.pre(op, function(next){ next(new Error(msg)); }))
+);
 
 schema.index({ user: 1 });
 schema.index({ model: 1, action: 1 });

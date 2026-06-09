@@ -855,7 +855,6 @@ body{
    BAREZ ADMIN ENGINE
    ═══════════════════════════════════════════════════════════ */
 const _allProps = [];
-let _logPage = 1;
 let _drawerPropId = null;
 const _debTimer = {};
 const _loaded = {};
@@ -1160,18 +1159,18 @@ async function loadStaff(){
   const tbody=document.getElementById('staff-tbody');
   tbody.innerHTML=skelRows(6,'skel-staff-row',6);
   try{
-    // إذا _allProps فارغة (فُتح التاب قبل ما تكتمل نظرة عامة) — اجلبهم أولاً
-    if(!_allProps.length){
-      const props=await fetch('/superadmin/api/properties').then(r=>r.json()).catch(()=>[]);
-      _allProps.length=0;(props||[]).forEach(p=>_allProps.push(p));_buildPropFilter();
-    }
     const propFilter=document.getElementById('staff-prop-filter')?.value||'all';
     const roleFilter=document.getElementById('staff-role-filter')?.value||'all';
     const q=document.getElementById('staff-search')?.value.toLowerCase()||'';
     let staff=[];
     if(propFilter==='all'){
-      const res=await Promise.all(_allProps.map(p=>fetch('/superadmin/api/properties/'+p._id+'/staff').then(r=>r.json()).then(l=>l.map(s=>({...s,_propName:p.name}))).catch(()=>[])));
-      staff=res.flat();
+      // endpoint واحد يجلب كل الموظفين دفعة واحدة بدل N+1 طلبات
+      staff=await fetch('/superadmin/api/staff/all').then(r=>r.json()).catch(()=>[]);
+      // populate _allProps إذا كانت فارغة
+      if(!_allProps.length){
+        const props=await fetch('/superadmin/api/properties').then(r=>r.json()).catch(()=>[]);
+        _allProps.length=0;(props||[]).forEach(p=>_allProps.push(p));_buildPropFilter();
+      }
     }else{
       const prop=_allProps.find(p=>p._id===propFilter);
       const list=await fetch('/superadmin/api/properties/'+propFilter+'/staff').then(r=>r.json());

@@ -50,7 +50,6 @@ const COPTS   = { httpOnly: true, maxAge: 8 * 60 * 60 * 1000, sameSite: 'lax', s
 
 if (!process.env.SUPERADMIN_PASSWORD) {
   if (IS_PROD) throw new Error('SUPERADMIN_PASSWORD env var is required in production');
-  console.warn('⚠️  SUPERADMIN_PASSWORD not set — using insecure fallback');
 }
 const SA_PASS = process.env.SUPERADMIN_PASSWORD || 'Barez@Super2026';
 
@@ -301,10 +300,22 @@ router.post('/api/staff/:id/reset-password', reqSAJson, saDestructiveLimit, asyn
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── API: All staff across all properties (bulk — avoids N+1 in dashboard) ──
+router.get('/api/staff/all', reqSAJson, async (req, res) => {
+  try {
+    const staff = await StaffUser.find({})
+      .select('-password').sort({ propertyId: 1, createdAt: -1 }).lean();
+    // attach property name from a single Property lookup
+    const propIds = [...new Set(staff.map(s => s.propertyId?.toString()).filter(Boolean))];
+    const props = await Property.find({ _id: { $in: propIds } }).select('name').lean();
+    const nameMap = Object.fromEntries(props.map(p => [p._id.toString(), p.name]));
+    res.json(staff.map(s => ({ ...s, _propName: nameMap[s.propertyId?.toString()] || '' })));
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // ── API: Activity log — paginated ────────────────────────────────────
 router.get('/api/activity', reqSAJson, async (req, res) => {
   try {
-    const AuditLog = require('../models/AuditLog');
     const page  = Math.max(1, parseInt(req.query.page) || 1);
     const limit = Math.min(50, parseInt(req.query.limit) || 20);
     const skip  = (page - 1) * limit;
