@@ -84,17 +84,24 @@ tbody td{padding:7px 5px;font-size:11px;}
 .af-btn{padding:5px 12px;border-radius:20px;border:1px solid var(--br);background:none;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;color:var(--t2);transition:all .15s;}
 .af-btn:hover{background:var(--s2);}
 .af-btn.active{background:var(--gold);border-color:var(--gold);color:#111;}
-.apt-card{width:84px;background:var(--card);border-radius:10px;padding:8px 6px;text-align:center;cursor:pointer;transition:opacity .15s;user-select:none;border:2px solid transparent;}
-.apt-card:hover{opacity:.82;}
-.apt-card.occ{background:#e74c3c;color:#fff;}
-.apt-card.vac{background:#27ae60;color:#fff;}
-.apt-card.cin{background:#2980b9;color:#fff;}
-.apt-card.cout{background:#e67e22;color:#fff;}
-.apt-card.awt{background:#8e44ad;color:#fff;}
-.apt-card.awp{background:#f39c12;color:#fff;}
+.apt-card{width:88px;height:72px;background:var(--s);border-radius:12px;padding:8px 6px;text-align:center;cursor:pointer;transition:all 200ms ease-in-out;user-select:none;border:1.5px solid var(--b2);position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.apt-card::before{content:'';position:absolute;top:0;right:0;left:0;height:3px;border-radius:12px 12px 0 0;}
+.apt-card:hover{transform:translateY(-2px);box-shadow:0 4px 14px rgba(0,0,0,.1);opacity:1;}
+.apt-card.occ{background:#FEE2E2;border-color:#FECACA;color:#991B1B;}
+.apt-card.occ::before{background:#991B1B;}
+.apt-card.vac{background:#DCFCE7;border-color:#BBF7D0;color:#166534;}
+.apt-card.vac::before{background:#166534;}
+.apt-card.cin{background:#DBEAFE;border-color:#BFDBFE;color:#1D4ED8;}
+.apt-card.cin::before{background:#1D4ED8;}
+.apt-card.cout{background:#FEF3C7;border-color:#FDE68A;color:#92400E;}
+.apt-card.cout::before{background:#92400E;}
+.apt-card.awt{background:#F3E8FF;border-color:#E9D5FF;color:#6B21A8;}
+.apt-card.awt::before{background:#6B21A8;}
+.apt-card.awp{background:#FEF9C3;border-color:#FEF08A;color:#854D0E;}
+.apt-card.awp::before{background:#854D0E;}
 .apt-num{font-size:15px;font-weight:900;line-height:1;}
-.apt-lbl{font-size:9px;margin-top:2px;opacity:.9;}
-.apt-name{font-size:9px;margin-top:1px;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:76px;}
+.apt-lbl{font-size:9px;margin-top:2px;}
+.apt-name{font-size:9px;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px;}
 .sr{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;}
 .si{background:var(--s);border:1px solid var(--b2);border-radius:8px;padding:6px 10px;color:var(--t);font-family:inherit;font-size:11px;outline:none;flex:1;min-width:100px;}
 .si:focus{border-color:var(--gold);}
@@ -255,6 +262,31 @@ tbody td{padding:7px 5px;font-size:11px;}
 
 /* ── Print ───────────────────────────────────────────── */
 @media print{.sidebar,.ai-wrap,.topbar-right,.watermark{display:none!important;}}
+
+/* ── Global transitions ──────────────────────────────── */
+.btn,.ni,.tab,.kpi,.apt-card,.room{transition:all 200ms ease-in-out;}
+
+/* ── Dropdown action menu ────────────────────────────── */
+.dd-wrap{position:relative;display:inline-block;}
+.dd-btn{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:8px;border:1px solid var(--b2);background:var(--s);color:var(--t3);cursor:pointer;font-size:14px;font-weight:700;font-family:inherit;transition:all 200ms ease-in-out;padding:0;}
+.dd-btn:hover{background:var(--s2);color:var(--t);border-color:var(--gold);}
+.dd-menu{position:absolute;top:calc(100% + 4px);left:0;min-width:160px;background:var(--s);border:1px solid var(--b);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:200;display:none;overflow:hidden;}
+.dd-wrap.open .dd-menu{display:block;}
+.dd-item{display:flex;align-items:center;gap:8px;width:100%;padding:8px 12px;font-size:11px;font-family:inherit;background:none;border:none;color:var(--t);cursor:pointer;text-align:right;transition:background 150ms;}
+.dd-item:hover{background:var(--s2);}
+.dd-item.red{color:var(--red);}
+.dd-item.blue{color:var(--blue);}
+.dd-item.gold{color:var(--gold);}
+.dd-item svg{flex-shrink:0;opacity:.8;}
+
+/* ── Audit action badges ─────────────────────────────── */
+.audit-badge{font-size:9px;padding:3px 8px;border-radius:20px;font-weight:600;display:inline-block;}
+.audit-create{background:#DCFCE7;color:#166534;}
+.audit-update{background:#DBEAFE;color:#1D4ED8;}
+.audit-delete{background:#FEE2E2;color:#991B1B;}
+.audit-login{background:#EDE9FE;color:#5B21B6;}
+.audit-approve{background:#DCFCE7;color:#166534;}
+.audit-reject{background:#FEE2E2;color:#991B1B;}
 </style>
 </head>
 <body>
@@ -2069,14 +2101,19 @@ function renderStaff(){
       </select>
     </td>
     <td><span class="pill ${s.active!==false?'pj':'pcl'}">${s.active!==false?'نشط':'موقوف'}</span></td>
-    <td style="white-space:nowrap;display:flex;gap:4px;flex-wrap:wrap;">
-      ${s.active!==false
-        ?`<button class="btn" style="font-size:9px;padding:3px 8px;color:var(--red);" onclick="updateStaff('${s._id}','active',false)">⏸ تعطيل</button>`
-        :`<button class="btn" style="font-size:9px;padding:3px 8px;background:rgba(39,174,96,.15);border:1px solid rgba(39,174,96,.4);color:#1e8449;" onclick="updateStaff('${s._id}','active',true)">▶ تفعيل</button>`
-      }
-      <button class="btn" style="font-size:9px;padding:3px 8px;color:var(--blue);" onclick="openPermsModal('${s._id}','${s.name}',${allStaff.indexOf(s)})">🔐 الصلاحيات</button>
-      <button class="btn" style="font-size:9px;padding:3px 8px;color:var(--gold);" onclick="resetPassPrompt('${s._id}','${s.name}')">🔑 كلمة المرور</button>
-      <a href="/staff/login" target="_blank" class="btn" style="font-size:9px;padding:3px 8px;">🔗</a>
+    <td>
+      <div class="dd-wrap" id="sdd-${s._id}">
+        <button class="dd-btn" onclick="toggleDD('sdd-${s._id}')">⋮</button>
+        <div class="dd-menu">
+          ${s.active!==false
+            ?`<button class="dd-item red" onclick="closeDD('sdd-${s._id}');updateStaff('${s._id}','active',false)"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>تعطيل</button>`
+            :`<button class="dd-item" style="color:#166534;" onclick="closeDD('sdd-${s._id}');updateStaff('${s._id}','active',true)"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>تفعيل</button>`
+          }
+          <button class="dd-item blue" onclick="closeDD('sdd-${s._id}');openPermsModal('${s._id}','${s.name}',${allStaff.indexOf(s)})"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>الصلاحيات</button>
+          <button class="dd-item gold" onclick="closeDD('sdd-${s._id}');resetPassPrompt('${s._id}','${s.name}')"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><line x1="12" y1="11" x2="20" y2="3"/><line x1="19" y1="4" x2="21" y2="6"/></svg>كلمة المرور</button>
+          <a href="/staff/login" target="_blank" class="dd-item" onclick="closeDD('sdd-${s._id}')"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>دخول الموظف</a>
+        </div>
+      </div>
     </td>
   </tr>`).join('');
 }
@@ -2642,9 +2679,12 @@ function renderAdminUsers(){
       <td><span class="pill ${u.active?'pj':'pcl'}">${u.active?'نشط':'معطّل'}</span></td>
       <td style="font-size:10px;color:var(--t3);">${(u.allowed||[]).map(p=>PAGE_LABELS[p]||p).join(' · ')||'—'}</td>
       <td>
-        <div style="display:flex;gap:4px;">
-          <button class="btn" style="padding:3px 8px;font-size:10px;" onclick="openUserEdit('${u._id}')">تعديل</button>
-          ${u.active?`<button class="btn" style="padding:3px 8px;font-size:10px;color:var(--red);border-color:var(--rb);" onclick="deactivateUser('${u._id}','${u.name}')">تعطيل</button>`:''}
+        <div class="dd-wrap" id="udd-${u._id}">
+          <button class="dd-btn" onclick="toggleDD('udd-${u._id}')">⋮</button>
+          <div class="dd-menu">
+            <button class="dd-item blue" onclick="closeDD('udd-${u._id}');openUserEdit('${u._id}')"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>تعديل</button>
+            ${u.active?`<button class="dd-item red" onclick="closeDD('udd-${u._id}');deactivateUser('${u._id}','${u.name}')"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>تعطيل</button>`:''}
+          </div>
         </div>
       </td>
     </tr>
@@ -2759,7 +2799,7 @@ function renderAuditLogs(d){
     return`<tr>
       <td style="font-size:10px;color:var(--t3);white-space:nowrap;">${time}</td>
       <td style="font-size:11px;font-weight:600;">${l.user}</td>
-      <td><span class="pill ${AUDIT_ACTION_COLOR[l.action]||'pcl'}">${AUDIT_ACTION_AR[l.action]||l.action}</span></td>
+      <td><span class="audit-badge audit-${l.action||'default'}">${AUDIT_ACTION_AR[l.action]||l.action}</span></td>
       <td style="font-size:10px;color:var(--t3);">${l.model}</td>
       <td style="font-size:11px;">${l.summary||'—'}</td>
     </tr>`;
@@ -2773,6 +2813,16 @@ function renderAuditLogs(d){
   if(d.page<d.pages)html+=`<button class="btn" style="padding:4px 10px;font-size:10px;" onclick="loadAuditLogs(${d.page+1})">التالي</button>`;
   pg.innerHTML=html;
 }
+
+/* ── Dropdown helpers ── */
+function toggleDD(id){
+  const wrap=document.getElementById(id);if(!wrap)return;
+  const wasOpen=wrap.classList.contains('open');
+  document.querySelectorAll('.dd-wrap.open').forEach(w=>w.classList.remove('open'));
+  if(!wasOpen)wrap.classList.add('open');
+}
+function closeDD(id){const wrap=document.getElementById(id);if(wrap)wrap.classList.remove('open');}
+document.addEventListener('click',e=>{if(!e.target.closest('.dd-wrap'))document.querySelectorAll('.dd-wrap.open').forEach(w=>w.classList.remove('open'));});
 
 window.addEventListener('load',()=>{loadUser();loadData();loadListings();loadBookings();loadHosts();loadMessages();loadApts();loadActivity();loadStaffPerformance();loadWeeklyStats();loadHkStats();setInterval(loadData,60000);setInterval(loadMessages,30000);setInterval(loadApts,30000);setInterval(loadBookings,30000);setInterval(loadActivity,30000);setInterval(loadStaffPerformance,120000);setInterval(loadWeeklyStats,300000);setInterval(loadHkStats,60000);if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});});
 </script>
