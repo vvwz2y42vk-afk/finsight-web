@@ -242,26 +242,19 @@ tbody td{padding:11px 12px;font-size:12px;vertical-align:middle;}
 .sb-logo{border-bottom:1px solid rgba(255,255,255,.07);padding:14px 14px 12px;}
 .sb-logo img{filter:brightness(0) invert(1);}
 .nav{padding:6px 0;}
-.ni{color:rgba(255,255,255,.5);font-size:12px;padding:9px 14px;border-radius:0!important;direction:rtl;flex-direction:row;}
+/* direction:ltr + row-reverse = أيقون يمين نص يساره بشكل مضمون */
+.ni{color:rgba(255,255,255,.5);font-size:12px;padding:9px 14px;border-radius:0!important;direction:ltr!important;flex-direction:row-reverse!important;}
 .ni:hover{background:rgba(59,130,246,.1);color:rgba(255,255,255,.85);}
 .ni.active{background:#1e3a5f;color:#93c5fd;font-weight:600;border-right:3px solid #3b82f6;padding-right:11px;}
 .ni.active::before{display:none;}
-.ni-badge{background:rgba(59,130,246,.2);color:#93c5fd;}
+.ni-badge{background:rgba(59,130,246,.2);color:#93c5fd;margin-right:0;margin-left:auto;}
 .ni-badge.red{background:rgba(239,68,68,.2);color:#fca5a5;}
-.ni-ico{opacity:.55;flex-shrink:0;}
+.ni-ico{opacity:.55;flex-shrink:0;margin-left:8px;margin-right:0;}
 .ni.active .ni-ico{opacity:1;color:#3b82f6;}
 .sb-user{border-top:1px solid rgba(255,255,255,.07);padding:10px 12px;}
 .user-row{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);}
 .user-name{color:rgba(255,255,255,.85);font-size:12px;}
 .user-role{color:rgba(255,255,255,.3);font-size:9px;}
-/* ── Occupancy strip ─────────────────────── */
-.occ-strip{padding:10px 14px 12px;border-bottom:1px solid rgba(255,255,255,.07);}
-.occ-strip-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;}
-.occ-strip-lbl{font-size:10px;color:rgba(255,255,255,.45);letter-spacing:.3px;}
-.occ-strip-unit{font-size:11px;font-weight:700;color:#93c5fd;}
-.occ-bar{height:4px;background:rgba(255,255,255,.1);border-radius:20px;overflow:hidden;margin-bottom:4px;}
-.occ-bar-fill{height:100%;background:linear-gradient(90deg,#3b82f6,#60a5fa);border-radius:20px;transition:width .6s ease;width:0%;}
-.occ-strip-pct{font-size:13px;font-weight:800;color:#60a5fa;text-align:center;letter-spacing:-.3px;}
 
 /* ── Watermark ───────────────────────────────────────── */
 .watermark{position:fixed;top:50%;left:calc(50% + 105px);transform:translate(-50%,-50%);pointer-events:none;z-index:0;opacity:.04;user-select:none;}
