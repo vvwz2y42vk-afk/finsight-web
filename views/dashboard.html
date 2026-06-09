@@ -238,22 +238,30 @@ tbody td{padding:11px 12px;font-size:12px;vertical-align:middle;}
 ::-webkit-scrollbar{width:4px;height:4px;}::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px;}
 
 /* ── Sidebar BAREZ Dark ─────────────────── */
-.sidebar{background:#071530;border-left:1px solid rgba(255,255,255,.06);}
-.sb-logo{border-bottom:1px solid rgba(255,255,255,.07);padding:16px 14px 14px;}
+.sidebar{background:#1a2a3f;border-left:1px solid rgba(255,255,255,.07);}
+.sb-logo{border-bottom:1px solid rgba(255,255,255,.07);padding:14px 14px 12px;}
 .sb-logo img{filter:brightness(0) invert(1);}
-.nav{padding:10px 8px;}
-.ni{color:rgba(255,255,255,.5);font-size:12px;padding:9px 10px;}
-.ni:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.9);}
-.ni.active{background:rgba(74,144,226,.2);color:#7ec8f8;font-weight:600;}
-.ni.active::before{background:#4a90e2;}
-.ni-badge{background:rgba(74,144,226,.18);color:#7ec8f8;}
-.ni-badge.red{background:rgba(231,76,60,.2);color:#f87171;}
-.ni-ico{opacity:.65;}
-.ni.active .ni-ico{opacity:1;}
+.nav{padding:6px 0;}
+.ni{color:rgba(255,255,255,.5);font-size:12px;padding:9px 14px;border-radius:0!important;direction:rtl;flex-direction:row;}
+.ni:hover{background:rgba(59,130,246,.1);color:rgba(255,255,255,.85);}
+.ni.active{background:#1e3a5f;color:#93c5fd;font-weight:600;border-right:3px solid #3b82f6;padding-right:11px;}
+.ni.active::before{display:none;}
+.ni-badge{background:rgba(59,130,246,.2);color:#93c5fd;}
+.ni-badge.red{background:rgba(239,68,68,.2);color:#fca5a5;}
+.ni-ico{opacity:.55;flex-shrink:0;}
+.ni.active .ni-ico{opacity:1;color:#3b82f6;}
 .sb-user{border-top:1px solid rgba(255,255,255,.07);padding:10px 12px;}
 .user-row{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);}
 .user-name{color:rgba(255,255,255,.85);font-size:12px;}
 .user-role{color:rgba(255,255,255,.3);font-size:9px;}
+/* ── Occupancy strip ─────────────────────── */
+.occ-strip{padding:10px 14px 12px;border-bottom:1px solid rgba(255,255,255,.07);}
+.occ-strip-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;}
+.occ-strip-lbl{font-size:10px;color:rgba(255,255,255,.45);letter-spacing:.3px;}
+.occ-strip-unit{font-size:11px;font-weight:700;color:#93c5fd;}
+.occ-bar{height:4px;background:rgba(255,255,255,.1);border-radius:20px;overflow:hidden;margin-bottom:4px;}
+.occ-bar-fill{height:100%;background:linear-gradient(90deg,#3b82f6,#60a5fa);border-radius:20px;transition:width .6s ease;width:0%;}
+.occ-strip-pct{font-size:13px;font-weight:800;color:#60a5fa;text-align:center;letter-spacing:-.3px;}
 
 /* ── Watermark ───────────────────────────────────────── */
 .watermark{position:fixed;top:50%;left:calc(50% + 105px);transform:translate(-50%,-50%);pointer-events:none;z-index:0;opacity:.04;user-select:none;}
@@ -365,6 +373,14 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
 <aside class="sidebar" id="dashSidebar">
   <div class="sb-logo" style="gap:12px;">
     <img src="/images/logo-dark.png" alt="Barez" style="height:48px;width:auto;">
+  </div>
+  <div class="occ-strip">
+    <div class="occ-strip-row">
+      <span class="occ-strip-lbl">الإشغال الحالي</span>
+      <span class="occ-strip-unit" id="sb-occ-unit">—/—</span>
+    </div>
+    <div class="occ-bar"><div class="occ-bar-fill" id="sb-occ-bar"></div></div>
+    <div class="occ-strip-pct" id="sb-occ-pct">—%</div>
   </div>
   <nav class="nav">
     <button id="nav-dashboard" class="ni active" onclick="go('dashboard',this)"><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>لوحة التحكم</button>
@@ -2275,6 +2291,9 @@ function updateAptsBadges(){
   const rate=totAll?Math.round(totOcc/totAll*100):0;
   const ro=document.getElementById('aptsOccRate');
   if(ro)ro.innerHTML=`نسبة الإشغال: <span style="color:var(--gold);font-size:16px;">${rate}%</span> <span style="font-weight:400;font-size:11px;">(${totOcc}/${totAll})</span>`;
+  const sbUnit=document.getElementById('sb-occ-unit');if(sbUnit)sbUnit.textContent=`${totOcc}/${totAll} وحدة`;
+  const sbBar=document.getElementById('sb-occ-bar');if(sbBar)sbBar.style.width=rate+'%';
+  const sbPct=document.getElementById('sb-occ-pct');if(sbPct)sbPct.textContent=rate+'%';
   renderBuildingCards();
   renderPipeline();
   renderAdminDonut(totOcc,totAll);
