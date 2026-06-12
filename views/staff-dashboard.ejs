@@ -194,6 +194,12 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
 
 /* ══ Table ══ */
 .tbl-wrap{overflow-x:auto;border-radius:12px;border:1px solid var(--border);box-shadow:var(--sh-sm);}
+.pager{display:flex;align-items:center;justify-content:center;gap:4px;padding:10px 0;flex-wrap:wrap;}
+.pager button{min-width:32px;height:32px;padding:0 8px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;color:#475569;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;}
+.pager button:hover{background:#f1f5f9;}
+.pager button.active{background:#1a3d8f;color:#fff;border-color:#1a3d8f;}
+.pager button:disabled{opacity:.4;cursor:default;}
+.pager-info{font-size:11px;color:var(--t4);margin:0 6px;}
 .stbl{width:100%;border-collapse:collapse;font-size:13px;}
 .stbl th{background:linear-gradient(135deg,#F8FAFC,#F1F5F9);color:var(--t2);padding:10px 12px;text-align:right;font-weight:700;font-size:11px;letter-spacing:.05em;text-transform:uppercase;border-bottom:2px solid var(--border);}
 .stbl td{padding:10px 12px;border-bottom:1px solid var(--border-s);color:var(--t2);}
@@ -698,6 +704,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
             <tbody id="bkTbody"><tr><td colspan="12" style="padding:16px;"><div class="skel" style="height:13px;width:100%;margin-bottom:10px;"></div><div class="skel" style="height:13px;width:88%;margin-bottom:10px;"></div><div class="skel" style="height:13px;width:94%;margin-bottom:10px;"></div><div class="skel" style="height:13px;width:80%;"></div></td></tr></tbody>
           </table>
         </div>
+        <div id="bkPager" style="display:none;"></div>
       </div>
     </div>
 
@@ -738,6 +745,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
           <tbody id="custTbody"><tr><td colspan="10" style="padding:16px;"><div class="skel" style="height:13px;width:100%;margin-bottom:10px;"></div><div class="skel" style="height:13px;width:85%;margin-bottom:10px;"></div><div class="skel" style="height:13px;width:92%;"></div></td></tr></tbody>
         </table>
       </div>
+      <div id="custPager" style="display:none;"></div>
     </div>
 
     <!-- ── Housekeeping ── -->
@@ -2035,28 +2043,36 @@ function clearBkFilters(){
   loadBookings();
 }
 
-async function loadBookings(){
-  const sf          = document.getElementById('bk-status-filter')?.value||'open';
-  const date_from   = document.getElementById('bkDateFrom')?.value||'';
-  const date_to     = document.getElementById('bkDateTo')?.value||'';
-  const booking_num = (document.getElementById('bkNum')?.value||'').trim();
-  const apt         = (document.getElementById('bkApt')?.value||'').trim();
-  const name        = (document.getElementById('bkName')?.value||'').trim();
-  const phone       = (document.getElementById('bkPhone')?.value||'').trim();
-  const booking_type= document.getElementById('bkType')?.value||'';
-  const source      = document.getElementById('bkSource')?.value||'';
-  const q           = name||(phone||'');
+const PER_PAGE=30;
+function renderPager(page,total,setPage,pagerId){
+  const pages=Math.ceil(total/PER_PAGE);
+  const el=document.getElementById(pagerId);
+  if(!el)return;
+  if(pages<=1){el.style.display='none';return;}
+  el.style.display='block';
+  let btns='';
+  btns+=`<button onclick="${setPage}(${page-1})" ${page===1?'disabled':''}>&#8594;</button>`;
+  const delta=2;
+  let lo=Math.max(1,page-delta),hi=Math.min(pages,page+delta);
+  if(lo>1) btns+=`<button onclick="${setPage}(1)">1</button>${lo>2?'<span class="pager-info">…</span>':''}`;
+  for(let p=lo;p<=hi;p++) btns+=`<button class="${p===page?'active':''}" onclick="${setPage}(${p})">${p}</button>`;
+  if(hi<pages) btns+=`${hi<pages-1?'<span class="pager-info">…</span>':''}<button onclick="${setPage}(${pages})">${pages}</button>`;
+  btns+=`<button onclick="${setPage}(${page+1})" ${page===pages?'disabled':''}>&#8592;</button>`;
+  btns+=`<span class="pager-info">${((page-1)*PER_PAGE)+1}–${Math.min(page*PER_PAGE,total)} من ${total}</span>`;
+  el.innerHTML=`<div class="pager">${btns}</div>`;
+}
 
-  const params=new URLSearchParams({sf,date_from,date_to,booking_num,apt,booking_type,source,q});
-  try{
-    const r=await fetch('/staff/api/bookings?'+params);
-    const list=await r.json();
-    const tb=document.getElementById('bkTbody');
-    const cnt=document.getElementById('bkCount');
-    if(cnt) cnt.textContent=list.length?`${list.length} حجز`:'';
-    if(!list.length){ tb.innerHTML='<tr><td colspan="12" style="text-align:center;padding:30px;color:#94a3b8;">لا توجد حجوزات</td></tr>'; return; }
-    tb.innerHTML=list.map((b,i)=>{const bg=b.checkoutToday?'background:rgba(234,179,8,.22);':'';return`<tr>
-      <td style="${bg}font-family:monospace;font-weight:700;color:var(--t4);font-size:11px;width:32px;">${i+1}</td>
+let _bkData=[], _bkPage=1;
+function setBkPage(p){_bkPage=p;renderBkRows();}
+function renderBkRows(){
+  const tb=document.getElementById('bkTbody');
+  const cnt=document.getElementById('bkCount');
+  const slice=_bkData.slice((_bkPage-1)*PER_PAGE,_bkPage*PER_PAGE);
+  if(cnt) cnt.textContent=_bkData.length?`${_bkData.length} حجز`:'';
+  if(!slice.length){tb.innerHTML='<tr><td colspan="12" style="text-align:center;padding:30px;color:#94a3b8;">لا توجد حجوزات</td></tr>';return;}
+  const offset=(_bkPage-1)*PER_PAGE;
+  tb.innerHTML=slice.map((b,i)=>{const bg=b.checkoutToday?'background:rgba(234,179,8,.22);':'';return`<tr>
+      <td style="${bg}font-family:monospace;font-weight:700;color:var(--t4);font-size:11px;width:32px;">${offset+i+1}</td>
       <td style="${bg}"><b style="font-size:14px;">${esc(b.apt||'—')}</b></td>
       <td style="${bg}"><span onclick="openGuestCard('${esc(b.phone||'')}')" style="cursor:pointer;color:var(--brand);font-weight:700;">${esc(b.name||'—')}</span></td>
       <td style="${bg}"><a href="https://wa.me/${waPhone(b.phone)}" target="_blank" style="color:var(--brand);text-decoration:none;font-family:monospace;font-size:12px;">${esc(b.phone||'—')}</a></td>
@@ -2079,6 +2095,27 @@ async function loadBookings(){
         </div>
       </td>
     </tr>`;}).join('');
+  renderPager(_bkPage,_bkData.length,'setBkPage','bkPager');
+}
+
+async function loadBookings(){
+  const sf          = document.getElementById('bk-status-filter')?.value||'open';
+  const date_from   = document.getElementById('bkDateFrom')?.value||'';
+  const date_to     = document.getElementById('bkDateTo')?.value||'';
+  const booking_num = (document.getElementById('bkNum')?.value||'').trim();
+  const apt         = (document.getElementById('bkApt')?.value||'').trim();
+  const name        = (document.getElementById('bkName')?.value||'').trim();
+  const phone       = (document.getElementById('bkPhone')?.value||'').trim();
+  const booking_type= document.getElementById('bkType')?.value||'';
+  const source      = document.getElementById('bkSource')?.value||'';
+  const q           = name||(phone||'');
+
+  const params=new URLSearchParams({sf,date_from,date_to,booking_num,apt,booking_type,source,q});
+  try{
+    const r=await fetch('/staff/api/bookings?'+params);
+    _bkData=await r.json();
+    _bkPage=1;
+    renderBkRows();
   }catch(e){
     const tb=document.getElementById('bkTbody');
     if(tb) tb.innerHTML='<tr><td colspan="12" style="text-align:center;padding:30px;color:#dc2626;">❌ تعذر تحميل الحجوزات — تحقق من الاتصال</td></tr>';
@@ -2115,25 +2152,20 @@ function updateCustDateTime(){
 setInterval(updateCustDateTime,1000);
 
 const CUST_CAT={regular:{lbl:'عادي',bg:'#f1f5f9',c:'#64748b'},vip:{lbl:'VIP',bg:'rgba(234,179,8,.15)',c:'#b45309'},blocked:{lbl:'محظور',bg:'rgba(220,38,38,.1)',c:'#dc2626'}};
-async function loadCustomers(){
-  updateCustDateTime();
-  const q=(document.getElementById('custSearch')?.value||'').trim();
-  const params=new URLSearchParams({q});
-  try{
-    const r=await fetch('/staff/api/customers?'+params);
-    const list=await r.json();
-    const tb=document.getElementById('custTbody');
-    const cnt=document.getElementById('custCount');
-    if(cnt) cnt.textContent=list.length?`${list.length} عميل`:'';
-    if(!list.length){
-      tb.innerHTML=`<tr><td colspan="10" style="text-align:center;padding:30px;color:#94a3b8;">لا توجد نتائج</td></tr>`;
-      return;
-    }
-    tb.innerHTML=list.map((c,i)=>{
-      const cat=CUST_CAT[c.category]||CUST_CAT.regular;
-      const phone=c.phone&&!c.phone.startsWith('nzl-')?c.phone:'—';
-      return`<tr>
-      <td style="font-family:monospace;font-size:11px;color:var(--t4);">${i+1}</td>
+let _custData=[], _custPage=1;
+function setCustPage(p){_custPage=p;renderCustRows();}
+function renderCustRows(){
+  const tb=document.getElementById('custTbody');
+  const cnt=document.getElementById('custCount');
+  const slice=_custData.slice((_custPage-1)*PER_PAGE,_custPage*PER_PAGE);
+  if(cnt) cnt.textContent=_custData.length?`${_custData.length} عميل`:'';
+  if(!slice.length){tb.innerHTML='<tr><td colspan="10" style="text-align:center;padding:30px;color:#94a3b8;">لا توجد نتائج</td></tr>';return;}
+  const offset=(_custPage-1)*PER_PAGE;
+  tb.innerHTML=slice.map((c,i)=>{
+    const cat=CUST_CAT[c.category]||CUST_CAT.regular;
+    const phone=c.phone&&!c.phone.startsWith('nzl-')?c.phone:'—';
+    return`<tr>
+      <td style="font-family:monospace;font-size:11px;color:var(--t4);">${offset+i+1}</td>
       <td><span onclick="openGuestCard('${esc(c.phone||'')}')" style="cursor:pointer;color:var(--brand);font-weight:700;">${esc(c.name||'—')}</span></td>
       <td>${phone!=='—'?`<a href="https://wa.me/${waPhone(c.phone)}" target="_blank" style="color:var(--brand);text-decoration:none;font-family:monospace;font-size:12px;">${esc(phone)}</a>`:'<span style="color:var(--t4);">—</span>'}</td>
       <td style="font-size:11px;color:var(--t4);">${esc(c.idType||'—')}</td>
@@ -2144,6 +2176,18 @@ async function loadCustomers(){
       <td style="font-size:11px;color:var(--t4);">${c.lastSeen?fDate(c.lastSeen):'—'}</td>
       <td><span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:${cat.bg};color:${cat.c};">${cat.lbl}</span></td>
     </tr>`;}).join('');
+  renderPager(_custPage,_custData.length,'setCustPage','custPager');
+}
+
+async function loadCustomers(){
+  updateCustDateTime();
+  const q=(document.getElementById('custSearch')?.value||'').trim();
+  const params=new URLSearchParams({q});
+  try{
+    const r=await fetch('/staff/api/customers?'+params);
+    _custData=await r.json();
+    _custPage=1;
+    renderCustRows();
   }catch(e){
     const tb=document.getElementById('custTbody');
     if(tb) tb.innerHTML='<tr><td colspan="10" style="text-align:center;padding:30px;color:#dc2626;">❌ تعذر تحميل البيانات — تحقق من الاتصال</td></tr>';
