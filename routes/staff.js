@@ -365,11 +365,11 @@ router.post('/api/bookings/new', reqStaff, async (req,res) => {
     }).save();
 
     AL.create({building:req.staff.building,staffName:req.staff.name,action:'booking_add',apt,guestName:name,bookingId:bk._id,details:'حجز يدوي',propertyId:req.staff.propertyId||null}).catch(()=>{});
-    // Upsert guest record
+    // Upsert guest record with all available data
     const Guest = require('../models/Guest');
     Guest.findOneAndUpdate(
       { phone, propertyId: req.staff.propertyId || null },
-      { name, idType: idType||'', idNumber: idNumber||'', building: req.staff.building, lastSeen: new Date(), $inc: { totalBookings: 1 } },
+      { $set: { name, idType: idType||'', idNumber: idNumber||'', building: req.staff.building, lastSeen: new Date(), email: req.body.email||'' }, $inc: { totalBookings: 1 }, $setOnInsert: { category: 'regular' } },
       { upsert: true, new: true, setDefaultsOnInsert: true }
     ).catch(() => {});
     // WhatsApp booking confirmation
