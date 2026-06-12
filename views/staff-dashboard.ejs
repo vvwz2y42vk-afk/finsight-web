@@ -1311,7 +1311,10 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
         </div>
         <div>
           <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">رقم الإثبات</label>
-          <input id="nb-idnum" type="text" placeholder="رقم الوثيقة" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;">
+          <div style="position:relative;">
+            <input id="nb-idnum" type="text" placeholder="رقم الوثيقة" oninput="onIdNumInput(this.value)" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;">
+            <span id="nb-idnum-badge" style="display:none;position:absolute;left:8px;top:50%;transform:translateY(-50%);background:#047857;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;">ضيف سابق ✓</span>
+          </div>
         </div>
         <div style="grid-column:1/-1;">
           <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">الحالة</label>
@@ -2763,7 +2766,23 @@ function searchGuests(q) {
   }, 250);
 }
 
-// ── Phone auto-fill in new booking ───────────────────────
+// ── Auto-fill helpers ─────────────────────────────────────
+function applyGuestFill(g) {
+  const nameEl   = document.getElementById('nb-name');
+  const phoneEl  = document.getElementById('nb-phone');
+  const idTypeEl = document.getElementById('nb-idtype');
+  const idNumEl  = document.getElementById('nb-idnum');
+  const phoneBadge = document.getElementById('nb-guest-badge');
+  const idBadge    = document.getElementById('nb-idnum-badge');
+  if (nameEl  && !nameEl.value)  nameEl.value  = g.name  || '';
+  if (phoneEl && !phoneEl.value && g.phone && !g.phone.startsWith('nzl-')) phoneEl.value = g.phone;
+  if (idTypeEl && g.idType)      idTypeEl.value = g.idType;
+  if (idNumEl  && !idNumEl.value) idNumEl.value = g.idNumber || '';
+  if (phoneBadge) phoneBadge.style.display = 'inline-block';
+  if (idBadge)    idBadge.style.display    = 'inline-block';
+  toast('تم تعبئة بيانات الضيف تلقائياً ✓');
+}
+
 let phoneTimer;
 async function onPhoneInput(val) {
   clearTimeout(phoneTimer);
@@ -2775,16 +2794,23 @@ async function onPhoneInput(val) {
       const r = await fetch('/staff/api/guests/search?phone=' + val);
       if (!r.ok) return;
       const g = await r.json();
-      if (!g) return;
-      // Auto-fill
-      const nameEl = document.getElementById('nb-name');
-      const idTypeEl = document.getElementById('nb-idtype');
-      const idNumEl = document.getElementById('nb-idnumber');
-      if (nameEl && !nameEl.value) nameEl.value = g.name;
-      if (idTypeEl && g.idType) idTypeEl.value = g.idType;
-      if (idNumEl && !idNumEl.value) idNumEl.value = g.idNumber || '';
-      if (badge) badge.style.display = 'inline-block';
-      toast('تم تعبئة بيانات الضيف تلقائياً ✓');
+      if (g) applyGuestFill(g);
+    } catch(e) {}
+  }, 400);
+}
+
+let idNumTimer;
+async function onIdNumInput(val) {
+  clearTimeout(idNumTimer);
+  const badge = document.getElementById('nb-idnum-badge');
+  if (badge) badge.style.display = 'none';
+  if (val.length < 5) return;
+  idNumTimer = setTimeout(async () => {
+    try {
+      const r = await fetch('/staff/api/guests/by-idnum/' + encodeURIComponent(val));
+      if (!r.ok) return;
+      const g = await r.json();
+      if (g) applyGuestFill(g);
     } catch(e) {}
   }, 400);
 }

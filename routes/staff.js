@@ -842,6 +842,17 @@ router.get('/api/guests/by-phone/:phone', reqStaff, async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── API: Guest lookup by ID number ───────────────────────
+router.get('/api/guests/by-idnum/:idnum', reqStaff, async (req, res) => {
+  try {
+    const Guest = require('../models/Guest');
+    const idnum = req.params.idnum.trim();
+    if (idnum.length < 5) return res.json(null);
+    const guest = await Guest.findOne({ idNumber: idnum, propertyId: req.staff.propertyId || null }).lean();
+    res.json(guest || null);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 // ── API: Guest booking history ───────────────────────────
 router.get('/api/guests/:id/history', reqStaff, async (req, res) => {
   try {
