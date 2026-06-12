@@ -1813,23 +1813,22 @@ function renderAptGrid(){
     aptsRawData.floors.forEach(floor=>{
       floor.rooms.forEach(r=>{ if(r.housekeeping==='maintenance') maintRooms.push(r); });
     });
-    if(!maintRooms.length){ maintStrip.style.display='none'; }
-    else{
-      maintStrip.style.display='block';
-      maintStrip.innerHTML=`
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-          <span style="width:10px;height:10px;border-radius:50%;background:#7C3AED;display:inline-block;"></span>
-          <span style="font-size:13px;font-weight:700;color:#7C3AED;">الشقق في الصيانة (${maintRooms.length})</span>
+    maintStrip.style.display='block';
+    maintStrip.innerHTML=`
+      <div style="background:#fff;border:1px solid rgba(124,58,237,.2);border-radius:12px;padding:14px 16px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:${maintRooms.length?'12px':'0'};">
+          <span style="width:10px;height:10px;border-radius:50%;background:#7C3AED;display:inline-block;flex-shrink:0;"></span>
+          <span style="font-size:13px;font-weight:700;color:#7C3AED;">الشقق في الصيانة${maintRooms.length?' ('+maintRooms.length+')':''}</span>
         </div>
-        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+        ${maintRooms.length?`<div style="display:flex;flex-wrap:wrap;gap:8px;">
           ${maintRooms.map(r=>`
             <div onclick="openBkModal('${r.bookingId||''}','${r.apt}','${r.status}')" style="cursor:pointer;min-width:110px;padding:10px 14px;background:#faf5ff;border:1.5px solid rgba(124,58,237,.3);border-radius:12px;display:flex;flex-direction:column;gap:4px;">
               <div style="font-size:18px;font-weight:800;color:#7C3AED;">${esc(r.apt)}</div>
               <div style="font-size:10px;font-weight:700;color:#7C3AED;background:rgba(124,58,237,.1);padding:2px 7px;border-radius:20px;align-self:flex-start;">🔧 صيانة</div>
               ${r.notes?`<div style="font-size:11px;color:#64748b;margin-top:2px;">${esc(r.notes)}</div>`:''}
             </div>`).join('')}
-        </div>`;
-    }
+        </div>`:'<div style="font-size:12px;color:#94a3b8;">لا توجد شقق في الصيانة حالياً</div>'}
+      </div>`;
   }
 }
 
