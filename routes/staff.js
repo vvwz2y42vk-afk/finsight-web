@@ -814,6 +814,79 @@ router.put('/api/room-prices', reqStaff, async (req, res) => {
 });
 
 // ── Guests ────────────────────────────────────────────────
+// ── API: Analytics ───────────────────────────────────────
+router.get('/api/analytics', reqStaff, async (req, res) => {
+  try {
+    const B = require('../models/Booking');
+    const year = parseInt(req.query.year) || new Date().getFullYear();
+    const propFilter = req.staff.propertyId
+      ? { propertyId: req.staff.propertyId }
+      : { building: req.staff.building, propertyId: null };
+
+    const start = new Date(year, 0, 1);
+    const end   = new Date(year + 1, 0, 1);
+
+    // All bookings for this year (non-cancelled)
+    const bookings = await B.find({
+      ...propFilter,
+      checkIn: { $gte: start, $lt: end },
+      status: { $ne: 'cancelled' },
+    }).lean();
+
+    // All-time totals (non-cancelled)
+    const allTime = await B.aggregate([
+      { $match: { ...propFilter, status: { $ne: 'cancelled' } } },
+      { $group: { _id: null, revenue: { $sum: '$totalPrice' }, paid: { $sum: '$paidAmount' }, count: { $sum: 1 } } }
+    ]);
+
+    // Monthly breakdown
+    const monthlyRevenue  = Array(12).fill(0);
+    const monthlyBookings = Array(12).fill(0);
+    const aptMap = {};
+
+    bookings.forEach(b => {
+      const m = new Date(b.checkIn).getMonth();
+      monthlyRevenue[m]  += b.totalPrice  || 0;
+      monthlyBookings[m] += 1;
+      const a = b.apt || 'غير محدد';
+      if (!aptMap[a]) aptMap[a] = { apt: a, revenue: 0, bookings: 0 };
+      aptMap[a].revenue  += b.totalPrice || 0;
+      aptMap[a].bookings += 1;
+    });
+
+    const topApts = Object.values(aptMap)
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 10);
+
+    // Booking type breakdown (all-time, non-cancelled)
+    const typeAgg = await B.aggregate([
+      { $match: { ...propFilter, status: { $ne: 'cancelled' } } },
+      { $group: { _id: '$bookingType', count: { $sum: 1 }, revenue: { $sum: '$totalPrice' } } }
+    ]);
+
+    const byType = {};
+    typeAgg.forEach(t => { byType[t._id] = { count: t.count, revenue: t.revenue }; });
+
+    const at = allTime[0] || { revenue: 0, paid: 0, count: 0 };
+    const bestMonth = monthlyRevenue.indexOf(Math.max(...monthlyRevenue));
+
+    res.json({
+      year,
+      monthlyRevenue:  monthlyRevenue.map(v => Math.round(v)),
+      monthlyBookings,
+      topApts,
+      byType,
+      totalRevenue:   Math.round(at.revenue),
+      totalPaid:      Math.round(at.paid),
+      totalRemaining: Math.round(at.revenue - at.paid),
+      totalBookings:  at.count,
+      bestMonth,
+      yearBookings:   bookings.length,
+      yearRevenue:    Math.round(monthlyRevenue.reduce((a,b)=>a+b,0)),
+    });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 router.get('/api/guests', reqStaff, async (req, res) => {
   try {
     const Guest = require('../models/Guest');

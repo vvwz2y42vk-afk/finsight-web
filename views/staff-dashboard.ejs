@@ -481,6 +481,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
     <div class="sn" onclick="goTab('housekeeping',this)" id="sn-housekeeping" style="display:<%= P.includes('housekeeping')?'flex':'none' %>"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span><span class="sn-lbl">خدمة الغرف</span></div>
     <div class="sn" onclick="goTab('activity',this)" id="sn-activity" style="display:<%= P.includes('activity')?'flex':'none' %>"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span><span class="sn-lbl">سجل الحركات</span></div>
     <div class="sn" onclick="goTab('vouchers',this)" id="sn-vouchers" style="display:<%= P.includes('vouchers')?'flex':'none' %>"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></span><span class="sn-lbl">السندات والفواتير</span></div>
+    <div class="sn" onclick="goTab('analytics',this)" id="sn-analytics"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="18" y="3" width="4" height="18"/><rect x="10" y="8" width="4" height="13"/><rect x="2" y="13" width="4" height="8"/></svg></span><span class="sn-lbl">التحليلات</span></div>
     <div class="sn" onclick="goTab('reports',this)" id="sn-reports"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></span><span class="sn-lbl">التقارير</span></div>
     <div class="sn" onclick="goTab('calendar',this)" id="sn-calendar" style="display:<%= P.includes('reports')?'flex':'none' %>"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/></svg></span><span class="sn-lbl">التقويم</span></div>
     <div class="sn" onclick="goTab('guests',this)" id="sn-guests" style="display:<%= P.includes('guests') || staff.role==='manager' ? 'flex' : 'none' %>"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span><span class="sn-lbl">الضيوف</span></div>
@@ -760,6 +761,44 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
         <span style="margin-right:auto;" id="hk-summary-txt" style="font-size:11px;color:var(--t4);"></span>
       </div>
       <div class="hk-grid" id="hkGrid"></div>
+    </div>
+
+    <!-- ── Analytics ── -->
+    <div class="tab-section" id="tab-analytics">
+      <!-- رأس التحليلات -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px;">
+        <div style="font-size:16px;font-weight:800;color:var(--brand);">لوحة التحليلات</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button onclick="anYear--;loadAnalytics()" style="width:30px;height:30px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;">›</button>
+          <span id="an-year-lbl" style="font-size:14px;font-weight:700;color:var(--t1);min-width:48px;text-align:center;"></span>
+          <button onclick="anYear++;loadAnalytics()" style="width:30px;height:30px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;">‹</button>
+        </div>
+      </div>
+
+      <!-- KPI Cards -->
+      <div id="an-kpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:20px;"></div>
+
+      <!-- Charts Grid -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+        <div style="background:#fff;border:1px solid var(--border);border-radius:14px;padding:16px;">
+          <div style="font-size:12px;font-weight:700;color:var(--t3);margin-bottom:12px;">الإيرادات الشهرية (ريال)</div>
+          <canvas id="an-revenue-chart" height="200"></canvas>
+        </div>
+        <div style="background:#fff;border:1px solid var(--border);border-radius:14px;padding:16px;">
+          <div style="font-size:12px;font-weight:700;color:var(--t3);margin-bottom:12px;">عدد الحجوزات الشهري</div>
+          <canvas id="an-bookings-chart" height="200"></canvas>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;">
+        <div style="background:#fff;border:1px solid var(--border);border-radius:14px;padding:16px;">
+          <div style="font-size:12px;font-weight:700;color:var(--t3);margin-bottom:12px;">أفضل الشقق إيراداً</div>
+          <canvas id="an-apts-chart" height="260"></canvas>
+        </div>
+        <div style="background:#fff;border:1px solid var(--border);border-radius:14px;padding:16px;">
+          <div style="font-size:12px;font-weight:700;color:var(--t3);margin-bottom:12px;">توزيع نوع الحجز</div>
+          <canvas id="an-type-chart" height="260"></canvas>
+        </div>
+      </div>
     </div>
 
     <!-- ── Reports ── -->
@@ -1448,6 +1487,7 @@ function goTab(id, el){
         </div>`;
     } else { loadReports(); loadYearlyChart(); }
   }
+  if(id==='analytics')  loadAnalytics();
   if(id==='calendar')   loadCalendar();
   if(id==='guests')     loadGuests();
   if(id==='settings')   loadSettings();
@@ -2162,6 +2202,92 @@ async function loadBookings(){
     const tb=document.getElementById('bkTbody');
     if(tb) tb.innerHTML='<tr><td colspan="12" style="text-align:center;padding:30px;color:#dc2626;">❌ تعذر تحميل الحجوزات — تحقق من الاتصال</td></tr>';
   }
+}
+
+// ── Analytics ────────────────────────────────────────────
+let anYear=new Date().getFullYear();
+let _anCharts={};
+const AN_MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+
+function anFmt(n){return n>=1000000?(n/1000000).toFixed(1)+'م':n>=1000?(n/1000).toFixed(0)+'ك':n.toLocaleString();}
+
+function destroyChart(id){ if(_anCharts[id]){_anCharts[id].destroy();delete _anCharts[id];} }
+
+async function loadAnalytics(){
+  document.getElementById('an-year-lbl').textContent=anYear;
+  // Chart.js lazy load
+  if(!window.Chart){
+    await new Promise((res,rej)=>{
+      const s=document.createElement('script');
+      s.src='https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js';
+      s.onload=res; s.onerror=rej;
+      document.head.appendChild(s);
+    });
+  }
+  try{
+    const r=await fetch('/staff/api/analytics?year='+anYear);
+    const d=await r.json();
+
+    // ── KPI Cards ──
+    const bestName=d.bestMonth>=0?AN_MONTHS[d.bestMonth]:'—';
+    document.getElementById('an-kpis').innerHTML=[
+      {lbl:'إجمالي الإيرادات',val:anFmt(d.totalRevenue)+' ﷼',c:'#1a3d8f',bg:'rgba(26,61,143,.06)'},
+      {lbl:'إجمالي المحصّل',val:anFmt(d.totalPaid)+' ﷼',c:'#16a34a',bg:'rgba(22,163,74,.06)'},
+      {lbl:'المتبقي',val:anFmt(d.totalRemaining)+' ﷼',c:'#dc2626',bg:'rgba(220,38,38,.06)'},
+      {lbl:'إجمالي الحجوزات',val:d.totalBookings.toLocaleString(),c:'#7c3aed',bg:'rgba(124,58,237,.06)'},
+      {lbl:'إيرادات '+anYear,val:anFmt(d.yearRevenue)+' ﷼',c:'#b45309',bg:'rgba(180,83,9,.06)'},
+      {lbl:'أفضل شهر '+anYear,val:bestName,c:'#0891b2',bg:'rgba(8,145,178,.06)'},
+    ].map(k=>`<div style="background:${k.bg};border:1px solid ${k.c}22;border-radius:12px;padding:12px 14px;">
+      <div style="font-size:11px;color:var(--t4);margin-bottom:4px;">${k.lbl}</div>
+      <div style="font-size:18px;font-weight:800;color:${k.c};">${k.val}</div>
+    </div>`).join('');
+
+    // ── Chart defaults ──
+    Chart.defaults.font.family="'Cairo',sans-serif";
+    Chart.defaults.color='#64748b';
+
+    // 1. إيرادات شهرية
+    destroyChart('rev');
+    _anCharts['rev']=new Chart(document.getElementById('an-revenue-chart'),{
+      type:'bar',
+      data:{labels:AN_MONTHS,datasets:[{label:'الإيرادات',data:d.monthlyRevenue,backgroundColor:'rgba(26,61,143,.75)',borderRadius:6,borderSkipped:false}]},
+      options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.parsed.y.toLocaleString()+' ﷼'}}},scales:{y:{ticks:{callback:v=>anFmt(v)},grid:{color:'#f1f5f9'}},x:{grid:{display:false}}}}
+    });
+
+    // 2. حجوزات شهرية
+    destroyChart('bk');
+    _anCharts['bk']=new Chart(document.getElementById('an-bookings-chart'),{
+      type:'line',
+      data:{labels:AN_MONTHS,datasets:[{label:'الحجوزات',data:d.monthlyBookings,borderColor:'#7c3aed',backgroundColor:'rgba(124,58,237,.08)',tension:.4,fill:true,pointBackgroundColor:'#7c3aed',pointRadius:4}]},
+      options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{ticks:{stepSize:1},grid:{color:'#f1f5f9'}},x:{grid:{display:false}}}}
+    });
+
+    // 3. أفضل الشقق
+    destroyChart('apts');
+    _anCharts['apts']=new Chart(document.getElementById('an-apts-chart'),{
+      type:'bar',
+      data:{
+        labels:d.topApts.map(a=>a.apt),
+        datasets:[{label:'الإيرادات',data:d.topApts.map(a=>a.revenue),backgroundColor:d.topApts.map((_,i)=>`hsla(${220+i*8},70%,${48+i*2}%,.8)`),borderRadius:4,borderSkipped:false}]
+      },
+      options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.parsed.x.toLocaleString()+' ﷼'}}},scales:{x:{ticks:{callback:v=>anFmt(v)},grid:{color:'#f1f5f9'}},y:{grid:{display:false}}}}
+    });
+
+    // 4. توزيع نوع الحجز
+    destroyChart('type');
+    const typeLabels={daily:'يومي',annual:'شهري',inquiry:'استفسار'};
+    const typeColors=['#1a3d8f','#16a34a','#f59e0b'];
+    const typeKeys=Object.keys(d.byType);
+    _anCharts['type']=new Chart(document.getElementById('an-type-chart'),{
+      type:'doughnut',
+      data:{
+        labels:typeKeys.map(k=>typeLabels[k]||k),
+        datasets:[{data:typeKeys.map(k=>d.byType[k].count),backgroundColor:typeColors,borderWidth:0,hoverOffset:6}]
+      },
+      options:{responsive:true,cutout:'65%',plugins:{legend:{position:'bottom',labels:{padding:12,font:{size:12}}}}}
+    });
+
+  }catch(e){ toast('❌ تعذر تحميل التحليلات'); }
 }
 
 // ── Customers ────────────────────────────────────────────
