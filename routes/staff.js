@@ -62,7 +62,7 @@ function buildBookingFilter(staff, { sf='open', apt='', booking_type='', date_fr
   const filter = staff.propertyId
     ? { propertyId: staff.propertyId }
     : { building: staff.building, propertyId: null };
-  if      (sf==='open')                  filter.status = { $nin:['cancelled','checkout'] };
+  if      (sf==='open')                  filter.status = { $ne:'cancelled' };
   else if (sf==='active')                filter.status = 'active';
   else if (sf==='pending_checkin')       filter.status = { $in:['pending','awaiting_payment','awaiting_checkin'] };
   else if (sf==='today_arrival_pending') { filter.checkIn={$gte:today,$lt:tomorrow}; filter.status={$ne:'active'}; }
