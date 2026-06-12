@@ -9,7 +9,8 @@ const XLSX   = require('xlsx');
 
 const nazeelUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
 
-const staffLoginLimit = createRateLimiter({ windowMs: 15 * 60 * 1000, max: 10, message: 'محاولات دخول كثيرة، انتظر 15 دقيقة' });
+const staffLoginLimit   = createRateLimiter({ windowMs: 15 * 60 * 1000, max: 10, message: 'محاولات دخول كثيرة، انتظر 15 دقيقة' });
+const staffRegisterLimit = createRateLimiter({ windowMs: 60 * 60 * 1000, max: 5,  message: 'تجاوزت الحد المسموح للتسجيل، حاول بعد ساعة' });
 
 const COOKIE = 'fs_staff';
 const COPTS  = { httpOnly: true, maxAge: 12 * 60 * 60 * 1000, sameSite: 'lax', secure: process.env.NODE_ENV === 'production' };
@@ -96,17 +97,31 @@ router.post('/login', staffLoginLimit, async (req,res) => {
     }
     const perms = u.permissions?.length ? [...new Set(u.permissions)] : DEFAULT_PERMS;
     let planExpiry = null;
+    let propDoc = null;
     if (u.propertyId) {
-      const prop = await Property.findById(u.propertyId).select('planExpiry active').lean();
-      if (!prop || !prop.active) return res.render('staff-login', { error: 'هذا الحساب موقوف. تواصل مع الإدارة.' });
-      planExpiry = prop?.planExpiry || null;
+      propDoc = await Property.findById(u.propertyId).lean();
+      if (!propDoc || !propDoc.active) return res.render('staff-login', { error: 'هذا الحساب موقوف. تواصل مع الإدارة.' });
+      planExpiry = propDoc?.planExpiry || null;
     }
     res.cookie(COOKIE, createToken({id:u._id,name:u.name,building:u.building,role:u.role,permissions:perms,propertyId:u.propertyId||null,planExpiry}), COPTS);
+    // New tenant: redirect to building setup if no floors configured yet
+    if (propDoc) {
+      const needsSetup = !propDoc.buildings?.length || propDoc.buildings.every(b => !b.floors?.length);
+      if (needsSetup) return res.redirect('/staff/setup');
+    }
     res.redirect('/staff/dashboard');
   } catch(e){ res.render('staff-login',{error:'حدث خطأ'}); }
 });
 
 router.get('/logout',(req,res)=>{ res.clearCookie(COOKIE); res.redirect('/staff/login'); });
+
+router.get('/api/check-username', async (req, res) => {
+  const u = (req.query.u || '').trim();
+  if (!u || u.length < 3) return res.json({ taken: false });
+  const S = require('../models/StaffUser');
+  const exists = await S.exists({ username: u });
+  res.json({ taken: !!exists });
+});
 router.get('/dashboard', reqStaff, (req,res) => { res.setHeader('Cache-Control','no-store'); res.render('staff-dashboard',{staff:req.staff}); });
 
 // ── API: Stats ────────────────────────────────────────────
@@ -984,12 +999,12 @@ router.get('/register', (req, res) => {
   res.render('staff-register', { error: null, success: false });
 });
 
-router.post('/register', async (req, res) => {
+router.post('/register', staffRegisterLimit, async (req, res) => {
   try {
     const S = require('../models/StaffUser');
-    const { propertyName, propertyType, city, adminName, username, password, password2 } = req.body;
-    if (!propertyName || !adminName || !username || !password) {
-      return res.render('staff-register', { error: 'جميع الحقول مطلوبة', success: false });
+    const { propertyName, propertyType, city, adminPhone, adminEmail, adminName, username, password, password2 } = req.body;
+    if (!propertyName || !adminName || !username || !password || !adminPhone) {
+      return res.render('staff-register', { error: 'جميع الحقول المطلوبة يجب تعبئتها', success: false });
     }
     if (password !== password2) {
       return res.render('staff-register', { error: 'كلمتا المرور غير متطابقتين', success: false });
@@ -997,31 +1012,69 @@ router.post('/register', async (req, res) => {
     if (password.length < 8) {
       return res.render('staff-register', { error: 'كلمة المرور يجب أن تكون 8 أحرف على الأقل', success: false });
     }
+    const phoneClean = adminPhone.replace(/\D/g,'');
+    if (phoneClean.length < 9) {
+      return res.render('staff-register', { error: 'رقم الجوال غير صحيح', success: false });
+    }
     const exists = await S.findOne({ username: username.trim() });
     if (exists) return res.render('staff-register', { error: 'اسم المستخدم مستخدم بالفعل، اختر اسماً آخر', success: false });
 
-    // Create property
+    const bldName = propertyName.trim();
     const prop = await new Property({
-      name: propertyName.trim(),
-      type: propertyType || 'apartment',
-      city: city || '',
-      buildings: [], // admin configures buildings later
+      name:       bldName,
+      type:       propertyType || 'apartment',
+      city:       city || '',
+      phone:      phoneClean,
+      adminEmail: (adminEmail || '').trim().toLowerCase(),
+      buildings:  [{ name: bldName, floors: [] }],
     }).save();
 
-    // Create manager account
     await new S({
-      name: adminName.trim(),
-      username: username.trim(),
+      name:       adminName.trim(),
+      username:   username.trim(),
       password,
-      building: propertyName.trim(), // default building = property name
-      role: 'manager',
+      building:   bldName,
+      role:       'manager',
       propertyId: prop._id,
       permissions: DEFAULT_PERMS,
     }).save();
 
     res.render('staff-register', { error: null, success: true });
   } catch(e) {
+    console.error('register error:', e);
     res.render('staff-register', { error: 'حدث خطأ أثناء التسجيل، حاول مرة أخرى', success: false });
+  }
+});
+
+// ── Building setup (onboarding for new tenants) ───────────
+router.get('/setup', reqStaff, async (req, res) => {
+  if (!req.staff.propertyId) return res.redirect('/staff/dashboard');
+  const prop = await Property.findById(req.staff.propertyId).lean();
+  const needsSetup = !prop || !prop.buildings?.length || prop.buildings.every(b => !b.floors?.length);
+  if (!needsSetup) return res.redirect('/staff/dashboard');
+  res.render('staff-setup', { staff: req.staff, propertyName: prop?.name || '' });
+});
+
+router.post('/api/setup-building', reqStaff, async (req, res) => {
+  try {
+    if (!req.staff.propertyId) return res.status(403).json({ error: 'غير مصرح' });
+    const { buildingName, floors } = req.body; // floors: [{label,rooms:[...]}]
+    if (!buildingName || !Array.isArray(floors) || !floors.length) {
+      return res.status(400).json({ error: 'بيانات غير مكتملة' });
+    }
+    const cleanFloors = floors.map(f => ({
+      label: (f.label||'').trim(),
+      rooms: (f.rooms||[]).map(r=>String(r).trim()).filter(Boolean),
+    })).filter(f => f.label && f.rooms.length);
+
+    if (!cleanFloors.length) return res.status(400).json({ error: 'أضف طابقاً واحداً على الأقل بغرف' });
+
+    await Property.findByIdAndUpdate(req.staff.propertyId, {
+      $set: { buildings: [{ name: buildingName.trim(), floors: cleanFloors }] },
+    });
+    res.json({ success: true });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
   }
 });
 

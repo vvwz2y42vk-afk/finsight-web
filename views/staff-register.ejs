@@ -4,73 +4,101 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>سجّل منشأتك — BAREZ Pro</title>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Cairo',sans-serif;background:#F0F4FF;direction:rtl;min-height:100vh;display:flex;flex-direction:column;}
 
-.top-nav{padding:18px 32px;display:flex;align-items:center;justify-content:space-between;}
-.nav-logo{font-size:18px;font-weight:800;color:#1a3d8f;letter-spacing:-.5px;}
-.nav-logo span{color:#B8860B;}
-.nav-login{font-size:13px;color:#64748b;text-decoration:none;padding:7px 16px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;transition:all .2s;}
+.top-nav{padding:18px 32px;display:flex;align-items:center;justify-content:space-between;background:#fff;border-bottom:1px solid #E8EEF8;}
+.nav-logo{font-size:20px;font-weight:900;color:#1a3d8f;letter-spacing:-.5px;}
+.nav-logo span{color:#C9A844;}
+.nav-login{font-size:13px;color:#64748b;text-decoration:none;padding:8px 18px;border-radius:9px;border:1.5px solid #e2e8f0;background:#fff;transition:all .2s;font-weight:600;}
 .nav-login:hover{border-color:#1a3d8f;color:#1a3d8f;}
 
-.hero{text-align:center;padding:48px 20px 32px;}
-.hero-badge{display:inline-flex;align-items:center;gap:6px;background:#EEF4FF;border:1px solid #C7D9FF;color:#1a3d8f;font-size:12px;font-weight:600;padding:5px 14px;border-radius:20px;margin-bottom:20px;}
-.hero-badge::before{content:'';width:6px;height:6px;border-radius:50%;background:#1a3d8f;animation:pulse 2s infinite;}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.hero h1{font-size:32px;font-weight:800;color:#0F172A;line-height:1.2;margin-bottom:10px;}
+.hero{text-align:center;padding:44px 20px 28px;background:linear-gradient(180deg,#EEF4FF 0%,#F0F4FF 100%);}
+.hero-badge{display:inline-flex;align-items:center;gap:7px;background:#fff;border:1.5px solid #C7D9FF;color:#1a3d8f;font-size:12px;font-weight:700;padding:6px 16px;border-radius:20px;margin-bottom:18px;box-shadow:0 2px 8px rgba(26,61,143,.08);}
+.hero-badge::before{content:'';width:7px;height:7px;border-radius:50%;background:#22c55e;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.4;transform:scale(.8);}}
+.hero h1{font-size:30px;font-weight:900;color:#0F172A;line-height:1.25;margin-bottom:10px;}
 .hero h1 span{color:#1a3d8f;}
-.hero p{font-size:15px;color:#64748b;max-width:500px;margin:0 auto;}
+.hero p{font-size:14px;color:#64748b;max-width:480px;margin:0 auto;line-height:1.7;}
 
-.form-wrap{max-width:520px;margin:0 auto;padding:0 20px 60px;}
+.steps{display:flex;justify-content:center;gap:0;margin:24px auto 0;max-width:400px;}
+.step{flex:1;text-align:center;position:relative;}
+.step::after{content:'';position:absolute;top:14px;left:-50%;width:100%;height:2px;background:#E2E8F0;z-index:0;}
+.step:first-child::after{display:none;}
+.step-num{width:28px;height:28px;border-radius:50%;background:#E2E8F0;color:#94a3b8;font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;position:relative;z-index:1;margin-bottom:5px;transition:all .3s;}
+.step.active .step-num{background:#1a3d8f;color:#fff;box-shadow:0 2px 10px rgba(26,61,143,.35);}
+.step.done .step-num{background:#22c55e;color:#fff;}
+.step-lbl{font-size:10px;color:#94a3b8;font-weight:600;}
+.step.active .step-lbl{color:#1a3d8f;font-weight:700;}
+
+.form-wrap{max-width:560px;margin:0 auto;padding:24px 20px 60px;}
+
 .card{background:#fff;border-radius:18px;padding:32px;box-shadow:0 4px 24px rgba(15,23,42,.07),0 1px 4px rgba(15,23,42,.04);border:1px solid #E8EEF8;}
 
-.section-label{font-size:11px;font-weight:700;color:#1a3d8f;text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
-.section-label::after{content:'';flex:1;height:1px;background:#E8EEF8;}
+.section-label{font-size:11px;font-weight:800;color:#1a3d8f;text-transform:uppercase;letter-spacing:.1em;margin:20px 0 14px;display:flex;align-items:center;gap:10px;}
+.section-label::after{content:'';flex:1;height:1.5px;background:#EEF4FF;}
+.section-label:first-child{margin-top:0;}
 
-.field{margin-bottom:16px;}
-.field label{display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:6px;}
+.field{margin-bottom:14px;}
+.field label{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:#475569;margin-bottom:6px;}
+.req{color:#ef4444;font-size:14px;line-height:1;}
 .field input,.field select{width:100%;padding:11px 14px;border:1.5px solid #E2E8F0;border-radius:10px;font-family:'Cairo',sans-serif;font-size:14px;color:#0F172A;background:#FAFBFF;outline:none;transition:all .2s;}
 .field input:focus,.field select:focus{border-color:#1a3d8f;background:#fff;box-shadow:0 0 0 3px rgba(26,61,143,.08);}
-.field input::placeholder{color:#94A3B8;}
+.field input::placeholder{color:#cbd5e1;}
+.field-hint{font-size:11px;color:#94a3b8;margin-top:4px;}
 
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.pw-wrap{position:relative;}
+.pw-wrap input{padding-left:42px;}
+.pw-eye{position:absolute;left:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#94a3b8;font-size:16px;padding:0;width:auto;}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 
 .type-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:4px;}
-.type-opt{border:1.5px solid #E2E8F0;border-radius:10px;padding:14px 10px;text-align:center;cursor:pointer;transition:all .2s;background:#FAFBFF;}
+.type-opt{border:1.5px solid #E2E8F0;border-radius:12px;padding:14px 10px;text-align:center;cursor:pointer;transition:all .2s;background:#FAFBFF;}
 .type-opt:hover{border-color:#1a3d8f;background:#EEF4FF;}
-.type-opt.selected{border-color:#1a3d8f;background:#EEF4FF;color:#1a3d8f;}
-.type-opt-ico{font-size:22px;margin-bottom:6px;}
-.type-opt-lbl{font-size:12px;font-weight:600;}
+.type-opt.selected{border-color:#1a3d8f;background:#EEF4FF;}
+.type-opt-ico{font-size:24px;margin-bottom:6px;}
+.type-opt-lbl{font-size:12px;font-weight:700;color:#334155;}
+.type-opt.selected .type-opt-lbl{color:#1a3d8f;}
 
-.divider{height:1px;background:#F1F5F9;margin:22px 0;}
+.trial-note{background:linear-gradient(135deg,#FFFBEB,#FEF9EC);border:1.5px solid #FDE68A;border-radius:12px;padding:13px 16px;font-size:12px;color:#78350F;margin-bottom:20px;display:flex;align-items:center;gap:10px;font-weight:600;}
 
-.submit-btn{width:100%;padding:14px;background:linear-gradient(135deg,#1a3d8f,#2563eb);border:none;border-radius:12px;font-family:'Cairo',sans-serif;font-size:15px;font-weight:700;color:#fff;cursor:pointer;transition:all .2s;box-shadow:0 4px 16px rgba(26,61,143,.25);margin-top:6px;}
-.submit-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(26,61,143,.35);}
+.submit-btn{width:100%;padding:15px;background:linear-gradient(135deg,#1a3d8f,#2563eb);border:none;border-radius:12px;font-family:'Cairo',sans-serif;font-size:15px;font-weight:800;color:#fff;cursor:pointer;transition:all .25s;box-shadow:0 4px 20px rgba(26,61,143,.3);margin-top:8px;letter-spacing:.03em;}
+.submit-btn:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(26,61,143,.4);}
 .submit-btn:active{transform:translateY(0);}
+.submit-btn:disabled{opacity:.6;transform:none;cursor:not-allowed;}
 
-.err{background:#FEF2F2;border:1px solid #FECACA;color:#B91C1C;padding:12px 16px;border-radius:10px;font-size:13px;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.err{background:#FEF2F2;border:1.5px solid #FECACA;color:#B91C1C;padding:13px 16px;border-radius:11px;font-size:13px;margin-bottom:16px;display:flex;align-items:center;gap:10px;font-weight:600;}
 
-.success-box{text-align:center;padding:40px 20px;}
-.success-ico{font-size:56px;margin-bottom:16px;}
-.success-title{font-size:22px;font-weight:700;color:#047857;margin-bottom:8px;}
-.success-sub{font-size:14px;color:#64748b;line-height:1.7;margin-bottom:24px;}
-.success-btn{display:inline-flex;align-items:center;gap:8px;padding:12px 28px;background:linear-gradient(135deg,#1a3d8f,#2563eb);border-radius:12px;color:#fff;font-family:'Cairo',sans-serif;font-size:14px;font-weight:700;text-decoration:none;box-shadow:0 4px 16px rgba(26,61,143,.25);}
+.success-wrap{text-align:center;padding:48px 20px;}
+.success-ico{font-size:64px;margin-bottom:20px;animation:popIn .5s ease;}
+@keyframes popIn{0%{transform:scale(0);opacity:0;}70%{transform:scale(1.15);}100%{transform:scale(1);opacity:1;}}
+.success-title{font-size:24px;font-weight:900;color:#1a3d8f;margin-bottom:10px;}
+.success-sub{font-size:14px;color:#64748b;line-height:1.8;margin-bottom:28px;max-width:380px;margin-left:auto;margin-right:auto;}
+.success-btn{display:inline-flex;align-items:center;gap:10px;padding:14px 32px;background:linear-gradient(135deg,#1a3d8f,#2563eb);border-radius:12px;color:#fff;font-family:'Cairo',sans-serif;font-size:15px;font-weight:800;text-decoration:none;box-shadow:0 4px 18px rgba(26,61,143,.3);transition:all .2s;}
+.success-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(26,61,143,.4);}
 
-.features{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:32px;margin-bottom:32px;}
-.feat{background:#fff;border-radius:12px;padding:16px;border:1px solid #E8EEF8;text-align:center;}
-.feat-ico{font-size:24px;margin-bottom:8px;}
-.feat-lbl{font-size:12px;font-weight:600;color:#0F172A;}
-.feat-sub{font-size:11px;color:#94A3B8;margin-top:2px;}
+.features{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:24px 0;}
+.feat{background:#fff;border-radius:12px;padding:15px 10px;border:1px solid #E8EEF8;text-align:center;transition:transform .2s;}
+.feat:hover{transform:translateY(-2px);}
+.feat-ico{font-size:22px;margin-bottom:7px;}
+.feat-lbl{font-size:12px;font-weight:700;color:#0F172A;}
+.feat-sub{font-size:10px;color:#94A3B8;margin-top:2px;}
 
-.trial-note{background:#FFFBEB;border:1px solid #FDE68A;border-radius:10px;padding:12px 16px;font-size:12px;color:#92400E;margin-bottom:20px;display:flex;align-items:center;gap:8px;}
+.divider{height:1px;background:linear-gradient(90deg,transparent,#E2E8F0,transparent);margin:20px 0;}
+
+.strength{height:3px;border-radius:2px;margin-top:5px;transition:all .3s;background:#E2E8F0;}
+.strength-bar{height:100%;border-radius:2px;transition:all .4s;}
 
 @media(max-width:600px){
-  .hero h1{font-size:24px;}
+  .hero h1{font-size:22px;}
   .grid2{grid-template-columns:1fr;}
   .type-grid{grid-template-columns:1fr 1fr;}
   .features{grid-template-columns:1fr 1fr;}
+  .card{padding:22px 18px;}
+  .top-nav{padding:14px 18px;}
 }
 </style>
 </head>
@@ -82,25 +110,28 @@ body{font-family:'Cairo',sans-serif;background:#F0F4FF;direction:rtl;min-height:
 </nav>
 
 <% if(success){ %>
+
 <div class="form-wrap">
   <div class="card">
-    <div class="success-box">
+    <div class="success-wrap">
       <div class="success-ico">🎉</div>
-      <div class="success-title">تم التسجيل بنجاح!</div>
+      <div class="success-title">تم إنشاء حسابك!</div>
       <div class="success-sub">
-        تم إنشاء حسابك. يمكنك الآن تسجيل الدخول وبدء إدارة منشأتك.<br>
-        <strong>ملاحظة:</strong> الحساب في فترة تجريبية مجانية لمدة 30 يوم.
+        مرحباً بك في BAREZ Pro.<br>
+        حسابك في <strong>فترة تجريبية مجانية 30 يوم</strong>.<br>
+        سجّل دخولك لتبدأ بإعداد منشأتك.
       </div>
-      <a href="/staff/login" class="success-btn">تسجيل الدخول الآن</a>
+      <a href="/staff/login" class="success-btn">ابدأ الآن ←</a>
     </div>
   </div>
 </div>
+
 <% } else { %>
 
 <div class="hero">
   <div class="hero-badge">تجربة مجانية 30 يوم — بدون بطاقة ائتمان</div>
   <h1>أدر منشأتك بذكاء<br>مع <span>BAREZ Pro</span></h1>
-  <p>نظام متكامل لإدارة الفنادق والشقق الفندقية — الحجوزات، الشقق، الوصولات، التقارير المالية</p>
+  <p>نظام متكامل لإدارة الشقق الفندقية — الحجوزات، الشقق، الوصولات، التقارير المالية، وأكثر</p>
 </div>
 
 <div class="form-wrap">
@@ -116,22 +147,22 @@ body{font-family:'Cairo',sans-serif;background:#F0F4FF;direction:rtl;min-height:
 
   <div class="card">
     <% if(error){ %>
-    <div class="err">⚠️ <%= error %></div>
+    <div class="err"><span>⚠️</span> <%= error %></div>
     <% } %>
 
-    <div class="trial-note">🎁 تجربة مجانية كاملة لمدة 30 يوم — لا يلزم أي دفع مسبق</div>
+    <div class="trial-note">🎁 ابدأ مجاناً الآن — لا يلزم أي دفع مسبق</div>
 
-    <form method="POST" action="/staff/register">
+    <form method="POST" action="/staff/register" id="regForm">
 
       <div class="section-label">معلومات المنشأة</div>
 
       <div class="field">
-        <label>اسم المنشأة *</label>
-        <input type="text" name="propertyName" placeholder="مثال: فندق الأندلس، شقق النخيل الفندقية" required>
+        <label>اسم المنشأة <span class="req">*</span></label>
+        <input type="text" name="propertyName" placeholder="مثال: شقق النخيل الفندقية" required>
       </div>
 
       <div class="field">
-        <label>نوع المنشأة *</label>
+        <label>نوع المنشأة <span class="req">*</span></label>
         <div class="type-grid" id="typeGrid">
           <div class="type-opt selected" onclick="selectType('apartment',this)">
             <div class="type-opt-ico">🏢</div>
@@ -149,9 +180,21 @@ body{font-family:'Cairo',sans-serif;background:#F0F4FF;direction:rtl;min-height:
         <input type="hidden" name="propertyType" id="propertyTypeInput" value="apartment">
       </div>
 
+      <div class="grid2">
+        <div class="field">
+          <label>المدينة</label>
+          <input type="text" name="city" placeholder="الرياض، جدة، مكة...">
+        </div>
+        <div class="field">
+          <label>جوال المنشأة <span class="req">*</span></label>
+          <input type="tel" name="adminPhone" placeholder="05XXXXXXXX" required maxlength="15" dir="ltr">
+        </div>
+      </div>
+
       <div class="field">
-        <label>المدينة</label>
-        <input type="text" name="city" placeholder="مثال: الرياض، جدة، مكة المكرمة">
+        <label>البريد الإلكتروني</label>
+        <input type="email" name="adminEmail" placeholder="info@example.com" dir="ltr">
+        <div class="field-hint">اختياري — للتواصل والإشعارات</div>
       </div>
 
       <div class="divider"></div>
@@ -159,38 +202,48 @@ body{font-family:'Cairo',sans-serif;background:#F0F4FF;direction:rtl;min-height:
 
       <div class="grid2">
         <div class="field">
-          <label>الاسم الكامل *</label>
-          <input type="text" name="adminName" placeholder="اسمك" required>
+          <label>الاسم الكامل <span class="req">*</span></label>
+          <input type="text" name="adminName" placeholder="اسمك الكامل" required>
         </div>
         <div class="field">
-          <label>اسم الدخول (username) *</label>
-          <input type="text" name="username" placeholder="بالإنجليزي أو الأرقام" required autocomplete="username">
+          <label>اسم الدخول <span class="req">*</span></label>
+          <input type="text" name="username" placeholder="بالإنجليزي أو الأرقام" required autocomplete="username" dir="ltr" oninput="checkUsername(this.value)">
+          <div class="field-hint" id="usernameHint"></div>
         </div>
       </div>
 
       <div class="grid2">
         <div class="field">
-          <label>كلمة المرور *</label>
-          <input type="password" name="password" placeholder="6 أحرف على الأقل" required autocomplete="new-password">
+          <label>كلمة المرور <span class="req">*</span></label>
+          <div class="pw-wrap">
+            <input type="password" name="password" id="pw1" placeholder="8 أحرف على الأقل" required autocomplete="new-password" oninput="checkStrength(this.value)">
+            <button type="button" class="pw-eye" onclick="togglePw('pw1',this)">👁</button>
+          </div>
+          <div class="strength"><div class="strength-bar" id="strBar"></div></div>
         </div>
         <div class="field">
-          <label>تأكيد كلمة المرور *</label>
-          <input type="password" name="password2" placeholder="أعد كتابة كلمة المرور" required autocomplete="new-password">
+          <label>تأكيد كلمة المرور <span class="req">*</span></label>
+          <div class="pw-wrap">
+            <input type="password" name="password2" id="pw2" placeholder="أعد الكتابة" required autocomplete="new-password" oninput="checkMatch()">
+            <button type="button" class="pw-eye" onclick="togglePw('pw2',this)">👁</button>
+          </div>
+          <div class="field-hint" id="matchHint"></div>
         </div>
       </div>
 
-      <button type="submit" class="submit-btn">إنشاء الحساب مجاناً</button>
+      <button type="submit" class="submit-btn" id="submitBtn">إنشاء الحساب مجاناً ←</button>
 
-      <div style="text-align:center;margin-top:16px;font-size:12px;color:#94a3b8;">
+      <div style="text-align:center;margin-top:14px;font-size:11px;color:#94a3b8;">
         بالتسجيل توافق على شروط الاستخدام وسياسة الخصوصية
       </div>
     </form>
   </div>
 
-  <div style="text-align:center;margin-top:20px;font-size:13px;color:#64748b;">
-    لديك حساب؟ <a href="/staff/login" style="color:#1a3d8f;font-weight:600;text-decoration:none;">تسجيل الدخول</a>
+  <div style="text-align:center;margin-top:20px;font-size:13px;color:#64748b;padding-bottom:40px;">
+    لديك حساب؟ <a href="/staff/login" style="color:#1a3d8f;font-weight:700;text-decoration:none;">تسجيل الدخول</a>
   </div>
 </div>
+
 <% } %>
 
 <script>
@@ -199,6 +252,62 @@ function selectType(val, el) {
   el.classList.add('selected');
   document.getElementById('propertyTypeInput').value = val;
 }
+
+function togglePw(id, btn) {
+  const el = document.getElementById(id);
+  if (el.type === 'password') { el.type = 'text'; btn.textContent = '🙈'; }
+  else { el.type = 'password'; btn.textContent = '👁'; }
+}
+
+function checkStrength(v) {
+  const bar = document.getElementById('strBar');
+  let score = 0;
+  if (v.length >= 8) score++;
+  if (/[A-Z]/.test(v)) score++;
+  if (/[0-9]/.test(v)) score++;
+  if (/[^A-Za-z0-9]/.test(v)) score++;
+  const colors = ['#ef4444','#f97316','#eab308','#22c55e'];
+  const widths  = ['25%','50%','75%','100%'];
+  bar.style.width   = v.length ? widths[score-1]||'15%' : '0';
+  bar.style.background = v.length ? colors[score-1]||'#ef4444' : '';
+}
+
+function checkMatch() {
+  const p1 = document.getElementById('pw1').value;
+  const p2 = document.getElementById('pw2').value;
+  const hint = document.getElementById('matchHint');
+  if (!p2) { hint.textContent=''; return; }
+  if (p1 === p2) { hint.style.color='#22c55e'; hint.textContent='✓ كلمتا المرور متطابقتان'; }
+  else           { hint.style.color='#ef4444'; hint.textContent='✗ كلمتا المرور غير متطابقتين'; }
+}
+
+let usrTimer;
+function checkUsername(v) {
+  const hint = document.getElementById('usernameHint');
+  clearTimeout(usrTimer);
+  if (v.length < 3) { hint.textContent=''; return; }
+  usrTimer = setTimeout(async () => {
+    try {
+      const r = await fetch('/staff/api/check-username?u=' + encodeURIComponent(v));
+      const d = await r.json();
+      if (d.taken) { hint.style.color='#ef4444'; hint.textContent='✗ هذا الاسم مستخدم بالفعل'; }
+      else          { hint.style.color='#22c55e'; hint.textContent='✓ متاح'; }
+    } catch{}
+  }, 500);
+}
+
+document.getElementById('regForm').addEventListener('submit', function(e) {
+  const p1 = document.getElementById('pw1').value;
+  const p2 = document.getElementById('pw2').value;
+  if (p1 !== p2) {
+    e.preventDefault();
+    document.getElementById('matchHint').textContent = '✗ كلمتا المرور غير متطابقتين';
+    document.getElementById('matchHint').style.color = '#ef4444';
+    return;
+  }
+  document.getElementById('submitBtn').disabled = true;
+  document.getElementById('submitBtn').textContent = 'جاري الإنشاء...';
+});
 </script>
 </body>
 </html>

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>إعداد المبنى — BAREZ Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Cairo',sans-serif;background:#F0F4FF;direction:rtl;min-height:100vh;}
+
+.top-nav{padding:16px 28px;display:flex;align-items:center;justify-content:space-between;background:#fff;border-bottom:1px solid #E8EEF8;}
+.nav-logo{font-size:19px;font-weight:900;color:#1a3d8f;}
+.nav-logo span{color:#C9A844;}
+.nav-out{font-size:12px;color:#94a3b8;text-decoration:none;padding:7px 14px;border-radius:8px;border:1px solid #e2e8f0;transition:all .2s;}
+.nav-out:hover{color:#ef4444;border-color:#ef4444;}
+
+.wrap{max-width:700px;margin:0 auto;padding:36px 20px 60px;}
+
+.progress{background:#fff;border-radius:16px;padding:20px 28px;border:1px solid #E8EEF8;margin-bottom:24px;box-shadow:0 2px 12px rgba(15,23,42,.04);}
+.prog-title{font-size:13px;font-weight:700;color:#1a3d8f;margin-bottom:10px;}
+.prog-steps{display:flex;gap:0;align-items:center;}
+.prog-step{flex:1;text-align:center;position:relative;}
+.prog-line{flex:1;height:2px;background:#E2E8F0;margin:0 4px;}
+.prog-line.done{background:#22c55e;}
+.prog-dot{width:32px;height:32px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;background:#E2E8F0;color:#94a3b8;}
+.prog-dot.done{background:#22c55e;color:#fff;}
+.prog-dot.active{background:#1a3d8f;color:#fff;box-shadow:0 2px 10px rgba(26,61,143,.3);}
+.prog-lbl{font-size:10px;font-weight:600;color:#94a3b8;margin-top:4px;display:block;}
+.prog-dot.active + .prog-lbl{color:#1a3d8f;}
+
+.card{background:#fff;border-radius:18px;border:1px solid #E8EEF8;box-shadow:0 4px 20px rgba(15,23,42,.06);overflow:hidden;}
+.card-head{padding:22px 28px 16px;border-bottom:1px solid #F1F5F9;}
+.card-head h2{font-size:18px;font-weight:900;color:#0F172A;margin-bottom:4px;}
+.card-head p{font-size:13px;color:#64748b;}
+.card-body{padding:24px 28px;}
+
+.field{margin-bottom:16px;}
+.field label{display:block;font-size:12px;font-weight:700;color:#475569;margin-bottom:6px;}
+.field input,.field select{width:100%;padding:11px 14px;border:1.5px solid #E2E8F0;border-radius:10px;font-family:'Cairo',sans-serif;font-size:14px;color:#0F172A;background:#FAFBFF;outline:none;transition:all .2s;}
+.field input:focus{border-color:#1a3d8f;background:#fff;box-shadow:0 0 0 3px rgba(26,61,143,.08);}
+.field input::placeholder{color:#cbd5e1;}
+
+.floors-area{margin-top:8px;}
+.floor-card{background:#F8FAFF;border:1.5px solid #E2E8F0;border-radius:12px;padding:16px;margin-bottom:12px;position:relative;}
+.floor-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.floor-num{width:28px;height:28px;background:linear-gradient(135deg,#1a3d8f,#2563eb);color:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;}
+.floor-label-input{flex:1;padding:8px 12px;border:1.5px solid #E2E8F0;border-radius:8px;font-family:'Cairo',sans-serif;font-size:13px;color:#0F172A;background:#fff;outline:none;transition:border .2s;}
+.floor-label-input:focus{border-color:#1a3d8f;}
+.floor-del{background:none;border:none;cursor:pointer;color:#cbd5e1;font-size:18px;padding:4px;border-radius:6px;transition:color .2s;flex-shrink:0;}
+.floor-del:hover{color:#ef4444;}
+
+.rooms-row{display:flex;align-items:center;gap:8px;}
+.rooms-lbl{font-size:11px;font-weight:700;color:#64748b;white-space:nowrap;}
+.rooms-tags{display:flex;flex-wrap:wrap;gap:6px;flex:1;}
+.room-tag{display:inline-flex;align-items:center;gap:4px;background:#EEF4FF;border:1px solid #C7D9FF;color:#1a3d8f;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:700;}
+.room-tag button{background:none;border:none;cursor:pointer;color:#7C9FCC;font-size:12px;padding:0;margin-right:-2px;line-height:1;}
+.room-tag button:hover{color:#ef4444;}
+.rooms-add-wrap{display:flex;gap:6px;margin-top:8px;}
+.rooms-add-wrap input{flex:1;padding:7px 12px;border:1.5px dashed #C7D9FF;border-radius:8px;font-family:'Cairo',sans-serif;font-size:13px;color:#0F172A;background:#fff;outline:none;transition:border .2s;}
+.rooms-add-wrap input:focus{border-color:#1a3d8f;border-style:solid;}
+.rooms-add-btn{padding:7px 14px;background:#EEF4FF;border:1.5px solid #C7D9FF;border-radius:8px;color:#1a3d8f;font-family:'Cairo',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.rooms-add-btn:hover{background:#1a3d8f;color:#fff;border-color:#1a3d8f;}
+
+.quick-btn{padding:6px 12px;background:#F8FAFF;border:1px solid #E2E8F0;border-radius:7px;font-family:'Cairo',sans-serif;font-size:11px;color:#475569;cursor:pointer;transition:all .2s;}
+.quick-btn:hover{background:#EEF4FF;border-color:#C7D9FF;color:#1a3d8f;}
+
+.add-floor-btn{width:100%;padding:12px;border:2px dashed #C7D9FF;border-radius:12px;background:transparent;font-family:'Cairo',sans-serif;font-size:14px;font-weight:700;color:#1a3d8f;cursor:pointer;transition:all .2s;margin-top:4px;}
+.add-floor-btn:hover{background:#EEF4FF;border-color:#1a3d8f;}
+
+.actions{display:flex;gap:10px;margin-top:24px;}
+.btn-save{flex:1;padding:14px;background:linear-gradient(135deg,#1a3d8f,#2563eb);border:none;border-radius:12px;font-family:'Cairo',sans-serif;font-size:15px;font-weight:800;color:#fff;cursor:pointer;transition:all .2s;box-shadow:0 4px 16px rgba(26,61,143,.25);}
+.btn-save:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(26,61,143,.35);}
+.btn-save:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+.btn-skip{padding:14px 22px;border:1.5px solid #E2E8F0;border-radius:12px;background:#fff;font-family:'Cairo',sans-serif;font-size:14px;font-weight:700;color:#64748b;cursor:pointer;transition:all .2s;text-decoration:none;display:flex;align-items:center;}
+.btn-skip:hover{border-color:#94a3b8;color:#334155;}
+
+.err{background:#FEF2F2;border:1.5px solid #FECACA;color:#B91C1C;padding:12px 16px;border-radius:10px;font-size:13px;margin-bottom:16px;display:none;}
+.tip{background:#FFFBEB;border:1px solid #FDE68A;border-radius:10px;padding:11px 14px;font-size:12px;color:#92400E;margin-bottom:20px;}
+
+@media(max-width:600px){
+  .card-head,.card-body{padding:16px 18px;}
+  .rooms-row{flex-direction:column;align-items:flex-start;}
+}
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <div class="nav-logo">BAREZ <span>Pro</span></div>
+  <a href="/staff/logout" class="nav-out">خروج</a>
+</nav>
+
+<div class="wrap">
+
+  <div class="progress">
+    <div class="prog-title">خطوات الإعداد</div>
+    <div class="prog-steps">
+      <div style="text-align:center">
+        <div class="prog-dot done">✓</div>
+        <span class="prog-lbl">التسجيل</span>
+      </div>
+      <div class="prog-line done"></div>
+      <div style="text-align:center">
+        <div class="prog-dot active">2</div>
+        <span class="prog-lbl" style="color:#1a3d8f">إعداد المبنى</span>
+      </div>
+      <div class="prog-line"></div>
+      <div style="text-align:center">
+        <div class="prog-dot">3</div>
+        <span class="prog-lbl">لوحة التحكم</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <h2>🏢 أضف طوابق وغرف <%= propertyName %></h2>
+      <p>حدّد الطوابق والشقق حتى يتمكن فريقك من إدارة الحجوزات فوراً</p>
+    </div>
+    <div class="card-body">
+
+      <div class="err" id="errMsg"></div>
+
+      <div class="tip">
+        💡 <strong>مثال سريع:</strong> طابق أرضي: غرف 001، 002 — الطابق الأول: 101، 102، 103 ... إلخ
+      </div>
+
+      <div class="field">
+        <label>اسم المبنى</label>
+        <input type="text" id="bldName" value="<%= propertyName %>" placeholder="مثال: المبنى الرئيسي، برج أ">
+      </div>
+
+      <div class="floors-area" id="floorsArea"></div>
+      <button type="button" class="add-floor-btn" onclick="addFloor()">+ إضافة طابق</button>
+
+      <div class="actions">
+        <button class="btn-save" id="saveBtn" onclick="saveSetup()">حفظ وبدء العمل ←</button>
+        <a href="/staff/dashboard" class="btn-skip">تخطي الآن</a>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+let floorCount = 0;
+const FLOOR_LABELS = ['أرضي','الأول','الثاني','الثالث','الرابع','الخامس','السادس','السابع','الثامن','التاسع','العاشر'];
+
+function addFloor(label='', rooms=[]) {
+  floorCount++;
+  const idx = floorCount;
+  const defaultLabel = label || FLOOR_LABELS[floorCount-1] || ('الطابق '+floorCount);
+  const div = document.createElement('div');
+  div.className = 'floor-card';
+  div.id = 'floor-'+idx;
+  div.innerHTML = `
+    <div class="floor-head">
+      <div class="floor-num">${idx}</div>
+      <input class="floor-label-input" placeholder="اسم الطابق" value="${defaultLabel}" id="fl-label-${idx}">
+      <button class="floor-del" onclick="removeFloor(${idx})" title="حذف الطابق">✕</button>
+    </div>
+    <div class="rooms-row">
+      <span class="rooms-lbl">الشقق:</span>
+      <div class="rooms-tags" id="tags-${idx}"></div>
+    </div>
+    <div class="rooms-add-wrap">
+      <input type="text" placeholder="رقم الشقة (مثال: 101)" id="ri-${idx}" onkeydown="if(event.key==='Enter'){event.preventDefault();addRoom(${idx});}">
+      <button class="rooms-add-btn" onclick="addRoom(${idx})">إضافة</button>
+    </div>
+    <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">
+      <span style="font-size:11px;color:#94a3b8;align-self:center;">إضافة سريعة:</span>
+      <button class="quick-btn" onclick="quickAdd(${idx},'${idx < 10 ? '0'+idx : idx}',1,8)">101→108</button>
+      <button class="quick-btn" onclick="quickAdd(${idx},'${idx < 10 ? '0'+idx : idx}',1,6)">101→106</button>
+      <button class="quick-btn" onclick="quickAdd(${idx},'${idx < 10 ? '0'+idx : idx}',1,4)">101→104</button>
+    </div>
+  `;
+  document.getElementById('floorsArea').appendChild(div);
+  rooms.forEach(r => addRoomTag(idx, r));
+}
+
+function removeFloor(idx) {
+  const el = document.getElementById('floor-'+idx);
+  if (el) el.remove();
+}
+
+function addRoom(idx) {
+  const inp = document.getElementById('ri-'+idx);
+  const val = inp.value.trim();
+  if (!val) return;
+  addRoomTag(idx, val);
+  inp.value = '';
+  inp.focus();
+}
+
+function addRoomTag(idx, val) {
+  const tags = document.getElementById('tags-'+idx);
+  if (!tags) return;
+  // check duplicate
+  const exists = [...tags.querySelectorAll('.room-tag span')].some(s => s.textContent === val);
+  if (exists) return;
+  const tag = document.createElement('span');
+  tag.className = 'room-tag';
+  tag.innerHTML = `<span>${val}</span><button onclick="this.parentElement.remove()" title="حذف">✕</button>`;
+  tags.appendChild(tag);
+}
+
+function quickAdd(idx, floorPrefix, from, to) {
+  for (let i = from; i <= to; i++) {
+    addRoomTag(idx, floorPrefix + String(i).padStart(2,'0'));
+  }
+}
+
+function getFloorsData() {
+  const floors = [];
+  document.querySelectorAll('.floor-card').forEach(fc => {
+    const id = fc.id.replace('floor-','');
+    const label = document.getElementById('fl-label-'+id)?.value.trim() || '';
+    const rooms = [...fc.querySelectorAll('.room-tag span')].map(s => s.textContent.trim()).filter(Boolean);
+    if (label) floors.push({ label, rooms });
+  });
+  return floors;
+}
+
+async function saveSetup() {
+  const bldName = document.getElementById('bldName').value.trim();
+  const floors = getFloorsData();
+  const err = document.getElementById('errMsg');
+
+  if (!bldName) { showErr('أدخل اسم المبنى'); return; }
+  if (!floors.length) { showErr('أضف طابقاً واحداً على الأقل'); return; }
+  const hasRooms = floors.some(f => f.rooms.length > 0);
+  if (!hasRooms) { showErr('أضف غرفاً في الطوابق'); return; }
+
+  const btn = document.getElementById('saveBtn');
+  btn.disabled = true; btn.textContent = 'جاري الحفظ...';
+
+  try {
+    const r = await fetch('/staff/api/setup-building', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ buildingName: bldName, floors }),
+    });
+    const d = await r.json();
+    if (d.success) {
+      window.location.href = '/staff/dashboard';
+    } else {
+      showErr(d.error || 'حدث خطأ');
+      btn.disabled = false; btn.textContent = 'حفظ وبدء العمل ←';
+    }
+  } catch {
+    showErr('خطأ في الاتصال بالسيرفر');
+    btn.disabled = false; btn.textContent = 'حفظ وبدء العمل ←';
+  }
+}
+
+function showErr(msg) {
+  const el = document.getElementById('errMsg');
+  el.textContent = '⚠️ ' + msg;
+  el.style.display = 'block';
+  el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// Start with 2 default floors
+addFloor('أرضي');
+addFloor('الأول');
+</script>
+</body>
+</html>
