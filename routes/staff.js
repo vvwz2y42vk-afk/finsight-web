@@ -381,30 +381,15 @@ router.post('/api/bookings/new', reqStaff, async (req,res) => {
 // ── API: Customers ────────────────────────────────────────
 router.get('/api/customers', reqStaff, async (req,res) => {
   try {
-    const B = require('../models/Booking');
-    const { q='', sf='open', apt='', booking_type='', date_from='', date_to='', booking_num='' } = req.query;
-    const filter = buildBookingFilter(req.staff, { sf, apt, booking_type, date_from, date_to });
-
-    let bookings = await B.find(filter).sort({ createdAt:-1 }).limit(200).lean();
-
-    // Text search
-    const qs = q.trim();
-    if (qs) bookings = bookings.filter(b =>
-      b.name?.includes(qs) || b.phone?.includes(qs) || b.apt?.includes(qs) || b._id.toString().endsWith(qs)
-    );
-    // Booking number search
-    if (booking_num.trim()) bookings = bookings.filter(b => b._id.toString().slice(-5) === booking_num.trim());
-
-    const out = bookings.map(b => ({
-      bookingNum: b._id.toString().slice(-5).toUpperCase(),
-      name: b.name, phone: b.phone, apt: b.apt,
-      checkIn: b.checkIn, checkOut: b.checkOut,
-      status: b.status, bookingType: b.bookingType,
-      totalPrice: b.totalPrice, paidAmount: b.paidAmount||0,
-      source: b.source||'', bookingId: b._id,
-      idType: b.idType||'', idNumber: b.idNumber||'',
-    }));
-    res.json(out);
+    const Guest = require('../models/Guest');
+    const { q='' } = req.query;
+    const filter = { propertyId: req.staff.propertyId || null };
+    if (q.trim()) {
+      const re = new RegExp(q.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      filter.$or = [{ name: re }, { phone: re }, { idNumber: re }];
+    }
+    const guests = await Guest.find(filter).sort({ lastSeen: -1 }).limit(500).lean();
+    res.json(guests);
   } catch(e){ res.status(500).json({error:e.message}); }
 });
 

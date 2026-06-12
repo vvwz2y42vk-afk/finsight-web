@@ -710,21 +710,9 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
         <div style="font-size:14px;font-weight:700;color:var(--brand);">إدارة العملاء</div>
       </div>
 
-      <!-- شريط الفلترة -->
+      <!-- شريط البحث -->
       <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;margin-bottom:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-        <input type="text" id="custIdNum" class="cff" placeholder="رقم الإثبات" style="width:130px;">
-        <input type="text" id="custSearch" class="cff" placeholder="الاسم" style="width:140px;">
-        <input type="text" id="custPhone" class="cff" placeholder="جوال" style="width:130px;">
-        <select id="custSF" class="cff" style="width:170px;">
-          <option value="open">الحجوزات المفتوحة</option>
-          <option value="active">النزلاء المقيمين</option>
-          <option value="pending_checkin">بدون دخول</option>
-          <option value="today_arrival_all">وصول اليوم</option>
-          <option value="today_dep_all">مغادرة اليوم</option>
-          <option value="closed">مغلقة</option>
-          <option value="cancelled">ملغاة</option>
-          <option value="all">الجميع</option>
-        </select>
+        <input type="text" id="custSearch" class="cff" placeholder="بحث بالاسم أو الجوال أو رقم الهوية..." style="width:280px;" oninput="custSearchDebounce()">
         <button onclick="loadCustomers()" style="padding:7px 20px;border-radius:8px;background:#1a3d8f;border:none;color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">بحث</button>
         <button onclick="clearCustFilters()" style="padding:7px 14px;border-radius:8px;border:1px solid #e2e8f0;background:#f8fafc;color:#64748b;font-family:inherit;font-size:12px;cursor:pointer;">مسح</button>
         <span style="font-size:11px;color:#94a3b8;margin-right:auto;" id="custCount"></span>
@@ -744,9 +732,8 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
       <div class="tbl-wrap">
         <table class="stbl">
           <thead><tr>
-            <th>الاسم</th><th>نوع الإثبات</th><th>رقم الإثبات</th><th>الشقة</th>
-            <th>الجوال</th><th>الدخول</th><th>الخروج</th><th>نوع الإيجار</th>
-            <th>الحالة</th><th>المعاملات</th>
+            <th>#</th><th>الاسم</th><th>الجوال</th><th>نوع الإثبات</th><th>رقم الإثبات</th>
+            <th>الجنسية</th><th>البريد</th><th>الحجوزات</th><th>آخر زيارة</th><th>التصنيف</th>
           </tr></thead>
           <tbody id="custTbody"><tr><td colspan="10" style="padding:16px;"><div class="skel" style="height:13px;width:100%;margin-bottom:10px;"></div><div class="skel" style="height:13px;width:85%;margin-bottom:10px;"></div><div class="skel" style="height:13px;width:92%;"></div></td></tr></tbody>
         </table>
@@ -2108,10 +2095,11 @@ function toggleCustSearch(){
 }
 
 function clearCustFilters(){
-  ['custSearch','custPhone','custIdNum'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  ['custSF'].forEach(id=>{const el=document.getElementById(id);if(el)el.selectedIndex=0;});
+  const el=document.getElementById('custSearch');if(el)el.value='';
   loadCustomers();
 }
+let _custTimer;
+function custSearchDebounce(){ clearTimeout(_custTimer); _custTimer=setTimeout(loadCustomers,400); }
 
 const BTYPE_LBL={daily:'يومي',annual:'شهري',inquiry:'استفسار'};
 
@@ -2126,15 +2114,11 @@ function updateCustDateTime(){
 }
 setInterval(updateCustDateTime,1000);
 
+const CUST_CAT={regular:{lbl:'عادي',bg:'#f1f5f9',c:'#64748b'},vip:{lbl:'VIP',bg:'rgba(234,179,8,.15)',c:'#b45309'},blocked:{lbl:'محظور',bg:'rgba(220,38,38,.1)',c:'#dc2626'}};
 async function loadCustomers(){
   updateCustDateTime();
-  const q          = (document.getElementById('custSearch')?.value||'').trim();
-  const phone      = (document.getElementById('custPhone')?.value||'').trim();
-  const sf         = document.getElementById('custSF')?.value||'open';
-  const booking_num= (document.getElementById('custIdNum')?.value||'').trim();
-  const combined_q = q||(phone||'');
-
-  const params=new URLSearchParams({q:combined_q,sf,booking_num});
+  const q=(document.getElementById('custSearch')?.value||'').trim();
+  const params=new URLSearchParams({q});
   try{
     const r=await fetch('/staff/api/customers?'+params);
     const list=await r.json();
@@ -2145,21 +2129,21 @@ async function loadCustomers(){
       tb.innerHTML=`<tr><td colspan="10" style="text-align:center;padding:30px;color:#94a3b8;">لا توجد نتائج</td></tr>`;
       return;
     }
-    tb.innerHTML=list.map(c=>`<tr>
-      <td><b style="color:var(--t1);">${esc(c.name||'—')}</b></td>
-      <td style="color:var(--t4);font-size:11px;">${esc(c.idType||'—')}</td>
+    tb.innerHTML=list.map((c,i)=>{
+      const cat=CUST_CAT[c.category]||CUST_CAT.regular;
+      const phone=c.phone&&!c.phone.startsWith('nzl-')?c.phone:'—';
+      return`<tr>
+      <td style="font-family:monospace;font-size:11px;color:var(--t4);">${i+1}</td>
+      <td><span onclick="openGuestCard('${esc(c.phone||'')}')" style="cursor:pointer;color:var(--brand);font-weight:700;">${esc(c.name||'—')}</span></td>
+      <td>${phone!=='—'?`<a href="https://wa.me/${waPhone(c.phone)}" target="_blank" style="color:var(--brand);text-decoration:none;font-family:monospace;font-size:12px;">${esc(phone)}</a>`:'<span style="color:var(--t4);">—</span>'}</td>
+      <td style="font-size:11px;color:var(--t4);">${esc(c.idType||'—')}</td>
       <td style="font-family:monospace;font-size:12px;color:var(--t3);">${esc(c.idNumber||'—')}</td>
-      <td style="font-size:15px;font-weight:800;color:var(--brand);">${esc(c.apt||'—')}</td>
-      <td><a href="https://wa.me/${waPhone(c.phone)}" target="_blank" style="color:var(--brand);text-decoration:none;font-family:monospace;font-size:12px;">${esc(c.phone||'—')}</a></td>
-      <td style="font-size:12px;">${fDate(c.checkIn)}</td>
-      <td style="font-size:12px;">${fDate(c.checkOut)}</td>
-      <td><span class="badge" style="background:rgba(26,61,143,.07);color:var(--brand);">${BTYPE_LBL[c.bookingType]||c.bookingType||'—'}</span></td>
-      <td>${statusBadge(c.status)}</td>
-      <td style="font-size:11px;">
-        <span style="font-family:monospace;font-weight:700;color:var(--brand);">#${c.bookingNum}</span>
-        ${c.totalPrice?`<br><span style="color:var(--t4);">${c.totalPrice.toLocaleString()} ر</span>`:''}
-      </td>
-    </tr>`).join('');
+      <td style="font-size:12px;">${esc(c.nationality||'—')}</td>
+      <td style="font-size:11px;color:var(--t4);">${esc(c.email||'—')}</td>
+      <td style="text-align:center;font-weight:700;color:var(--brand);">${c.totalBookings||1}</td>
+      <td style="font-size:11px;color:var(--t4);">${c.lastSeen?fDate(c.lastSeen):'—'}</td>
+      <td><span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:${cat.bg};color:${cat.c};">${cat.lbl}</span></td>
+    </tr>`;}).join('');
   }catch(e){
     const tb=document.getElementById('custTbody');
     if(tb) tb.innerHTML='<tr><td colspan="10" style="text-align:center;padding:30px;color:#dc2626;">❌ تعذر تحميل البيانات — تحقق من الاتصال</td></tr>';
