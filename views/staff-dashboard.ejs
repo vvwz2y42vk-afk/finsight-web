@@ -2022,6 +2022,7 @@ async function cancelBk(id){
 }
 
 async function changeStatus(id,status){
+  if(status==='checkout' && !confirm('تأكيد تسجيل خروج النزيل من الشقة؟')) return;
   try{
     const r=await fetch('/staff/api/bookings/'+id+'/status',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({status})});
     const d=await r.json();
