@@ -623,6 +623,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
       </div>
       <div id="apt-alert-strip" style="display:none;margin-bottom:14px;"></div>
       <div id="aptsContainer"></div>
+      <div id="apt-maintenance-strip" style="display:none;margin-top:16px;"></div>
     </div>
 
     <!-- ── Bookings ── -->
@@ -1804,6 +1805,32 @@ function renderAptGrid(){
   });
   html+='</div>';
   container.innerHTML=html;
+
+  // ── قسم الصيانة ──
+  const maintStrip = document.getElementById('apt-maintenance-strip');
+  if(maintStrip){
+    const maintRooms=[];
+    aptsRawData.floors.forEach(floor=>{
+      floor.rooms.forEach(r=>{ if(r.housekeeping==='maintenance') maintRooms.push(r); });
+    });
+    if(!maintRooms.length){ maintStrip.style.display='none'; }
+    else{
+      maintStrip.style.display='block';
+      maintStrip.innerHTML=`
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+          <span style="width:10px;height:10px;border-radius:50%;background:#7C3AED;display:inline-block;"></span>
+          <span style="font-size:13px;font-weight:700;color:#7C3AED;">الشقق في الصيانة (${maintRooms.length})</span>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          ${maintRooms.map(r=>`
+            <div onclick="openBkModal('${r.bookingId||''}','${r.apt}','${r.status}')" style="cursor:pointer;min-width:110px;padding:10px 14px;background:#faf5ff;border:1.5px solid rgba(124,58,237,.3);border-radius:12px;display:flex;flex-direction:column;gap:4px;">
+              <div style="font-size:18px;font-weight:800;color:#7C3AED;">${esc(r.apt)}</div>
+              <div style="font-size:10px;font-weight:700;color:#7C3AED;background:rgba(124,58,237,.1);padding:2px 7px;border-radius:20px;align-self:flex-start;">🔧 صيانة</div>
+              ${r.notes?`<div style="font-size:11px;color:#64748b;margin-top:2px;">${esc(r.notes)}</div>`:''}
+            </div>`).join('')}
+        </div>`;
+    }
+  }
 }
 
 function filterApts(f,btn){
