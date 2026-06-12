@@ -816,6 +816,7 @@ router.put('/api/room-prices', reqStaff, async (req, res) => {
 // ── Guests ────────────────────────────────────────────────
 // ── API: Analytics ───────────────────────────────────────
 router.get('/api/analytics', reqStaff, async (req, res) => {
+  if(req.staff.role !== 'manager') return res.status(403).json({error:'غير مصرح'});
   try {
     const B = require('../models/Booking');
     const year = parseInt(req.query.year) || new Date().getFullYear();
