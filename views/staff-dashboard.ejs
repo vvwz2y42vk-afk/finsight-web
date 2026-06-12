@@ -692,8 +692,8 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
       <div class="apt-bld">
         <div class="tbl-wrap">
           <table class="stbl">
-            <thead><tr><th>#</th><th>الشقة</th><th>النزيل</th><th>الجوال</th><th>نوع الإيجار</th><th>الدخول</th><th>الخروج</th><th>الإجمالي</th><th>الحالة</th><th>إجراء</th></tr></thead>
-            <tbody id="bkTbody"><tr><td colspan="10" style="padding:16px;"><div class="skel" style="height:13px;width:100%;margin-bottom:10px;"></div><div class="skel" style="height:13px;width:88%;margin-bottom:10px;"></div><div class="skel" style="height:13px;width:94%;margin-bottom:10px;"></div><div class="skel" style="height:13px;width:80%;"></div></td></tr></tbody>
+            <thead><tr><th>#</th><th>الشقة</th><th>النزيل</th><th>الجوال</th><th>نوع الإيجار</th><th>الدخول</th><th>الخروج</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th><th>الحالة</th><th>إجراء</th></tr></thead>
+            <tbody id="bkTbody"><tr><td colspan="12" style="padding:16px;"><div class="skel" style="height:13px;width:100%;margin-bottom:10px;"></div><div class="skel" style="height:13px;width:88%;margin-bottom:10px;"></div><div class="skel" style="height:13px;width:94%;margin-bottom:10px;"></div><div class="skel" style="height:13px;width:80%;"></div></td></tr></tbody>
           </table>
         </div>
       </div>
@@ -990,6 +990,25 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
           </button>
         </div>
         <div style="font-size:11px;color:var(--t4);margin-top:8px;">يُشغَّل مرة واحدة فقط لربط الحجوزات والسجلات القديمة بحساب منشأتك.</div>
+      </div>
+
+      <!-- ── استيراد بيانات نزيل ── -->
+      <div style="margin-top:16px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 20px;">
+        <div style="font-size:13px;font-weight:700;color:var(--t1);margin-bottom:4px;">📥 استيراد بيانات من نزيل</div>
+        <div style="font-size:11px;color:var(--t4);margin-bottom:14px;">الصق البيانات المنسوخة من تقرير نزيل (Ctrl+A → Copy)، أو ارفع ملف Excel.</div>
+
+        <!-- Text paste -->
+        <textarea id="nazeelPaste" rows="5" placeholder="الصق هنا البيانات من تقرير نزيل..." style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:9px;border:1px solid var(--border);background:var(--bg);color:var(--t1);font-family:monospace;font-size:11px;resize:vertical;direction:ltr;"></textarea>
+        <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;align-items:center;">
+          <button onclick="importNazeelText()" style="padding:9px 18px;border-radius:9px;border:none;background:#1a3d8f;color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">
+            ▶ استيراد النص
+          </button>
+          <label style="padding:9px 14px;border-radius:9px;border:1px solid var(--border);background:var(--surface-2,#f5f6fa);color:var(--t2);font-size:12px;font-weight:600;cursor:pointer;">
+            📂 رفع Excel
+            <input type="file" id="nazeelFile" accept=".xlsx,.xls" style="display:none;" onchange="importNazeelFile(this)">
+          </label>
+        </div>
+        <div id="nazeelStatus" style="margin-top:10px;font-size:12px;min-height:18px;color:var(--t2);"></div>
       </div>
       <% } %>
     </div>
@@ -1396,6 +1415,7 @@ function animateNum(el, target, suffix=''){
 }
 function esc(s){ return String(s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function fDate(d){ if(!d)return'—'; const dt=new Date(d); return dt.toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit',year:'numeric',calendar:'gregory'}); }
+function waPhone(p){ let n=(p||'').replace(/\D/g,''); if(n.startsWith('966'))return n; if(n.startsWith('0'))return'966'+n.slice(1); if(n.startsWith('5'))return'966'+n; return n; }
 function statusBadge(s){
   const m={active:'b-active مفتوح',awaiting_checkin:'b-awaiting انتظار الدخول',awaiting_payment:'b-awaiting_payment انتظار الدفع',checkout:'b-checkout خروج',pending:'b-pending جديد',cancelled:'b-cancelled ملغي'};
   const [cls,lbl]=(m[s]||'b-pending '+s).split(' ');
@@ -1835,7 +1855,7 @@ async function openBkModal(bookingId, apt, status) {
     html += r('الاسم', esc(b.name));
     html += `<div class="mrow"><span>الجوال</span><b>
       <a href="tel:${esc(b.phone)}" style="color:inherit;text-decoration:none;font-family:monospace;">${esc(b.phone)}</a>
-      <a href="https://wa.me/${(b.phone||'').replace(/^0/,'966')}" target="_blank" style="margin-right:8px;font-size:11px;padding:2px 8px;background:#dcfce7;color:#16a34a;border-radius:6px;text-decoration:none;font-weight:700;">واتساب ↗</a>
+      <a href="https://wa.me/${waPhone(b.phone)}" target="_blank" style="margin-right:8px;font-size:11px;padding:2px 8px;background:#dcfce7;color:#16a34a;border-radius:6px;text-decoration:none;font-weight:700;">واتساب ↗</a>
     </b></div>`;
     html += r('نوع الإثبات', b.idType ? (ID[b.idType]||b.idType) : '');
     html += r('رقم الإثبات', b.idNumber ? esc(b.idNumber) : '');
@@ -2045,16 +2065,18 @@ async function loadBookings(){
     const tb=document.getElementById('bkTbody');
     const cnt=document.getElementById('bkCount');
     if(cnt) cnt.textContent=list.length?`${list.length} حجز`:'';
-    if(!list.length){ tb.innerHTML='<tr><td colspan="10" style="text-align:center;padding:30px;color:#94a3b8;">لا توجد حجوزات</td></tr>'; return; }
+    if(!list.length){ tb.innerHTML='<tr><td colspan="12" style="text-align:center;padding:30px;color:#94a3b8;">لا توجد حجوزات</td></tr>'; return; }
     tb.innerHTML=list.map((b,i)=>`<tr>
       <td style="font-family:monospace;font-weight:700;color:var(--t4);font-size:11px;width:32px;">${i+1}</td>
       <td><b style="font-size:14px;">${esc(b.apt||'—')}</b></td>
       <td><span onclick="openGuestCard('${esc(b.phone||'')}')" style="cursor:pointer;color:var(--brand);font-weight:700;">${esc(b.name||'—')}</span></td>
-      <td><a href="https://wa.me/${(b.phone||'').replace(/^0/,'966')}" style="color:var(--brand);text-decoration:none;font-family:monospace;font-size:12px;">${esc(b.phone||'—')}</a></td>
+      <td><a href="https://wa.me/${waPhone(b.phone)}" target="_blank" style="color:var(--brand);text-decoration:none;font-family:monospace;font-size:12px;">${esc(b.phone||'—')}</a></td>
       <td><span class="badge" style="background:rgba(26,61,143,.07);color:var(--brand);">${b.bookingType==='daily'?'يومي':b.bookingType==='annual'?'شهري':'استفسار'}</span></td>
       <td style="font-size:12px;">${fDate(b.checkIn)}</td>
       <td style="font-size:12px;">${fDate(b.checkOut)}</td>
       <td style="font-weight:700;font-size:12px;">${b.totalPrice?(b.totalPrice.toLocaleString()+' ر'):'—'}</td>
+      <td style="font-size:12px;color:var(--green);font-weight:600;">${(b.paidAmount||0)>0?(b.paidAmount.toLocaleString()+' ر'):'—'}</td>
+      <td style="font-size:12px;font-weight:600;color:${Math.max(0,(b.totalPrice||0)-(b.paidAmount||0))>0?'var(--red)':'var(--t4)'};">${Math.max(0,(b.totalPrice||0)-(b.paidAmount||0))>0?(Math.max(0,(b.totalPrice||0)-(b.paidAmount||0)).toLocaleString()+' ر'):'✓'}</td>
       <td>${statusBadge(b.status)}</td>
       <td>
         <div class="tbl-act">
@@ -2070,7 +2092,7 @@ async function loadBookings(){
     </tr>`).join('');
   }catch(e){
     const tb=document.getElementById('bkTbody');
-    if(tb) tb.innerHTML='<tr><td colspan="10" style="text-align:center;padding:30px;color:#dc2626;">❌ تعذر تحميل الحجوزات — تحقق من الاتصال</td></tr>';
+    if(tb) tb.innerHTML='<tr><td colspan="12" style="text-align:center;padding:30px;color:#dc2626;">❌ تعذر تحميل الحجوزات — تحقق من الاتصال</td></tr>';
   }
 }
 
@@ -2126,7 +2148,7 @@ async function loadCustomers(){
       <td style="color:var(--t4);font-size:11px;">${esc(c.idType||'—')}</td>
       <td style="font-family:monospace;font-size:12px;color:var(--t3);">${esc(c.idNumber||'—')}</td>
       <td style="font-size:15px;font-weight:800;color:var(--brand);">${esc(c.apt||'—')}</td>
-      <td><a href="https://wa.me/${(c.phone||'').replace(/^0/,'966')}" style="color:var(--brand);text-decoration:none;font-family:monospace;font-size:12px;">${esc(c.phone||'—')}</a></td>
+      <td><a href="https://wa.me/${waPhone(c.phone)}" target="_blank" style="color:var(--brand);text-decoration:none;font-family:monospace;font-size:12px;">${esc(c.phone||'—')}</a></td>
       <td style="font-size:12px;">${fDate(c.checkIn)}</td>
       <td style="font-size:12px;">${fDate(c.checkOut)}</td>
       <td><span class="badge" style="background:rgba(26,61,143,.07);color:var(--brand);">${BTYPE_LBL[c.bookingType]||c.bookingType||'—'}</span></td>
@@ -2779,6 +2801,45 @@ function renderPlanCard(prop) {
   if (pt) pt.textContent = typeNames[prop.type] || '';
 }
 
+async function importNazeelText() {
+  const text = document.getElementById('nazeelPaste').value.trim();
+  if (!text) { document.getElementById('nazeelStatus').textContent = 'الصق البيانات أولاً'; return; }
+  const st = document.getElementById('nazeelStatus');
+  st.textContent = 'جاري الاستيراد...';
+  try {
+    const r = await fetch('/staff/api/import/nazeel/text', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text })
+    });
+    const d = await r.json();
+    if (d.success) {
+      st.innerHTML = `✅ تم: <b>${d.created}</b> حجز جديد، <b>${d.skipped}</b> مكرر / مهمل من أصل <b>${d.total}</b>` +
+        (d.errors.length ? `<br><span style="color:#B91C1C;font-size:11px;">${d.errors.join(' | ')}</span>` : '');
+      if (d.created) toast(`✅ استيراد نزيل: ${d.created} حجز`);
+    } else { st.textContent = '❌ ' + (d.error || 'خطأ'); }
+  } catch(e) { st.textContent = '❌ تعذر الاتصال بالخادم'; }
+}
+
+async function importNazeelFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const st = document.getElementById('nazeelStatus');
+  st.textContent = `جاري رفع "${file.name}"...`;
+  const fd = new FormData();
+  fd.append('file', file);
+  try {
+    const r = await fetch('/staff/api/import/nazeel', { method: 'POST', body: fd });
+    const d = await r.json();
+    if (d.success) {
+      st.innerHTML = `✅ تم: <b>${d.created}</b> حجز جديد، <b>${d.skipped}</b> مكرر / مهمل من أصل <b>${d.total}</b>` +
+        (d.errors.length ? `<br><span style="color:#B91C1C;font-size:11px;">${d.errors.join(' | ')}</span>` : '');
+      if (d.created) toast(`✅ استيراد نزيل: ${d.created} حجز`);
+    } else { st.textContent = '❌ ' + (d.error || 'خطأ'); }
+  } catch(e) { st.textContent = '❌ تعذر رفع الملف'; }
+  input.value = '';
+}
+
 async function runMigration() {
   if (!confirm('هذا سيربط جميع البيانات القديمة بمنشأتك. هل أنت متأكد؟')) return;
   try {
@@ -3245,7 +3306,7 @@ function renderReports() {
           <tbody>${debts.map(d=>`<tr>
             <td style="font-family:monospace;font-weight:700;color:var(--brand);">#${esc(d.bookingNum)}</td>
             <td>${esc(d.name||'—')}</td>
-            <td><a href="https://wa.me/${(d.phone||'').replace(/^0/,'966')}" style="color:var(--brand);">${esc(d.phone||'—')}</a></td>
+            <td><a href="https://wa.me/${waPhone(d.phone)}" target="_blank" style="color:var(--brand);">${esc(d.phone||'—')}</a></td>
             <td><b>${esc(d.apt||'—')}</b></td>
             <td>${fmt(d.totalPrice)} ﷼</td>
             <td style="color:var(--green);">${fmt(d.paidAmount)} ﷼</td>
@@ -3557,35 +3618,19 @@ function switchWaType(type) {
   }
 }
 
-async function sendWaMessage() {
+function sendWaMessage() {
   const phone = document.getElementById('waPhone').value;
   const name  = document.getElementById('waName').value;
   const apt   = document.getElementById('waApt').value;
-  const msg   = document.getElementById('waMessage').value;
-  const statusEl = document.getElementById('waStatus');
-  const btn   = document.getElementById('waSendBtn');
-
-  btn.disabled = true;
-  statusEl.textContent = 'جاري الإرسال…';
-  statusEl.style.color = '#64748b';
-
-  try {
-    const checkIn  = document.getElementById('waCheckIn').value;
-    const checkOut = document.getElementById('waCheckOut').value;
-    const total    = parseFloat(document.getElementById('waTotal').value) || 0;
-    const body = { phone, type: _waType, message: msg, name, apt, checkIn, checkOut, total };
-    const r = await fetch('/staff/api/whatsapp/send', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
-    const data = await r.json();
-    if (!r.ok) throw new Error(data.error || 'خطأ');
-    statusEl.textContent = '✅ تم الإرسال';
-    statusEl.style.color = '#16a34a';
-    setTimeout(closeWaSend, 1500);
-  } catch(e) {
-    statusEl.textContent = '❌ ' + e.message;
-    statusEl.style.color = '#dc2626';
-  } finally {
-    btn.disabled = false;
+  let msg;
+  if (_waType === 'free') {
+    msg = document.getElementById('waMessage').value.trim();
+    if (!msg) { document.getElementById('waStatus').textContent = 'اكتب الرسالة أولاً'; return; }
+  } else {
+    msg = WA_TEMPLATES[_waType]?.(name, apt) || '';
   }
+  window.open('https://wa.me/' + waPhone(phone) + '?text=' + encodeURIComponent(msg), '_blank');
+  closeWaSend();
 }
 
 function closeWaSend() { document.getElementById('waSendOverlay').style.display = 'none'; }

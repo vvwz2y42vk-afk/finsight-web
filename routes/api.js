@@ -62,7 +62,7 @@ async function autoCloseExpired() {
 router.get('/contracts', auth, async (req, res) => {
   try {
     await autoCloseExpired();
-    const contracts = await Contract.find().lean();
+    const contracts = await Contract.find().sort({ createdAt: -1 }).lean();
     res.json(contracts);
   } catch (e) { res.status(500).json({ error: e.message }); }
 });

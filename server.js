@@ -23,9 +23,12 @@ async function connectDB() {
     return;
   }
   await mongoose.connect(MONGO_URI, {
-    serverSelectionTimeoutMS: 10000,
+    serverSelectionTimeoutMS: 15000,
     socketTimeoutMS: 45000,
     family: 4,
+    tls: true,
+    tlsAllowInvalidCertificates: false,
+    maxPoolSize: 10,
   });
   console.log('✅ MongoDB متصل');
   if (!_seeded) {

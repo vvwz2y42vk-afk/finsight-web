@@ -4,6 +4,10 @@ const { createToken, verifyToken } = require('../utils/auth');
 const { createRateLimiter } = require('../utils/rateLimit');
 const Property = require('../models/Property');
 const WA = require('../utils/whatsapp');
+const multer = require('multer');
+const XLSX   = require('xlsx');
+
+const nazeelUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
 
 const staffLoginLimit = createRateLimiter({ windowMs: 15 * 60 * 1000, max: 10, message: 'محاولات دخول كثيرة، انتظر 15 دقيقة' });
 
@@ -1001,6 +1005,150 @@ router.put('/api/admin/update', async (req,res) => {
     }
     res.json({success:true});
   } catch(e){ res.status(500).json({error:e.message}); }
+});
+
+// ── Nazeel Import helpers ─────────────────────────────────
+function parseNazeelDate(val) {
+  if (!val) return null;
+  const s = String(val).trim();
+  // DD/MM/YYYY
+  const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m) return new Date(parseInt(m[3]), parseInt(m[2]) - 1, parseInt(m[1]));
+  // Excel serial number
+  if (/^\d+(\.\d+)?$/.test(s)) {
+    const dt = XLSX.SSF.parse_date_code(parseFloat(s));
+    if (dt) return new Date(dt.y, dt.m - 1, dt.d);
+  }
+  return null;
+}
+
+function parseNazeelRows(rows) {
+  const Booking = require('../models/Booking');
+  const results = [];
+  for (const r of rows) {
+    if (!r || r.length < 7) continue;
+    const bookingNum = String(r[0] || '').trim();
+    if (!/^\d+$/.test(bookingNum)) continue; // skip header/footer
+    const aptRaw   = String(r[2] || '').trim();
+    const name     = String(r[3] || '').trim();
+    const ciStr    = String(r[4] || '').trim();
+    const coStr    = String(r[5] || '').trim();
+    const typeRaw  = String(r[6] || '').trim();
+    const nights   = parseInt(r[7]) || undefined;
+    const ppn      = parseFloat(String(r[8] || '0').replace(/,/g, '')) || 0;
+    const total    = parseFloat(String(r[9] || '0').replace(/,/g, '')) || 0;
+    const paid     = parseFloat(String(r[11] || '0').replace(/,/g, '')) || 0;
+
+    if (!name) continue;
+    const apt     = aptRaw.split(/\s+/)[0] || aptRaw;
+    const checkIn  = parseNazeelDate(ciStr);
+    const checkOut = parseNazeelDate(coStr);
+    if (!checkIn) continue;
+
+    const bkType = (typeRaw.includes('شهري') || typeRaw.includes('سنوي')) ? 'annual' : 'daily';
+    results.push({ bookingNum, apt, name, checkIn, checkOut, bkType, nights, pricePerNight: ppn, totalPrice: total, paidAmount: paid });
+  }
+  return results;
+}
+
+// POST /api/import/nazeel — accepts Excel file upload
+router.post('/api/import/nazeel', reqStaff, nazeelUpload.single('file'), async (req, res) => {
+  if (req.staff.role !== 'manager') return res.status(403).json({ error: 'للمديرين فقط' });
+
+  let rows = [];
+  if (req.file) {
+    const wb = XLSX.read(req.file.buffer, { type: 'buffer', raw: false, cellDates: false });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '', raw: false });
+  } else if (req.body && req.body.text) {
+    rows = String(req.body.text).split('\n').map(l => l.split('\t'));
+  } else {
+    return res.status(400).json({ error: 'أرسل ملف Excel أو نص TSV' });
+  }
+
+  const parsed = parseNazeelRows(rows);
+  if (!parsed.length) return res.json({ success: true, created: 0, skipped: 0, total: rows.length, errors: [] });
+
+  const Booking  = require('../models/Booking');
+  const building = req.staff.building || '';
+  const propertyId = req.staff.propertyId || null;
+
+  let created = 0, skipped = 0;
+  const errors = [];
+
+  for (const p of parsed) {
+    const phone = `nzl-${p.bookingNum}`;
+    // skip if already imported (same Nazeel booking number stored in notes)
+    const exists = await Booking.findOne({ notes: `نزيل#${p.bookingNum}` }).lean();
+    if (exists) { skipped++; continue; }
+
+    try {
+      await new Booking({
+        building, propertyId,
+        apt: p.apt,
+        name: p.name,
+        phone,
+        bookingType: p.bkType,
+        checkIn: p.checkIn,
+        checkOut: p.checkOut,
+        nights: p.nights,
+        pricePerNight: p.pricePerNight || undefined,
+        totalPrice: p.totalPrice,
+        paidAmount: p.paidAmount,
+        status: 'checkout',
+        source: 'نزيل',
+        notes: `نزيل#${p.bookingNum}`,
+      }).save();
+      created++;
+    } catch (e) {
+      errors.push(`${p.bookingNum}: ${e.message}`);
+      skipped++;
+    }
+  }
+
+  res.json({ success: true, created, skipped, total: parsed.length, errors: errors.slice(0, 30) });
+});
+
+// POST /api/import/nazeel/text — accepts JSON { text: "tsv..." }
+router.post('/api/import/nazeel/text', reqStaff, async (req, res) => {
+  if (req.staff.role !== 'manager') return res.status(403).json({ error: 'للمديرين فقط' });
+  if (!req.body || !req.body.text) return res.status(400).json({ error: 'أرسل البيانات في حقل text' });
+
+  const rows = String(req.body.text).split('\n').map(l => l.split('\t'));
+  const parsed = parseNazeelRows(rows);
+  if (!parsed.length) return res.json({ success: true, created: 0, skipped: 0, total: rows.length, errors: [] });
+
+  const Booking  = require('../models/Booking');
+  const building = req.staff.building || '';
+  const propertyId = req.staff.propertyId || null;
+
+  let created = 0, skipped = 0;
+  const errors = [];
+
+  for (const p of parsed) {
+    const phone = `nzl-${p.bookingNum}`;
+    const exists = await Booking.findOne({ notes: `نزيل#${p.bookingNum}` }).lean();
+    if (exists) { skipped++; continue; }
+    try {
+      await new Booking({
+        building, propertyId,
+        apt: p.apt, name: p.name, phone,
+        bookingType: p.bkType,
+        checkIn: p.checkIn, checkOut: p.checkOut,
+        nights: p.nights,
+        pricePerNight: p.pricePerNight || undefined,
+        totalPrice: p.totalPrice, paidAmount: p.paidAmount,
+        status: 'checkout', source: 'نزيل',
+        notes: `نزيل#${p.bookingNum}`,
+      }).save();
+      created++;
+    } catch (e) {
+      errors.push(`${p.bookingNum}: ${e.message}`);
+      skipped++;
+    }
+  }
+
+  res.json({ success: true, created, skipped, total: parsed.length, errors: errors.slice(0, 30) });
 });
 
 module.exports = router;
