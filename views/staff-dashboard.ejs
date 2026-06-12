@@ -2774,7 +2774,7 @@ function applyGuestFill(g) {
   const idNumEl  = document.getElementById('nb-idnum');
   const phoneBadge = document.getElementById('nb-guest-badge');
   const idBadge    = document.getElementById('nb-idnum-badge');
-  if (nameEl  && !nameEl.value)  nameEl.value  = g.name  || '';
+  if (nameEl  && g.name)  nameEl.value  = g.name;
   if (phoneEl && !phoneEl.value && g.phone && !g.phone.startsWith('nzl-')) phoneEl.value = g.phone;
   if (idTypeEl && g.idType)      idTypeEl.value = g.idType;
   if (idNumEl  && !idNumEl.value) idNumEl.value = g.idNumber || '';
