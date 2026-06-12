@@ -196,15 +196,26 @@ router.get('/api/bookings', reqStaff, async (req,res) => {
     if (qs) list = list.filter(b => b.name?.includes(qs)||b.phone?.includes(qs)||b.apt?.includes(qs));
     if (booking_num.trim()) list = list.filter(b => b._id.toString().slice(-5).toUpperCase()===booking_num.trim().toUpperCase());
 
-    res.json(list.map(b=>({
-      bookingNum: b._id.toString().slice(-5).toUpperCase(),
-      name: b.name, phone: b.phone, apt: b.apt,
-      checkIn: b.checkIn, checkOut: b.checkOut,
-      status: b.status, bookingType: b.bookingType,
-      totalPrice: b.totalPrice, paidAmount: b.paidAmount||0,
-      source: b.source||'', bookingId: b._id,
-      _id: b._id,
-    })));
+    // Today in Saudi time (UTC+3)
+    const nowSaudi = new Date(Date.now() + 3*60*60*1000);
+    const tY=nowSaudi.getUTCFullYear(), tM=nowSaudi.getUTCMonth(), tD=nowSaudi.getUTCDate();
+
+    res.json(list.map(b=>{
+      let checkoutToday=false;
+      if(b.checkOut){
+        const co=new Date(new Date(b.checkOut).getTime()+3*60*60*1000);
+        checkoutToday=co.getUTCFullYear()===tY&&co.getUTCMonth()===tM&&co.getUTCDate()===tD;
+      }
+      return {
+        bookingNum: b._id.toString().slice(-5).toUpperCase(),
+        name: b.name, phone: b.phone, apt: b.apt,
+        checkIn: b.checkIn, checkOut: b.checkOut,
+        status: b.status, bookingType: b.bookingType,
+        totalPrice: b.totalPrice, paidAmount: b.paidAmount||0,
+        source: b.source||'', bookingId: b._id,
+        _id: b._id, checkoutToday,
+      };
+    }));
   } catch(e){ res.status(500).json({error:e.message}); }
 });
 
