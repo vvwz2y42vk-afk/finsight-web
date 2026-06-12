@@ -190,7 +190,7 @@ router.get('/api/bookings', reqStaff, async (req,res) => {
     const filter = buildBookingFilter(req.staff, { sf, apt, booking_type, date_from, date_to });
     if (source) filter.source = source;
 
-    let list = await B.find(filter).sort({createdAt:-1}).limit(300).lean();
+    let list = await B.find(filter).sort({checkIn:-1}).limit(300).lean();
 
     const qs = q.trim();
     if (qs) list = list.filter(b => b.name?.includes(qs)||b.phone?.includes(qs)||b.apt?.includes(qs));
