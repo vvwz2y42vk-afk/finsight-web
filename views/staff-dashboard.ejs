@@ -2066,7 +2066,7 @@ async function loadBookings(){
     const cnt=document.getElementById('bkCount');
     if(cnt) cnt.textContent=list.length?`${list.length} حجز`:'';
     if(!list.length){ tb.innerHTML='<tr><td colspan="12" style="text-align:center;padding:30px;color:#94a3b8;">لا توجد حجوزات</td></tr>'; return; }
-    tb.innerHTML=list.map((b,i)=>`<tr>
+    tb.innerHTML=list.map((b,i)=>`<tr${b.status==='checkout'?' style="background:rgba(26,61,143,.06);"':''}>
       <td style="font-family:monospace;font-weight:700;color:var(--t4);font-size:11px;width:32px;">${i+1}</td>
       <td><b style="font-size:14px;">${esc(b.apt||'—')}</b></td>
       <td><span onclick="openGuestCard('${esc(b.phone||'')}')" style="cursor:pointer;color:var(--brand);font-weight:700;">${esc(b.name||'—')}</span></td>
