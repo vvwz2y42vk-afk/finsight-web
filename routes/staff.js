@@ -334,6 +334,12 @@ router.post('/api/bookings/new', reqStaff, async (req,res) => {
     if(!apt||!name||!phone||!bookingType||!checkIn||!totalPrice)
       return res.status(400).json({error:'جميع الحقول المطلوبة غير مكتملة'});
 
+    // منع الحجز إذا الشقة في صيانة
+    const HK = require('../models/HousekeepingTask');
+    const hkCheck = await HK.findOne({ apt, ...(req.staff.propertyId ? {propertyId:req.staff.propertyId} : {building:req.staff.building, propertyId:null}) }).lean();
+    if(hkCheck?.status === 'maintenance')
+      return res.status(400).json({error:'لا يمكن الحجز — الشقة '+apt+' في وضع الصيانة'});
+
     let nights = 0, checkout = checkOut;
     if(bookingType==='daily' && checkIn && checkOut){
       nights = Math.round((new Date(checkOut)-new Date(checkIn))/86400000);

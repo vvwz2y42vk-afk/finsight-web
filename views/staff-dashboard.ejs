@@ -1246,7 +1246,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
         <div class="field-wrap" id="fw-apt" style="grid-column:1/-1;">
           <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;"><span class="f-req-star">*</span> الشقة</label>
-          <select id="nb-apt" class="f-idle" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;" onchange="updateNbPrice();validateField('nb-apt','fw-apt','fh-apt','اختر الشقة')"></select>
+          <select id="nb-apt" class="f-idle" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;" onchange="checkAptMaintenance();updateNbPrice();validateField('nb-apt','fw-apt','fh-apt','اختر الشقة')"></select>
           <div class="field-hint" id="fh-apt"></div>
         </div>
         <div class="field-wrap" id="fw-name" style="grid-column:1/-1;">
@@ -1331,7 +1331,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
         </div>
       </div>
       <div id="nb-err" style="color:#dc2626;font-size:12px;font-weight:600;margin-top:8px;display:none;"></div>
-      <button onclick="submitNewBk()" style="width:100%;margin-top:14px;padding:12px;background:linear-gradient(135deg,#1a3d8f,#2a5cc7);border:none;border-radius:12px;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;color:#111;">حفظ الحجز</button>
+      <button id="nb-submit" onclick="submitNewBk()" style="width:100%;margin-top:14px;padding:12px;background:linear-gradient(135deg,#1a3d8f,#2a5cc7);border:none;border-radius:12px;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;color:#111;">حفظ الحجز</button>
     </div>
   </div>
 </div>
@@ -2318,6 +2318,20 @@ async function loadActivity(){
 }
 
 // ── New Booking ──────────────────────────────────────────
+function checkAptMaintenance(){
+  const apt=document.getElementById('nb-apt').value;
+  const listing=nbListings.find(r=>r.apt===apt);
+  const hint=document.getElementById('fh-apt');
+  const submitBtn=document.getElementById('nb-submit');
+  if(listing?.housekeeping==='maintenance'){
+    if(hint){hint.textContent='🔧 هذه الشقة في وضع الصيانة — لا يمكن الحجز';hint.style.color='#dc2626';}
+    if(submitBtn) submitBtn.disabled=true;
+  } else {
+    if(hint) hint.textContent='';
+    if(submitBtn) submitBtn.disabled=false;
+  }
+}
+
 let nbListings=[];
 async function openNewBkModal(editMode){
   const modal=document.getElementById('newBkModal');
@@ -2328,9 +2342,9 @@ async function openNewBkModal(editMode){
     const d=await r.json();
     nbListings=[];
     d.floors.forEach(f=>f.rooms.forEach(r=>{
-      nbListings.push({apt:r.apt,status:r.status,bookingType:r.bookingType||'both',priceDaily:r.priceDaily||0,priceAnnual:r.priceAnnual||0});
+      nbListings.push({apt:r.apt,status:r.status,housekeeping:r.housekeeping||'clean',bookingType:r.bookingType||'both',priceDaily:r.priceDaily||0,priceAnnual:r.priceAnnual||0});
     }));
-    sel.innerHTML='<option value="">اختر شقة...</option>'+nbListings.filter(r=>r.status==='vacant').map(r=>`<option value="${r.apt}">${r.apt}</option>`).join('');
+    sel.innerHTML='<option value="">اختر شقة...</option>'+nbListings.filter(r=>r.status==='vacant'&&r.housekeeping!=='maintenance').map(r=>`<option value="${r.apt}">${r.apt}</option>`).join('');
   }catch(e){
     sel.innerHTML='<option value="">— اختر شقة —</option>';
     // fallback: allow manual entry
