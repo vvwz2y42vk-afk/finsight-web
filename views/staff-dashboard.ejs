@@ -1809,25 +1809,37 @@ function renderAptGrid(){
   // ── قسم الصيانة ──
   const maintStrip = document.getElementById('apt-maintenance-strip');
   if(maintStrip){
-    const maintRooms=[];
+    const maintRooms=[], dirtyRooms=[];
     aptsRawData.floors.forEach(floor=>{
-      floor.rooms.forEach(r=>{ if(r.housekeeping==='maintenance') maintRooms.push(r); });
+      floor.rooms.forEach(r=>{
+        if(r.housekeeping==='maintenance') maintRooms.push(r);
+        else if(r.housekeeping==='dirty') dirtyRooms.push(r);
+      });
     });
+    const mkCards=(rooms,bg,border,color,icon,label)=>rooms.length
+      ?rooms.map(r=>`<div onclick="openBkModal('${r.bookingId||''}','${r.apt}','${r.status}')" style="cursor:pointer;min-width:110px;padding:10px 14px;background:${bg};border:1.5px solid ${border};border-radius:12px;display:flex;flex-direction:column;gap:4px;">
+          <div style="font-size:18px;font-weight:800;color:${color};">${esc(r.apt)}</div>
+          <div style="font-size:10px;font-weight:700;color:${color};background:${border};padding:2px 7px;border-radius:20px;align-self:flex-start;">${icon} ${label}</div>
+          ${r.notes?`<div style="font-size:11px;color:#64748b;margin-top:2px;">${esc(r.notes)}</div>`:''}
+        </div>`).join('')
+      :`<div style="font-size:12px;color:#94a3b8;">لا يوجد</div>`;
     maintStrip.style.display='block';
     maintStrip.innerHTML=`
-      <div style="background:#fff;border:1px solid rgba(124,58,237,.2);border-radius:12px;padding:14px 16px;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:${maintRooms.length?'12px':'0'};">
-          <span style="width:10px;height:10px;border-radius:50%;background:#7C3AED;display:inline-block;flex-shrink:0;"></span>
-          <span style="font-size:13px;font-weight:700;color:#7C3AED;">الشقق في الصيانة${maintRooms.length?' ('+maintRooms.length+')':''}</span>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div style="background:#fff;border:1px solid rgba(124,58,237,.2);border-radius:12px;padding:14px 16px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+            <span style="width:9px;height:9px;border-radius:50%;background:#7C3AED;display:inline-block;flex-shrink:0;"></span>
+            <span style="font-size:13px;font-weight:700;color:#7C3AED;">الصيانة${maintRooms.length?' ('+maintRooms.length+')':''}</span>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;">${mkCards(maintRooms,'#faf5ff','rgba(124,58,237,.15)','#7C3AED','🔧','صيانة')}</div>
         </div>
-        ${maintRooms.length?`<div style="display:flex;flex-wrap:wrap;gap:8px;">
-          ${maintRooms.map(r=>`
-            <div onclick="openBkModal('${r.bookingId||''}','${r.apt}','${r.status}')" style="cursor:pointer;min-width:110px;padding:10px 14px;background:#faf5ff;border:1.5px solid rgba(124,58,237,.3);border-radius:12px;display:flex;flex-direction:column;gap:4px;">
-              <div style="font-size:18px;font-weight:800;color:#7C3AED;">${esc(r.apt)}</div>
-              <div style="font-size:10px;font-weight:700;color:#7C3AED;background:rgba(124,58,237,.1);padding:2px 7px;border-radius:20px;align-self:flex-start;">🔧 صيانة</div>
-              ${r.notes?`<div style="font-size:11px;color:#64748b;margin-top:2px;">${esc(r.notes)}</div>`:''}
-            </div>`).join('')}
-        </div>`:'<div style="font-size:12px;color:#94a3b8;">لا توجد شقق في الصيانة حالياً</div>'}
+        <div style="background:#fff;border:1px solid rgba(185,28,28,.15);border-radius:12px;padding:14px 16px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+            <span style="width:9px;height:9px;border-radius:50%;background:#B91C1C;display:inline-block;flex-shrink:0;"></span>
+            <span style="font-size:13px;font-weight:700;color:#B91C1C;">غير نظيف${dirtyRooms.length?' ('+dirtyRooms.length+')':''}</span>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;">${mkCards(dirtyRooms,'#fff5f5','rgba(185,28,28,.12)','#B91C1C','🔴','غير نظيف')}</div>
+        </div>
       </div>`;
   }
 }
