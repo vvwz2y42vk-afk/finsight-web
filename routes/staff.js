@@ -403,9 +403,10 @@ router.post('/api/bookings/new', reqStaff, async (req,res) => {
 router.get('/api/customers', reqStaff, async (req,res) => {
   try {
     const Guest = require('../models/Guest');
-    const { q='', page=1, limit=100 } = req.query;
+    const { q='', page=1, limit=100, category='' } = req.query;
     const skip = (parseInt(page)-1) * parseInt(limit);
     const filter = { propertyId: req.staff.propertyId || null };
+    if (category && ['regular','vip','blocked'].includes(category)) filter.category = category;
     if (q.trim()) {
       const re = new RegExp(q.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
       filter.$or = [{ name: re }, { phone: re }, { idNumber: re }];

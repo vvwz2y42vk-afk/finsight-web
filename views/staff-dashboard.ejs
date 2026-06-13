@@ -719,11 +719,15 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
         <div style="font-size:14px;font-weight:700;color:var(--brand);">إدارة العملاء</div>
       </div>
 
-      <!-- شريط البحث -->
+      <!-- شريط البحث والفلاتر -->
       <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;margin-bottom:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-        <input type="text" id="custSearch" class="cff" placeholder="بحث بالاسم أو الجوال أو رقم الهوية..." style="width:280px;" oninput="custSearchDebounce()">
+        <input type="text" id="custSearch" class="cff" placeholder="بحث بالاسم أو الجوال أو رقم الهوية..." style="width:240px;" oninput="custSearchDebounce()">
         <button onclick="loadCustomers()" style="padding:7px 20px;border-radius:8px;background:#1a3d8f;border:none;color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">بحث</button>
         <button onclick="clearCustFilters()" style="padding:7px 14px;border-radius:8px;border:1px solid #e2e8f0;background:#f8fafc;color:#64748b;font-family:inherit;font-size:12px;cursor:pointer;">مسح</button>
+        <div style="width:1px;height:24px;background:#e2e8f0;margin:0 2px;"></div>
+        <button id="custFilterAll" onclick="setCustFilter('all')" style="padding:6px 14px;border-radius:8px;border:2px solid #1a3d8f;background:#1a3d8f;color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">الكل</button>
+        <button id="custFilterBlocked" onclick="setCustFilter('blocked')" style="padding:6px 14px;border-radius:8px;border:2px solid #e2e8f0;background:#fff;color:#dc2626;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">🚫 المحظورون</button>
+        <button id="custFilterVip" onclick="setCustFilter('vip')" style="padding:6px 14px;border-radius:8px;border:2px solid #e2e8f0;background:#fff;color:#b45309;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">⭐ VIP</button>
         <span style="font-size:11px;color:#94a3b8;margin-right:auto;" id="custCount"></span>
       </div>
 
@@ -2321,7 +2325,22 @@ function updateCustDateTime(){
 setInterval(updateCustDateTime,1000);
 
 const CUST_CAT={regular:{lbl:'عادي',bg:'#f1f5f9',c:'#64748b'},vip:{lbl:'VIP',bg:'rgba(234,179,8,.15)',c:'#b45309'},blocked:{lbl:'محظور',bg:'rgba(220,38,38,.1)',c:'#dc2626'}};
-let _custData=[], _custTotal=0, _custPage=1, _custApiPage=1, _custLimit=100;
+let _custData=[], _custTotal=0, _custPage=1, _custApiPage=1, _custLimit=100, _custFilter='all';
+
+function setCustFilter(f){
+  _custFilter=f; _custApiPage=1;
+  ['All','Blocked','Vip'].forEach(x=>{
+    const btn=document.getElementById('custFilter'+x);
+    if(!btn) return;
+    const active=f===(x==='All'?'all':x.toLowerCase());
+    const colors={All:'#1a3d8f',Blocked:'#dc2626',Vip:'#b45309'};
+    const col=colors[x];
+    btn.style.background=active?col:'#fff';
+    btn.style.color=active?'#fff':col;
+    btn.style.borderColor=active?col:'#e2e8f0';
+  });
+  loadCustomers();
+}
 function setCustPage(p){_custPage=p;renderCustRows();}
 
 function renderCustRows(){
@@ -2385,7 +2404,7 @@ async function loadCustomers(){
   const q=(document.getElementById('custSearch')?.value||'').trim();
   // لو في بحث، ارجع للصفحة الأولى
   if(q) _custApiPage=1;
-  const params=new URLSearchParams({q, page:_custApiPage, limit:_custLimit});
+  const params=new URLSearchParams({q, page:_custApiPage, limit:_custLimit, category:_custFilter==='all'?'':_custFilter});
   const tb=document.getElementById('custTbody');
   if(tb) tb.innerHTML='<tr><td colspan="11" style="text-align:center;padding:20px;color:#94a3b8;">⏳ جاري التحميل…</td></tr>';
   try{
