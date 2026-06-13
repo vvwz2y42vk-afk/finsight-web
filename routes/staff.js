@@ -403,14 +403,18 @@ router.post('/api/bookings/new', reqStaff, async (req,res) => {
 router.get('/api/customers', reqStaff, async (req,res) => {
   try {
     const Guest = require('../models/Guest');
-    const { q='' } = req.query;
+    const { q='', page=1, limit=100 } = req.query;
+    const skip = (parseInt(page)-1) * parseInt(limit);
     const filter = { propertyId: req.staff.propertyId || null };
     if (q.trim()) {
       const re = new RegExp(q.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
       filter.$or = [{ name: re }, { phone: re }, { idNumber: re }];
     }
-    const guests = await Guest.find(filter).sort({ lastSeen: -1 }).limit(500).lean();
-    res.json(guests);
+    const [guests, total] = await Promise.all([
+      Guest.find(filter).sort({ name: 1 }).skip(skip).limit(parseInt(limit)).lean(),
+      Guest.countDocuments(filter)
+    ]);
+    res.json({ data: guests, total, page: parseInt(page), limit: parseInt(limit) });
   } catch(e){ res.status(500).json({error:e.message}); }
 });
 
