@@ -9,8 +9,11 @@ const XLSX   = require('xlsx');
 
 const nazeelUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
 
-const staffLoginLimit   = createRateLimiter({ windowMs: 15 * 60 * 1000, max: 10, message: 'محاولات دخول كثيرة، انتظر 15 دقيقة' });
-const staffRegisterLimit = createRateLimiter({ windowMs: 60 * 60 * 1000, max: 5,  message: 'تجاوزت الحد المسموح للتسجيل، حاول بعد ساعة' });
+const staffLoginLimit    = createRateLimiter({ windowMs: 15 * 60 * 1000, max: 10,  message: 'محاولات دخول كثيرة، انتظر 15 دقيقة' });
+const staffRegisterLimit = createRateLimiter({ windowMs: 60 * 60 * 1000, max: 5,   message: 'تجاوزت الحد المسموح للتسجيل، حاول بعد ساعة' });
+const apiLimit           = createRateLimiter({ windowMs: 15 * 60 * 1000, max: 300, message: 'طلبات كثيرة جداً، حاول بعد قليل' });
+const adminLimit         = createRateLimiter({ windowMs: 15 * 60 * 1000, max: 20,  message: 'طلبات كثيرة جداً، حاول بعد قليل' });
+const checkUserLimit     = createRateLimiter({ windowMs: 60 * 1000,       max: 30,  message: 'طلبات كثيرة جداً، حاول بعد قليل' });
 
 const COOKIE = 'fs_staff';
 const COPTS  = { httpOnly: true, maxAge: 12 * 60 * 60 * 1000, sameSite: 'lax', secure: process.env.NODE_ENV === 'production' };
@@ -82,6 +85,7 @@ function buildBookingFilter(staff, { sf='open', apt='', booking_type='', date_fr
 }
 
 router.use(staffAuth);
+router.use('/api/', apiLimit);
 
 // ── Auth ─────────────────────────────────────────────────
 router.get('/login',(req,res)=>{ if(req.staff)return res.redirect('/staff/dashboard'); res.render('staff-login',{error:null,query:req.query}); });
@@ -115,7 +119,75 @@ router.post('/login', staffLoginLimit, async (req,res) => {
 
 router.get('/logout',(req,res)=>{ res.clearCookie(COOKIE); res.redirect('/staff/login'); });
 
-router.get('/api/check-username', async (req, res) => {
+// ── Forgot / Reset Password ───────────────────────────────
+const forgotLimit = createRateLimiter({ windowMs: 60 * 60 * 1000, max: 5, message: 'محاولات كثيرة، انتظر ساعة' });
+
+router.get('/forgot-password', (req, res) => {
+  if (req.staff) return res.redirect('/staff/dashboard');
+  res.render('staff-forgot-password', { error: null, success: null });
+});
+
+router.post('/forgot-password', forgotLimit, async (req, res) => {
+  try {
+    const S = require('../models/StaffUser');
+    const user = await S.findOne({ username: (req.body.username || '').trim() });
+    if (user) {
+      const token = require('crypto').randomBytes(32).toString('hex');
+      user.resetToken = token;
+      user.resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000);
+      await user.save();
+      // Get email from property if SaaS tenant
+      let email = null;
+      if (user.propertyId) {
+        const prop = await Property.findById(user.propertyId).select('adminEmail').lean();
+        email = prop?.adminEmail;
+      }
+      const base = process.env.BASE_URL || 'https://barez.pro';
+      const resetUrl = `${base}/staff/reset-password/${token}`;
+      require('../utils/mailer').sendEmail({
+        to: email || 'no-email',
+        subject: 'إعادة تعيين كلمة المرور — BAREZ',
+        html: `<div dir="rtl" style="font-family:Cairo,sans-serif;max-width:480px;margin:auto;padding:32px;background:#f9f9f9;border-radius:12px;">
+          <h2 style="color:#1a3d8f;margin-bottom:8px;">إعادة تعيين كلمة المرور</h2>
+          <p>انقر على الرابط أدناه لإعادة تعيين كلمة مرور حساب <strong>${user.username}</strong>:</p>
+          <a href="${resetUrl}" style="display:inline-block;margin:20px 0;padding:12px 28px;background:#1a3d8f;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">إعادة تعيين كلمة المرور</a>
+          <p style="color:#888;font-size:13px;">الرابط صالح لمدة ساعة واحدة فقط. إذا لم تطلب ذلك، تجاهل هذا البريد.</p>
+        </div>`,
+      }).catch(() => {});
+    }
+    // نفس الرد سواء وُجد الحساب أم لا (لمنع enumeration)
+    res.render('staff-forgot-password', { error: null, success: 'إذا كان الحساب موجوداً، ستصلك رسالة بالبريد الإلكتروني خلال دقيقة' });
+  } catch(e) { res.render('staff-forgot-password', { error: 'حدث خطأ، حاول لاحقاً', success: null }); }
+});
+
+router.get('/reset-password/:token', async (req, res) => {
+  try {
+    const S = require('../models/StaffUser');
+    const user = await S.findOne({ resetToken: req.params.token, resetTokenExpiry: { $gt: new Date() } }).lean();
+    if (!user) return res.render('staff-reset-password', { error: 'الرابط غير صالح أو منتهي الصلاحية', token: '' });
+    res.render('staff-reset-password', { error: null, token: req.params.token });
+  } catch(e) { res.render('staff-reset-password', { error: 'حدث خطأ', token: '' }); }
+});
+
+router.post('/reset-password/:token', forgotLimit, async (req, res) => {
+  try {
+    const S = require('../models/StaffUser');
+    const { password, confirmPassword } = req.body;
+    if (!password || password.length < 8)
+      return res.render('staff-reset-password', { error: 'كلمة المرور يجب أن تكون 8 أحرف على الأقل', token: req.params.token });
+    if (password !== confirmPassword)
+      return res.render('staff-reset-password', { error: 'كلمتا المرور غير متطابقتين', token: req.params.token });
+    const user = await S.findOne({ resetToken: req.params.token, resetTokenExpiry: { $gt: new Date() } });
+    if (!user) return res.render('staff-reset-password', { error: 'الرابط غير صالح أو منتهي الصلاحية', token: '' });
+    user.password = password;
+    user.resetToken = undefined;
+    user.resetTokenExpiry = undefined;
+    await user.save();
+    res.redirect('/staff/login?reset=1');
+  } catch(e) { res.render('staff-reset-password', { error: 'حدث خطأ', token: req.params.token }); }
+});
+
+router.get('/api/check-username', checkUserLimit, async (req, res) => {
   const u = (req.query.u || '').trim();
   if (!u || u.length < 3) return res.json({ taken: false });
   const S = require('../models/StaffUser');
@@ -275,9 +347,9 @@ router.put('/api/bookings/:id/status', reqStaff, async (req,res) => {
         else await L.findByIdAndUpdate(bk.listing,{available:true});
       }
     }
-    AL.create({building:req.staff.building,staffName:req.staff.name,action:status==='active'?'check_in':status==='checkout'?'check_out':'status_change',apt:bk.apt,guestName:bk.name,bookingId:bk._id,details:`${prev} → ${status}`}).catch(()=>{});
-    if (status !== prev && status === 'active')   WA.sendCheckIn(bk.phone, bk.name, req.staff.building, bk.apt).catch(()=>{});
-    if (status !== prev && status === 'checkout') WA.sendCheckOut(bk.phone, bk.name, bk.apt).catch(()=>{});
+    AL.create({building:req.staff.building,staffName:req.staff.name,action:status==='active'?'check_in':status==='checkout'?'check_out':'status_change',apt:bk.apt,guestName:bk.name,bookingId:bk._id,details:`${prev} → ${status}`}).catch(e=>console.warn('audit log:',e.message));
+    if (status !== prev && status === 'active')   WA.sendCheckIn(bk.phone, bk.name, req.staff.building, bk.apt).catch(e=>console.warn('WA checkin:',e.message));
+    if (status !== prev && status === 'checkout') WA.sendCheckOut(bk.phone, bk.name, bk.apt).catch(e=>console.warn('WA checkout:',e.message));
     res.json({success:true});
   } catch(e){ res.status(500).json({error:e.message}); }
 });
@@ -305,7 +377,7 @@ router.put('/api/bookings/:id/edit', reqStaff, async (req,res) => {
       : { _id: req.params.id, building: req.staff.building, propertyId: null };
     const bk = await B.findOne(editFilter);
     if(!bk) return res.status(404).json({error:'الحجز غير موجود'});
-    const { name, phone, checkIn, checkOut, months, pricePerUnit, totalPrice, paidAmount, idType, idNumber, status, notes } = req.body;
+    const { name, phone, checkIn, checkOut, months, pricePerUnit, totalPrice, paidAmount, paymentMethod, idType, idNumber, status, notes } = req.body;
 
     let nights = bk.nights, checkout = checkOut || bk.checkOut;
     if(bk.bookingType==='daily' && checkIn && checkOut)
@@ -332,6 +404,7 @@ router.put('/api/bookings/:id/edit', reqStaff, async (req,res) => {
       checkOut: checkout?new Date(checkout):bk.checkOut,
       nights, totalPrice: parseFloat(totalPrice)||bk.totalPrice,
       paidAmount: parseFloat(paidAmount)||0,
+      paymentMethod: paymentMethod !== undefined ? paymentMethod : bk.paymentMethod,
       idType: idType||bk.idType, idNumber: idNumber||bk.idNumber,
       status: safeStatus, notes: notes !== undefined ? notes : bk.notes,
     });
@@ -345,9 +418,18 @@ router.post('/api/bookings/new', reqStaff, async (req,res) => {
   try {
     const B = require('../models/Booking');
     const AL = require('../models/ActivityLog');
-    const { apt, name, phone, bookingType, checkIn, checkOut, months, pricePerUnit, totalPrice, paidAmount, idType, idNumber, status, notes } = req.body;
+    const { apt, name, phone, bookingType, checkIn, checkOut, months, pricePerUnit, totalPrice, paidAmount, paymentMethod, idType, idNumber, status, notes } = req.body;
     if(!apt||!name||!phone||!bookingType||!checkIn||!totalPrice)
       return res.status(400).json({error:'جميع الحقول المطلوبة غير مكتملة'});
+
+    // التحقق من صحة البيانات
+    const checkInDate = new Date(checkIn);
+    if(isNaN(checkInDate)) return res.status(400).json({error:'تاريخ الدخول غير صحيح'});
+    if(checkOut && new Date(checkOut) <= checkInDate) return res.status(400).json({error:'تاريخ الخروج يجب أن يكون بعد تاريخ الدخول'});
+    const price = parseFloat(totalPrice);
+    if(isNaN(price) || price <= 0) return res.status(400).json({error:'السعر يجب أن يكون أكبر من صفر'});
+    const paid = parseFloat(paidAmount) || 0;
+    if(paid < 0 || paid > price) return res.status(400).json({error:'المبلغ المدفوع غير صحيح'});
 
     // منع الحجز إذا الشقة في صيانة
     const HK = require('../models/HousekeepingTask');
@@ -364,6 +446,24 @@ router.post('/api/bookings/new', reqStaff, async (req,res) => {
       nights = (parseInt(months)||1)*30;
     }
 
+    // منع تعارض الحجوزات (double-booking)
+    if(checkIn && checkout) {
+      const aptFilter = req.staff.propertyId
+        ? { apt, propertyId: req.staff.propertyId }
+        : { apt, building: req.staff.building, propertyId: null };
+      const conflict = await B.findOne({
+        ...aptFilter,
+        status: { $in: ['awaiting_checkin','active'] },
+        checkIn:  { $lt: new Date(checkout) },
+        checkOut: { $gt: new Date(checkIn) },
+      }).lean();
+      if(conflict) {
+        const ci = conflict.checkIn?.toLocaleDateString('ar-SA') || '';
+        const co = conflict.checkOut?.toLocaleDateString('ar-SA') || '';
+        return res.status(400).json({ error: `الشقة ${apt} محجوزة بالفعل من ${ci} إلى ${co}` });
+      }
+    }
+
     const bk = await new B({
       building: req.staff.building,
       apt,
@@ -377,6 +477,7 @@ router.post('/api/bookings/new', reqStaff, async (req,res) => {
       pricePerMonth: bookingType==='annual' ? pricePerUnit : undefined,
       totalPrice: parseFloat(totalPrice)||0,
       paidAmount: parseFloat(paidAmount)||0,
+      paymentMethod: paymentMethod||'',
       idType: idType||'',
       idNumber: idNumber||'',
       status: status||'awaiting_checkin',
@@ -385,16 +486,16 @@ router.post('/api/bookings/new', reqStaff, async (req,res) => {
       propertyId: req.staff.propertyId || null,
     }).save();
 
-    AL.create({building:req.staff.building,staffName:req.staff.name,action:'booking_add',apt,guestName:name,bookingId:bk._id,details:'حجز يدوي',propertyId:req.staff.propertyId||null}).catch(()=>{});
+    AL.create({building:req.staff.building,staffName:req.staff.name,action:'booking_add',apt,guestName:name,bookingId:bk._id,details:'حجز يدوي',propertyId:req.staff.propertyId||null}).catch(e=>console.warn('audit log:',e.message));
     // Upsert guest record with all available data
     const Guest = require('../models/Guest');
     Guest.findOneAndUpdate(
       { phone, propertyId: req.staff.propertyId || null },
       { $set: { name, idType: idType||'', idNumber: idNumber||'', building: req.staff.building, lastSeen: new Date(), email: req.body.email||'' }, $inc: { totalBookings: 1 }, $setOnInsert: { category: 'regular' } },
       { upsert: true, new: true, setDefaultsOnInsert: true }
-    ).catch(() => {});
+    ).catch(e => console.warn('guest upsert:', e.message));
     // WhatsApp booking confirmation
-    WA.sendBookingConfirmed(phone, name, apt, req.staff.building, bk.checkIn, bk.checkOut, bk.totalPrice).catch(()=>{});
+    WA.sendBookingConfirmed(phone, name, apt, req.staff.building, bk.checkIn, bk.checkOut, bk.totalPrice).catch(e=>console.warn('WA confirm:',e.message));
     res.json({success:true, id:bk._id});
   } catch(e){ res.status(500).json({error:e.message}); }
 });
@@ -407,8 +508,11 @@ router.get('/api/customers', reqStaff, async (req,res) => {
     const skip = (parseInt(page)-1) * parseInt(limit);
     const filter = { propertyId: req.staff.propertyId || null };
     if (category && ['regular','vip','blocked'].includes(category)) filter.category = category;
-    if (q.trim()) {
-      const re = new RegExp(q.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+    const qClean = q.trim().slice(0, 100);
+    if (qClean) {
+      const pat = qClean.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+        .replace(/[أإآا]/g, '[أإآا]').replace(/[يى]/g, '[يى]').replace(/[هة]/g, '[هة]');
+      const re = new RegExp(pat, 'i');
       filter.$or = [{ name: re }, { phone: re }, { idNumber: re }];
     }
     const [guests, total] = await Promise.all([
@@ -570,13 +674,15 @@ router.get('/api/reports', reqStaff, async (req, res) => {
     const daily  = allMonth.filter(b => b.bookingType === 'daily');
     const annual = allMonth.filter(b => b.bookingType === 'annual');
 
-    const dailyChart = [];
-    for (let i = 1; i <= daysInMonth; i++) {
-      const d  = new Date(selYear, selMonth, i);
-      const nd = new Date(selYear, selMonth, i + 1);
-      const rev = allMonth.filter(b => { const bd = new Date(b.checkIn); return bd >= d && bd < nd; }).reduce((s,b) => s + (b.totalPrice||0), 0);
-      dailyChart.push({ label: d.toLocaleDateString('ar-SA', { day:'numeric', month:'short' }), revenue: rev });
-    }
+    const dayRevMap = {};
+    allMonth.forEach(b => {
+      const day = new Date(b.checkIn).getDate();
+      dayRevMap[day] = (dayRevMap[day] || 0) + (b.totalPrice || 0);
+    });
+    const dailyChart = Array.from({ length: daysInMonth }, (_, i) => {
+      const d = new Date(selYear, selMonth, i + 1);
+      return { label: d.toLocaleDateString('ar-SA', { day: 'numeric', month: 'short' }), revenue: dayRevMap[i + 1] || 0 };
+    });
 
     const debts = allDebtsRaw
       .filter(b => (b.paidAmount||0) < (b.totalPrice||0))
@@ -619,23 +725,26 @@ router.get('/api/reports/yearly', reqStaff, async (req, res) => {
       ? { propertyId: req.staff.propertyId }
       : { building: req.staff.building, propertyId: null };
 
-    const bookings = await B.find({
-      ...baseFilter,
-      checkIn: { $gte: yearAgo },
-      status: { $ne: 'cancelled' },
-    }, 'checkIn totalPrice bookingType').lean();
-
+    const agg = await B.aggregate([
+      { $match: { ...baseFilter, checkIn: { $gte: yearAgo }, status: { $ne: 'cancelled' } } },
+      { $group: {
+        _id:    { y: { $year: '$checkIn' }, m: { $month: '$checkIn' } },
+        revenue:{ $sum: '$totalPrice' },
+        count:  { $sum: 1 },
+        daily:  { $sum: { $cond: [{ $eq: ['$bookingType','daily']  }, '$totalPrice', 0] } },
+        annual: { $sum: { $cond: [{ $eq: ['$bookingType','annual'] }, '$totalPrice', 0] } },
+      }},
+    ]);
+    const revMap = {};
+    agg.forEach(x => { revMap[`${x._id.y}-${x._id.m}`] = x; });
     const months = [];
     for (let i = 11; i >= 0; i--) {
       const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const end   = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
-      const mBk   = bookings.filter(b => { const d = new Date(b.checkIn); return d >= start && d < end; });
+      const key   = `${start.getFullYear()}-${start.getMonth() + 1}`;
+      const m     = revMap[key] || { revenue: 0, count: 0, daily: 0, annual: 0 };
       months.push({
-        label:    start.toLocaleDateString('ar-SA', { month: 'short' }) + ' ' + String(start.getFullYear()).slice(2),
-        revenue:  mBk.reduce((s, b) => s + (b.totalPrice || 0), 0),
-        count:    mBk.length,
-        daily:    mBk.filter(b => b.bookingType === 'daily').reduce((s, b) => s + (b.totalPrice || 0), 0),
-        annual:   mBk.filter(b => b.bookingType === 'annual').reduce((s, b) => s + (b.totalPrice || 0), 0),
+        label:   start.toLocaleDateString('ar-SA', { month: 'short' }) + ' ' + String(start.getFullYear()).slice(2),
+        revenue: m.revenue, count: m.count, daily: m.daily, annual: m.annual,
       });
     }
     res.json({ months });
@@ -665,19 +774,30 @@ router.get('/api/calendar', reqStaff, async (req, res) => {
     const floors = bldgData ? bldgData.floors.map(f => ({ label: f.l, apts: f.r })) : [];
     const allApts = floors.flatMap(f => f.apts);
 
+    // Pre-build apt→bookings map O(n) and parse dates once
+    const bkByApt = {};
+    bookings.forEach(b => {
+      if (!bkByApt[b.apt]) bkByApt[b.apt] = [];
+      bkByApt[b.apt].push({
+        _id: b._id, name: b.name,
+        _cin:     new Date(b.checkIn).setHours(0,0,0,0),
+        _cout:    new Date(b.checkOut).setHours(0,0,0,0),
+        _cinRaw:  new Date(b.checkIn).getTime(),
+        _coutRaw: new Date(b.checkOut).getTime(),
+      });
+    });
+
     const aptCalendar = allApts.map(apt => {
-      const aptBks = bookings.filter(b => b.apt === apt);
+      const aptBks = bkByApt[apt] || [];
       const days = [];
       for (let d = 1; d <= daysInMonth; d++) {
-        const dayDate = new Date(selYear, selMonth, d);
-        const nextDay = new Date(selYear, selMonth, d + 1);
-        const bk = aptBks.find(b => new Date(b.checkIn) < nextDay && new Date(b.checkOut) > dayDate);
+        const dayDate = new Date(selYear, selMonth, d).getTime();
+        const nextDay = dayDate + 86400000;
+        const bk = aptBks.find(b => b._cinRaw < nextDay && b._coutRaw > dayDate);
         if (!bk) { days.push({ s: 'v' }); continue; }
-        const cin = new Date(bk.checkIn); cin.setHours(0,0,0,0);
-        const cout = new Date(bk.checkOut); cout.setHours(0,0,0,0);
         let s = 'o';
-        if (cin.getTime() === dayDate.getTime()) s = 'i';
-        else if (cout.getTime() === dayDate.getTime()) s = 'x';
+        if (bk._cin === dayDate) s = 'i';
+        else if (bk._cout === dayDate) s = 'x';
         days.push({ s, id: bk._id.toString().slice(-5).toUpperCase(), n: (bk.name||'').split(' ')[0] });
       }
       return { apt, days };
@@ -913,8 +1033,11 @@ router.get('/api/guests', reqStaff, async (req, res) => {
     const Guest = require('../models/Guest');
     const { q = '' } = req.query;
     const filter = { propertyId: req.staff.propertyId || null };
-    if (q.trim()) {
-      const re = new RegExp(q.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+    const qClean2 = q.trim().slice(0, 100);
+    if (qClean2) {
+      const pat2 = qClean2.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+        .replace(/[أإآا]/g, '[أإآا]').replace(/[يى]/g, '[يى]').replace(/[هة]/g, '[هة]');
+      const re = new RegExp(pat2, 'i');
       filter.$or = [{ name: re }, { phone: re }, { idNumber: re }];
     }
     const guests = await Guest.find(filter).sort({ lastSeen: -1 }).limit(200).lean();
@@ -1108,7 +1231,7 @@ router.post('/api/admin/migrate-tenant', reqStaff, async (req, res) => {
 });
 
 // ── Admin: create staff user ──────────────────────────────
-router.post('/api/admin/create', async (req,res) => {
+router.post('/api/admin/create', adminLimit, async (req,res) => {
   try {
     const adminToken = verifyToken(req.cookies?.fs_auth);
     if(!adminToken || adminToken.role !== 'admin') return res.status(403).json({error:'للمديرين فقط'});
@@ -1122,7 +1245,7 @@ router.post('/api/admin/create', async (req,res) => {
   } catch(e){ res.status(500).json({error:e.message}); }
 });
 
-router.get('/api/admin/staff', async (req,res) => {
+router.get('/api/admin/staff', adminLimit, async (req,res) => {
   try {
     const adminToken = verifyToken(req.cookies?.fs_auth);
     if(!adminToken || adminToken.role !== 'admin') return res.status(403).json({error:'للمديرين فقط'});
@@ -1132,7 +1255,7 @@ router.get('/api/admin/staff', async (req,res) => {
   } catch(e){ res.status(500).json({error:e.message}); }
 });
 
-router.put('/api/admin/update', async (req,res) => {
+router.put('/api/admin/update', adminLimit, async (req,res) => {
   try {
     const adminToken = verifyToken(req.cookies?.fs_auth);
     if(!adminToken || adminToken.role !== 'admin') return res.status(403).json({error:'للمديرين فقط'});
@@ -1150,6 +1273,64 @@ router.put('/api/admin/update', async (req,res) => {
     }
     res.json({success:true});
   } catch(e){ res.status(500).json({error:e.message}); }
+});
+
+// ── Super Admin: Tenants Management ──────────────────────
+function reqSuperAdmin(req, res, next) {
+  const t = verifyToken(req.cookies?.fs_auth);
+  if (!t || t.role !== 'admin') return res.status(403).json({ error: 'للسوبر أدمن فقط' });
+  req.superAdmin = t;
+  next();
+}
+
+router.get('/superadmin', (req, res) => {
+  const t = verifyToken(req.cookies?.fs_auth);
+  if (!t || t.role !== 'admin') return res.redirect('/login');
+  res.render('staff-superadmin', { admin: t });
+});
+
+router.get('/api/superadmin/tenants', reqSuperAdmin, async (req, res) => {
+  try {
+    const S = require('../models/StaffUser');
+    const B = require('../models/Booking');
+    const page  = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(50, parseInt(req.query.limit) || 20);
+    const filter = {};
+    if (req.query.plan) filter.plan = req.query.plan;
+    if (req.query.active === 'false') filter.active = false;
+    else if (req.query.active === 'true') filter.active = true;
+    const q = (req.query.q || '').trim().slice(0, 80);
+    if (q) { const re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i'); filter.$or=[{name:re},{adminEmail:re},{city:re}]; }
+
+    const [tenants, total] = await Promise.all([
+      Property.find(filter).sort({ createdAt: -1 }).skip((page-1)*limit).limit(limit).lean(),
+      Property.countDocuments(filter),
+    ]);
+
+    const ids = tenants.map(t => t._id);
+    const [staffCounts, bookingCounts] = await Promise.all([
+      S.aggregate([{ $match: { propertyId: { $in: ids } } }, { $group: { _id: '$propertyId', count: { $sum: 1 } } }]),
+      B.aggregate([{ $match: { propertyId: { $in: ids } } }, { $group: { _id: '$propertyId', count: { $sum: 1 } } }]),
+    ]);
+    const scMap = Object.fromEntries(staffCounts.map(x => [String(x._id), x.count]));
+    const bcMap = Object.fromEntries(bookingCounts.map(x => [String(x._id), x.count]));
+
+    res.json({
+      data: tenants.map(t => ({ ...t, staffCount: scMap[String(t._id)] || 0, bookingCount: bcMap[String(t._id)] || 0 })),
+      total, page, limit,
+    });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+router.put('/api/superadmin/tenants/:id', reqSuperAdmin, async (req, res) => {
+  try {
+    const allowed = ['active', 'plan', 'planExpiry'];
+    const update = Object.fromEntries(allowed.filter(k => k in req.body).map(k => [k, req.body[k]]));
+    if (!Object.keys(update).length) return res.status(400).json({ error: 'لا يوجد تعديل' });
+    const tenant = await Property.findByIdAndUpdate(req.params.id, update, { new: true }).lean();
+    if (!tenant) return res.status(404).json({ error: 'المستأجر غير موجود' });
+    res.json({ success: true, tenant });
+  } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
 // ── Nazeel Import helpers ─────────────────────────────────
@@ -1296,4 +1477,595 @@ router.post('/api/import/nazeel/text', reqStaff, async (req, res) => {
   res.json({ success: true, created, skipped, total: parsed.length, errors: errors.slice(0, 30) });
 });
 
+// ── Data Export (CSV) ─────────────────────────────────────
+function toCSV(rows, cols) {
+  const header = cols.map(c => `"${c.label}"`).join(',');
+  const lines  = rows.map(r => cols.map(c => {
+    const v = String(r[c.key] ?? '').replace(/"/g, '""');
+    return `"${v}"`;
+  }).join(','));
+  return '﻿' + [header, ...lines].join('\r\n'); // BOM for Excel Arabic support
+}
+
+router.get('/api/export/bookings.csv', reqStaff, async (req, res) => {
+  try {
+    const B = require('../models/Booking');
+    const filter = req.staff.propertyId
+      ? { propertyId: req.staff.propertyId }
+      : { building: req.staff.building, propertyId: null };
+    const bookings = await B.find(filter).sort({ checkIn: -1 }).limit(10000).lean();
+    const cols = [
+      { key: '_id',         label: 'رقم الحجز' },
+      { key: 'apt',         label: 'الشقة' },
+      { key: 'name',        label: 'الاسم' },
+      { key: 'phone',       label: 'الجوال' },
+      { key: 'bookingType', label: 'نوع الحجز' },
+      { key: 'checkIn',     label: 'تاريخ الدخول' },
+      { key: 'checkOut',    label: 'تاريخ الخروج' },
+      { key: 'nights',      label: 'الليالي' },
+      { key: 'totalPrice',  label: 'الإجمالي' },
+      { key: 'paidAmount',  label: 'المدفوع' },
+      { key: 'status',      label: 'الحالة' },
+      { key: 'source',      label: 'المصدر' },
+      { key: 'createdAt',   label: 'تاريخ الإنشاء' },
+    ];
+    const rows = bookings.map(b => ({
+      ...b,
+      checkIn:   b.checkIn   ? new Date(b.checkIn).toLocaleDateString('ar-SA')   : '',
+      checkOut:  b.checkOut  ? new Date(b.checkOut).toLocaleDateString('ar-SA')  : '',
+      createdAt: b.createdAt ? new Date(b.createdAt).toLocaleDateString('ar-SA') : '',
+    }));
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="bookings-${Date.now()}.csv"`);
+    res.send(toCSV(rows, cols));
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+router.get('/api/export/guests.csv', reqStaff, async (req, res) => {
+  try {
+    const Guest = require('../models/Guest');
+    const filter = { propertyId: req.staff.propertyId || null };
+    const guests = await Guest.find(filter).sort({ name: 1 }).limit(50000).lean();
+    const cols = [
+      { key: 'name',         label: 'الاسم' },
+      { key: 'phone',        label: 'الجوال' },
+      { key: 'idType',       label: 'نوع الإثبات' },
+      { key: 'idNumber',     label: 'رقم الإثبات' },
+      { key: 'nationality',  label: 'الجنسية' },
+      { key: 'email',        label: 'البريد' },
+      { key: 'category',     label: 'التصنيف' },
+      { key: 'totalBookings',label: 'عدد الحجوزات' },
+      { key: 'lastSeen',     label: 'آخر زيارة' },
+    ];
+    const rows = guests.map(g => ({
+      ...g,
+      lastSeen: g.lastSeen ? new Date(g.lastSeen).toLocaleDateString('ar-SA') : '',
+      phone: ['nophone-','dup-','nzl-'].some(p => String(g.phone).startsWith(p)) ? '' : g.phone,
+    }));
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="guests-${Date.now()}.csv"`);
+    res.send(toCSV(rows, cols));
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ══════════════════════════════════════════════════════════
+// CHANNEL MANAGER — Multi-platform booking sync
+// ══════════════════════════════════════════════════════════
+
+const crypto   = require('crypto');
+const https    = require('https');
+const http     = require('http');
+
+const PLATFORM_LABELS = {
+  airbnb:   'Airbnb',
+  booking:  'Booking.com',
+  gathering:'Gathering',
+  website:  'موقعنا',
+};
+
+function fetchUrl(url, timeoutMs = 12000) {
+  return new Promise((resolve, reject) => {
+    const mod = url.startsWith('https') ? https : http;
+    const req = mod.get(url, { timeout: timeoutMs }, res => {
+      let data = '';
+      res.on('data', c => data += c);
+      res.on('end', () => resolve(data));
+    });
+    req.on('error', reject);
+    req.on('timeout', () => { req.destroy(); reject(new Error('timeout')); });
+  });
+}
+
+// Parse iCal text → array of { uid, summary, dtStart, dtEnd, status }
+function parseICal(text) {
+  const events = [];
+  const veventBlocks = text.split('BEGIN:VEVENT').slice(1);
+  for (const block of veventBlocks) {
+    const get = k => {
+      const m = block.match(new RegExp(`${k}[^:]*:([^\\r\\n]+)`));
+      return m ? m[1].trim() : '';
+    };
+    const parseDate = s => {
+      if (!s) return null;
+      const d = s.replace(/[TZ]/g, '');
+      if (d.length >= 8) {
+        const y = d.slice(0,4), mo = d.slice(4,6), day = d.slice(6,8);
+        const h = d.slice(8,10)||'00', mi = d.slice(10,12)||'00';
+        return new Date(`${y}-${mo}-${day}T${h}:${mi}:00Z`);
+      }
+      return null;
+    };
+    const uid     = get('UID');
+    const summary = get('SUMMARY');
+    const dtStart = parseDate(get('DTSTART'));
+    const dtEnd   = parseDate(get('DTEND'));
+    const status  = get('STATUS') || 'CONFIRMED';
+    if (uid && dtStart && dtEnd) events.push({ uid, summary, dtStart, dtEnd, status });
+  }
+  return events;
+}
+
+// Build iCal text from our bookings
+function buildICal(bookings, building) {
+  const fmt = d => {
+    if (!d) return '';
+    const dt = new Date(d);
+    return dt.toISOString().replace(/[-:]/g,'').replace(/\.\d+/,'').replace('T','T').replace('Z','Z');
+  };
+  const lines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    `PRODID:-//BAREZ//Channel Manager//AR`,
+    `X-WR-CALNAME:BAREZ ${building}`,
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+  ];
+  for (const b of bookings) {
+    const uid = `barez-${b._id}@barez.sa`;
+    lines.push('BEGIN:VEVENT');
+    lines.push(`UID:${uid}`);
+    lines.push(`DTSTART;VALUE=DATE:${fmt(b.checkIn).slice(0,8)}`);
+    lines.push(`DTEND;VALUE=DATE:${fmt(b.checkOut).slice(0,8)}`);
+    lines.push(`SUMMARY:BLOCKED - ${b.apt} - ${b.name||'حجز'}`);
+    lines.push(`STATUS:${b.status === 'cancelled' ? 'CANCELLED' : 'CONFIRMED'}`);
+    lines.push(`DESCRIPTION:شقة ${b.apt} - ${b.name||''} - ${b.phone||''}`);
+    lines.push(`LAST-MODIFIED:${fmt(b.updatedAt||b.createdAt)}`);
+    lines.push('END:VEVENT');
+  }
+  lines.push('END:VCALENDAR');
+  return lines.join('\r\n');
+}
+
+// Build booking notification email HTML
+function channelBookingEmail({ platform, apt, building, name, checkIn, checkOut, totalPrice, nights }) {
+  const fDate = d => d ? new Date(d).toLocaleDateString('ar-SA', { year:'numeric', month:'long', day:'numeric' }) : '—';
+  const platformLabel = PLATFORM_LABELS[platform] || platform;
+  const platformColors = { airbnb:'#FF5A5F', booking:'#003580', gathering:'#1a6b3c', website:'#1a3d8f' };
+  const color = platformColors[platform] || '#1a3d8f';
+  return `
+<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8">
+<style>body{font-family:Arial,sans-serif;background:#f8fafc;margin:0;padding:0;direction:rtl;}
+.wrap{max-width:540px;margin:32px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.1);}
+.hd{background:${color};padding:28px 32px;color:#fff;}
+.hd h1{margin:0;font-size:22px;font-weight:800;}
+.hd p{margin:6px 0 0;opacity:.85;font-size:14px;}
+.body{padding:28px 32px;}
+.row{display:flex;justify-content:space-between;border-bottom:1px solid #f1f5f9;padding:12px 0;font-size:14px;}
+.row:last-child{border-bottom:none;}
+.lbl{color:#64748b;font-weight:600;}
+.val{color:#0f172a;font-weight:700;}
+.badge{display:inline-block;background:${color}18;color:${color};border-radius:20px;padding:4px 14px;font-size:13px;font-weight:800;margin-top:4px;}
+.ft{background:#f8fafc;padding:16px 32px;font-size:12px;color:#94a3b8;text-align:center;}
+</style></head><body>
+<div class="wrap">
+  <div class="hd">
+    <h1>حجز جديد من ${platformLabel}</h1>
+    <p>تم استلام حجز جديد وتم إغلاق الوحدة تلقائياً في المنصات الأخرى</p>
+  </div>
+  <div class="body">
+    <div style="margin-bottom:16px;"><span class="badge">📍 ${building} — شقة ${apt}</span></div>
+    <div class="row"><span class="lbl">اسم العميل</span><span class="val">${name||'—'}</span></div>
+    <div class="row"><span class="lbl">المنصة</span><span class="val">${platformLabel}</span></div>
+    <div class="row"><span class="lbl">تاريخ الدخول</span><span class="val">${fDate(checkIn)}</span></div>
+    <div class="row"><span class="lbl">تاريخ الخروج</span><span class="val">${fDate(checkOut)}</span></div>
+    <div class="row"><span class="lbl">عدد الليالي</span><span class="val">${nights||'—'} ليلة</span></div>
+    <div class="row"><span class="lbl">الإجمالي</span><span class="val">${totalPrice ? totalPrice.toLocaleString('ar-SA') + ' ريال' : '—'}</span></div>
+  </div>
+  <div class="ft">BAREZ Property Management · تم الإرسال تلقائياً</div>
+</div></body></html>`;
+}
+
+// GET /staff/ical/:building/:secret — serve our calendar for external platforms
+router.get('/ical/:building/:secret', async (req, res) => {
+  try {
+    const ChannelConfig = require('../models/ChannelConfig');
+    const Booking = require('../models/Booking');
+    const { building, secret } = req.params;
+    const configs = await ChannelConfig.find({ building, icalSecret: secret }).lean();
+    if (!configs.length) return res.status(403).send('Unauthorized');
+    const bookings = await Booking.find({
+      building,
+      status: { $nin: ['cancelled'] },
+      checkIn: { $gte: new Date(Date.now() - 90 * 86400000) },
+    }).lean();
+    res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${building}.ics"`);
+    res.send(buildICal(bookings, building));
+  } catch(e) { res.status(500).send('Error: ' + e.message); }
+});
+
+// GET /staff/api/channels — get channel configs for this building
+router.get('/api/channels', reqStaff, async (req, res) => {
+  try {
+    const ChannelConfig = require('../models/ChannelConfig');
+    const filter = req.staff.propertyId
+      ? { propertyId: req.staff.propertyId }
+      : { building: req.staff.building, propertyId: null };
+    const configs = await ChannelConfig.find(filter).lean();
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const result = ['airbnb','booking','gathering','website'].map(p => {
+      const c = configs.find(x => x.platform === p) || {};
+      const secret = c.icalSecret || '';
+      return {
+        platform: p,
+        label: PLATFORM_LABELS[p],
+        enabled: c.enabled || false,
+        icalImport: c.icalImport || '',
+        icalExportUrl: secret ? `${baseUrl}/staff/ical/${encodeURIComponent(req.staff.building)}/${secret}` : '',
+        hotelId: c.hotelId || '',
+        lastSync: c.lastSync || null,
+        lastSyncStatus: c.lastSyncStatus || 'never',
+        lastSyncMsg: c.lastSyncMsg || '',
+        notifyEmail: c.notifyEmail || '',
+        _id: c._id || null,
+      };
+    });
+    res.json({ configs: result });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// POST /staff/api/channels/:platform — save/update config for one platform
+router.post('/api/channels/:platform', reqStaff, async (req, res) => {
+  if (req.staff.role !== 'manager') return res.status(403).json({ error: 'للمديرين فقط' });
+  try {
+    const ChannelConfig = require('../models/ChannelConfig');
+    const platform = req.params.platform;
+    if (!['airbnb','booking','gathering','website'].includes(platform))
+      return res.status(400).json({ error: 'منصة غير معروفة' });
+    const filter = req.staff.propertyId
+      ? { propertyId: req.staff.propertyId, platform }
+      : { building: req.staff.building, propertyId: null, platform };
+    let cfg = await ChannelConfig.findOne(filter);
+    if (!cfg) {
+      cfg = new ChannelConfig({
+        ...filter,
+        building: req.staff.building,
+        icalSecret: crypto.randomBytes(24).toString('hex'),
+      });
+    }
+    const { enabled, icalImport, hotelId, apiKey, apiSecret, notifyEmail } = req.body;
+    if (enabled !== undefined) cfg.enabled = !!enabled;
+    if (icalImport !== undefined) cfg.icalImport = icalImport.trim();
+    if (hotelId !== undefined) cfg.hotelId = hotelId.trim();
+    if (apiKey !== undefined) cfg.apiKey = apiKey.trim();
+    if (apiSecret !== undefined) cfg.apiSecret = apiSecret.trim();
+    if (notifyEmail !== undefined) cfg.notifyEmail = notifyEmail.trim();
+    if (!cfg.icalSecret) cfg.icalSecret = crypto.randomBytes(24).toString('hex');
+    await cfg.save();
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    res.json({
+      success: true,
+      icalExportUrl: `${baseUrl}/staff/ical/${encodeURIComponent(req.staff.building)}/${cfg.icalSecret}`,
+    });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// POST /staff/api/channels/:platform/sync — manual sync (fetch iCal, detect new bookings, send email)
+router.post('/api/channels/:platform/sync', reqStaff, async (req, res) => {
+  try {
+    const ChannelConfig = require('../models/ChannelConfig');
+    const Booking = require('../models/Booking');
+    const { sendEmail } = require('../utils/mailer');
+    const platform = req.params.platform;
+    const filter = req.staff.propertyId
+      ? { propertyId: req.staff.propertyId, platform }
+      : { building: req.staff.building, propertyId: null, platform };
+    const cfg = await ChannelConfig.findOne(filter);
+    if (!cfg || !cfg.icalImport) return res.json({ success: false, msg: 'لا يوجد رابط iCal مضبوط لهذه المنصة' });
+
+    let icalText;
+    try { icalText = await fetchUrl(cfg.icalImport); }
+    catch(e) {
+      cfg.lastSync = new Date(); cfg.lastSyncStatus = 'error'; cfg.lastSyncMsg = e.message;
+      await cfg.save();
+      return res.json({ success: false, msg: 'فشل جلب iCal: ' + e.message });
+    }
+
+    const events = parseICal(icalText);
+    let newBookings = 0;
+    const building = req.staff.building;
+
+    for (const ev of events) {
+      if (ev.status === 'CANCELLED') continue;
+      // Skip events with UID already stored as source
+      const exists = await Booking.findOne({ source: `ch-${platform}-${ev.uid}` }).lean();
+      if (exists) continue;
+
+      // Try to extract apartment from summary (e.g. "BAREZ - 101 - Guest Name")
+      const aptMatch = ev.summary.match(/\b(\d{3})\b/);
+      const apt = aptMatch ? aptMatch[1] : (req.body.apt || '');
+      const nights = ev.dtEnd && ev.dtStart ? Math.round((ev.dtEnd - ev.dtStart) / 86400000) : undefined;
+
+      const booking = new Booking({
+        building,
+        propertyId: req.staff.propertyId || null,
+        apt,
+        name: ev.summary.replace(/BLOCKED\s*[-—]?\s*/i, '').split(' - ')[1] || ev.summary,
+        phone: `ch-${platform}-${Date.now()}`,
+        bookingType: 'daily',
+        checkIn: ev.dtStart,
+        checkOut: ev.dtEnd,
+        nights,
+        status: 'awaiting_checkin',
+        source: `ch-${platform}-${ev.uid}`,
+        notes: `مستورد تلقائياً من ${PLATFORM_LABELS[platform]}`,
+      });
+      await booking.save();
+      newBookings++;
+
+      // Send email notification
+      const notifyTo = cfg.notifyEmail || process.env.NOTIFY_EMAIL || '';
+      if (notifyTo) {
+        await sendEmail({
+          to: notifyTo,
+          subject: `حجز جديد من ${PLATFORM_LABELS[platform]} — شقة ${apt}`,
+          html: channelBookingEmail({
+            platform, apt, building,
+            name: booking.name,
+            checkIn: booking.checkIn,
+            checkOut: booking.checkOut,
+            nights: booking.nights,
+            totalPrice: booking.totalPrice,
+          }),
+        });
+      }
+    }
+
+    cfg.lastSync = new Date();
+    cfg.lastSyncStatus = 'ok';
+    cfg.lastSyncMsg = `${events.length} حدث، ${newBookings} حجز جديد`;
+    await cfg.save();
+    res.json({ success: true, events: events.length, newBookings, msg: cfg.lastSyncMsg });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// GET /staff/api/channels/feed — recent bookings from all channel sources
+router.get('/api/channels/feed', reqStaff, async (req, res) => {
+  try {
+    const Booking = require('../models/Booking');
+    const filter = req.staff.propertyId
+      ? { propertyId: req.staff.propertyId }
+      : { building: req.staff.building, propertyId: null };
+    filter.source = { $regex: /^ch-/ };
+    const bookings = await Booking.find(filter).sort({ createdAt: -1 }).limit(50).lean();
+    res.json({ bookings });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// POST /staff/api/channels/webhook/:platform — webhook endpoint for direct API platforms
+router.post('/api/channels/webhook/:platform', async (req, res) => {
+  try {
+    const ChannelConfig = require('../models/ChannelConfig');
+    const Booking = require('../models/Booking');
+    const { sendEmail } = require('../utils/mailer');
+    const platform = req.params.platform;
+    const secret = req.headers['x-webhook-secret'] || req.query.secret || '';
+
+    // Validate secret
+    const cfg = await ChannelConfig.findOne({ platform, icalSecret: secret });
+    if (!cfg) return res.status(401).json({ error: 'unauthorized' });
+
+    const body = req.body || {};
+    // Normalize payload (Gathering / Booking.com formats differ)
+    const apt       = body.apt || body.room || body.unit || '';
+    const name      = body.guest_name || body.name || body.customer_name || 'ضيف';
+    const checkIn   = body.check_in  || body.arrival   || body.from_date || null;
+    const checkOut  = body.check_out || body.departure  || body.to_date   || null;
+    const totalPrice= parseFloat(body.total || body.price || body.amount || 0) || undefined;
+    const nights    = body.nights || (checkIn && checkOut ? Math.round((new Date(checkOut)-new Date(checkIn))/86400000) : undefined);
+    const uid       = body.reservation_id || body.booking_id || body.id || `wh-${Date.now()}`;
+    const isCancelled = (body.status||'').toLowerCase().includes('cancel');
+
+    if (isCancelled) {
+      // Reopen: mark matching booking as cancelled
+      await Booking.updateMany(
+        { building: cfg.building, source: `ch-${platform}-${uid}` },
+        { status: 'cancelled' }
+      );
+      return res.json({ success: true, action: 'cancelled' });
+    }
+
+    const exists = await Booking.findOne({ source: `ch-${platform}-${uid}` }).lean();
+    if (!exists) {
+      await new Booking({
+        building: cfg.building,
+        propertyId: cfg.propertyId || null,
+        apt, name, checkIn, checkOut, nights, totalPrice,
+        phone: `ch-${platform}-${uid}`,
+        bookingType: 'daily',
+        status: 'awaiting_checkin',
+        source: `ch-${platform}-${uid}`,
+        notes: `ويب‌هوك من ${PLATFORM_LABELS[platform]}`,
+      }).save();
+
+      const notifyTo = cfg.notifyEmail || process.env.NOTIFY_EMAIL || '';
+      if (notifyTo) {
+        await sendEmail({
+          to: notifyTo,
+          subject: `حجز جديد من ${PLATFORM_LABELS[platform]} — شقة ${apt}`,
+          html: channelBookingEmail({ platform, apt, building: cfg.building, name, checkIn, checkOut, nights, totalPrice }),
+        });
+      }
+    }
+    res.json({ success: true, action: 'created' });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ══════════════════════════════════════════════════════════
+// CHANNEL MANAGER — Standalone page (per-building × per-apt)
+// ══════════════════════════════════════════════════════════
+
+// GET /staff/channels — render standalone page
+router.get('/channels', reqStaff, (req, res) => {
+  if (req.staff.role !== 'manager') return res.redirect('/staff/dashboard');
+  res.render('channel-manager', { staff: req.staff });
+});
+
+// GET /staff/api/listings — all ChannelListings for this staff's buildings
+router.get('/api/listings', reqStaff, async (req, res) => {
+  try {
+    const ChannelListing = require('../models/ChannelListing');
+    const { bldgs } = await getBldgConfig(req.staff);
+    const buildings = Object.keys(bldgs);
+    const filter = req.staff.propertyId
+      ? { propertyId: req.staff.propertyId }
+      : { building: { $in: buildings }, propertyId: null };
+    const listings = await ChannelListing.find(filter).lean();
+    res.json({ listings, buildings, bldgs });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// POST /staff/api/listings — upsert one listing connection
+router.post('/api/listings', reqStaff, async (req, res) => {
+  if (req.staff.role !== 'manager') return res.status(403).json({ error: 'للمديرين فقط' });
+  try {
+    const ChannelListing = require('../models/ChannelListing');
+    const { building, apt, platform, icalImport, platformListingId, enabled } = req.body;
+    if (!building || !apt || !platform) return res.status(400).json({ error: 'building, apt, platform مطلوبة' });
+    const filter = { building, apt, platform, propertyId: req.staff.propertyId || null };
+    const update = {
+      $set: {
+        ...(icalImport        !== undefined && { icalImport: (icalImport||'').trim() }),
+        ...(platformListingId !== undefined && { platformListingId: (platformListingId||'').trim() }),
+        ...(enabled           !== undefined && { enabled: !!enabled }),
+        propertyId: req.staff.propertyId || null,
+      }
+    };
+    const doc = await ChannelListing.findOneAndUpdate(filter, update, { upsert: true, new: true });
+    res.json({ success: true, listing: doc });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// POST /staff/api/listings/bulk — import many rows at once [{building,apt,platform,icalImport}]
+router.post('/api/listings/bulk', reqStaff, async (req, res) => {
+  if (req.staff.role !== 'manager') return res.status(403).json({ error: 'للمديرين فقط' });
+  try {
+    const ChannelListing = require('../models/ChannelListing');
+    const rows = Array.isArray(req.body) ? req.body : [];
+    let saved = 0, errors = [];
+    for (const row of rows) {
+      const { building, apt, platform, icalImport, platformListingId } = row;
+      if (!building || !apt || !platform) continue;
+      try {
+        await ChannelListing.findOneAndUpdate(
+          { building, apt, platform, propertyId: req.staff.propertyId || null },
+          { $set: { icalImport: (icalImport||'').trim(), platformListingId: (platformListingId||'').trim(), enabled: true, propertyId: req.staff.propertyId || null } },
+          { upsert: true }
+        );
+        saved++;
+      } catch(e) { errors.push(`${building}-${apt}-${platform}: ${e.message}`); }
+    }
+    res.json({ success: true, saved, errors: errors.slice(0,20) });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// POST /staff/api/listings/sync/:building — sync all listings in a building (or single apt)
+router.post('/api/listings/sync/:building', reqStaff, async (req, res) => {
+  try {
+    const ChannelListing = require('../models/ChannelListing');
+    const Booking        = require('../models/Booking');
+    const ChannelConfig  = require('../models/ChannelConfig');
+    const { sendEmail }  = require('../utils/mailer');
+    const building = req.params.building;
+    const { apt, platform } = req.body; // optional filters
+
+    const filter = { building, propertyId: req.staff.propertyId || null };
+    if (apt)      filter.apt = apt;
+    if (platform) filter.platform = platform;
+    filter.enabled   = true;
+    filter.icalImport = { $exists: true, $ne: '' };
+
+    const listings = await ChannelListing.find(filter);
+    const cfgFilter = req.staff.propertyId
+      ? { propertyId: req.staff.propertyId }
+      : { building, propertyId: null };
+
+    let totalNew = 0, totalErr = 0, results = [];
+
+    for (const lst of listings) {
+      let icalText;
+      try { icalText = await fetchUrl(lst.icalImport); }
+      catch(e) {
+        lst.lastSync = new Date(); lst.lastSyncStatus = 'error'; lst.lastSyncMsg = e.message;
+        await lst.save(); totalErr++; results.push({ apt: lst.apt, platform: lst.platform, ok: false, msg: e.message });
+        continue;
+      }
+
+      const events = parseICal(icalText);
+      let newCount = 0;
+
+      for (const ev of events) {
+        if (ev.status === 'CANCELLED') {
+          await Booking.updateMany({ source: `ch-${lst.platform}-${ev.uid}` }, { status: 'cancelled' });
+          continue;
+        }
+        const exists = await Booking.findOne({ source: `ch-${lst.platform}-${ev.uid}` }).lean();
+        if (exists) continue;
+        const nights = ev.dtEnd && ev.dtStart ? Math.round((ev.dtEnd - ev.dtStart) / 86400000) : undefined;
+        await new Booking({
+          building, apt: lst.apt,
+          propertyId: lst.propertyId || null,
+          name: ev.summary.replace(/BLOCKED\s*[-—]?\s*/i,'').trim() || 'حجز خارجي',
+          phone: `ch-${lst.platform}-${Date.now()}`,
+          bookingType: 'daily',
+          checkIn: ev.dtStart, checkOut: ev.dtEnd, nights,
+          status: 'awaiting_checkin',
+          source: `ch-${lst.platform}-${ev.uid}`,
+          notes: `مستورد من ${PLATFORM_LABELS[lst.platform]}`,
+        }).save();
+        newCount++; totalNew++;
+
+        // Email notification
+        const cfg = await ChannelConfig.findOne({ ...cfgFilter, platform: lst.platform }).lean();
+        const notifyTo = (cfg && cfg.notifyEmail) || process.env.NOTIFY_EMAIL || '';
+        if (notifyTo) {
+          await sendEmail({
+            to: notifyTo,
+            subject: `حجز جديد من ${PLATFORM_LABELS[lst.platform]} — ${building} شقة ${lst.apt}`,
+            html: channelBookingEmail({ platform: lst.platform, apt: lst.apt, building, name: 'حجز خارجي', checkIn: ev.dtStart, checkOut: ev.dtEnd, nights }),
+          });
+        }
+      }
+
+      lst.lastSync = new Date(); lst.lastSyncStatus = 'ok';
+      lst.lastSyncMsg = `${events.length} حدث، ${newCount} جديد`; lst.lastEventCount = events.length;
+      await lst.save();
+      results.push({ apt: lst.apt, platform: lst.platform, ok: true, newCount, total: events.length });
+    }
+
+    res.json({ success: true, totalNew, totalErr, results });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// DELETE /staff/api/listings/:id — remove a listing connection
+router.delete('/api/listings/:id', reqStaff, async (req, res) => {
+  if (req.staff.role !== 'manager') return res.status(403).json({ error: 'للمديرين فقط' });
+  try {
+    const ChannelListing = require('../models/ChannelListing');
+    await ChannelListing.findByIdAndDelete(req.params.id);
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 module.exports = router;
+

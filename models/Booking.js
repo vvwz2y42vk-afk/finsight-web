@@ -19,7 +19,8 @@ const bookingSchema = new mongoose.Schema({
   notes:        String,
   paymentId:    String,
   paidAt:       Date,
-  paidAmount:   { type: Number, default: 0 },
+  paidAmount:      { type: Number, default: 0 },
+  paymentMethod:   { type: String, enum: ['cash','transfer','network','other',''], default: '' },
   idType:       { type: String, enum: ['national_id','passport','iqama','family_card',''], default: '' },
   idNumber:     String,
   source:       String,
@@ -37,5 +38,7 @@ bookingSchema.index({ propertyId: 1, status: 1 });
 bookingSchema.index({ checkIn: 1 });
 bookingSchema.index({ checkOut: 1 });
 bookingSchema.index({ phone: 1 });
+bookingSchema.index({ propertyId: 1, building: 1, status: 1 });
+bookingSchema.index({ customer: 1, createdAt: -1 });
 
 module.exports = mongoose.model('Booking', bookingSchema);

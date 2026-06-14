@@ -589,7 +589,7 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
     <div class="sn" onclick="goTab('activity',this)" id="sn-activity" style="display:<%= P.includes('activity')?'flex':'none' %>"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span><span class="sn-lbl">سجل الحركات</span></div>
     <div class="sn" onclick="goTab('vouchers',this)" id="sn-vouchers" style="display:<%= P.includes('vouchers')?'flex':'none' %>"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></span><span class="sn-lbl">السندات والفواتير</span></div>
     <div class="sn" onclick="goTab('analytics',this)" id="sn-analytics" style="display:<%= staff.role==='manager'?'flex':'none' %>"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="18" y="3" width="4" height="18"/><rect x="10" y="8" width="4" height="13"/><rect x="2" y="13" width="4" height="8"/></svg></span><span class="sn-lbl">التحليلات</span></div>
-    <div class="sn" onclick="goTab('channels',this)" id="sn-channels" style="display:<%= staff.role==='manager'?'flex':'none' %>"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="5" r="3"/><circle cx="5" cy="19" r="3"/><circle cx="19" cy="19" r="3"/><line x1="12" y1="8" x2="5.5" y2="16.5"/><line x1="12" y1="8" x2="18.5" y2="16.5"/></svg></span><span class="sn-lbl">إدارة القنوات</span></div>
+    <% if(staff.role==='manager'){ %><a href="/staff/channels" class="sn" style="text-decoration:none;display:flex;" id="sn-channels"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="5" r="3"/><circle cx="5" cy="19" r="3"/><circle cx="19" cy="19" r="3"/><line x1="12" y1="8" x2="5.5" y2="16.5"/><line x1="12" y1="8" x2="18.5" y2="16.5"/></svg></span><span class="sn-lbl">إدارة القنوات</span></a><% } %>
     <div class="sn" onclick="goTab('reports',this)" id="sn-reports"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></span><span class="sn-lbl">التقارير</span></div>
     <div class="sn" onclick="goTab('calendar',this)" id="sn-calendar" style="display:<%= P.includes('reports')?'flex':'none' %>"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/></svg></span><span class="sn-lbl">التقويم</span></div>
     <% if(staff.role==='manager'){ %>
@@ -1565,6 +1565,16 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
           <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">المتبقي</label>
           <input id="nb-remain" type="number" placeholder="0" readonly style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;background:#f8fafc;color:#dc2626;font-weight:700;">
         </div>
+        <div style="grid-column:1/-1;">
+          <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">طريقة الدفع</label>
+          <select id="nb-paymethod" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;">
+            <option value="">— اختر —</option>
+            <option value="cash">كاش</option>
+            <option value="transfer">تحويل</option>
+            <option value="network">شبكة</option>
+            <option value="other">أخرى</option>
+          </select>
+        </div>
         <div>
           <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">نوع الإثبات</label>
           <select id="nb-idtype" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;">
@@ -2213,6 +2223,8 @@ async function openBkModal(bookingId, apt, status) {
     html += r('إجمالي الحجز', b.totalPrice ? b.totalPrice.toLocaleString() + ' ريال' : '');
     html += `<div class="mrow"><span>المدفوع</span><b style="color:#16a34a;">${(b.paidAmount||0).toLocaleString()} ريال</b></div>`;
     html += `<div class="mrow"><span>المتبقي</span><b style="color:${remain>0?'#dc2626':'#16a34a'};">${remain.toLocaleString()} ريال ${remain===0?'✓':''}</b></div>`;
+    const pmLabels={cash:'كاش',transfer:'تحويل',network:'شبكة',other:'أخرى'};
+    if(b.paymentMethod) html += r('طريقة الدفع', pmLabels[b.paymentMethod]||b.paymentMethod);
 
     if (b.notes) html += `<div style="margin:12px 0 4px;padding:10px 12px;background:#f8fafc;border-radius:10px;font-size:12px;color:#475569;line-height:1.6;"><b>ملاحظات:</b> ${esc(b.notes)}</div>`;
 
@@ -2342,6 +2354,7 @@ async function editBk(id){
     document.getElementById('nb-idnum').value=b.idNumber||'';
     document.getElementById('nb-status').value=b.status||'awaiting_checkin';
     document.getElementById('nb-notes').value=b.notes||'';
+    document.getElementById('nb-paymethod').value=b.paymentMethod||'';
   }catch(e){ toast('❌ حدث خطأ'); }
 }
 
@@ -2874,6 +2887,7 @@ async function submitNewBk(){
   const idNumber=document.getElementById('nb-idnum').value.trim();
   const status=document.getElementById('nb-status').value;
   const notes=document.getElementById('nb-notes').value.trim();
+  const paymentMethod=document.getElementById('nb-paymethod').value;
   const errEl=document.getElementById('nb-err');
   errEl.style.display='none';
   let valid=true;
@@ -2884,7 +2898,7 @@ async function submitNewBk(){
   if(type==='daily'&&!checkout){ shakeField('nb-checkout','nb-checkout-grp','fh-checkout','اختر تاريخ الخروج'); valid=false; }
   if(!price){ shakeField('nb-price','fw-price','fh-price','أدخل سعر الإيجار'); valid=false; }
   if(!valid) return;
-  const _bkBody={apt,name,phone,bookingType:type,checkIn:checkin,checkOut:checkout,months,pricePerUnit:price,totalPrice:total,paidAmount:paid,idType,idNumber,status,notes};
+  const _bkBody={apt,name,phone,bookingType:type,checkIn:checkin,checkOut:checkout,months,pricePerUnit:price,totalPrice:total,paidAmount:paid,paymentMethod,idType,idNumber,status,notes};
   const url=editBkId?`/staff/api/bookings/${editBkId}/edit`:'/staff/api/bookings/new';
   const method=editBkId?'PUT':'POST';
   try{
