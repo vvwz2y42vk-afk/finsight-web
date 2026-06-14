@@ -2140,5 +2140,12 @@ router.get('/api/daily-closing', reqStaff, async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── Staff router error handler — shows real error instead of generic message ──
+router.use((err, req, res, _next) => {
+  console.error('[Staff Error]', req.method, req.path, err.message, err.stack?.split('\n')[1] || '');
+  if (res.headersSent) return;
+  res.status(err.status || 500).json({ error: err.message || 'خطأ غير معروف', path: req.path });
+});
+
 module.exports = router;
 
