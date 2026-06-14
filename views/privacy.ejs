@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>سياسة الخصوصية — Barez</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/client.css">
+<style>
+.policy-wrap{max-width:760px;margin:60px auto;padding:0 20px 80px;}
+.policy-title{font-size:2rem;font-weight:900;margin-bottom:8px;}
+.policy-date{font-size:13px;color:var(--text3);margin-bottom:40px;}
+.policy-section{margin-bottom:32px;}
+.policy-section h2{font-size:1.1rem;font-weight:800;margin-bottom:10px;color:var(--text1);}
+.policy-section p,.policy-section li{font-size:14px;color:var(--text2);line-height:1.9;margin-bottom:8px;}
+.policy-section ul{padding-right:20px;}
+.policy-section li{list-style:disc;}
+.policy-contact{background:var(--light);border-radius:14px;padding:20px 24px;margin-top:8px;}
+.policy-contact a{color:var(--gold);font-weight:600;text-decoration:none;}
+</style>
+</head>
+<body>
+<%- include('_header', { customer: customer, activePage: '' }) %>
+
+<div class="policy-wrap">
+  <h1 class="policy-title">سياسة الخصوصية</h1>
+  <div class="policy-date">آخر تحديث: يونيو 2026</div>
+
+  <div class="policy-section">
+    <h2>١. مقدمة</h2>
+    <p>تحرص منصة BAREZ على حماية خصوصية مستخدميها. توضح هذه السياسة كيفية جمع بياناتك واستخدامها وحمايتها عند استخدامك لخدماتنا.</p>
+  </div>
+
+  <div class="policy-section">
+    <h2>٢. البيانات التي نجمعها</h2>
+    <ul>
+      <li>البيانات الشخصية: الاسم، رقم الجوال، البريد الإلكتروني، رقم الهوية (عند التسجيل)</li>
+      <li>بيانات الحجوزات: تواريخ الدخول والخروج، نوع الحجز، المبالغ المدفوعة</li>
+      <li>بيانات الاستخدام: سجلات الدخول، عنوان IP، نوع المتصفح</li>
+    </ul>
+  </div>
+
+  <div class="policy-section">
+    <h2>٣. كيفية استخدام بياناتك</h2>
+    <ul>
+      <li>تنفيذ وإدارة حجوزاتك</li>
+      <li>التواصل معك بشأن حجوزاتك أو حسابك</li>
+      <li>تحسين خدماتنا وتجربة المستخدم</li>
+      <li>الامتثال للمتطلبات القانونية</li>
+    </ul>
+  </div>
+
+  <div class="policy-section">
+    <h2>٤. مشاركة البيانات</h2>
+    <p>لا نبيع بياناتك الشخصية لأطراف ثالثة. قد نشارك بياناتك في الحالات التالية:</p>
+    <ul>
+      <li>مع مزودي الخدمات الضروريين لتشغيل المنصة (معالجة الدفع، استضافة الخوادم)</li>
+      <li>عند الطلب القانوني من جهات حكومية مختصة</li>
+      <li>لحماية حقوق ومصالح BAREZ ومستخدميها</li>
+    </ul>
+  </div>
+
+  <div class="policy-section">
+    <h2>٥. حماية البيانات</h2>
+    <p>نطبق معايير أمنية عالية لحماية بياناتك، تشمل تشفير البيانات أثناء النقل (HTTPS)، وتشفير كلمات المرور، وسجلات مراجعة أمنية.</p>
+  </div>
+
+  <div class="policy-section">
+    <h2>٦. ملفات تعريف الارتباط (Cookies)</h2>
+    <p>نستخدم ملفات الارتباط الضرورية للمصادقة وإدارة الجلسات فقط. لا نستخدم ملفات تتبع لأغراض تسويقية.</p>
+  </div>
+
+  <div class="policy-section">
+    <h2>٧. حقوقك</h2>
+    <ul>
+      <li>الحق في الاطلاع على بياناتك الشخصية</li>
+      <li>الحق في تصحيح البيانات غير الدقيقة</li>
+      <li>الحق في طلب حذف حسابك وبياناتك</li>
+      <li>الحق في الاعتراض على معالجة بياناتك</li>
+    </ul>
+  </div>
+
+  <div class="policy-section">
+    <h2>٨. التواصل معنا</h2>
+    <div class="policy-contact">
+      لأي استفسار بشأن خصوصيتك، تواصل معنا على:
+      <br><a href="mailto:assisting@finsight-sa.com">assisting@finsight-sa.com</a>
+    </div>
+  </div>
+</div>
+
+<%- include('_footer') %>
+</body>
+</html>

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title><%= code %> — BAREZ</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Cairo',sans-serif;background:#04091a;min-height:100vh;display:flex;align-items:center;justify-content:center;color:#fff;}
+.bg-glow{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:700px;height:700px;background:radial-gradient(ellipse,rgba(26,61,143,.3) 0%,transparent 70%);pointer-events:none;}
+.container{position:relative;z-index:1;text-align:center;padding:40px 24px;}
+.code{font-size:clamp(80px,18vw,160px);font-weight:900;line-height:1;background:linear-gradient(135deg,#1a3d8f,#2a5cc7,#C9A844);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-4px;}
+.title{font-size:clamp(1.2rem,4vw,1.8rem);font-weight:700;margin:16px 0 12px;color:rgba(255,255,255,.9);}
+.msg{font-size:14px;color:rgba(255,255,255,.45);margin-bottom:40px;max-width:400px;margin-left:auto;margin-right:auto;line-height:1.7;}
+.btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+.btn{padding:12px 28px;border-radius:12px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;text-decoration:none;transition:all .2s;}
+.btn-primary{background:linear-gradient(135deg,#1a3d8f,#2a5cc7);color:#fff;border:none;box-shadow:0 4px 20px rgba(26,61,143,.4);}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(26,61,143,.6);}
+.btn-ghost{background:rgba(255,255,255,.06);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.12);}
+.btn-ghost:hover{background:rgba(255,255,255,.1);color:#fff;}
+</style>
+</head>
+<body>
+<div class="bg-glow"></div>
+<div class="container">
+  <div class="code"><%= code %></div>
+  <div class="title"><%= code === 404 ? 'الصفحة غير موجودة' : 'حدث خطأ في الخادم' %></div>
+  <div class="msg"><%= message %></div>
+  <div class="btns">
+    <a href="/" class="btn btn-primary">← الرئيسية</a>
+    <a href="javascript:history.back()" class="btn btn-ghost">رجوع</a>
+  </div>
+</div>
+</body>
+</html>
