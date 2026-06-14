@@ -9,8 +9,11 @@ const { securityHeaders, sanitizeBody, noSQLGuard } = require('./middleware/secu
 const { logSecEvent, securityAuditInterceptor } = require('./middleware/securityLog');
 const AdminUser = require('./models/AdminUser');
 const AuditLog = require('./models/AuditLog');
+require('./models/ChannelConfig');
+require('./models/ChannelListing');
 
 const app = express();
+app.set('trust proxy', 1);
 
 // ── MongoDB ──────────────────────────────────────────────
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/finsight';
@@ -19,7 +22,11 @@ let _seeded = false;
 async function connectDB() {
   if (mongoose.connection.readyState === 1) return;
   if (mongoose.connection.readyState === 2) {
-    await new Promise(r => mongoose.connection.once('connected', r));
+    await new Promise((resolve, reject) => {
+      const t = setTimeout(() => reject(new Error('MongoDB connection timeout')), 10000);
+      mongoose.connection.once('connected', () => { clearTimeout(t); resolve(); });
+      mongoose.connection.once('error', (e) => { clearTimeout(t); reject(e); });
+    });
     return;
   }
   await mongoose.connect(MONGO_URI, {
@@ -28,13 +35,13 @@ async function connectDB() {
     family: 4,
     tls: true,
     tlsAllowInvalidCertificates: false,
-    maxPoolSize: 10,
+    maxPoolSize: 100,
   });
   console.log('✅ MongoDB متصل');
   if (!_seeded) {
     await seedAdminUsers();
     // Sync indexes after schema changes (drops stale indexes, creates new ones)
-    const models = ['HousekeepingTask','RoomInfo','Guest','Booking','Voucher','ActivityLog','StaffUser','Host','Customer'];
+    const models = ['HousekeepingTask','RoomInfo','Guest','Booking','Voucher','ActivityLog','StaffUser','Host','Customer','Message','Conversation','Contract','Review','Listing','AuditLog','ChannelConfig','ChannelListing'];
     for (const m of models) {
       try { await mongoose.model(m).syncIndexes(); } catch(e) { console.warn(`syncIndexes ${m}:`, e.message); }
     }
@@ -195,17 +202,44 @@ app.get('/logout', (req, res) => {
   res.redirect('/login');
 });
 
-// ── Global error handler ─────────────────────────────────
-// Catches any unhandled error thrown or passed to next(err) in any route.
-// Prevents Express from leaking stack traces to the client in production.
-app.use((err, req, res, _next) => {
-  const status = err.status || err.statusCode || 500;
-  if (status >= 500) console.error('[Server Error]', err.message, err.stack?.split('\n')[1] || '');
-  if (res.headersSent) return;
+// ── 404 handler ──────────────────────────────────────────
+app.use((req, res) => {
   if (req.accepts('json') || req.path.startsWith('/api')) {
-    return res.status(status).json({ error: process.env.NODE_ENV === 'production' ? 'حدث خطأ في الخادم' : err.message });
+    return res.status(404).json({ error: 'الصفحة غير موجودة' });
   }
-  res.status(status).send(process.env.NODE_ENV === 'production' ? 'حدث خطأ في الخادم' : err.message);
+  res.status(404).render('error', { code: 404, message: 'الصفحة التي تبحث عنها غير موجودة' });
+});
+
+// ── Global error handler ─────────────────────────────────
+app.use((err, req, res, _next) => {
+  const status  = err.status || err.statusCode || 500;
+  const isProd  = process.env.NODE_ENV === 'production';
+  const isMissing = err.message?.includes('Failed to lookup view') ||
+                    err.message?.includes('Cannot find module');
+
+  // Always log everything — visible in Vercel Functions logs
+  console.error(
+    `\n[ERROR] ${req.method} ${req.path} → ${status}`,
+    '\nMessage:', err.message,
+    '\nStack:', err.stack || '(no stack)',
+    '\n'
+  );
+
+  if (res.headersSent) return;
+
+  // Client response: never expose internals in production
+  const clientMsg = isProd
+    ? (isMissing ? 'خطأ في إعداد الخادم — تم إبلاغ الفريق' : 'حدث خطأ في الخادم')
+    : err.message;
+
+  if (req.path.startsWith('/api') || (req.accepts('json') && !req.accepts('html'))) {
+    return res.status(status).json({ error: clientMsg });
+  }
+  try {
+    res.status(status).render('error', { code: status, message: clientMsg });
+  } catch (_) {
+    res.status(status).send(`<h2>${status} — ${clientMsg}</h2>`);
+  }
 });
 
 // ── Start ────────────────────────────────────────────────

@@ -1,10 +1,11 @@
 {
   "version": 2,
+  "buildCommand": "node scripts/verify-views.js",
   "builds": [{
     "src": "server.js",
     "use": "@vercel/node",
     "config": {
-      "includeFiles": ["views/**", "public/**", "middleware/**", "utils/**", "models/**"]
+      "includeFiles": ["views/**", "public/**", "middleware/**", "utils/**", "models/**", "scripts/**"]
     }
   }],
   "routes": [{ "src": "/(.*)", "dest": "server.js" }],

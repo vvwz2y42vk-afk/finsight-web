@@ -4,7 +4,10 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "set NODE_OPTIONS=--openssl-legacy-provider && nodemon server.js"
+    "dev": "set NODE_OPTIONS=--openssl-legacy-provider && nodemon server.js",
+    "verify": "node scripts/verify-views.js",
+    "build": "node scripts/verify-views.js",
+    "predeploy": "node scripts/verify-views.js"
   },
   "dependencies": {
     "@vercel/blob": "^2.4.0",
@@ -20,6 +23,7 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1"
+    "nodemon": "^3.0.1",
+    "puppeteer": "^25.1.0"
   }
 }
