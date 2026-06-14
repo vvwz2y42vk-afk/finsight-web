@@ -207,23 +207,32 @@ router.get('/api/stats', reqStaff, async (req,res) => {
     const statsFilter = req.staff.propertyId
       ? { propertyId: req.staff.propertyId }
       : { building: bld, propertyId: null };
-    const all = await B.find({ ...statsFilter, status:{$nin:['cancelled']} }).lean();
-    const active      = all.filter(b=>b.status==='active');
-    const arrivals    = all.filter(b=>{ const c=b.checkIn?new Date(b.checkIn):null; return c&&c>=today&&c<tom&&['awaiting_checkin','active'].includes(b.status); });
-    const departures  = all.filter(b=>{ const c=b.checkOut?new Date(b.checkOut):null; return c&&c>=today&&c<tom&&b.status==='active'; });
-    const newBk       = all.filter(b=>['pending','awaiting_payment'].includes(b.status));
-    const { bldgs: bldgsForStats } = await getBldgConfig(req.staff);
-    const total       = totalAptsFromConfig(bldgsForStats, bld);
-    const rate        = total?Math.round(active.length/total*100):0;
+
+    const [activeCount, arrivalsCount, departuresCount, newBkCount, bldgsCfg, weeklyRaw] = await Promise.all([
+      B.countDocuments({ ...statsFilter, status: 'active' }),
+      B.countDocuments({ ...statsFilter, checkIn: { $gte: today, $lt: tom }, status: { $in: ['awaiting_checkin','active'] } }),
+      B.countDocuments({ ...statsFilter, checkOut: { $gte: today, $lt: tom }, status: 'active' }),
+      B.countDocuments({ ...statsFilter, status: { $in: ['pending','awaiting_payment'] } }),
+      getBldgConfig(req.staff),
+      // weekly occupancy: for each of 7 days check how many bookings span that day
+      B.aggregate([
+        { $match: { ...statsFilter, status: { $in: ['active','checkout','awaiting_checkin'] }, checkIn: { $lt: tom }, checkOut: { $gt: new Date(today.getTime() - 6*86400000) } } },
+        { $project: { checkIn: 1, checkOut: 1 } },
+      ]),
+    ]);
+
+    const total = totalAptsFromConfig(bldgsCfg.bldgs, bld);
+    const rate  = total ? Math.round(activeCount / total * 100) : 0;
 
     const weekly = [];
     for (let i=6;i>=0;i--) {
-      const d=new Date(today); d.setDate(today.getDate()-i);
-      const nd=new Date(d); nd.setDate(d.getDate()+1);
-      const occ = all.filter(b=>{ if(!b.checkIn||!b.checkOut)return false; return new Date(b.checkIn)<nd&&new Date(b.checkOut)>d&&['active','checkout','awaiting_checkin'].includes(b.status); }).length;
-      weekly.push({ label:d.toLocaleDateString('ar-SA',{weekday:'short',day:'numeric',month:'numeric'}), occupied:occ, total });
+      const d  = new Date(today); d.setDate(today.getDate()-i);
+      const nd = new Date(d);     nd.setDate(d.getDate()+1);
+      const occ = weeklyRaw.filter(b => b.checkIn < nd && b.checkOut > d).length;
+      weekly.push({ label: d.toLocaleDateString('ar-SA',{weekday:'short',day:'numeric',month:'numeric'}), occupied: occ, total });
     }
-    res.json({ arrivals:arrivals.length, departures:departures.length, currentGuests:active.length, newBookings:newBk.length, occupancyRate:rate, occupied:active.length, total, weekly });
+
+    res.json({ arrivals: arrivalsCount, departures: departuresCount, currentGuests: activeCount, newBookings: newBkCount, occupancyRate: rate, occupied: activeCount, total, weekly });
   } catch(e){ res.status(500).json({error:e.message}); }
 });
 
@@ -2084,8 +2093,8 @@ router.get('/api/daily-closing', reqStaff, async (req, res) => {
     const todayEnd   = new Date(todayStr + 'T23:59:59+03:00');
 
     const [newBookings, arrivals, departures] = await Promise.all([
-      // حجوزات جديدة اليوم
-      B.find({ ...filter, createdAt: { $gte: todayStart, $lte: todayEnd } }).lean(),
+      // حجوزات يدوية جديدة اليوم فقط (source:manual)
+      B.find({ ...filter, source: 'manual', createdAt: { $gte: todayStart, $lte: todayEnd } }).lean(),
       // وصولات اليوم
       B.find({ ...filter, checkIn: { $gte: todayStart, $lte: todayEnd }, status: { $in: ['active','checkout','awaiting_checkin'] } }).lean(),
       // مغادرات اليوم
