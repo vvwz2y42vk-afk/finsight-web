@@ -2096,15 +2096,20 @@ router.get('/api/daily-closing', reqStaff, async (req, res) => {
       ? { propertyId: req.staff.propertyId }
       : { building: req.staff.building, propertyId: null };
 
-    // Saudi time offset (+3)
+    // Saudi time offset (+3) — use requested date or today
     const now = new Date(Date.now() + 3 * 60 * 60 * 1000);
-    const todayStr = now.toISOString().split('T')[0];
+    const todayStr = req.query.date || now.toISOString().split('T')[0];
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(todayStr))
+      return res.status(400).json({ error: 'تاريخ غير صالح' });
     const todayStart = new Date(todayStr + 'T00:00:00+03:00');
     const todayEnd   = new Date(todayStr + 'T23:59:59+03:00');
 
+    // استثناء: حجوزات نزيل المستوردة وحجوزات channel manager (source يبدأ بـ ch-)
+    const notImported = { $not: /^(ch-|نزيل)/ };
+
     const [newBookings, arrivals, departures] = await Promise.all([
-      // حجوزات يدوية جديدة اليوم فقط (source:manual)
-      B.find({ ...filter, source: 'manual', createdAt: { $gte: todayStart, $lte: todayEnd } }).lean(),
+      // حجوزات جديدة اليوم (يدوية — تستثني المستوردة)
+      B.find({ ...filter, source: notImported, createdAt: { $gte: todayStart, $lte: todayEnd } }).lean(),
       // وصولات اليوم
       B.find({ ...filter, checkIn: { $gte: todayStart, $lte: todayEnd }, status: { $in: ['active','checkout','awaiting_checkin'] } }).lean(),
       // مغادرات اليوم

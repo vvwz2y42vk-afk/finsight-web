@@ -1665,7 +1665,16 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
 <!-- مودال التقفيلة اليومية -->
 <div class="overlay" id="dailyClosingModal" style="display:none;" onclick="if(event.target===this)closeDailyClosing()">
   <div class="modal" style="max-width:600px;max-height:90vh;display:flex;flex-direction:column;">
-    <div class="mhd"><div class="mhd-title">📋 التقفيلة اليومية</div><button class="mclose" onclick="closeDailyClosing()">×</button></div>
+    <div class="mhd" style="flex-shrink:0;">
+      <div class="mhd-title">📋 التقفيلة اليومية</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-right:auto;">
+        <button onclick="dcPrevDay()" style="border:1.5px solid #e2e8f0;background:#f8fafc;border-radius:8px;padding:4px 10px;cursor:pointer;font-size:16px;line-height:1;" title="اليوم السابق">‹</button>
+        <input type="date" id="dcDatePicker" style="border:1.5px solid #e2e8f0;border-radius:8px;padding:5px 8px;font-family:inherit;font-size:12px;outline:none;cursor:pointer;" onchange="loadDailyClosing(this.value)">
+        <button onclick="dcNextDay()" id="dcNextBtn" style="border:1.5px solid #e2e8f0;background:#f8fafc;border-radius:8px;padding:4px 10px;cursor:pointer;font-size:16px;line-height:1;" title="اليوم التالي">›</button>
+        <button onclick="loadDailyClosing(dcToday())" style="border:1.5px solid #1a3d8f;background:#eff6ff;color:#1a3d8f;border-radius:8px;padding:5px 10px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">اليوم</button>
+      </div>
+      <button class="mclose" onclick="closeDailyClosing()">×</button>
+    </div>
     <div class="mbody" id="dcBody" style="flex:1;overflow-y:auto;"></div>
   </div>
 </div>
@@ -2921,16 +2930,45 @@ function renderCompanions(){
 }
 
 // ── Daily Closing ─────────────────────────────────────────
-async function openDailyClosing(){
+function dcToday(){
+  const now=new Date(Date.now()+3*60*60*1000);
+  return now.toISOString().split('T')[0];
+}
+function dcPrevDay(){
+  const d=new Date(document.getElementById('dcDatePicker').value||dcToday());
+  d.setDate(d.getDate()-1);
+  loadDailyClosing(d.toISOString().split('T')[0]);
+}
+function dcNextDay(){
+  const cur=document.getElementById('dcDatePicker').value||dcToday();
+  const today=dcToday();
+  if(cur>=today) return;
+  const d=new Date(cur); d.setDate(d.getDate()+1);
+  loadDailyClosing(d.toISOString().split('T')[0]);
+}
+function openDailyClosing(){
   document.getElementById('dailyClosingModal').style.display='flex';
+  const today=dcToday();
+  document.getElementById('dcDatePicker').value=today;
+  document.getElementById('dcDatePicker').max=today;
+  loadDailyClosing(today);
+}
+async function loadDailyClosing(date){
+  const today=dcToday();
+  if(!date||date>today) date=today;
+  document.getElementById('dcDatePicker').value=date;
+  document.getElementById('dcDatePicker').max=today;
+  // إخفاء زر التالي إذا وصلنا لليوم
+  document.getElementById('dcNextBtn').style.opacity=date>=today?'0.3':'1';
+  document.getElementById('dcNextBtn').style.pointerEvents=date>=today?'none':'auto';
   const el=document.getElementById('dcBody');
   el.innerHTML='<div style="text-align:center;padding:30px;color:var(--t4);">⏳ جاري التحميل...</div>';
   try{
-    const r=await fetch('/staff/api/daily-closing');
+    const r=await fetch('/staff/api/daily-closing?date='+encodeURIComponent(date));
     const d=await r.json();
     if(!r.ok){el.innerHTML=`<div style="color:#dc2626;padding:20px;">❌ ${d.error||'حدث خطأ'}</div>`;return;}
 
-    const dateAr=new Date(d.date).toLocaleDateString('ar-SA',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+    const dateAr=new Date(d.date+'T12:00:00').toLocaleDateString('ar-SA',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
     const fmt=n=>(n||0).toLocaleString();
     const pmIcon={cash:'💵',transfer:'🏦',network:'💳',other:'🔖','':'❓'};
     const pmL={cash:'كاش',transfer:'تحويل',network:'شبكة',other:'أخرى','':'غير محدد'};
