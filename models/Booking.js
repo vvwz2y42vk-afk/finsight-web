@@ -23,6 +23,7 @@ const bookingSchema = new mongoose.Schema({
   paymentMethod:   { type: String, enum: ['cash','transfer','network','other',''], default: '' },
   idType:       { type: String, enum: ['national_id','passport','iqama','family_card',''], default: '' },
   idNumber:     String,
+  companions:   [{ name: String, idType: { type: String, default: '' }, idNumber: { type: String, default: '' } }],
   source:       String,
   pricePerNight: Number,
   pricePerMonth: Number,

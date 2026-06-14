@@ -377,7 +377,7 @@ router.put('/api/bookings/:id/edit', reqStaff, async (req,res) => {
       : { _id: req.params.id, building: req.staff.building, propertyId: null };
     const bk = await B.findOne(editFilter);
     if(!bk) return res.status(404).json({error:'الحجز غير موجود'});
-    const { name, phone, checkIn, checkOut, months, pricePerUnit, totalPrice, paidAmount, paymentMethod, idType, idNumber, status, notes } = req.body;
+    const { name, phone, checkIn, checkOut, months, pricePerUnit, totalPrice, paidAmount, paymentMethod, idType, idNumber, status, notes, companions } = req.body;
 
     let nights = bk.nights, checkout = checkOut || bk.checkOut;
     if(bk.bookingType==='daily' && checkIn && checkOut)
@@ -405,6 +405,7 @@ router.put('/api/bookings/:id/edit', reqStaff, async (req,res) => {
       nights, totalPrice: parseFloat(totalPrice)||bk.totalPrice,
       paidAmount: parseFloat(paidAmount)||0,
       paymentMethod: paymentMethod !== undefined ? paymentMethod : bk.paymentMethod,
+      companions: Array.isArray(companions) ? companions.filter(c=>c.name).map(c=>({name:c.name,idType:c.idType||'',idNumber:c.idNumber||''})) : bk.companions,
       idType: idType||bk.idType, idNumber: idNumber||bk.idNumber,
       status: safeStatus, notes: notes !== undefined ? notes : bk.notes,
     });
@@ -418,7 +419,7 @@ router.post('/api/bookings/new', reqStaff, async (req,res) => {
   try {
     const B = require('../models/Booking');
     const AL = require('../models/ActivityLog');
-    const { apt, name, phone, bookingType, checkIn, checkOut, months, pricePerUnit, totalPrice, paidAmount, paymentMethod, idType, idNumber, status, notes } = req.body;
+    const { apt, name, phone, bookingType, checkIn, checkOut, months, pricePerUnit, totalPrice, paidAmount, paymentMethod, idType, idNumber, status, notes, companions } = req.body;
     if(!apt||!name||!phone||!bookingType||!checkIn||!totalPrice)
       return res.status(400).json({error:'جميع الحقول المطلوبة غير مكتملة'});
 
@@ -480,6 +481,7 @@ router.post('/api/bookings/new', reqStaff, async (req,res) => {
       paymentMethod: paymentMethod||'',
       idType: idType||'',
       idNumber: idNumber||'',
+      companions: Array.isArray(companions) ? companions.filter(c=>c.name).map(c=>({name:c.name,idType:c.idType||'',idNumber:c.idNumber||''})) : [],
       status: status||'awaiting_checkin',
       notes: notes||'',
       source: 'manual',
@@ -2064,6 +2066,59 @@ router.delete('/api/listings/:id', reqStaff, async (req, res) => {
     const ChannelListing = require('../models/ChannelListing');
     await ChannelListing.findByIdAndDelete(req.params.id);
     res.json({ success: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── API: Daily Closing (التقفيلة اليومية) ─────────────────
+router.get('/api/daily-closing', reqStaff, async (req, res) => {
+  try {
+    const B = require('../models/Booking');
+    const filter = req.staff.propertyId
+      ? { propertyId: req.staff.propertyId }
+      : { building: req.staff.building, propertyId: null };
+
+    // Saudi time offset (+3)
+    const now = new Date(Date.now() + 3 * 60 * 60 * 1000);
+    const todayStr = now.toISOString().split('T')[0];
+    const todayStart = new Date(todayStr + 'T00:00:00+03:00');
+    const todayEnd   = new Date(todayStr + 'T23:59:59+03:00');
+
+    const [newBookings, arrivals, departures] = await Promise.all([
+      // حجوزات جديدة اليوم
+      B.find({ ...filter, createdAt: { $gte: todayStart, $lte: todayEnd } }).lean(),
+      // وصولات اليوم
+      B.find({ ...filter, checkIn: { $gte: todayStart, $lte: todayEnd }, status: { $in: ['active','checkout','awaiting_checkin'] } }).lean(),
+      // مغادرات اليوم
+      B.find({ ...filter, checkOut: { $gte: todayStart, $lte: todayEnd }, status: { $in: ['checkout','active'] } }).lean(),
+    ]);
+
+    // إجمالي المحصّل من الحجوزات الجديدة اليوم
+    const pmLabels = { cash: 'كاش', transfer: 'تحويل', network: 'شبكة', other: 'أخرى', '': 'غير محدد' };
+    const byMethod = {};
+    let totalCollected = 0;
+    newBookings.forEach(b => {
+      const paid = b.paidAmount || 0;
+      if (paid <= 0) return;
+      const pm = b.paymentMethod || '';
+      if (!byMethod[pm]) byMethod[pm] = { label: pmLabels[pm] || pm, total: 0, bookings: [] };
+      byMethod[pm].total += paid;
+      byMethod[pm].bookings.push({ name: b.name, apt: b.apt, paid, total: b.totalPrice || 0 });
+      totalCollected += paid;
+    });
+
+    res.json({
+      date: todayStr,
+      totalCollected,
+      byMethod: Object.values(byMethod),
+      newBookings: newBookings.map(b => ({
+        _id: b._id, apt: b.apt, name: b.name, phone: b.phone,
+        totalPrice: b.totalPrice || 0, paidAmount: b.paidAmount || 0,
+        paymentMethod: b.paymentMethod || '', bookingType: b.bookingType,
+        checkIn: b.checkIn, checkOut: b.checkOut, status: b.status,
+      })),
+      arrivals: arrivals.map(b => ({ _id: b._id, apt: b.apt, name: b.name, phone: b.phone, checkIn: b.checkIn, checkOut: b.checkOut, status: b.status })),
+      departures: departures.map(b => ({ _id: b._id, apt: b.apt, name: b.name, phone: b.phone, checkIn: b.checkIn, checkOut: b.checkOut, status: b.status })),
+    });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
