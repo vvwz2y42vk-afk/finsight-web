@@ -395,7 +395,7 @@ router.put('/api/bookings/:id/edit', reqStaff, async (req,res) => {
       : { _id: req.params.id, building: req.staff.building, propertyId: null };
     const bk = await B.findOne(editFilter);
     if(!bk) return res.status(404).json({error:'الحجز غير موجود'});
-    const { name, phone, checkIn, checkOut, months, pricePerUnit, totalPrice, paidAmount, paymentMethod, idType, idNumber, status, notes, companions } = req.body;
+    const { name, phone, checkIn, checkOut, months, pricePerUnit, totalPrice, paidAmount, paymentMethod, bookingSource, idType, idNumber, status, notes, companions } = req.body;
 
     let nights = bk.nights, checkout = checkOut || bk.checkOut;
     if(bk.bookingType==='daily' && checkIn && checkOut)
@@ -426,6 +426,7 @@ router.put('/api/bookings/:id/edit', reqStaff, async (req,res) => {
       companions: Array.isArray(companions) ? companions.filter(c=>c.name).map(c=>({name:c.name,idType:c.idType||'',idNumber:c.idNumber||''})) : bk.companions,
       idType: idType||bk.idType, idNumber: idNumber||bk.idNumber,
       status: safeStatus, notes: notes !== undefined ? notes : bk.notes,
+      ...(bookingSource !== undefined && bookingSource !== '' && { source: bookingSource }),
     });
     AL.create({building:req.staff.building,staffName:req.staff.name,action:'status_change',apt:bk.apt,guestName:name||bk.name,bookingId:bk._id,details:'تعديل الحجز'}).catch(()=>{});
     res.json({success:true});
@@ -437,7 +438,7 @@ router.post('/api/bookings/new', reqStaff, async (req,res) => {
   try {
     const B = require('../models/Booking');
     const AL = require('../models/ActivityLog');
-    const { apt, name, phone, bookingType, checkIn, checkOut, months, pricePerUnit, totalPrice, paidAmount, paymentMethod, idType, idNumber, status, notes, companions } = req.body;
+    const { apt, name, phone, bookingType, checkIn, checkOut, months, pricePerUnit, totalPrice, paidAmount, paymentMethod, bookingSource, idType, idNumber, status, notes, companions } = req.body;
     if(!apt||!name||!phone||!bookingType||!checkIn||!totalPrice)
       return res.status(400).json({error:'جميع الحقول المطلوبة غير مكتملة'});
 
@@ -502,7 +503,7 @@ router.post('/api/bookings/new', reqStaff, async (req,res) => {
       companions: Array.isArray(companions) ? companions.filter(c=>c.name).map(c=>({name:c.name,idType:c.idType||'',idNumber:c.idNumber||''})) : [],
       status: status||'awaiting_checkin',
       notes: notes||'',
-      source: 'manual',
+      source: bookingSource || 'manual',
       propertyId: req.staff.propertyId || null,
     }).save();
 
