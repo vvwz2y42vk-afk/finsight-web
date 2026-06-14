@@ -194,7 +194,16 @@ router.get('/api/check-username', checkUserLimit, async (req, res) => {
   const exists = await S.exists({ username: u });
   res.json({ taken: !!exists });
 });
-router.get('/dashboard', reqStaff, (req,res) => { res.setHeader('Cache-Control','no-store'); res.render('staff-dashboard',{staff:req.staff}); });
+router.get('/dashboard', reqStaff, (req,res) => {
+  res.setHeader('Cache-Control','no-store');
+  res.render('staff-dashboard', { staff: req.staff }, (err, html) => {
+    if (err) {
+      console.error('[staff-dashboard render error]', err.message, err.stack);
+      return res.status(500).send(`<pre>render error: ${err.message}</pre>`);
+    }
+    res.send(html);
+  });
+});
 
 // ── API: Stats ────────────────────────────────────────────
 router.get('/api/stats', reqStaff, async (req,res) => {
