@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title><%= staff.building %> — بوابة الموظفين</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -430,26 +430,133 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
 .print-total-lbl{font-size:14px;font-weight:600;color:#475569;}.print-total-val{font-size:22px;font-weight:700;color:var(--brand);}
 .print-footer{text-align:center;margin-top:24px;font-size:11px;color:#94a3b8;border-top:1px solid #e2e8f0;padding-top:12px;}
 .print-btns{display:flex;gap:8px;margin-bottom:16px;}
+/* ── Mobile UX — global touch/tap hardening ── */
+*{-webkit-tap-highlight-color:transparent;}
+button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;}
+.apt{transition:transform .12s ease,box-shadow .12s ease;}
+.apt:active{transform:scale(.95)!important;box-shadow:0 2px 8px rgba(0,0,0,.15)!important;}
+.ia{will-change:transform;}
+/* Bottom sheet */
+#bsOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1200;opacity:0;transition:opacity .25s;}
+#bsOverlay.open{display:block;opacity:1;}
+#bottomSheet{position:fixed;bottom:0;right:0;left:0;background:#fff;border-radius:22px 22px 0 0;padding:0 0 env(safe-area-inset-bottom);z-index:1201;transform:translateY(100%);transition:transform .3s cubic-bezier(.32,.72,0,1);max-height:80dvh;overflow-y:auto;}
+#bottomSheet.open{transform:translateY(0);}
+.bs-handle{width:40px;height:4px;background:#e2e8f0;border-radius:4px;margin:14px auto 6px;flex-shrink:0;}
+.bs-title{font-size:13px;font-weight:700;color:#64748b;text-align:center;padding:0 16px 12px;border-bottom:1px solid #f1f5f9;}
+.bs-btn{display:flex;align-items:center;gap:12px;width:100%;padding:14px 20px;background:none;border:none;border-bottom:1px solid #f1f5f9;font-family:'Cairo',sans-serif;font-size:14px;font-weight:600;color:#1e293b;cursor:pointer;text-align:right;touch-action:manipulation;}
+.bs-btn:active{background:#f8fafc;}
+.bs-btn.danger{color:#dc2626;}
+.bs-btn.success{color:#16a34a;}
+.bs-btn-ico{font-size:18px;width:28px;text-align:center;flex-shrink:0;}
+.bs-sep{height:8px;background:#f8fafc;flex-shrink:0;}
+.ia-mob{display:none;}
 @media(max-width:768px){
   .main{margin-right:var(--sb);}
   .charts-row{grid-template-columns:1fr;}
-  .kpi-row{grid-template-columns:repeat(2,1fr);}
+  .kpi-row{grid-template-columns:repeat(2,1fr);gap:8px;}
   .vou-cards{gap:10px;}
-  /* فلتر الحجوزات والعملاء على الجوال */
   .cust-ff{min-width:140px;}
   [style*="grid-template-columns:repeat(7"]{grid-template-columns:repeat(2,1fr)!important;}
   [style*="grid-template-columns:2fr 1.5fr"]{grid-template-columns:1fr 1fr!important;flex-wrap:wrap!important;}
-  /* الجداول تصير كروت */
   .stbl thead{display:none!important;}
   .stbl tr{display:block!important;background:#fff;border-radius:12px;margin-bottom:10px;padding:12px;box-shadow:var(--sh-sm);border:1px solid var(--border);}
   .stbl td{display:flex!important;justify-content:space-between;align-items:center;padding:5px 0!important;border:none!important;font-size:12px;}
   .stbl td::before{content:attr(data-label);color:var(--t3);font-size:11px;font-weight:600;margin-left:8px;white-space:nowrap;}
-  /* KPI row */
-  .kpi-row{gap:8px;}
+  .stbl td[data-label=""]{justify-content:flex-end;}
+  .stbl td[data-label=""]::before{display:none;}
   .kpi{padding:12px 10px;}
-  /* content padding */
   .content{padding:12px;}
+  /* أزرار الإجراءات: إخفاء على الجوال مع إظهار زر ⋮ */
+  .stbl .ia:not(.ia-mob){display:none!important;}
+  .ia-mob{display:inline-flex!important;align-items:center;justify-content:center;width:34px;height:34px;background:rgba(26,61,143,.07);border-radius:9px;border:none;font-size:18px;cursor:pointer;color:var(--brand);font-weight:700;}
 }
+@media(max-width:480px){
+  .main{margin-right:0!important;}
+  .kpi-row{grid-template-columns:repeat(2,1fr);}
+  .modal-box{width:calc(100vw - 16px)!important;max-height:90dvh!important;overflow-y:auto;}
+  .content{padding:8px 6px;}
+  .apt{min-width:calc(50% - 8px);}
+}
+/* ══ Channel Manager ══ */
+.ch-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:28px;}
+.ch-card{background:#fff;border-radius:18px;border:1.5px solid var(--border);box-shadow:var(--sh-sm);overflow:hidden;transition:all .25s var(--ease);}
+.ch-card:hover{box-shadow:var(--sh);transform:translateY(-2px);}
+.ch-card.ch-active{border-color:transparent;}
+.ch-card-hd{padding:18px 20px 14px;display:flex;align-items:center;gap:14px;position:relative;}
+.ch-logo{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;font-weight:900;}
+.ch-info{flex:1;min-width:0;}
+.ch-name{font-size:15px;font-weight:800;color:var(--t1);letter-spacing:-.01em;}
+.ch-sub{font-size:11px;color:var(--t4);margin-top:2px;}
+.ch-toggle{position:relative;width:42px;height:24px;flex-shrink:0;}
+.ch-toggle input{opacity:0;width:0;height:0;}
+.ch-toggle-slider{position:absolute;inset:0;background:#cbd5e1;border-radius:24px;cursor:pointer;transition:background .2s;}
+.ch-toggle input:checked+.ch-toggle-slider{background:var(--green);}
+.ch-toggle-slider::before{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:3px;right:3px;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.15);}
+.ch-toggle input:checked+.ch-toggle-slider::before{transform:translateX(-18px);}
+.ch-status{display:flex;align-items:center;gap:6px;padding:8px 20px;background:var(--s2);border-top:1px solid var(--border-s);font-size:11px;font-weight:700;}
+.ch-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.ch-dot.ok{background:#16a34a;}
+.ch-dot.error{background:#dc2626;}
+.ch-dot.never{background:#94a3b8;}
+.ch-body{padding:14px 20px 18px;}
+.ch-field{margin-bottom:12px;}
+.ch-label{font-size:10px;font-weight:700;color:var(--t3);letter-spacing:.05em;text-transform:uppercase;margin-bottom:5px;}
+.ch-input{width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:12px;outline:none;color:var(--t1);background:var(--surface);transition:border-color .2s;}
+.ch-input:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(26,61,143,.08);}
+.ch-export-box{background:var(--s2);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;border:1px dashed var(--border);}
+.ch-export-url{font-size:11px;color:var(--t3);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:monospace;}
+.ch-copy-btn{flex-shrink:0;background:var(--brand);color:#fff;border:none;border-radius:7px;padding:4px 10px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;}
+.ch-actions{display:flex;gap:8px;margin-top:14px;}
+.ch-save-btn{flex:1;padding:9px;background:linear-gradient(135deg,var(--brand),var(--brand-l));color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px;}
+.ch-save-btn:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(26,61,143,.3);}
+.ch-sync-btn{padding:9px 14px;background:var(--s2);color:var(--t2);border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px;}
+.ch-sync-btn:hover{background:var(--s3);}
+.ch-sync-btn.spinning svg{animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* Channel Feed */
+.ch-feed{background:#fff;border-radius:18px;border:1px solid var(--border);box-shadow:var(--sh-sm);overflow:hidden;}
+.ch-feed-hd{padding:16px 22px;border-bottom:1px solid var(--border-s);display:flex;align-items:center;justify-content:space-between;}
+.ch-feed-title{font-size:14px;font-weight:800;color:var(--t1);display:flex;align-items:center;gap:8px;}
+.ch-feed-title::before{content:'';display:block;width:4px;height:16px;background:linear-gradient(180deg,var(--brand-l),var(--brand));border-radius:3px;}
+.ch-feed-row{display:flex;align-items:center;gap:12px;padding:12px 22px;border-bottom:1px solid var(--border-s);transition:background .12s;}
+.ch-feed-row:last-child{border-bottom:none;}
+.ch-feed-row:hover{background:var(--s2);}
+.ch-plat-badge{font-size:10px;font-weight:800;padding:3px 9px;border-radius:20px;white-space:nowrap;flex-shrink:0;}
+.ch-plat-airbnb{background:#fff0f0;color:#FF5A5F;}
+.ch-plat-booking{background:#e8f0fa;color:#003580;}
+.ch-plat-gathering{background:#eafaf1;color:#1a6b3c;}
+.ch-plat-website{background:var(--brand-m);color:var(--brand);}
+.ch-feed-apt{font-size:14px;font-weight:800;color:var(--t1);min-width:44px;}
+.ch-feed-info{flex:1;min-width:0;}
+.ch-feed-name{font-size:13px;font-weight:600;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ch-feed-dates{font-size:11px;color:var(--t3);margin-top:2px;}
+.ch-feed-price{font-size:13px;font-weight:700;color:var(--green);white-space:nowrap;}
+.ch-empty{padding:48px;text-align:center;color:var(--t4);font-size:13px;}
+
+/* Airbnb #FF5A5F, Booking #003580, Gathering green, Website brand */
+.ch-card[data-platform="airbnb"] .ch-logo{background:#fff0f0;color:#FF5A5F;}
+.ch-card[data-platform="airbnb"].ch-active{border-color:#FF5A5F40;box-shadow:0 4px 24px #FF5A5F18;}
+.ch-card[data-platform="booking"] .ch-logo{background:#e8f0fa;color:#003580;}
+.ch-card[data-platform="booking"].ch-active{border-color:#00358040;box-shadow:0 4px 24px #00358018;}
+.ch-card[data-platform="gathering"] .ch-logo{background:#eafaf1;color:#1a6b3c;}
+.ch-card[data-platform="gathering"].ch-active{border-color:#1a6b3c40;box-shadow:0 4px 24px #1a6b3c18;}
+.ch-card[data-platform="website"] .ch-logo{background:var(--brand-m);color:var(--brand);}
+.ch-card[data-platform="website"].ch-active{border-color:rgba(26,61,143,.25);box-shadow:0 4px 24px rgba(26,61,143,.1);}
+
+/* How-to accordion */
+.ch-how{background:#fff;border-radius:18px;border:1px solid var(--border);box-shadow:var(--sh-sm);overflow:hidden;margin-top:20px;}
+.ch-how-hd{padding:16px 22px;border-bottom:1px solid var(--border-s);display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;}
+.ch-how-hd-title{font-size:14px;font-weight:800;color:var(--t1);flex:1;}
+.ch-how-body{padding:0 22px;max-height:0;overflow:hidden;transition:max-height .35s var(--ease),padding .35s;}
+.ch-how-body.open{max-height:1200px;padding:20px 22px;}
+.ch-how-step{display:flex;gap:14px;padding:12px 0;border-bottom:1px solid var(--border-s);}
+.ch-how-step:last-child{border-bottom:none;}
+.ch-how-num{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--brand),var(--brand-l));color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
+.ch-how-text{flex:1;}
+.ch-how-text strong{display:block;font-size:13px;font-weight:700;color:var(--t1);margin-bottom:3px;}
+.ch-how-text p{font-size:12px;color:var(--t3);line-height:1.6;margin:0;}
+.ch-how-text code{background:var(--s2);color:var(--brand);padding:2px 7px;border-radius:6px;font-family:monospace;font-size:11px;}
 </style>
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#1e3a5f">
@@ -482,9 +589,9 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
     <div class="sn" onclick="goTab('activity',this)" id="sn-activity" style="display:<%= P.includes('activity')?'flex':'none' %>"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span><span class="sn-lbl">سجل الحركات</span></div>
     <div class="sn" onclick="goTab('vouchers',this)" id="sn-vouchers" style="display:<%= P.includes('vouchers')?'flex':'none' %>"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></span><span class="sn-lbl">السندات والفواتير</span></div>
     <div class="sn" onclick="goTab('analytics',this)" id="sn-analytics" style="display:<%= staff.role==='manager'?'flex':'none' %>"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="18" y="3" width="4" height="18"/><rect x="10" y="8" width="4" height="13"/><rect x="2" y="13" width="4" height="8"/></svg></span><span class="sn-lbl">التحليلات</span></div>
+    <div class="sn" onclick="goTab('channels',this)" id="sn-channels" style="display:<%= staff.role==='manager'?'flex':'none' %>"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="5" r="3"/><circle cx="5" cy="19" r="3"/><circle cx="19" cy="19" r="3"/><line x1="12" y1="8" x2="5.5" y2="16.5"/><line x1="12" y1="8" x2="18.5" y2="16.5"/></svg></span><span class="sn-lbl">إدارة القنوات</span></div>
     <div class="sn" onclick="goTab('reports',this)" id="sn-reports"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></span><span class="sn-lbl">التقارير</span></div>
     <div class="sn" onclick="goTab('calendar',this)" id="sn-calendar" style="display:<%= P.includes('reports')?'flex':'none' %>"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/></svg></span><span class="sn-lbl">التقويم</span></div>
-    <div class="sn" onclick="goTab('guests',this)" id="sn-guests" style="display:<%= P.includes('guests') || staff.role==='manager' ? 'flex' : 'none' %>"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span><span class="sn-lbl">الضيوف</span></div>
     <% if(staff.role==='manager'){ %>
     <div class="sn" onclick="goTab('settings',this)" id="sn-settings"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span><span class="sn-lbl">إعدادات المبنى</span></div>
     <% } %>
@@ -641,8 +748,8 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
           <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:8px;">
             <div class="cust-ff"><label>من تاريخ</label><input type="date" id="bkDateFrom" class="cff" onchange="loadBookings()"></div>
             <div class="cust-ff"><label>إلى تاريخ</label><input type="date" id="bkDateTo" class="cff" onchange="loadBookings()"></div>
-            <div class="cust-ff"><label>رقم العقد</label><input type="text" id="bkNum" class="cff" placeholder="آخر 5 أرقام"></div>
-            <div class="cust-ff"><label>الشقة</label><input type="text" id="bkApt" class="cff" placeholder="رقم الشقة"></div>
+            <div class="cust-ff"><label>رقم العقد</label><input type="text" id="bkNum" class="cff" placeholder="آخر 5 أرقام" oninput="bkSearchDebounce()"></div>
+            <div class="cust-ff"><label>الشقة</label><input type="text" id="bkApt" class="cff" placeholder="رقم الشقة" oninput="bkSearchDebounce()"></div>
             <div class="cust-ff"><label>-- نوع الغرفة --</label>
               <select id="bkRoomType" class="cff">
                 <option value="">الكل</option>
@@ -659,8 +766,8 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
           </div>
           <!-- صف 2 -->
           <div style="display:grid;grid-template-columns:2fr 1.5fr 1fr 1fr 2fr auto auto;gap:8px;align-items:flex-end;">
-            <div class="cust-ff"><label>اسم العميل</label><input type="text" id="bkName" class="cff" placeholder="اسم العميل..."></div>
-            <div class="cust-ff"><label>الجوال</label><input type="text" id="bkPhone" class="cff" placeholder="05xxxxxxxx"></div>
+            <div class="cust-ff"><label>اسم العميل</label><input type="text" id="bkName" class="cff" placeholder="اسم العميل..." oninput="bkSearchDebounce()"></div>
+            <div class="cust-ff"><label>الجوال</label><input type="text" id="bkPhone" class="cff" placeholder="05xxxxxxxx" oninput="bkSearchDebounce()"></div>
             <div class="cust-ff"><label>-- نوع الإيجار --</label>
               <select id="bkType" class="cff">
                 <option value="">الكل</option><option value="daily">يومي</option><option value="annual">شهري</option>
@@ -746,7 +853,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
         <table class="stbl">
           <thead><tr>
             <th>#</th><th>الاسم</th><th>الجوال</th><th>نوع الإثبات</th><th>رقم الإثبات</th>
-            <th>الجنسية</th><th>البريد</th><th>الحجوزات</th><th>آخر زيارة</th><th>التصنيف</th><th>إجراء</th>
+            <th>الجنسية</th><th>البريد</th><th>الحجوزات</th><th>آخر زيارة</th><th>التصنيف</th>
           </tr></thead>
           <tbody id="custTbody"><tr><td colspan="10" style="padding:16px;"><div class="skel" style="height:13px;width:100%;margin-bottom:10px;"></div><div class="skel" style="height:13px;width:85%;margin-bottom:10px;"></div><div class="skel" style="height:13px;width:92%;"></div></td></tr></tbody>
         </table>
@@ -905,26 +1012,140 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
       </div>
     </div>
 
-    <!-- ── Guests ── -->
-    <div class="tab-section" id="tab-guests">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px;">
+    <!-- ── Channel Manager ── -->
+    <div class="tab-section" id="tab-channels">
+
+      <!-- Header -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
         <div>
-          <div style="font-size:15px;font-weight:700;color:var(--t1);">قاعدة الضيوف</div>
-          <div style="font-size:11px;color:var(--t4);margin-top:2px;" id="guests-count"></div>
+          <div style="font-size:17px;font-weight:800;color:var(--t1);letter-spacing:-.02em;">إدارة قنوات الحجز</div>
+          <div style="font-size:12px;color:var(--t4);margin-top:3px;">ربط جميع المنصات · منع الازدواجية · إشعارات تلقائية</div>
         </div>
-        <input class="sinp" id="guests-search" placeholder="بحث بالاسم أو الجوال أو رقم الهوية..." style="max-width:280px;" oninput="searchGuests(this.value)">
+        <button class="sbtn" onclick="syncAllChannels(this)" style="display:flex;align-items:center;gap:8px;">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+          مزامنة الكل
+        </button>
       </div>
-      <div class="chart-card" style="padding:0;">
-        <div class="tbl-wrap">
-          <table class="stbl">
-            <thead><tr>
-              <th>الضيف</th><th>الجوال</th><th>نوع الهوية</th><th>رقم الهوية</th><th>المبنى</th><th>عدد الحجوزات</th><th>التصنيف</th><th>آخر زيارة</th>
-            </tr></thead>
-            <tbody id="guests-tbody"><tr><td colspan="8" style="text-align:center;padding:30px;color:var(--t4);">جاري التحميل...</td></tr></tbody>
-          </table>
+
+      <!-- KPI Strip -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-bottom:24px;" id="ch-kpi-row">
+        <div class="kpi-c" style="padding:16px 18px;">
+          <div style="font-size:10px;font-weight:700;color:var(--t3);letter-spacing:.04em;margin-bottom:8px;">منصات مفعّلة</div>
+          <div style="font-size:28px;font-weight:900;color:var(--brand);" id="ch-kpi-active">—</div>
+        </div>
+        <div class="kpi-c" style="padding:16px 18px;">
+          <div style="font-size:10px;font-weight:700;color:var(--t3);letter-spacing:.04em;margin-bottom:8px;">حجوزات القنوات</div>
+          <div style="font-size:28px;font-weight:900;color:var(--green);" id="ch-kpi-total">—</div>
+        </div>
+        <div class="kpi-c" style="padding:16px 18px;">
+          <div style="font-size:10px;font-weight:700;color:var(--t3);letter-spacing:.04em;margin-bottom:8px;">آخر مزامنة</div>
+          <div style="font-size:13px;font-weight:700;color:var(--t2);margin-top:6px;" id="ch-kpi-sync">—</div>
+        </div>
+        <div class="kpi-c" style="padding:16px 18px;">
+          <div style="font-size:10px;font-weight:700;color:var(--t3);letter-spacing:.04em;margin-bottom:8px;">إيميل الإشعارات</div>
+          <div style="font-size:11px;font-weight:600;color:var(--t2);margin-top:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" id="ch-kpi-email">—</div>
         </div>
       </div>
-    </div>
+
+      <!-- Platform Cards -->
+      <div class="ch-grid" id="ch-cards-container">
+        <!-- Rendered by JS -->
+        <div class="ch-empty">جاري تحميل إعدادات القنوات…</div>
+      </div>
+
+      <!-- How-to Guide (accordion) -->
+      <div class="ch-how" id="ch-how">
+        <div class="ch-how-hd" onclick="toggleChHow()">
+          <svg width="16" height="16" fill="none" stroke="var(--brand)" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <div class="ch-how-hd-title">كيف تربط كل منصة؟ — دليل خطوة بخطوة</div>
+          <svg id="ch-how-arrow" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="transition:transform .3s;flex-shrink:0;"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="ch-how-body" id="ch-how-body">
+
+          <!-- Airbnb -->
+          <div style="margin-bottom:20px;">
+            <div style="font-size:12px;font-weight:800;color:#FF5A5F;margin-bottom:10px;display:flex;align-items:center;gap:8px;">
+              <span style="font-size:18px;">🏡</span> Airbnb — ربط عبر iCal
+            </div>
+            <div class="ch-how-step">
+              <div class="ch-how-num">١</div>
+              <div class="ch-how-text"><strong>احصل على رابط iCal من Airbnb</strong><p>ادخل على Airbnb Host → الوحدة → التقويم → استيراد/تصدير التقويم → انسخ "رابط تصدير iCal"</p></div>
+            </div>
+            <div class="ch-how-step">
+              <div class="ch-how-num">٢</div>
+              <div class="ch-how-text"><strong>الصق الرابط في حقل "رابط iCal للاستيراد" هنا</strong><p>سيقرأ النظام الحجوزات منه تلقائياً عند كل مزامنة</p></div>
+            </div>
+            <div class="ch-how-step">
+              <div class="ch-how-num">٣</div>
+              <div class="ch-how-text"><strong>أضف رابط iCal الخاص بنا إلى Airbnb</strong><p>انسخ "رابط iCal للتصدير" من هنا، ثم في Airbnb → التقويم → استيراد تقويم خارجي → الصق الرابط. هكذا تُغلق Airbnb الأيام المحجوزة عندنا تلقائياً.</p></div>
+            </div>
+          </div>
+
+          <!-- Booking.com -->
+          <div style="margin-bottom:20px;">
+            <div style="font-size:12px;font-weight:800;color:#003580;margin-bottom:10px;display:flex;align-items:center;gap:8px;">
+              <span style="font-size:18px;">🌐</span> Booking.com — ربط عبر iCal أو API
+            </div>
+            <div class="ch-how-step">
+              <div class="ch-how-num">١</div>
+              <div class="ch-how-text"><strong>رابط iCal من Booking.com Extranet</strong><p>ادخل على Extranet → Calendar → Sync Calendar → "Export to iCal" → انسخ الرابط والصقه هنا</p></div>
+            </div>
+            <div class="ch-how-step">
+              <div class="ch-how-num">٢</div>
+              <div class="ch-how-text"><strong>أضف رابطنا إلى Booking.com</strong><p>في نفس صفحة Sync Calendar → "Import iCal" → الصق رابط iCal الخاص بنا</p></div>
+            </div>
+            <div class="ch-how-step">
+              <div class="ch-how-num">٣</div>
+              <div class="ch-how-text"><strong>للربط المباشر عبر API (للشركاء)</strong><p>أدخل <code>hotel_id</code> من لوحة Booking.com. يتطلب الانضمام لبرنامج Connectivity Partners. راسل Booking.com للحصول على مفاتيح API.</p></div>
+            </div>
+          </div>
+
+          <!-- Gathering -->
+          <div style="margin-bottom:20px;">
+            <div style="font-size:12px;font-weight:800;color:#1a6b3c;margin-bottom:10px;display:flex;align-items:center;gap:8px;">
+              <span style="font-size:18px;">🏘️</span> Gathering — ربط عبر iCal أو Webhook
+            </div>
+            <div class="ch-how-step">
+              <div class="ch-how-num">١</div>
+              <div class="ch-how-text"><strong>من لوحة Gathering → إعدادات العقار → مزامنة التقويم</strong><p>انسخ رابط iCal والصقه في الحقل أعلاه</p></div>
+            </div>
+            <div class="ch-how-step">
+              <div class="ch-how-num">٢</div>
+              <div class="ch-how-text"><strong>إعداد Webhook (اختياري للإشعار الفوري)</strong><p>في Gathering → إعدادات → Webhook URL، أدخل:<br><code id="ch-webhook-url-g">https://yoursite.com/staff/api/channels/webhook/gathering?secret=SECRET</code></p></div>
+            </div>
+          </div>
+
+          <!-- Website -->
+          <div>
+            <div style="font-size:12px;font-weight:800;color:var(--brand);margin-bottom:10px;display:flex;align-items:center;gap:8px;">
+              <span style="font-size:18px;">✅</span> موقعنا — متصل تلقائياً
+            </div>
+            <div class="ch-how-step">
+              <div class="ch-how-num">١</div>
+              <div class="ch-how-text"><strong>الموقع مربوط مباشرة بقاعدة البيانات</strong><p>حجوزات الموقع تظهر فوراً في الحجوزات. لا تحتاج إعداداً إضافياً.</p></div>
+            </div>
+            <div class="ch-how-step">
+              <div class="ch-how-num">٢</div>
+              <div class="ch-how-text"><strong>إيميل إشعار الحجز</strong><p>أدخل إيميل الإشعارات في الكارت أعلاه لتلقي بريد تلقائي عند كل حجز من الموقع.</p></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Booking Feed -->
+      <div class="ch-feed" style="margin-top:20px;" id="ch-feed-wrap">
+        <div class="ch-feed-hd">
+          <div class="ch-feed-title">آخر حجوزات القنوات</div>
+          <button onclick="loadChannelFeed()" style="background:none;border:none;cursor:pointer;color:var(--t4);font-size:11px;display:flex;align-items:center;gap:4px;">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+            تحديث
+          </button>
+        </div>
+        <div id="ch-feed-body"><div class="ch-empty">لا توجد حجوزات من القنوات الخارجية بعد</div></div>
+      </div>
+
+    </div><!-- /tab-channels -->
 
     <!-- ── Settings ── -->
     <div class="tab-section" id="tab-settings">
@@ -1474,7 +1695,7 @@ function goTab(id, el){
   const tab=document.getElementById('tab-'+id);
   tab.classList.add('active');
   el.classList.add('active');
-  const labels={dashboard:'لوحة المعلومات',apartments:'الشقق والتسكين',bookings:'الحجوزات',customers:'العملاء',housekeeping:'خدمة الغرف',activity:'سجل الحركات',vouchers:'السندات والفواتير',reports:'التقارير والإحصاءات',calendar:'التقويم الشهري',guests:'قاعدة الضيوف'};
+  const labels={dashboard:'لوحة المعلومات',apartments:'الشقق والتسكين',bookings:'الحجوزات',customers:'العملاء',housekeeping:'خدمة الغرف',activity:'سجل الحركات',vouchers:'السندات والفواتير',reports:'التقارير والإحصاءات',calendar:'التقويم الشهري',channels:'إدارة قنوات الحجز',analytics:'التحليلات',settings:'إعدادات المبنى'};
   document.getElementById('tbTitle').innerHTML=`${esc(BUILDING)} — <span>${labels[id]||id}</span>`;
   if(id==='apartments') loadApartments();
   if(id==='bookings')   loadBookings();
@@ -1494,14 +1715,31 @@ function goTab(id, el){
   }
   if(id==='analytics')  loadAnalytics();
   if(id==='calendar')   loadCalendar();
-  if(id==='guests')     loadGuests();
   if(id==='settings')   loadSettings();
+  if(id==='channels')   loadChannels();
+}
+
+// ── Smart Sync (SWR-style change detection) ──────────────
+function _djb2(s){let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h)^s.charCodeAt(i);return h>>>0;}
+let _statsHash=null, _aptsHash=null;
+
+function _syncPulse(dotId){
+  const el=document.getElementById(dotId);
+  if(!el) return;
+  el.style.background='#10b981';el.style.animation='none';
+  setTimeout(()=>{el.style.background='#047857';el.style.animation='dot-pulse 2s infinite';},700);
 }
 
 // ── Dashboard ────────────────────────────────────────────
+let _acStats=null;
 async function loadStats(){
+  if(_acStats)_acStats.abort();
+  _acStats=new AbortController();
   try{
-    const r=await fetch('/staff/api/stats'); const d=await r.json();
+    const r=await fetch('/staff/api/stats',{signal:_acStats.signal}); const d=await r.json();
+    const h=_djb2(JSON.stringify(d));
+    if(h===_statsHash) return; // بيانات لم تتغيّر — تجنّب إعادة الرسم
+    _statsHash=h;
     animateNum(document.getElementById('k-arrivals'), d.arrivals);
     animateNum(document.getElementById('k-checkin'), d.arrivals);
     animateNum(document.getElementById('k-departures'), d.departures);
@@ -1510,7 +1748,7 @@ async function loadStats(){
     animateNum(document.getElementById('k-rate'), d.occupancyRate, '%');
     renderWeeklyChart(d.weekly, d.total);
     renderDonut(d.occupied, d.total);
-  }catch(e){ toast('❌ تعذر تحميل الإحصاءات — تحقق من الاتصال'); }
+  }catch(e){ if(e.name!=='AbortError') toast('❌ تعذر تحميل الإحصاءات — تحقق من الاتصال'); }
 }
 
 function renderWeeklyChart(weekly, total){
@@ -1597,9 +1835,10 @@ function renderRoomTypeChart(){
   const bTypes=APT_TYPES[BUILDING]||{};
   const stats={};
   aptsRawData.floors.forEach(f=>f.rooms.forEach(r=>{
-    const info=bTypes[r.apt];
-    if(!info||!info.t) return;
-    const type=info.t;
+    const dbInfo=roomInfoMap[r.apt]||null;
+    const fbInfo=bTypes[r.apt]||null;
+    const type=dbInfo?.roomType||fbInfo?.t||'';
+    if(!type) return;
     if(!stats[type]) stats[type]={total:0,occupied:0};
     stats[type].total++;
     if(['occupied','checkin_today','checkout_today','awaiting','awaiting_payment'].includes(r.status))
@@ -1656,20 +1895,32 @@ function renderHkDonut(){
 }
 
 // ── Apartments ───────────────────────────────────────────
+let _acApts=null;
 async function loadApartments(){
+  if(_acApts)_acApts.abort();
+  _acApts=new AbortController();
   try{
-    const [r, ri]=await Promise.all([fetch('/staff/api/apartments'),fetch('/staff/api/room-info')]);
-    aptsRawData=await r.json();
-    if(ri.ok) roomInfoMap=await ri.json();
-    renderAptGrid();
-    updateAptCounts();
-    renderTodaySchedule();
-    renderMonthlyProgress();
-    renderHkDonut();
-    renderRoomTypeChart();
+    const [r, ri]=await Promise.all([fetch('/staff/api/apartments',{signal:_acApts.signal}),fetch('/staff/api/room-info',{signal:_acApts.signal})]);
+    const freshApts=await r.json();
+    const freshRoom=ri.ok?await ri.json():null;
+    const h=_djb2(JSON.stringify(freshApts)+(freshRoom?JSON.stringify(freshRoom):''));
+    const changed=h!==_aptsHash;
+    _aptsHash=h;
+    aptsRawData=freshApts;
+    if(freshRoom) roomInfoMap=freshRoom;
+    if(changed){
+      renderAptGrid();
+      updateAptCounts();
+      renderTodaySchedule();
+      renderMonthlyProgress();
+      renderHkDonut();
+      renderRoomTypeChart();
+      _syncPulse('apt-sync-dot');
+    }
     const el=document.getElementById('apt-sync-time');
     if(el) el.textContent=new Date().toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
   }catch(e){
+    if(e.name==='AbortError') return;
     const el=document.getElementById('apt-sync-dot');
     if(el){el.style.background='#B91C1C';}
   }
@@ -1753,36 +2004,36 @@ const APT_MAP={occupied:{cls:'occ',lbl:'مؤجر'},vacant:{cls:'vac',lbl:'شاغ
 
 const APT_TYPES={
   'المنارا':{
-    '001':{t:'',b:''},
-    '002':{t:'',b:''},
-    '101':{t:'غرفة مفردة',b:''},
-    '102':{t:'جناح جونيور',b:'توأم'},
-    '103':{t:'',b:''},
-    '104':{t:'جناح ديلوكس',b:'1 سرير'},
-    '105':{t:'جناح ديلوكس',b:'1 سرير'},
-    '106':{t:'',b:''},
+    '001':{t:'جناح غرفتين',b:''},
+    '002':{t:'جناح غرفتين',b:''},
+    '101':{t:'غرفة مفردة',b:'1'},
+    '102':{t:'جناح جونيور',b:'1'},
+    '103':{t:'جناح عائلي',b:''},
+    '104':{t:'جناح ديلوكس',b:'1'},
+    '105':{t:'جناح ديلوكس',b:'1'},
+    '106':{t:'جناح ديلوكس',b:'1'},
     '201':{t:'غرفة مفردة',b:''},
-    '202':{t:'',b:''},
-    '203':{t:'جناح عائلي',b:'5 بالغين'},
-    '204':{t:'جناح ديلوكس',b:'1 سرير'},
-    '205':{t:'جناح ديلوكس',b:'1 سرير'},
-    '206':{t:'جناح ديلوكس',b:'1 سرير'},
+    '202':{t:'جناح جونيور',b:'1'},
+    '203':{t:'جناح عائلي',b:''},
+    '204':{t:'جناح ديلوكس',b:'1'},
+    '205':{t:'جناح ديلوكس',b:'1'},
+    '206':{t:'جناح ديلوكس',b:'1'},
     '301':{t:'غرفة مفردة',b:''},
-    '302':{t:'جناح جونيور',b:'توأم'},
-    '303':{t:'',b:''},
-    '304':{t:'',b:''},
-    '305':{t:'',b:''},
-    '306':{t:'جناح ديلوكس',b:'1 سرير'},
-    '401':{t:'',b:''},
-    '402':{t:'جناح جونيور',b:'توأم'},
-    '403':{t:'جناح عائلي',b:'5 بالغين'},
-    '404':{t:'جناح ديلوكس',b:'2 سرير'},
-    '405':{t:'جناح ديلوكس',b:'2 سرير'},
-    '406':{t:'',b:''},
-    '501':{t:'',b:''},
-    '502':{t:'جناح ديلوكس',b:'2 سرير'},
-    '503':{t:'',b:''},
-    '504':{t:'',b:''},
+    '302':{t:'جناح جونيور',b:'1'},
+    '303':{t:'جناح عائلي',b:''},
+    '304':{t:'جناح ديلوكس',b:'1'},
+    '305':{t:'جناح ديلوكس',b:'1'},
+    '306':{t:'جناح ديلوكس',b:'1'},
+    '401':{t:'غرفة مفردة',b:''},
+    '402':{t:'جناح جونيور',b:'1'},
+    '403':{t:'جناح عائلي',b:''},
+    '404':{t:'جناح ديلوكس',b:'2'},
+    '405':{t:'جناح ديلوكس',b:'2'},
+    '406':{t:'جناح ديلوكس',b:'2'},
+    '501':{t:'غرفة مفردة',b:''},
+    '502':{t:'جناح ديلوكس',b:'2'},
+    '503':{t:'جناح ديلوكس',b:'2'},
+    '504':{t:'جناح ديلوكس',b:'2'},
   },
   'الماسة':{
     '101':{t:'غرفة+صالة+مطبخ',b:'سرير مزدوج'},
@@ -1840,7 +2091,7 @@ function renderAptGrid(){
       html+=`<div class="apt ${s.cls} ${hkClass}" onclick="openBkModal('${r.bookingId||''}','${r.apt}','${r.status}')">
         ${editBtn}
         <div class="apt-n">${esc(r.apt)}</div>
-        ${rt?'<div class="apt-type">'+esc(rt)+'</div>':''}
+        ${rt?`<div class="apt-type">${esc(rt)}${bd?' · '+esc(bd)+' سرير':''}</div>`:''}
         <div class="apt-s">${s.lbl}</div>
         ${r.name?'<div class="apt-g">'+esc(r.name)+'</div>':''}
         ${nightsHtml}
@@ -2099,7 +2350,7 @@ async function cancelBk(id){
   try{
     const r=await fetch('/staff/api/bookings/'+id+'/status',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'cancelled'})});
     const d=await r.json();
-    if(d.success){ toast('🗑️ تم إلغاء الحجز','success'); closeBkModal(); loadApartments(); loadStats(); loadBookings(); }
+    if(d.success){ toast('🗑️ تم إلغاء الحجز','success'); closeBkModal(); loadApartments(); loadStats(); loadBookings(); _pollKick(); }
     else toast('❌ '+d.error,'error');
   }catch(e){ toast('❌ حدث خطأ'); }
 }
@@ -2109,7 +2360,7 @@ async function changeStatus(id,status){
   try{
     const r=await fetch('/staff/api/bookings/'+id+'/status',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({status})});
     const d=await r.json();
-    if(d.success){ toast(status==='active'?'✅ تم تسجيل الدخول':'🚪 تم تسجيل الخروج','success'); closeBkModal(); loadApartments(); loadStats(); }
+    if(d.success){ toast(status==='active'?'✅ تم تسجيل الدخول':'🚪 تم تسجيل الخروج','success'); closeBkModal(); loadApartments(); loadStats(); _pollKick(); }
     else toast('❌ '+d.error,'error');
   }catch(e){ toast('❌ حدث خطأ'); }
 }
@@ -2159,19 +2410,20 @@ function renderBkRows(){
   if(!slice.length){tb.innerHTML='<tr><td colspan="12" style="text-align:center;padding:30px;color:#94a3b8;">لا توجد حجوزات</td></tr>';return;}
   const offset=(_bkPage-1)*PER_PAGE;
   tb.innerHTML=slice.map((b,i)=>{const bg=b.checkoutToday?'background:rgba(234,179,8,.22);':'';return`<tr>
-      <td style="${bg}font-family:monospace;font-weight:700;color:var(--t4);font-size:11px;width:32px;">${offset+i+1}</td>
-      <td style="${bg}"><b style="font-size:14px;">${esc(b.apt||'—')}</b></td>
-      <td style="${bg}"><span onclick="openGuestCard('${esc(b.phone||'')}')" style="cursor:pointer;color:var(--brand);font-weight:700;">${esc(b.name||'—')}</span></td>
-      <td style="${bg}"><a href="https://wa.me/${waPhone(b.phone)}" target="_blank" style="color:var(--brand);text-decoration:none;font-family:monospace;font-size:12px;">${esc(b.phone||'—')}</a></td>
-      <td style="${bg}"><span class="badge" style="background:rgba(26,61,143,.07);color:var(--brand);">${b.bookingType==='daily'?'يومي':b.bookingType==='annual'?'شهري':'استفسار'}</span></td>
-      <td style="${bg}font-size:12px;">${fDate(b.checkIn)}</td>
-      <td style="${bg}font-size:12px;">${fDate(b.checkOut)}</td>
-      <td style="${bg}font-weight:700;font-size:12px;">${b.totalPrice?(b.totalPrice.toLocaleString()+' ر'):'—'}</td>
-      <td style="${bg}font-size:12px;color:var(--green);font-weight:600;">${(b.paidAmount||0)>0?(b.paidAmount.toLocaleString()+' ر'):'—'}</td>
-      <td style="${bg}font-size:12px;font-weight:600;color:${Math.max(0,(b.totalPrice||0)-(b.paidAmount||0))>0?'var(--red)':'var(--t4)'};">${Math.max(0,(b.totalPrice||0)-(b.paidAmount||0))>0?(Math.max(0,(b.totalPrice||0)-(b.paidAmount||0)).toLocaleString()+' ر'):'✓'}</td>
-      <td style="${bg}">${statusBadge(b.status)}</td>
-      <td>
+      <td data-label="#" style="${bg}font-family:monospace;font-weight:700;color:var(--t4);font-size:11px;width:32px;">${offset+i+1}</td>
+      <td data-label="الشقة" style="${bg}"><b style="font-size:14px;">${esc(b.apt||'—')}</b></td>
+      <td data-label="النزيل" style="${bg}"><span onclick="openGuestCard('${esc(b.phone||'')}')" style="cursor:pointer;color:var(--brand);font-weight:700;">${esc(b.name||'—')}</span></td>
+      <td data-label="الجوال" style="${bg}"><a href="https://wa.me/${waPhone(b.phone)}" target="_blank" style="color:var(--brand);text-decoration:none;font-family:monospace;font-size:12px;">${esc(b.phone||'—')}</a></td>
+      <td data-label="النوع" style="${bg}"><span class="badge" style="background:rgba(26,61,143,.07);color:var(--brand);">${b.bookingType==='daily'?'يومي':b.bookingType==='annual'?'شهري':'استفسار'}</span></td>
+      <td data-label="الدخول" style="${bg}font-size:12px;">${fDate(b.checkIn)}</td>
+      <td data-label="الخروج" style="${bg}font-size:12px;">${fDate(b.checkOut)}</td>
+      <td data-label="الإجمالي" style="${bg}font-weight:700;font-size:12px;">${b.totalPrice?(b.totalPrice.toLocaleString()+' ر'):'—'}</td>
+      <td data-label="المحصّل" style="${bg}font-size:12px;color:var(--green);font-weight:600;">${(b.paidAmount||0)>0?(b.paidAmount.toLocaleString()+' ر'):'—'}</td>
+      <td data-label="المتبقي" style="${bg}font-size:12px;font-weight:600;color:${Math.max(0,(b.totalPrice||0)-(b.paidAmount||0))>0?'var(--red)':'var(--t4)'};">${Math.max(0,(b.totalPrice||0)-(b.paidAmount||0))>0?(Math.max(0,(b.totalPrice||0)-(b.paidAmount||0)).toLocaleString()+' ر'):'✓'}</td>
+      <td data-label="الحالة" style="${bg}">${statusBadge(b.status)}</td>
+      <td data-label="">
         <div class="tbl-act">
+          <button class="ia ia-mob" onclick="openBkSheet('${b._id}','${b.status}','${esc(b.apt||'')}','${esc(b.name||'')}')">⋮</button>
           ${b.status==='awaiting_checkin'?`<button class="ia ia-in" data-tip="تسجيل دخول" onclick="changeStatus('${b._id}','active')"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg></button>`:''}
           ${b.status==='active'?`<button class="ia ia-out" data-tip="تسجيل خروج" onclick="changeStatus('${b._id}','checkout')"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>`:''}
           ${!['cancelled','checkout'].includes(b.status)&&can('edit_booking')?`<button class="ia ia-edit" data-tip="تعديل" onclick="editBk('${b._id}')"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>`:''}
@@ -2184,6 +2436,9 @@ function renderBkRows(){
     </tr>`;}).join('');
   renderPager(_bkPage,_bkData.length,'setBkPage','bkPager');
 }
+
+let _bkTimer;
+function bkSearchDebounce(){ clearTimeout(_bkTimer); _bkTimer=setTimeout(loadBookings,300); }
 
 async function loadBookings(){
   const sf          = document.getElementById('bk-status-filter')?.value||'open';
@@ -2218,17 +2473,23 @@ function anFmt(n){return n>=1000000?(n/1000000).toFixed(1)+'م':n>=1000?(n/1000)
 
 function destroyChart(id){ if(_anCharts[id]){_anCharts[id].destroy();delete _anCharts[id];} }
 
+let _chartJsP=null;
+function _ensureChartJs(){
+  if(window.Chart) return Promise.resolve();
+  if(_chartJsP) return _chartJsP;
+  _chartJsP=new Promise((res,rej)=>{
+    const s=document.createElement('script');
+    s.src='https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js';
+    s.onload=()=>{_chartJsP=null;res();};
+    s.onerror=()=>{_chartJsP=null;rej(new Error('Chart.js load failed'));};
+    document.head.appendChild(s);
+  });
+  return _chartJsP;
+}
+
 async function loadAnalytics(){
   document.getElementById('an-year-lbl').textContent=anYear;
-  // Chart.js lazy load
-  if(!window.Chart){
-    await new Promise((res,rej)=>{
-      const s=document.createElement('script');
-      s.src='https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js';
-      s.onload=res; s.onerror=rej;
-      document.head.appendChild(s);
-    });
-  }
+  await _ensureChartJs();
   try{
     const r=await fetch('/staff/api/analytics?year='+anYear);
     const d=await r.json();
@@ -2309,7 +2570,7 @@ function clearCustFilters(){
   loadCustomers();
 }
 let _custTimer;
-function custSearchDebounce(){ clearTimeout(_custTimer); _custTimer=setTimeout(loadCustomers,400); }
+function custSearchDebounce(){ clearTimeout(_custTimer); _custTimer=setTimeout(loadCustomers,300); }
 
 const BTYPE_LBL={daily:'يومي',annual:'شهري',inquiry:'استفسار'};
 
@@ -2348,23 +2609,22 @@ function renderCustRows(){
   const cnt=document.getElementById('custCount');
   const slice=_custData.slice((_custPage-1)*PER_PAGE,_custPage*PER_PAGE);
   if(cnt) cnt.textContent=_custTotal?`${_custTotal.toLocaleString('ar')} عميل`:'';
-  if(!slice.length){tb.innerHTML='<tr><td colspan="11" style="text-align:center;padding:30px;color:#94a3b8;">لا توجد نتائج</td></tr>';return;}
+  if(!slice.length){tb.innerHTML='<tr><td colspan="10" style="text-align:center;padding:30px;color:#94a3b8;">لا توجد نتائج</td></tr>';return;}
   const offset=(_custPage-1)*PER_PAGE;
   tb.innerHTML=slice.map((c,i)=>{
     const cat=CUST_CAT[c.category]||CUST_CAT.regular;
     const phone=c.phone&&!c.phone.startsWith('nzl-')&&!c.phone.startsWith('nophone-')&&!c.phone.startsWith('dup-')?c.phone:'—';
     return`<tr>
-      <td style="font-family:monospace;font-size:11px;color:var(--t4);">${((_custApiPage-1)*_custLimit)+offset+i+1}</td>
-      <td><span onclick="openGuestCard('${esc(c.phone||'')}')" style="cursor:pointer;color:var(--brand);font-weight:700;">${esc(c.name||'—')}</span></td>
-      <td>${phone!=='—'?`<a href="https://wa.me/${waPhone(c.phone)}" target="_blank" style="color:var(--brand);text-decoration:none;font-family:monospace;font-size:12px;">${esc(phone)}</a>`:'<span style="color:var(--t4);">—</span>'}</td>
-      <td style="font-size:11px;color:var(--t4);">${esc(c.idType||'—')}</td>
-      <td style="font-family:monospace;font-size:12px;color:var(--t3);">${esc(c.idNumber||'—')}</td>
-      <td style="font-size:12px;">${esc(c.nationality||'—')}</td>
-      <td style="font-size:11px;color:var(--t4);">${esc(c.email||'—')}</td>
-      <td style="text-align:center;font-weight:700;color:var(--brand);">${c.totalBookings||0}</td>
-      <td style="font-size:11px;color:var(--t4);">${c.lastSeen?fDate(c.lastSeen):'—'}</td>
-      <td><span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:${cat.bg};color:${cat.c};">${cat.lbl}</span></td>
-      <td><button onclick="toggleBlock('${c._id}','${c.category}')" style="padding:4px 10px;border-radius:8px;border:1px solid ${c.category==='blocked'?'#16a34a':'#dc2626'};background:${c.category==='blocked'?'rgba(22,163,74,.08)':'rgba(220,38,38,.07)'};color:${c.category==='blocked'?'#16a34a':'#dc2626'};font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">${c.category==='blocked'?'رفع الحظر':'حظر'}</button></td>
+      <td data-label="#" style="font-family:monospace;font-size:11px;color:var(--t4);">${((_custApiPage-1)*_custLimit)+offset+i+1}</td>
+      <td data-label="الاسم"><span onclick="openGuestCard('${esc(c.phone||'')}')" style="cursor:pointer;color:var(--brand);font-weight:700;">${esc(c.name||'—')}</span></td>
+      <td data-label="الجوال">${phone!=='—'?`<a href="https://wa.me/${waPhone(c.phone)}" target="_blank" style="color:var(--brand);text-decoration:none;font-family:monospace;font-size:12px;">${esc(phone)}</a>`:'<span style="color:var(--t4);">—</span>'}</td>
+      <td data-label="نوع الهوية" style="font-size:11px;color:var(--t4);">${esc(c.idType||'—')}</td>
+      <td data-label="رقم الهوية" style="font-family:monospace;font-size:12px;color:var(--t3);">${esc(c.idNumber||'—')}</td>
+      <td data-label="الجنسية" style="font-size:12px;">${esc(c.nationality||'—')}</td>
+      <td data-label="الإيميل" style="font-size:11px;color:var(--t4);">${esc(c.email||'—')}</td>
+      <td data-label="الحجوزات" style="text-align:center;font-weight:700;color:var(--brand);">${c.totalBookings||0}</td>
+      <td data-label="آخر زيارة" style="font-size:11px;color:var(--t4);">${c.lastSeen?fDate(c.lastSeen):'—'}</td>
+      <td data-label="التصنيف"><select onchange="setCustCategory('${c._id}',this.value)" style="padding:3px 8px;border:1px solid ${cat.bg};border-radius:6px;font-size:11px;font-family:inherit;cursor:pointer;background:${cat.bg};color:${cat.c};font-weight:700;"><option value="regular" ${(c.category||'regular')==='regular'?'selected':''}>عادي</option><option value="vip" ${c.category==='vip'?'selected':''}>⭐ VIP</option><option value="blocked" ${c.category==='blocked'?'selected':''}>🚫 محظور</option></select></td>
     </tr>`;}).join('');
   // pagination داخل الصفحة الحالية
   renderPager(_custPage,_custData.length,'setCustPage','custPager');
@@ -2387,16 +2647,15 @@ async function loadCustomersPage(apiPage=1){
   loadCustomers();
 }
 
-async function toggleBlock(id, currentCat){
-  const newCat = currentCat==='blocked' ? 'regular' : 'blocked';
-  const label  = newCat==='blocked' ? 'حظر هذا العميل؟' : 'رفع الحظر عن هذا العميل؟';
-  if(!confirm(label)) return;
+async function setCustCategory(id, category){
+  const c=_custData.find(x=>x._id===id);
+  const prev=c?c.category:null;
+  if(c){ c.category=category; renderCustRows(); }
   try{
-    const r=await fetch('/staff/api/guests/'+id+'/category',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({category:newCat})});
-    if(!r.ok) throw new Error();
-    toast(newCat==='blocked'?'تم حظر العميل ✓':'تم رفع الحظر ✓');
-    loadCustomers();
-  }catch(e){ toast('❌ تعذر تحديث التصنيف'); }
+    const r=await fetch('/staff/api/guests/'+id+'/category',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({category})});
+    if(!r.ok){ if(c){ c.category=prev; renderCustRows(); } toast('❌ فشل تحديث التصنيف'); return; }
+    toast('✅ تم تحديث التصنيف');
+  }catch(e){ if(c){ c.category=prev; renderCustRows(); } toast('❌ حدث خطأ'); }
 }
 
 async function loadCustomers(){
@@ -2539,6 +2798,7 @@ async function openNewBkModal(editMode){
   }
   modal.style.display='flex';
   setTimeout(initFP,100);
+  if(!editMode) setTimeout(_loadDraft,60);
   setTimeout(()=>{
     ['nb-checkin','nb-checkout'].forEach(id=>{
       const el=document.getElementById(id);
@@ -2624,17 +2884,23 @@ async function submitNewBk(){
   if(type==='daily'&&!checkout){ shakeField('nb-checkout','nb-checkout-grp','fh-checkout','اختر تاريخ الخروج'); valid=false; }
   if(!price){ shakeField('nb-price','fw-price','fh-price','أدخل سعر الإيجار'); valid=false; }
   if(!valid) return;
+  const _bkBody={apt,name,phone,bookingType:type,checkIn:checkin,checkOut:checkout,months,pricePerUnit:price,totalPrice:total,paidAmount:paid,idType,idNumber,status,notes};
+  const url=editBkId?`/staff/api/bookings/${editBkId}/edit`:'/staff/api/bookings/new';
+  const method=editBkId?'PUT':'POST';
   try{
-    const body={apt,name,phone,bookingType:type,checkIn:checkin,checkOut:checkout,months,pricePerUnit:price,totalPrice:total,paidAmount:paid,idType,idNumber,status,notes};
-    const url=editBkId?`/staff/api/bookings/${editBkId}/edit`:'/staff/api/bookings/new';
-    const method=editBkId?'PUT':'POST';
-    const r=await fetch(url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const r=await fetch(url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(_bkBody)});
     const d=await r.json();
     if(!r.ok){errEl.textContent=d.error||'حدث خطأ';errEl.style.display='block';return;}
+    _clearDraft();
     closeNewBkModal();
     toast(editBkId?'✏️ تم تعديل الحجز':'✅ تم إضافة الحجز بنجاح','success');
-    loadApartments(); loadStats(); loadBookings();
-  }catch(e){errEl.textContent='حدث خطأ';errEl.style.display='block';}
+    loadApartments(); loadStats(); loadBookings(); _pollKick();
+  }catch(e){
+    if(!navigator.onLine&&!editBkId){
+      _savePending(_bkBody);
+      toast('📡 لا يوجد اتصال — سيُرسل الحجز تلقائياً عند عودة الشبكة');
+    }else{errEl.textContent='حدث خطأ';errEl.style.display='block';}
+  }
 }
 
 // ── Vouchers ─────────────────────────────────────────────
@@ -2949,57 +3215,29 @@ async function saveRoomInfo(){
 
 
 // ── Guests ───────────────────────────────────────────────
-let allGuests = [];
-async function loadGuests() {
-  try {
-    const r = await fetch('/staff/api/guests');
-    if (!r.ok) return;
-    allGuests = await r.json();
-    renderGuests(allGuests);
-  } catch(e) {}
-}
 
-function renderGuests(list) {
-  const tb = document.getElementById('guests-tbody');
-  const lbl = document.getElementById('guests-count');
-  if (lbl) lbl.textContent = list.length + ' ضيف مسجّل';
-  if (!list.length) {
-    tb.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--t4);">لا يوجد ضيوف مسجّلون بعد — سيُضافون تلقائياً عند إنشاء الحجوزات</td></tr>';
-    return;
-  }
-  const idLabels = { national_id: 'هوية وطنية', passport: 'جواز سفر', residence: 'إقامة', other: 'أخرى' };
-  const catColors = { vip: { bg:'#FEF3C7', color:'#D97706' }, blocked: { bg:'#FEE2E2', color:'#DC2626' }, regular: { bg:'#F0F4FF', color:'#1a3d8f' } };
-  tb.innerHTML = list.map(g => {
-    const last = g.lastSeen ? new Date(g.lastSeen).toLocaleDateString('ar-SA', { year:'numeric', month:'short', day:'numeric' }) : '—';
-    const cat = g.category || 'regular';
-    const cc = catColors[cat] || catColors.regular;
-    return `<tr>
-      <td><div style="font-weight:600;color:#1a3d8f;cursor:pointer;text-decoration:underline dotted;" onclick="openCustomerProfile('${g._id}')">${esc(g.name)}</div></td>
-      <td style="font-family:monospace;">${esc(g.phone)}</td>
-      <td style="font-size:12px;color:var(--t3);">${idLabels[g.idType] || g.idType || '—'}</td>
-      <td style="font-family:monospace;font-size:12px;">${esc(g.idNumber) || '—'}</td>
-      <td style="font-size:12px;color:var(--t3);">${esc(g.building) || '—'}</td>
-      <td style="text-align:center;"><span class="badge b-active">${g.totalBookings}</span></td>
-      <td style="text-align:center;">
-        <select onchange="setGuestCategory('${g._id}',this.value)" style="padding:3px 8px;border:1px solid ${cc.bg};border-radius:6px;font-size:11px;font-family:inherit;cursor:pointer;background:${cc.bg};color:${cc.color};font-weight:700;">
-          <option value="regular" ${cat==='regular'?'selected':''}>عادي</option>
-          <option value="vip" ${cat==='vip'?'selected':''}>⭐ VIP</option>
-          <option value="blocked" ${cat==='blocked'?'selected':''}>🚫 محظور</option>
-        </select>
-      </td>
-      <td style="font-size:12px;color:var(--t4);">${last}</td>
-    </tr>`;
-  }).join('');
+// ── Fuzzy Search Utility ──────────────────────────────────
+function _arNorm(s){
+  return (s||'').trim()
+    .replace(/[أإآ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي');
 }
-
-let guestSearchTimer;
-function searchGuests(q) {
-  clearTimeout(guestSearchTimer);
-  guestSearchTimer = setTimeout(() => {
-    if (!q.trim()) return renderGuests(allGuests);
-    const re = new RegExp(q.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
-    renderGuests(allGuests.filter(g => re.test(g.name) || re.test(g.phone) || re.test(g.idNumber || '')));
-  }, 250);
+function _fuzzyScore(text,q){
+  if(!text||!q) return 0;
+  const t=_arNorm(String(text)), n=_arNorm(q);
+  if(!n) return 100;
+  if(t===n) return 100;
+  if(t.startsWith(n)) return 90;
+  if(t.includes(n)) return 80;
+  let qi=0; for(let i=0;i<t.length&&qi<n.length;i++) if(t[i]===n[qi]) qi++;
+  if(qi===n.length) return 60;
+  if(n.length>=3){ for(let s=0;s<n.length;s++){ if(t.includes(n.slice(0,s)+n.slice(s+1))) return 45; } }
+  return 0;
+}
+function fuzzySearch(items,q,fields){
+  if(!q||!q.trim()) return items;
+  const scored=items.map(item=>({item,score:Math.max(...fields(item).map(f=>_fuzzyScore(f,q)))})).filter(x=>x.score>0);
+  scored.sort((a,b)=>b.score-a.score);
+  return scored.map(x=>x.item);
 }
 
 // ── Auto-fill helpers ─────────────────────────────────────
@@ -3404,17 +3642,6 @@ async function saveRoomPrices() {
     apts.forEach(apt => { if (!roomInfoMap[apt]) roomInfoMap[apt]={}; Object.assign(roomInfoMap[apt], roomPriceEdits[apt]); });
     roomPriceEdits = {};
     toast('✅ تم حفظ الأسعار','success');
-  } catch(e) { toast('❌ حدث خطأ'); }
-}
-
-// ── Guest Category ───────────────────────────────────────
-async function setGuestCategory(id, category) {
-  try {
-    const r = await fetch('/staff/api/guests/'+id+'/category', { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ category }) });
-    if (!r.ok) { toast('❌ فشل تحديث التصنيف'); return; }
-    const g = allGuests.find(x => x._id === id);
-    if (g) g.category = category;
-    toast('✅ تم تحديث التصنيف');
   } catch(e) { toast('❌ حدث خطأ'); }
 }
 
@@ -3857,19 +4084,89 @@ function initFP(){
   });
 }
 
+// ── Offline Draft System ─────────────────────────────────
+const _DRAFT_KEY   = 'barez_bk_draft';
+const _PENDING_KEY = 'barez_bk_pending';
+const _DRAFT_IDS   = ['nb-apt','nb-name','nb-phone','nb-type','nb-checkin','nb-checkout','nb-months','nb-price','nb-paid','nb-idtype','nb-idnum','nb-status','nb-notes'];
+
+let _draftTimer;
+function _saveDraft(){
+  if(typeof editBkId!=='undefined'&&editBkId) return;
+  const data={};
+  _DRAFT_IDS.forEach(id=>{const el=document.getElementById(id);if(el)data[id]=el.value;});
+  if(!data['nb-name']&&!data['nb-phone']) return;
+  data._at=Date.now();
+  try{localStorage.setItem(_DRAFT_KEY,JSON.stringify(data));}catch(e){}
+}
+
+function _loadDraft(){
+  try{
+    const raw=localStorage.getItem(_DRAFT_KEY);
+    if(!raw) return;
+    const data=JSON.parse(raw);
+    if(!data._at||Date.now()-data._at>8*60*60*1000){_clearDraft();return;}
+    let ok=false;
+    _DRAFT_IDS.forEach(id=>{
+      if(data[id]){const el=document.getElementById(id);if(el){el.value=data[id];ok=true;}}
+    });
+    if(ok){calcNbTotal();calcNbRemain();toast('📋 تم استعادة مسودة محفوظة — تحقق قبل الحفظ');}
+  }catch(e){}
+}
+
+function _clearDraft(){try{localStorage.removeItem(_DRAFT_KEY);}catch(e){}}
+function _clearPending(){try{localStorage.removeItem(_PENDING_KEY);}catch(e){}}
+
+function _savePending(body){
+  try{localStorage.setItem(_PENDING_KEY,JSON.stringify({body,_at:Date.now()}));}catch(e){}
+}
+
+async function _flushPending(){
+  try{
+    const raw=localStorage.getItem(_PENDING_KEY);
+    if(!raw) return;
+    const{body,_at}=JSON.parse(raw);
+    if(Date.now()-_at>24*60*60*1000){_clearPending();return;}
+    const r=await fetch('/staff/api/bookings/new',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(r.ok){
+      _clearPending();_clearDraft();
+      toast('✅ تم إرسال الحجز المعلّق بعد استعادة الاتصال','success');
+      loadApartments();loadStats();loadBookings();
+    }
+  }catch(e){}
+}
+
+window.addEventListener('online',()=>{toast('📶 الاتصال عاد');_flushPending();});
+window.addEventListener('offline',()=>{toast('📡 انقطع الاتصال — مدخلاتك محفوظة محلياً');});
+
 // ── Init ─────────────────────────────────────────────────
+let _ivClock,_ivStats,_ivApts;
+function _stopIntervals(){ clearInterval(_ivClock); clearInterval(_ivStats); clearInterval(_ivApts); }
+function _startIntervals(){ _stopIntervals(); _ivClock=setInterval(updateClock,1000); _ivStats=setInterval(loadStats,30000); _ivApts=setInterval(loadApartments,15000); }
+// إعادة ضبط العداد بعد أي تعديل — تجنب الانتظار 15 ثانية للـ refresh
+function _pollKick(){ clearInterval(_ivApts);clearInterval(_ivStats); _ivApts=setInterval(loadApartments,15000); _ivStats=setInterval(loadStats,30000); }
+
 window.addEventListener('load',()=>{
   loadStats();
   loadApartments();
   loadPropSettings();
   updateClock();
   setTimeout(initFP,300);
-
-  setInterval(updateClock,1000);
-  setInterval(loadStats,60000);
-  setInterval(loadApartments,30000);
+  _startIntervals();
   if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});
+  // Auto-save draft on any modal input/change
+  const _modal=document.getElementById('newBkModal');
+  if(_modal){
+    const _onDraftInput=()=>{clearTimeout(_draftTimer);_draftTimer=setTimeout(_saveDraft,300);};
+    _modal.addEventListener('input',_onDraftInput);
+    _modal.addEventListener('change',_onDraftInput);
+  }
 });
+
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){ _stopIntervals(); }
+  else{ loadStats(); loadApartments(); _startIntervals(); }
+});
+window.addEventListener('pagehide',_stopIntervals);
 // ── WhatsApp Manual Send ─────────────────────────────────
 let _waType = 'free';
 const WA_TEMPLATES = {
@@ -4443,6 +4740,297 @@ async function saveGuestCard() {
 
 function closeGuestCard() {
   document.getElementById('guestCardOverlay').style.display = 'none';
+}
+</script>
+
+<!-- Bottom Sheet for mobile actions -->
+<div id="bsOverlay" onclick="closeBottomSheet()"></div>
+<div id="bottomSheet"></div>
+
+<script>
+function openBkSheet(bId,status,apt,name){
+  const sheet=document.getElementById('bottomSheet');
+  const overlay=document.getElementById('bsOverlay');
+  let h=`<div class="bs-handle"></div><div class="bs-title">${apt} — ${name}</div>`;
+  if(status==='awaiting_checkin') h+=`<button class="bs-btn success" onclick="changeStatus('${bId}','active');closeBottomSheet()"><span class="bs-btn-ico">✅</span>تسجيل الدخول</button>`;
+  if(status==='active') h+=`<button class="bs-btn danger" onclick="changeStatus('${bId}','checkout');closeBottomSheet()"><span class="bs-btn-ico">🚪</span>تسجيل الخروج</button>`;
+  if(!['cancelled','checkout'].includes(status)&&can('edit_booking')) h+=`<button class="bs-btn" onclick="editBk('${bId}');closeBottomSheet()"><span class="bs-btn-ico">✏️</span>تعديل الحجز</button>`;
+  if(!['cancelled','checkout'].includes(status)&&can('cancel_booking')){h+=`<div class="bs-sep"></div>`;h+=`<button class="bs-btn danger" onclick="cancelBk('${bId}');closeBottomSheet()"><span class="bs-btn-ico">❌</span>إلغاء الحجز</button>`;}
+  h+=`<div class="bs-sep"></div>`;
+  h+=`<button class="bs-btn" onclick="printBkInvoice('${bId}');closeBottomSheet()"><span class="bs-btn-ico">🧾</span>طباعة فاتورة</button>`;
+  h+=`<button class="bs-btn" onclick="printContract('${bId}');closeBottomSheet()"><span class="bs-btn-ico">📄</span>طباعة عقد</button>`;
+  h+=`<div class="bs-sep"></div><button class="bs-btn" onclick="closeBottomSheet()" style="color:#94a3b8;justify-content:center;">إغلاق</button>`;
+  sheet.innerHTML=h;
+  sheet.classList.add('open');
+  overlay.classList.add('open');
+}
+function closeBottomSheet(){
+  document.getElementById('bottomSheet').classList.remove('open');
+  document.getElementById('bsOverlay').classList.remove('open');
+}
+
+// ════════════════════════════════════════════════
+// CHANNEL MANAGER
+// ════════════════════════════════════════════════
+
+const PLATFORM_META = {
+  airbnb:   { label:'Airbnb',       icon:'🏡', color:'#FF5A5F' },
+  booking:  { label:'Booking.com',  icon:'🌐', color:'#003580' },
+  gathering:{ label:'Gathering',    icon:'🏘️', color:'#1a6b3c' },
+  website:  { label:'موقعنا',       icon:'✅', color:'#1a3d8f' },
+};
+
+let _chConfigs = [];
+
+async function loadChannels() {
+  try {
+    const r = await fetch('/staff/api/channels');
+    if (!r.ok) throw new Error('فشل التحميل');
+    const data = await r.json();
+    _chConfigs = data.configs || [];
+    renderChannelCards(_chConfigs);
+    updateChannelKPIs(_chConfigs);
+    loadChannelFeed();
+    // Set webhook example URL
+    const wEl = document.getElementById('ch-webhook-url-g');
+    if (wEl) wEl.textContent = `${location.origin}/staff/api/channels/webhook/gathering?secret=SECRET`;
+  } catch(e) {
+    document.getElementById('ch-cards-container').innerHTML = `<div class="ch-empty">⚠️ ${e.message}</div>`;
+  }
+}
+
+function updateChannelKPIs(configs) {
+  const active = configs.filter(c => c.enabled).length;
+  const el = n => document.getElementById(n);
+  el('ch-kpi-active').textContent = active + ' / 4';
+  const lastSyncs = configs.filter(c=>c.lastSync).map(c=>new Date(c.lastSync));
+  if (lastSyncs.length) {
+    const latest = new Date(Math.max(...lastSyncs));
+    el('ch-kpi-sync').textContent = latest.toLocaleString('ar-SA',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  }
+  const emails = [...new Set(configs.filter(c=>c.notifyEmail).map(c=>c.notifyEmail))];
+  el('ch-kpi-email').textContent = emails.length ? emails[0] : '—';
+}
+
+function renderChannelCards(configs) {
+  const container = document.getElementById('ch-cards-container');
+  container.innerHTML = '';
+  for (const cfg of configs) {
+    const m = PLATFORM_META[cfg.platform] || {};
+    const statusDot = cfg.lastSyncStatus === 'ok' ? 'ok' : cfg.lastSyncStatus === 'error' ? 'error' : 'never';
+    const statusText = cfg.lastSyncStatus === 'ok'
+      ? `آخر مزامنة: ${cfg.lastSync ? new Date(cfg.lastSync).toLocaleString('ar-SA',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '—'}`
+      : cfg.lastSyncStatus === 'error' ? `خطأ: ${cfg.lastSyncMsg||''}` : 'لم تتم المزامنة بعد';
+    const isWebsite = cfg.platform === 'website';
+
+    const card = document.createElement('div');
+    card.className = 'ch-card' + (cfg.enabled ? ' ch-active' : '');
+    card.dataset.platform = cfg.platform;
+    card.innerHTML = `
+      <div class="ch-card-hd">
+        <div class="ch-logo">${m.icon||'📡'}</div>
+        <div class="ch-info">
+          <div class="ch-name">${m.label||cfg.platform}</div>
+          <div class="ch-sub">${isWebsite ? 'متصل تلقائياً' : 'ربط خارجي'}</div>
+        </div>
+        <label class="ch-toggle">
+          <input type="checkbox" ${cfg.enabled?'checked':''} onchange="toggleChannel('${cfg.platform}',this.checked)">
+          <span class="ch-toggle-slider"></span>
+        </label>
+      </div>
+      <div class="ch-status">
+        <div class="ch-dot ${statusDot}"></div>
+        <span style="color:${statusDot==='ok'?'#16a34a':statusDot==='error'?'#dc2626':'#94a3b8'}">${statusText}</span>
+      </div>
+      <div class="ch-body">
+        ${isWebsite ? `
+          <div class="ch-field">
+            <div class="ch-label">إيميل الإشعارات</div>
+            <input class="ch-input" type="email" id="ch-notify-${cfg.platform}" value="${esc(cfg.notifyEmail||'')}" placeholder="admin@example.com">
+          </div>
+        ` : `
+          <div class="ch-field">
+            <div class="ch-label">رابط iCal للاستيراد (من المنصة)</div>
+            <input class="ch-input" type="url" id="ch-ical-${cfg.platform}" value="${esc(cfg.icalImport||'')}" placeholder="https://…">
+          </div>
+          ${cfg.icalExportUrl ? `
+          <div class="ch-field">
+            <div class="ch-label">رابط iCal الخاص بنا (الصقه في المنصة)</div>
+            <div class="ch-export-box">
+              <span class="ch-export-url" id="ch-export-url-${cfg.platform}">${esc(cfg.icalExportUrl)}</span>
+              <button class="ch-copy-btn" onclick="copyChUrl('${cfg.platform}')">نسخ</button>
+            </div>
+          </div>` : ''}
+          <div class="ch-field">
+            <div class="ch-label">إيميل الإشعارات</div>
+            <input class="ch-input" type="email" id="ch-notify-${cfg.platform}" value="${esc(cfg.notifyEmail||'')}" placeholder="admin@example.com">
+          </div>
+          ${cfg.platform !== 'gathering' ? `
+          <div class="ch-field">
+            <div class="ch-label">${cfg.platform==='booking'?'Hotel ID (Booking.com)':'Property ID'}</div>
+            <input class="ch-input" type="text" id="ch-hotel-${cfg.platform}" value="${esc(cfg.hotelId||'')}" placeholder="اختياري">
+          </div>` : ''}
+        `}
+        <div class="ch-actions">
+          <button class="ch-save-btn" onclick="saveChannel('${cfg.platform}',this)">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            حفظ
+          </button>
+          ${!isWebsite ? `
+          <button class="ch-sync-btn" id="ch-sync-btn-${cfg.platform}" onclick="syncChannel('${cfg.platform}',this)">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+            مزامنة
+          </button>` : ''}
+        </div>
+        <div id="ch-msg-${cfg.platform}" style="font-size:11px;margin-top:8px;min-height:16px;font-weight:700;"></div>
+      </div>
+    `;
+    container.appendChild(card);
+  }
+}
+
+async function toggleChannel(platform, enabled) {
+  await saveChannelData(platform, { enabled });
+  const card = document.querySelector(`.ch-card[data-platform="${platform}"]`);
+  if (card) card.classList.toggle('ch-active', enabled);
+  updateChannelKPIs(_chConfigs.map(c => c.platform===platform ? {...c, enabled} : c));
+}
+
+async function saveChannel(platform, btn) {
+  const val = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
+  const body = {
+    icalImport:  val(`ch-ical-${platform}`),
+    notifyEmail: val(`ch-notify-${platform}`),
+    hotelId:     val(`ch-hotel-${platform}`),
+  };
+  const origText = btn.innerHTML;
+  btn.disabled = true; btn.innerHTML = '…';
+  await saveChannelData(platform, body);
+  btn.disabled = false; btn.innerHTML = origText;
+  const msg = document.getElementById(`ch-msg-${platform}`);
+  if (msg) { msg.textContent = '✅ تم الحفظ'; msg.style.color='#16a34a'; setTimeout(()=>{msg.textContent='';},2500); }
+}
+
+async function saveChannelData(platform, body) {
+  try {
+    const r = await fetch(`/staff/api/channels/${platform}`, {
+      method: 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)
+    });
+    const data = await r.json();
+    if (data.icalExportUrl) {
+      const urlEl = document.getElementById(`ch-export-url-${platform}`);
+      if (urlEl) urlEl.textContent = data.icalExportUrl;
+    }
+    // Refresh config cache
+    const idx = _chConfigs.findIndex(c=>c.platform===platform);
+    if (idx>=0) _chConfigs[idx] = {..._chConfigs[idx], ...body, ...data};
+  } catch(e) {
+    const msg = document.getElementById(`ch-msg-${platform}`);
+    if (msg) { msg.textContent = '❌ '+e.message; msg.style.color='#dc2626'; }
+  }
+}
+
+function copyChUrl(platform) {
+  const el = document.getElementById(`ch-export-url-${platform}`);
+  if (!el) return;
+  navigator.clipboard.writeText(el.textContent).then(() => {
+    const btn = el.nextElementSibling;
+    const orig = btn.textContent;
+    btn.textContent = 'تم!'; btn.style.background='#16a34a';
+    setTimeout(()=>{ btn.textContent=orig; btn.style.background=''; },1800);
+  });
+}
+
+async function syncChannel(platform, btn) {
+  const msgEl = document.getElementById(`ch-msg-${platform}`);
+  btn.classList.add('spinning'); btn.disabled = true;
+  if (msgEl) { msgEl.textContent = 'جاري المزامنة…'; msgEl.style.color='#64748b'; }
+  try {
+    const r = await fetch(`/staff/api/channels/${platform}/sync`, { method:'POST' });
+    const data = await r.json();
+    if (msgEl) {
+      msgEl.textContent = data.msg || (data.success ? '✅ تمت المزامنة' : data.error || 'خطأ');
+      msgEl.style.color = data.success ? '#16a34a' : '#dc2626';
+    }
+    if (data.newBookings > 0) loadChannelFeed();
+    // Update card status dot
+    await loadChannels();
+  } catch(e) {
+    if (msgEl) { msgEl.textContent = '❌ ' + e.message; msgEl.style.color='#dc2626'; }
+  } finally {
+    btn.classList.remove('spinning'); btn.disabled = false;
+  }
+}
+
+async function syncAllChannels(btn) {
+  const origText = btn.innerHTML;
+  btn.disabled = true; btn.innerHTML = '<span style="display:flex;align-items:center;gap:8px;"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="animation:spin .7s linear infinite"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>جاري المزامنة…</span>';
+  let total = 0;
+  for (const p of ['airbnb','booking','gathering']) {
+    try {
+      const r = await fetch(`/staff/api/channels/${p}/sync`, { method:'POST' });
+      const d = await r.json();
+      total += d.newBookings || 0;
+    } catch(e) {}
+  }
+  btn.disabled = false; btn.innerHTML = origText;
+  if (total > 0) { loadChannels(); showToast(`تمت المزامنة — ${total} حجز جديد`); }
+  else showToast('تمت مزامنة جميع القنوات');
+}
+
+async function loadChannelFeed() {
+  const body = document.getElementById('ch-feed-body');
+  if (!body) return;
+  try {
+    const r = await fetch('/staff/api/channels/feed');
+    const data = await r.json();
+    const bookings = data.bookings || [];
+    // Also count for KPI
+    document.getElementById('ch-kpi-total').textContent = bookings.length;
+    if (!bookings.length) { body.innerHTML = '<div class="ch-empty">لا توجد حجوزات من القنوات الخارجية بعد</div>'; return; }
+    const platFromSource = src => {
+      const m = (src||'').match(/^ch-(\w+)-/);
+      return m ? m[1] : 'website';
+    };
+    body.innerHTML = bookings.map(b => {
+      const plat = platFromSource(b.source);
+      const m = PLATFORM_META[plat] || {};
+      const nights = b.nights || (b.checkIn && b.checkOut ? Math.round((new Date(b.checkOut)-new Date(b.checkIn))/86400000) : 0);
+      return `
+        <div class="ch-feed-row">
+          <span class="ch-plat-badge ch-plat-${plat}">${m.icon||''} ${m.label||plat}</span>
+          <span class="ch-feed-apt">${esc(b.apt||'—')}</span>
+          <div class="ch-feed-info">
+            <div class="ch-feed-name">${esc(b.name||'—')}</div>
+            <div class="ch-feed-dates">${fDate(b.checkIn)} ← ${fDate(b.checkOut)} · ${nights} ليلة</div>
+          </div>
+          <span class="ch-feed-price">${b.totalPrice ? b.totalPrice.toLocaleString('ar-SA')+' ر' : '—'}</span>
+          ${statusBadge(b.status)}
+        </div>`;
+    }).join('');
+  } catch(e) {
+    body.innerHTML = `<div class="ch-empty">⚠️ ${e.message}</div>`;
+  }
+}
+
+function toggleChHow() {
+  const body = document.getElementById('ch-how-body');
+  const arrow = document.getElementById('ch-how-arrow');
+  body.classList.toggle('open');
+  if (arrow) arrow.style.transform = body.classList.contains('open') ? 'rotate(180deg)' : '';
+}
+
+function showToast(msg) {
+  let t = document.getElementById('ch-toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'ch-toast';
+    t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(60px);background:#0f172a;color:#fff;padding:12px 24px;border-radius:12px;font-size:13px;font-weight:600;z-index:9999;transition:transform .3s,opacity .3s;opacity:0;font-family:Cairo,sans-serif;';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  requestAnimationFrame(() => { t.style.transform='translateX(-50%) translateY(0)'; t.style.opacity='1'; });
+  setTimeout(() => { t.style.transform='translateX(-50%) translateY(60px)'; t.style.opacity='0'; }, 3000);
 }
 </script>
 </body>
