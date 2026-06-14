@@ -728,7 +728,6 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
         </span>
         </div>
         <% if(P.includes('new_booking')){ %><button class="sbtn" onclick="openNewBkModal()">+ حجز جديد</button><% } %>
-        <button class="sbtn" onclick="openDailyClosing()" style="background:linear-gradient(135deg,#047857,#059669);color:#fff;">📋 التقفيلة</button>
       </div>
       <div id="apt-alert-strip" style="display:none;margin-bottom:14px;"></div>
       <div id="aptsContainer"></div>
@@ -804,6 +803,7 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
       <!-- شريط الأزرار -->
       <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px;">
         <span style="font-size:11px;color:#94a3b8;align-self:center;" id="bkCount"></span>
+        <button class="sbtn" onclick="openDailyClosing()" style="background:linear-gradient(135deg,#047857,#059669);color:#fff;">📋 التقفيلة</button>
         <% if(P.includes('new_booking')){ %><button class="sbtn" onclick="openNewBkModal()" style="background:linear-gradient(135deg,#22c55e,#16a34a);">+ حجز جديد</button><% } %>
       </div>
 
