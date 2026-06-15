@@ -1938,8 +1938,13 @@ router.post('/api/channels/webhook/:platform', async (req, res) => {
 
 // GET /staff/channels — render standalone page
 router.get('/channels', reqStaff, (req, res) => {
-  if (req.staff.role !== 'manager') return res.redirect('/staff/dashboard');
-  res.render('channel-manager', { staff: req.staff });
+  res.render('channel-manager', { staff: req.staff }, (err, html) => {
+    if (err) {
+      console.error('[channels] render error:', err.message, err.stack);
+      return res.status(500).send(`<pre>Channel Manager Error:\n${err.message}\n\n${err.stack}</pre>`);
+    }
+    res.send(html);
+  });
 });
 
 // GET /staff/api/listings — all ChannelListings for this staff's buildings
