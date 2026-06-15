@@ -821,7 +821,7 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
       <!-- شريط الأزرار -->
       <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px;">
         <span style="font-size:11px;color:#94a3b8;align-self:center;" id="bkCount"></span>
-        <button class="sbtn" onclick="openDailyClosing()" style="background:linear-gradient(135deg,#047857,#059669);color:#fff;">📋 التقفيلة</button>
+        <button class="sbtn" onclick="openDailyClosing()" style="background:linear-gradient(135deg,#047857,#059669);color:#fff;">📋 الموازنة</button>
         <% if(P.includes('new_booking')){ %><button class="sbtn" onclick="openNewBkModal()" style="background:linear-gradient(135deg,#22c55e,#16a34a);">+ حجز جديد</button><% } %>
       </div>
 
@@ -1662,11 +1662,11 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
   </div>
 </div>
 
-<!-- مودال التقفيلة اليومية -->
+<!-- مودال الموازنة اليومية -->
 <div class="overlay" id="dailyClosingModal" style="display:none;" onclick="if(event.target===this)closeDailyClosing()">
   <div class="modal" style="max-width:600px;max-height:90vh;display:flex;flex-direction:column;">
     <div class="mhd" style="flex-shrink:0;">
-      <div class="mhd-title">📋 التقفيلة اليومية</div>
+      <div class="mhd-title">📋 الموازنة اليومية</div>
       <div style="display:flex;align-items:center;gap:8px;margin-right:auto;">
         <button onclick="dcPrevDay()" style="border:1.5px solid #e2e8f0;background:#f8fafc;border-radius:8px;padding:4px 10px;cursor:pointer;font-size:16px;line-height:1;" title="اليوم السابق">‹</button>
         <input type="date" id="dcDatePicker" style="border:1.5px solid #e2e8f0;border-radius:8px;padding:5px 8px;font-family:inherit;font-size:12px;outline:none;cursor:pointer;" onchange="loadDailyClosing(this.value)">
