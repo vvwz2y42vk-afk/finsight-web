@@ -821,7 +821,6 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
       <!-- شريط الأزرار -->
       <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px;">
         <span style="font-size:11px;color:#94a3b8;align-self:center;" id="bkCount"></span>
-        <button class="sbtn" onclick="openDailyClosing()" style="background:linear-gradient(135deg,#047857,#059669);color:#fff;">📋 الموازنة</button>
         <% if(P.includes('new_booking')){ %><button class="sbtn" onclick="openNewBkModal()" style="background:linear-gradient(135deg,#22c55e,#16a34a);">+ حجز جديد</button><% } %>
       </div>
 
@@ -944,6 +943,7 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
           </div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="sbtn" style="padding:8px 14px;font-size:12px;background:linear-gradient(135deg,#047857,#059669);" onclick="openDailyClosing()">📋 الموازنة</button>
           <button class="sbtn" style="padding:8px 14px;font-size:12px;background:linear-gradient(135deg,#b45309,#92400e);" onclick="sendReminders()">إرسال تذكير الخروج</button>
           <button class="sbtn" style="padding:8px 14px;font-size:12px;background:linear-gradient(135deg,#047857,#065f46);" onclick="exportReportCSV()">تصدير Excel</button>
           <button class="sbtn" style="padding:8px 14px;font-size:12px;" onclick="printReport()">طباعة</button>
