@@ -19,7 +19,17 @@ app.set('trust proxy', 1);
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/finsight';
 let _seeded = false;
 
-async function connectDB() {
+const MONGO_OPTS = {
+  serverSelectionTimeoutMS: 15000,
+  socketTimeoutMS: 45000,
+  connectTimeoutMS: 15000,
+  family: 4,
+  tls: true,
+  tlsAllowInvalidCertificates: false,
+  maxPoolSize: 10,
+};
+
+async function connectDB(retries = 3) {
   if (mongoose.connection.readyState === 1) return;
   if (mongoose.connection.readyState === 2) {
     await new Promise((resolve, reject) => {
@@ -29,15 +39,17 @@ async function connectDB() {
     });
     return;
   }
-  await mongoose.connect(MONGO_URI, {
-    serverSelectionTimeoutMS: 15000,
-    socketTimeoutMS: 45000,
-    family: 4,
-    tls: true,
-    tlsAllowInvalidCertificates: false,
-    maxPoolSize: 100,
-  });
-  console.log('✅ MongoDB متصل');
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      await mongoose.connect(MONGO_URI, MONGO_OPTS);
+      console.log('✅ MongoDB متصل');
+      break;
+    } catch (e) {
+      if (attempt === retries) throw e;
+      await new Promise(r => setTimeout(r, attempt * 2000));
+      try { await mongoose.disconnect(); } catch (_) {}
+    }
+  }
   if (!_seeded) {
     await seedAdminUsers();
     // Sync indexes after schema changes (drops stale indexes, creates new ones)
@@ -68,8 +80,8 @@ async function seedAdminUsers() {
 async function dbMiddleware(req, res, next) {
   try { await connectDB(); next(); }
   catch (e) {
-    mongoose.connection.destroy().catch(() => {});
-    res.status(500).json({ error: 'فشل الاتصال بقاعدة البيانات: ' + e.message });
+    try { await mongoose.disconnect(); } catch (_) {}
+    res.status(503).json({ error: 'فشل الاتصال بقاعدة البيانات: ' + e.message });
   }
 }
 
