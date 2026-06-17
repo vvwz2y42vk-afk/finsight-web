@@ -194,7 +194,26 @@ router.get('/api/check-username', checkUserLimit, async (req, res) => {
   const exists = await S.exists({ username: u });
   res.json({ taken: !!exists });
 });
-router.get('/dashboard', reqStaff, (req,res) => {
+router.get('/dashboard', reqStaff, async (req,res) => {
+  try {
+    const S = require('../models/StaffUser');
+    const fresh = await S.findById(req.staff.id).select('permissions active building role name').lean();
+    if (fresh) {
+      if (fresh.active === false) {
+        res.clearCookie(COOKIE);
+        return res.redirect('/staff/login?expired=1');
+      }
+      // Rebuild staff payload with fresh data from DB
+      req.staff = {
+        ...req.staff,
+        permissions: fresh.permissions?.length ? fresh.permissions : DEFAULT_PERMS,
+        building: fresh.building || req.staff.building,
+        role: fresh.role || req.staff.role,
+      };
+      // Refresh cookie so subsequent API calls also see updated permissions
+      res.cookie(COOKIE, createToken(req.staff), COPTS);
+    }
+  } catch(e) { /* DB unavailable — use JWT permissions as fallback */ }
   res.setHeader('Cache-Control','no-store');
   res.render('staff-dashboard', { staff: req.staff }, (err, html) => {
     if (err) {
