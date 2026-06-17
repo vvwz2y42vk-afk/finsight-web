@@ -1651,9 +1651,12 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
           <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">طريقة الدفع</label>
           <select id="nb-paymethod" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;">
             <option value="">— اختر —</option>
-            <option value="cash">كاش</option>
-            <option value="transfer">تحويل</option>
+            <option value="cash">نقداً</option>
+            <option value="transfer">تحويل بنكي</option>
             <option value="network">شبكة</option>
+            <option value="check">كمبيالة</option>
+            <option value="digital">دفع رقمي</option>
+            <option value="travel_agent">وكيل سفر</option>
             <option value="other">أخرى</option>
           </select>
         </div>
@@ -2353,12 +2356,12 @@ async function openBkModal(bookingId, apt, status) {
     html += r('إجمالي الحجز', b.totalPrice ? b.totalPrice.toLocaleString() + ' ريال' : '');
     html += `<div class="mrow"><span>المدفوع</span><b style="color:#16a34a;">${(b.paidAmount||0).toLocaleString()} ريال</b></div>`;
     html += `<div class="mrow"><span>المتبقي</span><b style="color:${remain>0?'#dc2626':'#16a34a'};">${remain.toLocaleString()} ريال ${remain===0?'✓':''}</b></div>`;
-    const pmLabels={cash:'كاش',transfer:'تحويل',network:'شبكة',other:'أخرى'};
+    const pmLabels={cash:'نقداً',transfer:'تحويل بنكي',network:'شبكة',check:'كمبيالة',digital:'دفع رقمي',travel_agent:'وكيل سفر',other:'أخرى'};
     if(b.paymentMethod) html += r('طريقة الدفع', pmLabels[b.paymentMethod]||b.paymentMethod);
     // ── سجل الدفعات ──
     html += sec('💳 سجل الدفعات');
-    const pmIcon={cash:'💵',transfer:'🏦',network:'💳',check:'📝',other:'🔖'};
-    const pmLbl={cash:'نقداً',transfer:'تحويل',network:'شبكة',check:'كمبيالة',other:'أخرى'};
+    const pmIcon={cash:'💵',transfer:'🏦',network:'💳',check:'📝',digital:'📱',travel_agent:'✈️',other:'🔖'};
+    const pmLbl={cash:'نقداً',transfer:'تحويل بنكي',network:'شبكة',check:'كمبيالة',digital:'دفع رقمي',travel_agent:'وكيل سفر',other:'أخرى'};
     if(b.payments&&b.payments.length){
       b.payments.forEach(p=>{
         const pDate=new Date(p.date).toLocaleDateString('ar-SA',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+new Date(p.date).toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
@@ -2396,6 +2399,8 @@ async function openBkModal(bookingId, apt, status) {
             <option value="transfer">تحويل بنكي</option>
             <option value="network">شبكة</option>
             <option value="check">كمبيالة</option>
+            <option value="digital">دفع رقمي</option>
+            <option value="travel_agent">وكيل سفر</option>
             <option value="other">أخرى</option>
           </select>
         </div>
