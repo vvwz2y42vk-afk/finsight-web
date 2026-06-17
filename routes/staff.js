@@ -21,7 +21,32 @@ const COPTS  = { httpOnly: true, maxAge: 12 * 60 * 60 * 1000, sameSite: 'lax', s
 // Hardcoded buildings for BAREZ internal (propertyId === null)
 const BLDGS = {
   'المنارا':  { floors: [{l:'أرضي',r:['001','002']},{l:'الأول',r:['101','102','103','104','105','106']},{l:'الثاني',r:['201','202','203','204','205','206']},{l:'الثالث',r:['301','302','303','304','305','306']},{l:'الرابع',r:['401','402','403','404','405','406']},{l:'الخامس',r:['501','502','503','504']}] },
-  'جوان ان': { floors: [{l:'أرضي',r:['001','002','003','004']},{l:'الأول',r:['101','102','103','104','105']},{l:'الثاني',r:['201','202','203','204','205']},{l:'الثالث',r:['301','302','303','304','305']},{l:'الرابع',r:['401','402']}] },
+  'جوان ان': {
+    floors: [{l:'أرضي',r:['001','002','003','004']},{l:'الأول',r:['101','102','103','104','105']},{l:'الثاني',r:['201','202','203','204','205']},{l:'الثالث',r:['301','302','303','304','305']},{l:'الرابع',r:['401','402']}],
+    types: {
+      '001':{title:'جناح ديلوكس (غرفة وصالة)',bedrooms:1},
+      '002':{title:'غرفتين جناح عائلي',bedrooms:2},
+      '003':{title:'غرفتين جناح عائلي',bedrooms:2},
+      '004':{title:'جناح ديلوكس (غرفة وصالة)',bedrooms:1},
+      '101':{title:'جناح ديلوكس (غرفة وصالة)',bedrooms:1},
+      '102':{title:'غرفتين جناح عائلي',bedrooms:2},
+      '103':{title:'جناح ديلوكس (3 أسرة مفردة)',bedrooms:1},
+      '104':{title:'جناح ديلوكس (غرفة وصالة)',bedrooms:1},
+      '105':{title:'استوديو (غرفة مفردة)',bedrooms:1},
+      '201':{title:'جناح ديلوكس (غرفة وصالة)',bedrooms:1},
+      '202':{title:'غرفتين جناح ديلوكس (3 أسرة مفردة)',bedrooms:2},
+      '203':{title:'جناح ديلوكس (غرفة وصالة)',bedrooms:1},
+      '204':{title:'جناح ديلوكس (غرفة وصالة)',bedrooms:1},
+      '205':{title:'استوديو (غرفة مفردة)',bedrooms:1},
+      '301':{title:'غرفتين جناح عائلي',bedrooms:2},
+      '302':{title:'جناح ديلوكس (غرفة وصالة)',bedrooms:1},
+      '303':{title:'جناح ديلوكس (غرفة وصالة)',bedrooms:1},
+      '304':{title:'جناح ديلوكس (غرفة وصالة)',bedrooms:1},
+      '305':{title:'استوديو (غرفة مفردة)',bedrooms:1},
+      '401':{title:'جناح ديلوكس (غرفة وصالة)',bedrooms:1},
+      '402':{title:'غرفتين جناح عائلي',bedrooms:2},
+    },
+  },
   'الماسة':  { floors: [{l:'الأول',r:['101','102','103','104','105','106']},{l:'الثاني',r:['201','202','203','204','205','206']},{l:'الثالث',r:['301','302','303','304','305','306']}] },
   'الواحة':  { floors: [{l:'أرضي',r:['001','002','003','004']},{l:'الأول',r:['101','102','103','104','105','106','107','108']},{l:'الثاني',r:['201','202','203','204','205','206','207','208']}] },
 };
@@ -299,7 +324,8 @@ router.get('/api/apartments', reqStaff, async (req,res) => {
           else if(b.status==='awaiting_checkin') status=(cin&&cin>=today&&cin<tom)?'checkin_today':'awaiting';
           else if(b.status==='awaiting_payment') status='awaiting_payment';
         }
-        return { apt, status, housekeeping:hk?.status||'clean', bookingId:b?._id||null, name:b?.name||'', phone:b?.phone||'', checkIn:b?.checkIn||null, checkOut:b?.checkOut||null, nights:b?.nights||0, totalPrice:b?.totalPrice||0, paidAmount:b?.paidAmount||0, idType:b?.idType||'', idNumber:b?.idNumber||'', bookingType:b?.bookingType||l?.type||'both', notes:hk?.notes||'', roomType:l?.title||'', bedrooms:l?.bedrooms||0, priceDaily:l?.price_daily||0, priceAnnual:l?.price_annual||0 };
+        const tInfo = bData.types?.[apt] || {};
+        return { apt, status, housekeeping:hk?.status||'clean', bookingId:b?._id||null, name:b?.name||'', phone:b?.phone||'', checkIn:b?.checkIn||null, checkOut:b?.checkOut||null, nights:b?.nights||0, totalPrice:b?.totalPrice||0, paidAmount:b?.paidAmount||0, idType:b?.idType||'', idNumber:b?.idNumber||'', bookingType:b?.bookingType||l?.type||'both', notes:hk?.notes||'', roomType:l?.title||tInfo.title||'', bedrooms:l?.bedrooms||tInfo.bedrooms||0, priceDaily:l?.price_daily||0, priceAnnual:l?.price_annual||0 };
       }),
     }));
     res.json({ building:bld, floors });
