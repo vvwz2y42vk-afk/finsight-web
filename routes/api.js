@@ -751,26 +751,39 @@ router.get('/apartments/grid', auth, async (req, res) => {
 router.get('/weekly-stats', auth, async (req, res) => {
   try {
     const today = new Date(); today.setHours(0,0,0,0);
+    const buildingNames = Object.keys(GRID_BUILDINGS);
+    const buildingTotals = {};
+    buildingNames.forEach(b => {
+      buildingTotals[b] = GRID_BUILDINGS[b].floors.reduce((s,f)=>s+f.r.length,0);
+    });
+    const totalApts = Object.values(buildingTotals).reduce((a,b)=>a+b,0);
 
-    const totalApts = Object.values(GRID_BUILDINGS).reduce((sum,b)=>sum+b.floors.reduce((s,f)=>s+f.r.length,0),0);
+    const days = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(today); d.setDate(today.getDate() - (6 - i));
+      const nd = new Date(d); nd.setDate(d.getDate() + 1);
+      return { d, nd, label: d.toLocaleDateString('ar-SA', { weekday:'short', day:'numeric', month:'numeric' }), date: d.toISOString().split('T')[0] };
+    });
 
-    const weekly = await Promise.all(
-      Array.from({ length: 7 }, (_, i) => {
-        const d  = new Date(today); d.setDate(today.getDate() - (6 - i));
-        const nd = new Date(d);     nd.setDate(d.getDate() + 1);
-        return Booking.countDocuments({
-          propertyId: null,
+    // Per-building weekly counts in parallel
+    const perBuilding = {};
+    await Promise.all(buildingNames.map(async bName => {
+      const counts = await Promise.all(days.map(({ d, nd }) =>
+        Booking.countDocuments({
+          building: bName, propertyId: null,
           status: { $in: ['active','checkout','awaiting_checkin'] },
-          checkIn:  { $lt: nd },
-          checkOut: { $gt: d },
-        }).then(occ => ({
-          label: d.toLocaleDateString('ar-SA', { weekday:'short', day:'numeric', month:'numeric' }),
-          date:  d.toISOString().split('T')[0],
-          occupied: occ,
-        }));
-      })
-    );
-    res.json({weekly,total:totalApts});
+          checkIn: { $lt: nd }, checkOut: { $gt: d },
+        })
+      ));
+      perBuilding[bName] = { total: buildingTotals[bName], weekly: days.map((day, i) => ({ label: day.label, date: day.date, occupied: counts[i] })) };
+    }));
+
+    // Combined (sum across buildings)
+    const weekly = days.map((day, i) => ({
+      label: day.label, date: day.date,
+      occupied: buildingNames.reduce((s, b) => s + perBuilding[b].weekly[i].occupied, 0),
+    }));
+
+    res.json({ weekly, total: totalApts, perBuilding });
   } catch(e){ res.status(500).json({error:e.message}); }
 });
 
