@@ -68,6 +68,11 @@ body{font-family:'IBM Plex Sans Arabic',sans-serif;background:var(--bg);directio
 .card-title{font-size:12px;font-weight:600;}.card-sub{font-size:10px;color:var(--t3);margin-top:1px;}
 .wtab{padding:4px 12px;border-radius:20px;border:1.5px solid #EEF2F8;background:#fff;font-size:11px;font-weight:600;color:var(--t3);cursor:pointer;transition:all 150ms;}
 .wtab.active{background:var(--blue);color:#fff;border-color:var(--blue);}
+.pg-btn{padding:4px 12px;border-radius:8px;border:1.5px solid var(--b2);background:var(--s);color:var(--t2);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:all 120ms;}
+.pg-btn:hover:not(:disabled){background:var(--blue);color:#fff;border-color:var(--blue);}
+.pg-btn:disabled{opacity:.3;cursor:default;}
+.pg-btn.active{background:var(--blue);color:#fff;border-color:var(--blue);}
+.pg-info{font-size:11px;color:var(--t3);padding:0 4px;}
 .wbstat{flex:1;min-width:110px;background:#F5F7FC;border-radius:12px;padding:10px 14px;}
 .wbstat-name{font-size:11px;font-weight:700;color:var(--t2);margin-bottom:6px;}
 .wbstat-row{display:flex;justify-content:space-between;font-size:11px;color:var(--t3);margin-bottom:2px;}
@@ -531,11 +536,15 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
   </div>
   <div class="tc" id="tab-contracts">
     <div class="sr">
-      <input class="si" type="text" id="cSearch" placeholder="🔍 ابحث..." oninput="renderContracts()" style="flex:2;">
-      <select class="si" id="cSheet" onchange="renderContracts()"><option value="">كل المباني</option><option>المنارا</option><option>جوان ان</option><option>الماسة</option><option>الواحة</option></select>
-      <select class="si" id="cStatus" onchange="renderContracts()"><option value="">كل الحالات</option><option>مفتوح</option><option>مغلق</option></select>
+      <input class="si" type="text" id="cSearch" placeholder="🔍 ابحث..." oninput="renderContracts(true)" style="flex:2;">
+      <select class="si" id="cSheet" onchange="renderContracts(true)"><option value="">كل المباني</option><option>المنارا</option><option>جوان ان</option><option>الماسة</option><option>الواحة</option></select>
+      <select class="si" id="cStatus" onchange="renderContracts(true)"><option value="">كل الحالات</option><option>مفتوح</option><option>مغلق</option></select>
     </div>
-    <div class="card"><div class="tbl-wrap"><table><thead><tr><th>العميل</th><th>المبنى</th><th>الشقة</th><th>القيمة</th><th>المدفوع</th><th>المتبقي</th><th>الدخول</th><th>الخروج</th><th>الحالة</th><th>السداد</th><th>رسوم إيجار</th><th>طريقة الدفع</th><th></th></tr></thead><tbody id="contracts-tbody"></tbody></table></div><div style="margin-top:6px;font-size:10px;color:var(--t3);" id="c-count"></div></div>
+    <div class="card"><div class="tbl-wrap"><table><thead><tr><th>العميل</th><th>المبنى</th><th>الشقة</th><th>القيمة</th><th>المدفوع</th><th>المتبقي</th><th>الدخول</th><th>الخروج</th><th>الحالة</th><th>السداد</th><th>رسوم إيجار</th><th>طريقة الدفع</th><th></th></tr></thead><tbody id="contracts-tbody"></tbody></table></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;flex-wrap:wrap;gap:6px;">
+      <div style="font-size:10px;color:var(--t3);" id="c-count"></div>
+      <div style="display:flex;align-items:center;gap:6px;" id="c-pager"></div>
+    </div></div>
 
     <!-- حجوزات الموظفين -->
     <div style="margin-top:24px;">
@@ -545,10 +554,10 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
           <span id="staff-bk-count" style="font-size:11px;background:rgba(26,61,143,.1);color:#1a3d8f;padding:2px 10px;border-radius:20px;font-weight:600;"></span>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <select id="sbk-building" onchange="renderStaffBookings()" style="font-size:11px;padding:5px 10px;border:1px solid var(--b2);border-radius:8px;background:var(--s);color:var(--t1);font-family:inherit;">
+          <select id="sbk-building" onchange="renderStaffBookings(true)" style="font-size:11px;padding:5px 10px;border:1px solid var(--b2);border-radius:8px;background:var(--s);color:var(--t1);font-family:inherit;">
             <option value="">كل المباني</option>
           </select>
-          <select id="sbk-status" onchange="renderStaffBookings()" style="font-size:11px;padding:5px 10px;border:1px solid var(--b2);border-radius:8px;background:var(--s);color:var(--t1);font-family:inherit;">
+          <select id="sbk-status" onchange="renderStaffBookings(true)" style="font-size:11px;padding:5px 10px;border:1px solid var(--b2);border-radius:8px;background:var(--s);color:var(--t1);font-family:inherit;">
             <option value="">كل الحالات</option>
             <option value="awaiting_checkin">انتظار دخول</option>
             <option value="active">نشط</option>
@@ -560,7 +569,11 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
       <div class="card"><div class="tbl-wrap"><table>
         <thead><tr><th>رقم العقد</th><th>النزيل</th><th>الجوال</th><th>المبنى</th><th>الشقة</th><th>النوع</th><th>الدخول</th><th>الخروج</th><th>الليالي</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th><th>الحالة</th></tr></thead>
         <tbody id="staff-bk-tbody"></tbody>
-      </table></div></div>
+      </table></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;flex-wrap:wrap;gap:6px;">
+        <div style="font-size:10px;color:var(--t3);" id="sbk-count-detail"></div>
+        <div style="display:flex;align-items:center;gap:6px;" id="sbk-pager"></div>
+      </div></div>
     </div>
   </div>
   <div class="tc" id="tab-commissions">
@@ -1165,11 +1178,32 @@ function renderAll(){
   renderContracts();renderCommissions();renderCollection();renderExpiry();renderMap();renderPerformance();renderSources();renderReports();
 }
 
-function renderContracts(){
+function renderPager(id,page,pages,onPage){
+  const el=document.getElementById(id);if(!el)return;
+  if(pages<=1){el.innerHTML='';return;}
+  let html='';
+  html+=`<button class="pg-btn" onclick="(${onPage})(1)" ${page<=1?'disabled':''}>«</button>`;
+  html+=`<button class="pg-btn" onclick="(${onPage})(${page-1})" ${page<=1?'disabled':''}>‹</button>`;
+  // page numbers: show at most 5 around current
+  const start=Math.max(1,page-2),end=Math.min(pages,page+2);
+  if(start>1)html+=`<span class="pg-info">…</span>`;
+  for(let i=start;i<=end;i++)html+=`<button class="pg-btn${i===page?' active':''}" onclick="(${onPage})(${i})">${i}</button>`;
+  if(end<pages)html+=`<span class="pg-info">…</span>`;
+  html+=`<button class="pg-btn" onclick="(${onPage})(${page+1})" ${page>=pages?'disabled':''}>›</button>`;
+  html+=`<button class="pg-btn" onclick="(${onPage})(${pages})" ${page>=pages?'disabled':''}>»</button>`;
+  el.innerHTML=html;
+}
+let _cPage=1; const _cPS=20;
+function renderContracts(resetPage){
+  if(resetPage)_cPage=1;
   const q=(document.getElementById('cSearch')?.value||'').trim(),sh=document.getElementById('cSheet')?.value||'',st=document.getElementById('cStatus')?.value||'';
-  const d=allC.filter(c=>c.n&&(!q||c.n.includes(q)||c.a.includes(q))&&(!sh||c.sheet===sh)&&(!st||c.st===st)).sort((a,b)=>new Date(b.createdAt||0)-new Date(a.createdAt||0));
-  set('contracts-tbody',d.map(c=>`<tr><td style="font-weight:600;">${c.n}</td><td><span class="pill ${SP[c.sheet]||''}">${c.sheet}</span></td><td>${c.a}</td><td>${fmt(c.v)} ﷼</td><td style="color:var(--green);">${fmt(c.p)} ﷼</td><td style="color:${c.r>0?'var(--red)':'var(--t4)'};">${c.r>0?fmt(c.r)+' ﷼':'—'}</td><td style="color:var(--t3);font-size:10px;">${c.en||'—'}</td><td style="color:var(--t3);font-size:10px;">${c.ex||'—'}</td><td><span class="pill ${c.st==='مفتوح'?'pop':'pcl'}">${c.st}</span></td><td><span class="pill ${c.py==='تم السداد'?'pp':'pup'}">${c.py}</span></td><td style="color:var(--blue);font-size:10px;">${c.ej>0?fmt(c.ej)+' ﷼':'—'}</td><td style="font-size:10px;color:var(--t3);">${c.pm||'—'}</td><td style="white-space:nowrap;"><button onclick="openEdit('${c.id}')" style="background:var(--gl);border:1px solid var(--gb);color:var(--gold);padding:2px 7px;border-radius:4px;cursor:pointer;font-size:9px;font-family:inherit;margin-left:3px;">✏️</button><button onclick="printContract('${c.id}')" style="background:#e8f4fd;border:1px solid #90caf9;color:#1565c0;padding:2px 7px;border-radius:4px;cursor:pointer;font-size:9px;font-family:inherit;margin-left:3px;">🖨️</button><button onclick="openConfirm('${c.id}')" style="background:var(--rg);border:1px solid var(--rb);color:var(--red);padding:2px 7px;border-radius:4px;cursor:pointer;font-size:9px;font-family:inherit;">🗑️</button></td></tr>`).join(''));
-  set('c-count',`إجمالي: ${toAr(d.length)} عقد`);
+  const all=allC.filter(c=>c.n&&(!q||c.n.includes(q)||c.a.includes(q))&&(!sh||c.sheet===sh)&&(!st||c.st===st)).sort((a,b)=>new Date(b.createdAt||0)-new Date(a.createdAt||0));
+  const pages=Math.max(1,Math.ceil(all.length/_cPS));
+  _cPage=Math.min(_cPage,pages);
+  const d=all.slice((_cPage-1)*_cPS,_cPage*_cPS);
+  set('contracts-tbody',d.length?d.map(c=>`<tr><td style="font-weight:600;">${c.n}</td><td><span class="pill ${SP[c.sheet]||''}">${c.sheet}</span></td><td>${c.a}</td><td>${fmt(c.v)} ﷼</td><td style="color:var(--green);">${fmt(c.p)} ﷼</td><td style="color:${c.r>0?'var(--red)':'var(--t4)'};">${c.r>0?fmt(c.r)+' ﷼':'—'}</td><td style="color:var(--t3);font-size:10px;">${c.en||'—'}</td><td style="color:var(--t3);font-size:10px;">${c.ex||'—'}</td><td><span class="pill ${c.st==='مفتوح'?'pop':'pcl'}">${c.st}</span></td><td><span class="pill ${c.py==='تم السداد'?'pp':'pup'}">${c.py}</span></td><td style="color:var(--blue);font-size:10px;">${c.ej>0?fmt(c.ej)+' ﷼':'—'}</td><td style="font-size:10px;color:var(--t3);">${c.pm||'—'}</td><td style="white-space:nowrap;"><button onclick="openEdit('${c.id}')" style="background:var(--gl);border:1px solid var(--gb);color:var(--gold);padding:2px 7px;border-radius:4px;cursor:pointer;font-size:9px;font-family:inherit;margin-left:3px;">✏️</button><button onclick="printContract('${c.id}')" style="background:#e8f4fd;border:1px solid #90caf9;color:#1565c0;padding:2px 7px;border-radius:4px;cursor:pointer;font-size:9px;font-family:inherit;margin-left:3px;">🖨️</button><button onclick="openConfirm('${c.id}')" style="background:var(--rg);border:1px solid var(--rb);color:var(--red);padding:2px 7px;border-radius:4px;cursor:pointer;font-size:9px;font-family:inherit;">🗑️</button></td></tr>`).join(''):'<tr><td colspan="13" style="text-align:center;padding:24px;color:var(--t3);">لا توجد عقود</td></tr>');
+  set('c-count',`${toAr((_cPage-1)*_cPS+1)}–${toAr(Math.min(_cPage*_cPS,all.length))} من ${toAr(all.length)} عقد`);
+  renderPager('c-pager',_cPage,pages,p=>{_cPage=p;renderContracts();});
 }
 
 function printContract(id){
@@ -1720,20 +1754,26 @@ async function loadStaffBookings() {
     renderAll();
   } catch(e) {}
 }
-function renderStaffBookings() {
+let _sbkPage=1; const _sbkPS=30;
+function renderStaffBookings(resetPage) {
+  if(resetPage)_sbkPage=1;
   const tbody = document.getElementById('staff-bk-tbody');
   const countEl = document.getElementById('staff-bk-count');
   if (!tbody) return;
   const building = document.getElementById('sbk-building')?.value || '';
   const status   = document.getElementById('sbk-status')?.value  || '';
-  let list = allStaffBookings;
-  if (building) list = list.filter(b => b.building === building);
-  if (status)   list = list.filter(b => b.status === status);
-  if (countEl)  countEl.textContent = list.length + ' حجز';
+  let all = allStaffBookings;
+  if (building) all = all.filter(b => b.building === building);
+  if (status)   all = all.filter(b => b.status === status);
+  if (countEl)  countEl.textContent = all.length.toLocaleString('ar-SA') + ' حجز';
+  const pages = Math.max(1,Math.ceil(all.length/_sbkPS));
+  _sbkPage = Math.min(_sbkPage,pages);
+  const list = all.slice((_sbkPage-1)*_sbkPS, _sbkPage*_sbkPS);
   const SL = {pending:'جديد',awaiting_checkin:'انتظار دخول',active:'نشط',checkout:'خروج',cancelled:'ملغي'};
   const SC = {pending:'pm',awaiting_checkin:'pw',active:'pj',checkout:'pp',cancelled:'pcl'};
   const BL = {daily:'يومي',annual:'شهري',inquiry:'استفسار'};
-  if (!list.length) { tbody.innerHTML = '<tr><td colspan="13" style="text-align:center;padding:24px;color:var(--t3);">لا توجد حجوزات من الموظفين</td></tr>'; return; }
+  if (!list.length) { tbody.innerHTML = '<tr><td colspan="13" style="text-align:center;padding:24px;color:var(--t3);">لا توجد حجوزات من الموظفين</td></tr>';
+    set('sbk-count-detail',''); set('sbk-pager',''); return; }
   tbody.innerHTML = list.map(b => {
     const total   = b.totalPrice || 0;
     const paid    = b.paidAmount || 0;
@@ -1756,6 +1796,9 @@ function renderStaffBookings() {
       <td><span class="pill ${SC[b.status]||'pm'}">${SL[b.status]||b.status}</span></td>
     </tr>`;
   }).join('');
+  const from=(_sbkPage-1)*_sbkPS+1, to=Math.min(_sbkPage*_sbkPS,all.length);
+  set('sbk-count-detail',`${from.toLocaleString('ar-SA')}–${to.toLocaleString('ar-SA')} من ${all.length.toLocaleString('ar-SA')} حجز`);
+  renderPager('sbk-pager',_sbkPage,pages,p=>{_sbkPage=p;renderStaffBookings();});
 }
 
 async function loadBookings(){
