@@ -398,16 +398,55 @@ router.delete('/bookings/:id', auth, requireRole('admin', 'manager'), async (req
 router.get('/booking-stats', auth, async (req, res) => {
   try {
     const baseFilter = { building: { $exists: true, $ne: null }, listing: null, status: { $ne: 'cancelled' } };
-    const [agg, openCount, closedCount] = await Promise.all([
+    const now = new Date();
+    const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const [agg, openCount, closedCount, thisMonthAgg, prevMonthAgg] = await Promise.all([
       Booking.aggregate([
         { $match: baseFilter },
         { $group: { _id: null, count: { $sum: 1 }, revenue: { $sum: '$totalPrice' }, paid: { $sum: '$paidAmount' } } }
       ]),
       Booking.countDocuments({ ...baseFilter, status: { $in: ['active', 'awaiting_checkin', 'awaiting_payment'] } }),
-      Booking.countDocuments({ ...baseFilter, status: 'checkout' })
+      Booking.countDocuments({ ...baseFilter, status: 'checkout' }),
+      Booking.aggregate([{ $match: { ...baseFilter, checkIn: { $gte: thisMonthStart } } }, { $group: { _id: null, count: { $sum: 1 }, paid: { $sum: '$paidAmount' } } }]),
+      Booking.aggregate([{ $match: { ...baseFilter, checkIn: { $gte: prevMonthStart, $lt: thisMonthStart } } }, { $group: { _id: null, count: { $sum: 1 }, paid: { $sum: '$paidAmount' } } }]),
     ]);
     const s = agg[0] || { count: 0, revenue: 0, paid: 0 };
-    res.json({ total: s.count, revenue: s.revenue, paid: s.paid, remaining: s.revenue - s.paid, open: openCount, closed: closedCount });
+    const tm = thisMonthAgg[0] || { count: 0, paid: 0 };
+    const pm = prevMonthAgg[0] || { count: 0, paid: 0 };
+    res.json({ total: s.count, revenue: s.revenue, paid: s.paid, remaining: s.revenue - s.paid, open: openCount, closed: closedCount, thisMonth: { count: tm.count, paid: tm.paid }, prevMonth: { count: pm.count, paid: pm.paid } });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ─── Create Booking from Admin Dashboard ──────────────────
+router.post('/bookings', auth, async (req, res) => {
+  try {
+    const { name, building, apt, totalPrice, paidAmount, checkIn, checkOut, phone, source, notes, bookingType, status } = req.body;
+    if (!name || !building || !apt || !totalPrice || !checkIn)
+      return res.status(400).json({ error: 'البيانات غير مكتملة' });
+    const parseDate = d => {
+      if (!d) return null;
+      if (String(d).includes('/')) { const [day, month, year] = String(d).split('/'); return new Date(Number(year), Number(month)-1, Number(day)); }
+      return new Date(d);
+    };
+    const cin = parseDate(checkIn);
+    if (!cin || isNaN(cin)) return res.status(400).json({ error: 'تاريخ الدخول غير صحيح' });
+    const cout = checkOut ? parseDate(checkOut) : null;
+    const bk = await new Booking({
+      name, building, apt,
+      phone: phone || '',
+      totalPrice: parseFloat(totalPrice) || 0,
+      paidAmount: parseFloat(paidAmount) || 0,
+      checkIn: cin,
+      checkOut: cout,
+      source: source || 'يدوي',
+      notes: notes || '',
+      bookingType: bookingType || 'annual',
+      status: status === 'مغلق' ? 'checkout' : 'active',
+      listing: null,
+      propertyId: null,
+    }).save();
+    res.json({ success: true, id: bk._id });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 

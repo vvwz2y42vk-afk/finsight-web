@@ -384,7 +384,7 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
     <button id="nav-contracts" class="ni" onclick="go('contracts',this)"><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>العقود<span class="ni-badge" id="nb-total">—</span></button>
     <button id="nav-commissions" class="ni" onclick="go('commissions',this)"><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span>العمولات</button>
     <button id="nav-collection" class="ni" onclick="go('collection',this)"><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>التحصيل<span class="ni-badge" id="nb-debt">—</span></button>
-    <button id="nav-expiry" class="ni" onclick="go('expiry',this)"><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>المنتهية</button>
+    <button id="nav-expiry" class="ni" onclick="go('expiry',this)"><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>المنتهية<span id="expiry-badge" style="display:none;background:#DC2626;color:#fff;font-size:9px;font-weight:700;border-radius:20px;padding:1px 7px;margin-right:auto;"></span></button>
     <button id="nav-performance" class="ni" onclick="go('performance',this)"><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></span>الأداء</button>
     <button id="nav-sources" class="ni" onclick="go('sources',this)"><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>المصادر</button>
     <button id="nav-reports" class="ni" onclick="go('reports',this)"><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>التقارير</button>
@@ -452,8 +452,8 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
   </div>
   <div class="tc active" id="tab-dashboard">
     <div class="kpi-grid">
-      <div class="kpi c1"><div class="kpi-ico"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div class="kpi-lbl">إجمالي العقود</div><div class="kpi-val" id="k0">—</div><div class="kpi-note">كل المباني</div></div>
-      <div class="kpi c2"><div class="kpi-ico"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="kpi-lbl">المحصّل</div><div class="kpi-val" id="k1">—</div><div class="kpi-note" id="k1n">—</div></div>
+      <div class="kpi c1"><div class="kpi-ico"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div class="kpi-lbl">إجمالي العقود</div><div class="kpi-val" id="k0">—</div><div class="kpi-note">كل المباني</div><div id="k0-delta"></div></div>
+      <div class="kpi c2"><div class="kpi-ico"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="kpi-lbl">المحصّل</div><div class="kpi-val" id="k1">—</div><div class="kpi-note" id="k1n">—</div><div id="k1-delta"></div></div>
       <div class="kpi c3"><div class="kpi-ico"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><div class="kpi-lbl">المتبقي</div><div class="kpi-val" id="k2">—</div><div class="kpi-note">يحتاج متابعة</div></div>
       <div class="kpi c4" id="kpi-comm-card"><div class="kpi-ico"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="kpi-lbl">عمولاتك</div><div class="kpi-val" id="k3">—</div><div class="kpi-note" id="k3n">—</div></div>
       <div class="kpi c5"><div class="kpi-ico"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg></div><div class="kpi-lbl">عقود مفتوحة</div><div class="kpi-val" id="k4">—</div><div class="kpi-note" id="k4n">—</div></div>
@@ -553,7 +553,8 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
           <div style="font-size:13px;font-weight:700;color:#1a3d8f;border-right:3px solid #1a3d8f;padding-right:10px;">📋 حجوزات الموظفين</div>
           <span id="staff-bk-count" style="font-size:11px;background:rgba(26,61,143,.1);color:#1a3d8f;padding:2px 10px;border-radius:20px;font-weight:600;"></span>
         </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <input type="text" id="sbk-search" placeholder="🔍 بحث بالاسم أو الشقة أو الجوال..." oninput="renderStaffBookings(true)" style="font-size:11px;padding:5px 10px;border:1px solid var(--b2);border-radius:8px;font-family:inherit;background:var(--s);color:var(--t1);min-width:200px;">
           <select id="sbk-building" onchange="renderStaffBookings(true)" style="font-size:11px;padding:5px 10px;border:1px solid var(--b2);border-radius:8px;background:var(--s);color:var(--t1);font-family:inherit;">
             <option value="">كل المباني</option>
           </select>
@@ -652,6 +653,7 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
         <option value="2026" selected>2026</option>
       </select>
       <button class="btn btn-gold" onclick="printReport()" style="margin-right:auto;">🖨️ طباعة</button>
+      <button class="btn" onclick="exportReportCSV()" style="background:#166534;color:#fff;border-color:#166534;">⬇️ تصدير CSV</button>
     </div>
     <div id="report-wrap"></div>
   </div>
@@ -1163,12 +1165,18 @@ function renderAll(){
   set('k0',toAr(bsTotal));set('k1',fmt(Math.round(bsPaid/1000))+'ك');set('k1n',Math.round(bsPaid/(bsRev||1)*100)+'٪ تحصيل');
   set('k2',fmt(Math.round(bsRem/1000))+'ك');set('k3',fmt(amT)+' ﷼');set('k3n',toAr(amN)+' عقد');
   set('k4',toAr(bsOpen));set('k4n',toAr(bsClosed)+' مغلق');
+  // KPI month-over-month delta
+  const tm=bs.thisMonth||{count:0,paid:0},pm2=bs.prevMonth||{count:0,paid:0};
+  const _delta=(cur,prv)=>{if(!prv)return'';const d=Math.round((cur-prv)/(prv||1)*100);return `<div style="font-size:9px;margin-top:3px;color:${d>=0?'#166534':'#dc2626'};">${d>=0?'▲':'▼'} ${Math.abs(d)}٪ عن الشهر الماضي</div>`;};
+  const _kd0=document.getElementById('k0-delta');if(_kd0)_kd0.innerHTML=_delta(tm.count,pm2.count);
+  const _kd1=document.getElementById('k1-delta');if(_kd1)_kd1.innerHTML=_delta(tm.paid,pm2.paid);
   const _activeStatuses=['active','awaiting_checkin','awaiting_payment'];
   const _sbDebt=allStaffBookings.filter(b=>b.name&&(b.paidAmount||0)<(b.totalPrice||0));
   const _sbActive=allStaffBookings.filter(b=>_activeStatuses.includes(b.status));
   set('nb-total',toAr(bsTotal));set('nb-debt',toAr(_sbDebt.length));
   const exp7=_sbActive.filter(b=>b.checkOut).map(b=>({...b,d:daysToISO(b.checkOut)})).filter(b=>b.d>=0&&b.d<=7);
   set('alerts-wrap',exp7.length?`<div class="alert-box"><span>⏰</span><span>تنبيه: ${toAr(exp7.length)} حجز ينتهي خلال ٧ أيام — <strong>${exp7.map(b=>b.name).join('، ')}</strong></span></div>`:'');
+  const _eb=document.getElementById('expiry-badge');if(_eb){if(exp7.length){_eb.textContent=exp7.length;_eb.style.display='inline-block';}else _eb.style.display='none';}
   const dbs=_sbDebt.map(b=>({...b,rem:(b.totalPrice||0)-(b.paidAmount||0)})).sort((a,b2)=>b2.rem-a.rem).slice(0,5);
   set('bd-count',toAr(dbs.length)+' حالات');
   set('top-debts',dbs.map(b=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--b);"><div><div style="font-size:11px;font-weight:600;">${b.name}</div><div style="font-size:9px;color:var(--t3);">شقة ${b.apt} · <span class="pill ${SP[b.building]||''}">${b.building}</span></div></div><div style="font-size:12px;font-weight:700;color:var(--red);">${fmt(b.rem)} ﷼</div></div>`).join(''));
@@ -1399,11 +1407,22 @@ async function saveContract(){
   const v=parseFloat(document.getElementById('f-val').value)||0,p=parseFloat(document.getElementById('f-paid').value)||0,mkt=document.getElementById('f-mkt').value;
   const n=new Date(),ds=`${n.getDate()}/${n.getMonth()+1}/${n.getFullYear()}`;
   const c={id:editId||uid(),n:name,sheet:document.getElementById('f-sheet').value,a:document.getElementById('f-apt').value.trim(),v,p,r:Math.max(0,v-p),en:document.getElementById('f-entry').value.trim(),ex:document.getElementById('f-exit').value.trim(),ph:document.getElementById('f-phone').value.trim(),st:document.getElementById('f-status').value,py:document.getElementById('f-pay').value,src:document.getElementById('f-src').value.trim(),type:document.getElementById('f-type').value,notes:document.getElementById('f-notes').value.trim(),ej:parseFloat(document.getElementById('f-ejar').value)||0,pm:document.getElementById('f-pay-method').value};
-  if(editId)allC=allC.map(x=>x.id===editId?c:x);else allC.push(c);
-  if(!editId&&mkt&&COMM_RATE[mkt])currComm.push({id:uid(),m:mkt,c:name,sh:c.sheet,d:ds,a:COMM_RATE[mkt]});
-  saveData();closeForm();renderAll();showToast('✅ جاري المزامنة...');
-  const synced=await syncToSheet(editId?'updateContract':'addContract',c);
-  showToast(synced?'✅ تمت المزامنة مع الشيت':'✅ تم الحفظ');
+  if(editId){
+    allC=allC.map(x=>x.id===editId?c:x);
+    saveData();closeForm();renderAll();showToast('✅ جاري المزامنة...');
+    const synced=await syncToSheet('updateContract',c);
+    showToast(synced?'✅ تمت المزامنة مع الشيت':'✅ تم الحفظ');
+  } else {
+    try{
+      showToast('⏳ جاري الحفظ...');
+      const r=await fetch('/api/bookings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:c.n,building:c.sheet,apt:c.a,totalPrice:c.v,paidAmount:c.p,checkIn:c.en,checkOut:c.ex,phone:c.ph,source:c.src||'يدوي',notes:c.notes,bookingType:'annual',status:c.st})});
+      const d=await r.json();
+      if(!r.ok){showToast('❌ '+(d.error||'حدث خطأ'));return;}
+      if(mkt&&COMM_RATE[mkt])currComm.push({id:uid(),m:mkt,c:name,sh:c.sheet,d:ds,a:COMM_RATE[mkt]});
+      saveData();closeForm();showToast('✅ تم حفظ الحجز في قاعدة البيانات');
+      loadStaffBookings();
+    }catch(e){showToast('❌ حدث خطأ في الحفظ');}
+  }
 }
 
 function openConfirm(id){deleteId=id;document.getElementById('deleteOverlay').style.display='flex';}
@@ -1773,9 +1792,11 @@ function renderStaffBookings(resetPage) {
   if (!tbody) return;
   const building = document.getElementById('sbk-building')?.value || '';
   const status   = document.getElementById('sbk-status')?.value  || '';
+  const q = (document.getElementById('sbk-search')?.value||'').trim().toLowerCase();
   let all = allStaffBookings;
   if (building) all = all.filter(b => b.building === building);
   if (status)   all = all.filter(b => b.status === status);
+  if (q) all = all.filter(b => (b.name||'').toLowerCase().includes(q)||(b.apt||'').includes(q)||(b.phone||'').includes(q));
   if (countEl)  countEl.textContent = all.length.toLocaleString('ar-SA') + ' حجز';
   const pages = Math.max(1,Math.ceil(all.length/_sbkPS));
   _sbkPage = Math.min(_sbkPage,pages);
@@ -1890,6 +1911,8 @@ function renderReports(){
 
   const totalNew=monthContracts.length;
   const totalCollected=monthContracts.reduce((a,b)=>a+(b.paidAmount||0),0);
+  const totalRevenue=monthContracts.reduce((a,b)=>a+(b.totalPrice||0),0);
+  const totalRemaining=monthContracts.reduce((a,b)=>a+Math.max(0,(b.totalPrice||0)-(b.paidAmount||0)),0);
 
   // أداء الفروع
   let branchRows='';
@@ -1930,15 +1953,20 @@ function renderReports(){
     </div>
 
     <!-- الأرقام الكبيرة -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px;">
       <div style="background:var(--s);border:1px solid var(--b);border-radius:12px;padding:20px;text-align:center;">
-        <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;">عقود جديدة هذا الشهر</div>
+        <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;">حجوزات هذا الشهر</div>
         <div style="font-size:40px;font-weight:700;color:var(--gold);line-height:1;">${toAr(totalNew)}</div>
-        <div style="font-size:11px;color:var(--t3);margin-top:4px;">عقد إيجاري</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:4px;">حجز</div>
       </div>
       <div style="background:var(--s);border:1px solid var(--b);border-radius:12px;padding:20px;text-align:center;">
         <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;">إجمالي المحصّل</div>
-        <div style="font-size:32px;font-weight:700;color:var(--green);line-height:1;">${fmt(totalCollected)}</div>
+        <div style="font-size:28px;font-weight:700;color:var(--green);line-height:1;">${fmt(totalCollected)}</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:4px;">من ${fmt(totalRevenue)} ﷼ (${totalRevenue?Math.round(totalCollected/totalRevenue*100):0}٪)</div>
+      </div>
+      <div style="background:var(--s);border:1px solid var(--b);border-radius:12px;padding:20px;text-align:center;">
+        <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;">المتبقي للتحصيل</div>
+        <div style="font-size:28px;font-weight:700;color:var(--red);line-height:1;">${fmt(totalRemaining)}</div>
         <div style="font-size:11px;color:var(--t3);margin-top:4px;">ريال سعودي</div>
       </div>
     </div>
@@ -1994,6 +2022,17 @@ function printReport(){
   </head><body>${body}</body></html>`);
   w.document.close();
   setTimeout(()=>w.print(),500);
+}
+function exportReportCSV(){
+  const month=parseInt(document.getElementById('rep-month')?.value||new Date().getMonth()+1);
+  const year=parseInt(document.getElementById('rep-year')?.value||new Date().getFullYear());
+  const ms=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  const data=allStaffBookings.filter(b=>{if(!b.checkIn||!b.name)return false;const d=new Date(b.checkIn);return d.getMonth()+1===month&&d.getFullYear()===year;});
+  const rows=[['الاسم','المبنى','الشقة','الدخول','الخروج','الإجمالي','المدفوع','المتبقي','الحالة']];
+  const SL={pending:'جديد',awaiting_checkin:'انتظار دخول',active:'نشط',checkout:'خروج',cancelled:'ملغي'};
+  data.forEach(b=>{const fD=d=>d?new Date(d).toLocaleDateString('ar-SA'):'';const rem=Math.max(0,(b.totalPrice||0)-(b.paidAmount||0));rows.push([b.name||'',b.building||'',b.apt||'',fD(b.checkIn),fD(b.checkOut),b.totalPrice||0,b.paidAmount||0,rem,SL[b.status]||b.status||'']);});
+  const csv='﻿'+rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download=`تقرير-${ms[month-1]}-${year}.csv`;a.click();
 }
 
 
