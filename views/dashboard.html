@@ -291,9 +291,9 @@ tbody td{padding:11px 12px;font-size:12px;vertical-align:middle;}
 
 /* ── Dropdown action menu ────────────────────────────── */
 .dd-wrap{position:relative;display:inline-block;}
-.dd-btn{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:8px;border:1px solid var(--b2);background:var(--s);color:var(--t3);cursor:pointer;font-size:14px;font-weight:700;font-family:inherit;transition:all 200ms ease-in-out;padding:0;}
-.dd-btn:hover{background:var(--s2);color:var(--t);border-color:var(--gold);}
-.dd-menu{position:absolute;top:calc(100% + 4px);left:0;min-width:160px;background:var(--s);border:1px solid var(--b);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:200;display:none;overflow:hidden;}
+.dd-btn{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;border:1.5px solid var(--b2);background:var(--s);color:var(--t2);cursor:pointer;font-size:16px;font-weight:700;font-family:inherit;transition:all 180ms ease-in-out;padding:0;line-height:1;flex-shrink:0;}
+.dd-btn:hover{background:var(--gl);color:var(--gold);border-color:var(--gold);}
+.dd-menu{position:fixed;min-width:168px;background:var(--s);border:1px solid var(--b);border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,.18);z-index:9999;display:none;overflow:hidden;}
 .dd-wrap.open .dd-menu{display:block;}
 .dd-item{display:flex;align-items:center;gap:8px;width:100%;padding:8px 12px;font-size:11px;font-family:inherit;background:none;border:none;color:var(--t);cursor:pointer;text-align:right;transition:background 150ms;}
 .dd-item:hover{background:var(--s2);}
@@ -2928,14 +2928,37 @@ function renderAuditLogs(d){
 }
 
 /* ── Dropdown helpers ── */
+function _closeDDs(){document.querySelectorAll('.dd-wrap.open').forEach(w=>{w.classList.remove('open');const m=w.querySelector('.dd-menu');if(m)m.style.cssText='';});}
 function toggleDD(id){
   const wrap=document.getElementById(id);if(!wrap)return;
   const wasOpen=wrap.classList.contains('open');
-  document.querySelectorAll('.dd-wrap.open').forEach(w=>w.classList.remove('open'));
-  if(!wasOpen)wrap.classList.add('open');
+  _closeDDs();
+  if(!wasOpen){
+    wrap.classList.add('open');
+    const btn=wrap.querySelector('.dd-btn');
+    const menu=wrap.querySelector('.dd-menu');
+    if(btn&&menu){
+      const r=btn.getBoundingClientRect();
+      menu.style.display='block';
+      const mw=menu.offsetWidth||168;
+      // Align right edge of menu with right edge of button; clamp to viewport
+      let left=r.right-mw;
+      if(left<8)left=8;
+      if(left+mw>window.innerWidth-8)left=window.innerWidth-mw-8;
+      // Show below button; if not enough room below, show above
+      let top=r.bottom+4;
+      const mh=menu.offsetHeight||160;
+      if(top+mh>window.innerHeight-8)top=r.top-mh-4;
+      menu.style.position='fixed';
+      menu.style.top=top+'px';
+      menu.style.left=left+'px';
+      menu.style.zIndex='9999';
+    }
+  }
 }
-function closeDD(id){const wrap=document.getElementById(id);if(wrap)wrap.classList.remove('open');}
-document.addEventListener('click',e=>{if(!e.target.closest('.dd-wrap'))document.querySelectorAll('.dd-wrap.open').forEach(w=>w.classList.remove('open'));});
+function closeDD(id){const wrap=document.getElementById(id);if(!wrap)return;wrap.classList.remove('open');const m=wrap.querySelector('.dd-menu');if(m)m.style.cssText='';}
+document.addEventListener('click',e=>{if(!e.target.closest('.dd-wrap'))_closeDDs();});
+document.addEventListener('scroll',_closeDDs,true);
 
 window.addEventListener('load',()=>{loadUser();loadData();loadListings();loadBookings();loadHosts();loadMessages();loadApts();loadActivity();loadStaffPerformance();loadWeeklyStats();setInterval(loadData,60000);setInterval(loadMessages,30000);setInterval(loadApts,30000);setInterval(loadBookings,30000);setInterval(loadActivity,30000);setInterval(loadStaffPerformance,120000);setInterval(loadWeeklyStats,300000);if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});});
 </script>
