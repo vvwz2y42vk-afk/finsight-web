@@ -433,6 +433,73 @@ router.put('/api/bookings/:id/edit', reqStaff, async (req,res) => {
   } catch(e){ res.status(500).json({error:e.message}); }
 });
 
+// ── API: Booking Payments ────────────────────────────────
+router.post('/api/bookings/:id/payments', reqStaff, async (req, res) => {
+  try {
+    const B = require('../models/Booking');
+    const V = require('../models/Voucher');
+    const AL = require('../models/ActivityLog');
+    const bkFilter = req.staff.propertyId
+      ? { _id: req.params.id, propertyId: req.staff.propertyId }
+      : { _id: req.params.id, building: req.staff.building, propertyId: null };
+    const bk = await B.findOne(bkFilter);
+    if (!bk) return res.status(404).json({ error: 'الحجز غير موجود' });
+
+    const { amount, paymentMethod, isDeposit, date, notes } = req.body;
+    const parsedAmount = parseFloat(amount);
+    if (!parsedAmount || parsedAmount <= 0) return res.status(400).json({ error: 'المبلغ يجب أن يكون أكبر من صفر' });
+
+    const payDate = date ? new Date(date) : new Date();
+    const pid = req.staff.propertyId || null;
+
+    // إنشاء سند قبض تلقائي
+    const vCount = await V.countDocuments({ building: bk.building, type: 'receipt', propertyId: pid });
+    const vNumber = 'QBD-' + String(vCount + 1).padStart(4, '0');
+    const vDesc = isDeposit
+      ? `تأمين — شقة ${bk.apt} — ${bk.name}`
+      : `دفعة حجز — شقة ${bk.apt} — ${bk.name}`;
+    const voucher = await new V({
+      building: bk.building, type: 'receipt', number: vNumber,
+      date: payDate, name: bk.name, phone: bk.phone, apt: bk.apt,
+      amount: parsedAmount, description: vDesc, notes: notes || '',
+      paymentMethod: paymentMethod || 'cash', bookingId: bk._id,
+      createdBy: req.staff.name, propertyId: pid,
+    }).save();
+
+    // إضافة الدفعة وإعادة حساب المدفوع
+    const payment = { date: payDate, amount: parsedAmount, paymentMethod: paymentMethod || 'cash', isDeposit: !!isDeposit, notes: notes || '', createdBy: req.staff.name, voucherId: voucher._id };
+    bk.payments.push(payment);
+    bk.paidAmount = bk.payments.reduce((s, p) => s + (p.amount || 0), 0);
+    await bk.save();
+
+    AL.create({ building: bk.building, staffName: req.staff.name, action: 'payment_add', apt: bk.apt, guestName: bk.name, bookingId: bk._id, details: `دفعة ${parsedAmount} ريال — ${paymentMethod || 'cash'}`, propertyId: pid }).catch(() => {});
+    res.json({ success: true, payment: bk.payments[bk.payments.length - 1], voucherNumber: vNumber, paidAmount: bk.paidAmount });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+router.delete('/api/bookings/:id/payments/:pid', reqStaff, async (req, res) => {
+  try {
+    const B = require('../models/Booking');
+    const V = require('../models/Voucher');
+    const bkFilter = req.staff.propertyId
+      ? { _id: req.params.id, propertyId: req.staff.propertyId }
+      : { _id: req.params.id, building: req.staff.building, propertyId: null };
+    const bk = await B.findOne(bkFilter);
+    if (!bk) return res.status(404).json({ error: 'الحجز غير موجود' });
+
+    const pay = bk.payments.id(req.params.pid);
+    if (!pay) return res.status(404).json({ error: 'الدفعة غير موجودة' });
+
+    if (pay.voucherId) {
+      await V.findByIdAndDelete(pay.voucherId).catch(() => {});
+    }
+    bk.payments.pull(req.params.pid);
+    bk.paidAmount = bk.payments.reduce((s, p) => s + (p.amount || 0), 0);
+    await bk.save();
+    res.json({ success: true, paidAmount: bk.paidAmount });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 // ── API: New Manual Booking ───────────────────────────────
 router.post('/api/bookings/new', reqStaff, async (req,res) => {
   try {

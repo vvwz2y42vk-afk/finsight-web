@@ -2265,6 +2265,7 @@ function filterApts(f,btn){
 // ── Booking Modal ────────────────────────────────────────
 async function openBkModal(bookingId, apt, status) {
   if (!bookingId || status === 'vacant') { toast('🟢 الشقة ' + apt + ' — شاغرة'); return; }
+  _curBkId = bookingId; _curBkApt = apt;
   document.getElementById('bkModalTitle').textContent = 'شقة ' + apt + ' — ' + esc(BUILDING);
   document.getElementById('bkModalBody').innerHTML = '<div style="text-align:center;padding:30px;color:var(--t4);font-size:13px;">⏳ جاري تحميل البيانات...</div>';
   document.getElementById('bkModal').style.display = 'flex';
@@ -2330,6 +2331,64 @@ async function openBkModal(bookingId, apt, status) {
     html += `<div class="mrow"><span>المتبقي</span><b style="color:${remain>0?'#dc2626':'#16a34a'};">${remain.toLocaleString()} ريال ${remain===0?'✓':''}</b></div>`;
     const pmLabels={cash:'كاش',transfer:'تحويل',network:'شبكة',other:'أخرى'};
     if(b.paymentMethod) html += r('طريقة الدفع', pmLabels[b.paymentMethod]||b.paymentMethod);
+    // ── سجل الدفعات ──
+    html += sec('💳 سجل الدفعات');
+    const pmIcon={cash:'💵',transfer:'🏦',network:'💳',check:'📝',other:'🔖'};
+    const pmLbl={cash:'نقداً',transfer:'تحويل',network:'شبكة',check:'كمبيالة',other:'أخرى'};
+    if(b.payments&&b.payments.length){
+      b.payments.forEach(p=>{
+        const pDate=new Date(p.date).toLocaleDateString('ar-SA',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+new Date(p.date).toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
+        html+=`<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:9px 12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;gap:8px;">
+          <div style="display:flex;align-items:center;gap:8px;flex:1;flex-wrap:wrap;">
+            <span style="font-size:16px;">${pmIcon[p.paymentMethod]||'💰'}</span>
+            <div>
+              <div style="font-size:13px;font-weight:800;color:#047857;">${(p.amount||0).toLocaleString()} ريال
+                ${p.isDeposit?'<span style="font-size:10px;background:#fef3c7;color:#92400e;padding:2px 7px;border-radius:10px;font-weight:700;margin-right:4px;">تأمين</span>':''}
+              </div>
+              <div style="font-size:11px;color:var(--t4);">${pmLbl[p.paymentMethod]||p.paymentMethod} • ${pDate}${p.createdBy?' • '+esc(p.createdBy):''}${p.notes?' — '+esc(p.notes):''}</div>
+            </div>
+          </div>
+          <button onclick="delPayment('${p._id}')" style="border:none;background:#fee2e2;color:#dc2626;border-radius:7px;padding:4px 9px;cursor:pointer;font-size:12px;font-weight:700;flex-shrink:0;">×</button>
+        </div>`;
+      });
+    } else {
+      html+=`<div style="color:var(--t4);font-size:12px;padding:8px 0;">لا توجد دفعات مسجّلة بعد</div>`;
+    }
+    html+=`<button onclick="togglePayForm()" style="margin-top:6px;padding:7px 16px;background:linear-gradient(135deg,#047857,#059669);border:none;border-radius:9px;color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">+ تسجيل دفعة جديدة</button>
+    <div id="payForm" style="display:none;margin-top:10px;background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:12px;padding:14px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--t3);display:block;margin-bottom:3px;">التاريخ والوقت</label>
+          <input type="datetime-local" id="pay-date" style="width:100%;padding:7px;border:1.5px solid #e2e8f0;border-radius:8px;font-family:inherit;font-size:12px;outline:none;">
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--t3);display:block;margin-bottom:3px;">المبلغ (ريال) *</label>
+          <input type="number" id="pay-amount" placeholder="0" min="1" style="width:100%;padding:7px;border:1.5px solid #e2e8f0;border-radius:8px;font-family:inherit;font-size:12px;outline:none;">
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--t3);display:block;margin-bottom:3px;">طريقة الدفع</label>
+          <select id="pay-method" style="width:100%;padding:7px;border:1.5px solid #e2e8f0;border-radius:8px;font-family:inherit;font-size:12px;outline:none;">
+            <option value="cash">نقداً</option>
+            <option value="transfer">تحويل بنكي</option>
+            <option value="network">شبكة</option>
+            <option value="check">كمبيالة</option>
+            <option value="other">أخرى</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--t3);display:block;margin-bottom:3px;">ملاحظات</label>
+          <input type="text" id="pay-notes" placeholder="اختياري" style="width:100%;padding:7px;border:1.5px solid #e2e8f0;border-radius:8px;font-family:inherit;font-size:12px;outline:none;">
+        </div>
+      </div>
+      <label style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--t2);cursor:pointer;margin-bottom:10px;">
+        <input type="checkbox" id="pay-deposit" style="cursor:pointer;accent-color:#f59e0b;"> هذه الدفعة تأمين (ضمان)
+      </label>
+      <div style="display:flex;gap:8px;">
+        <button onclick="submitPayment()" style="flex:1;padding:8px;background:linear-gradient(135deg,#047857,#059669);border:none;border-radius:9px;color:#fff;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">✅ حفظ الدفعة وإنشاء السند</button>
+        <button onclick="togglePayForm()" style="padding:8px 14px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:9px;font-family:inherit;font-size:12px;cursor:pointer;">إلغاء</button>
+      </div>
+    </div>`;
+
     if(b.companions&&b.companions.length){
       html += sec('👥 المرافقون');
       const idL={national_id:'هوية',passport:'جواز',iqama:'إقامة',family_card:'كرت عائلة'};
@@ -2357,11 +2416,48 @@ async function openBkModal(bookingId, apt, status) {
     html += `<button class="mbtn mbtn-cancel" onclick="closeBkModal()">إغلاق</button></div>`;
 
     document.getElementById('bkModalBody').innerHTML = html;
+    // تعيين التاريخ الحالي لحقل الدفعة
+    const now=new Date(), pd=document.getElementById('pay-date');
+    if(pd){ const pad=n=>String(n).padStart(2,'0'); pd.value=`${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`; }
   } catch(e) {
     document.getElementById('bkModalBody').innerHTML = '<div style="color:#dc2626;padding:20px;">❌ حدث خطأ في تحميل البيانات</div>';
   }
 }
 function closeBkModal(){ document.getElementById('bkModal').style.display='none'; }
+
+function togglePayForm(){
+  const f=document.getElementById('payForm');
+  if(f) f.style.display=f.style.display==='none'?'block':'none';
+}
+
+async function submitPayment(){
+  const amount=parseFloat(document.getElementById('pay-amount')?.value)||0;
+  const paymentMethod=document.getElementById('pay-method')?.value||'cash';
+  const isDeposit=document.getElementById('pay-deposit')?.checked||false;
+  const date=document.getElementById('pay-date')?.value||'';
+  const notes=document.getElementById('pay-notes')?.value||'';
+  if(!amount||amount<=0){showToast('أدخل مبلغاً صحيحاً');return;}
+  try{
+    const r=await fetch(`/staff/api/bookings/${_curBkId}/payments`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({amount,paymentMethod,isDeposit,date,notes})});
+    const d=await r.json();
+    if(!r.ok){showToast('❌ '+(d.error||'خطأ'),'error');return;}
+    toast(`✅ تم تسجيل الدفعة — سند رقم ${d.voucherNumber}`,'success');
+    openBkModal(_curBkId,_curBkApt,'active');
+    loadBookings(); loadStats();
+  }catch(e){showToast('❌ حدث خطأ','error');}
+}
+
+async function delPayment(paymentId){
+  if(!confirm('حذف هذه الدفعة وسندها؟')) return;
+  try{
+    const r=await fetch(`/staff/api/bookings/${_curBkId}/payments/${paymentId}`,{method:'DELETE'});
+    const d=await r.json();
+    if(!d.success){showToast('❌ '+(d.error||'خطأ'),'error');return;}
+    toast('🗑️ تم حذف الدفعة والسند','success');
+    openBkModal(_curBkId,_curBkApt,'active');
+    loadBookings(); loadStats();
+  }catch(e){showToast('❌ حدث خطأ','error');}
+}
 
 async function printBkInvoice(bookingId){
   try{
@@ -2443,6 +2539,7 @@ async function printBkInvoice(bookingId){
 }
 
 let editBkId=null;
+let _curBkId='', _curBkApt='';
 async function editBk(id){
   try{
     const r=await fetch('/staff/api/bookings/'+id);
