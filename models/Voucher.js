@@ -14,7 +14,7 @@ const schema = new mongoose.Schema({
   bankName:      String,
   dueDate:       Date,
   createdBy:     String,
-  paymentMethod: { type: String, enum: ['cash','transfer','network','check',''], default: '' },
+  paymentMethod: { type: String, enum: ['cash','transfer','network','check','digital','travel_agent',''], default: '' },
   bookingId:   { type: mongoose.Schema.Types.ObjectId, ref: 'Booking' },
   propertyId:  { type: mongoose.Schema.Types.ObjectId, ref: 'Property', default: null },
 }, { timestamps: true });

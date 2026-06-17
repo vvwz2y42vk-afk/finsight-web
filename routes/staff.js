@@ -2339,17 +2339,27 @@ router.get('/api/reports/cash-flow', reqStaff, async (req, res) => {
 
     // حسابات الملخص
     const sum   = arr => arr.reduce((s,v) => s+v.amount, 0);
-    const byPm  = (arr, pm) => sum(arr.filter(v => resolveMethod(v) === pm || v.paymentMethod === pm));
+    const byPm  = (arr, pm) => sum(arr.filter(v => (v.paymentMethod||'cash') === pm));
 
     const totalReceipts      = sum(receipts);
     const totalDisbursements = sum(disbursements);
     const bankReceipts       = byPm(receipts, 'transfer');
     const bankDisbursements  = byPm(disbursements, 'transfer');
-    const cashReceipts       = sum(receipts.filter(v => v.paymentMethod !== 'transfer'));
-    const cashDisbursements  = sum(disbursements.filter(v => v.paymentMethod !== 'transfer'));
+    const cashReceipts       = byPm(receipts, 'cash') + sum(receipts.filter(v => !v.paymentMethod));
+    const cashDisbursements  = byPm(disbursements, 'cash') + sum(disbursements.filter(v => !v.paymentMethod));
     const totalChecks        = sum(checks);
     const vatOnReceipts      = Math.round(totalReceipts / 1.15 * 0.15 * 100) / 100;
     const vatOnDisbursements = Math.round(totalDisbursements / 1.15 * 0.15 * 100) / 100;
+
+    // تفصيل طرق الدفع لصف الأعلى
+    const pmReceipts = {
+      cash:         byPm(receipts, 'cash') + sum(receipts.filter(v => !v.paymentMethod)),
+      check:        byPm(receipts, 'check'),
+      network:      byPm(receipts, 'network'),
+      transfer:     byPm(receipts, 'transfer'),
+      digital:      byPm(receipts, 'digital'),
+      travel_agent: byPm(receipts, 'travel_agent'),
+    };
 
     // الرصيد الإجمالي للبنك (كل الفترات)
     const [allBankR, allBankD] = await Promise.all([
@@ -2357,6 +2367,8 @@ router.get('/api/reports/cash-flow', reqStaff, async (req, res) => {
       V.aggregate([{ $match: { ...baseFilter, type: 'disbursement', $or:[{paymentMethod:'transfer'},{bankName:{$ne:'',$exists:true}}] } }, { $group:{_id:null,t:{$sum:'$amount'}} }]),
     ]);
     const totalBankBalance = (allBankR[0]?.t||0) - (allBankD[0]?.t||0);
+    const net      = totalReceipts - totalDisbursements;
+    const netBank  = bankReceipts - bankDisbursements;
 
     res.json({
       receipts, disbursements, checks,
@@ -2366,12 +2378,14 @@ router.get('/api/reports/cash-flow', reqStaff, async (req, res) => {
         countReceipts: receipts.length, countDisbursements: disbursements.length,
         bankReceipts, bankDisbursements, cashReceipts, cashDisbursements,
         vatOnReceipts, vatOnDisbursements,
-        net:  totalReceipts - totalDisbursements,
-        netBank: bankReceipts - bankDisbursements,
+        net, netBank,
         netCash: cashReceipts - cashDisbursements,
-        totalFund: cashReceipts - cashDisbursements,
-        bankBalance: bankReceipts - bankDisbursements,
+        totalFund: net,
+        bankBalance: netBank,
         totalBankBalance, totalChecks,
+        pmReceipts,
+        depositReceipts: 0, depositDisbursements: 0,
+        netDeposit: 0, prevDeposits: 0, prevAmounts: 0,
       },
     });
   } catch(e) { res.status(500).json({ error: e.message }); }
