@@ -572,10 +572,7 @@ router.post('/api/bookings/new', reqStaff, async (req,res) => {
 
     const bk = await new B({
       building: req.staff.building,
-      apt,
-      name,
-      phone,
-      bookingType,
+      apt, name, phone, bookingType,
       checkIn: new Date(checkIn),
       checkOut: checkout ? new Date(checkout) : undefined,
       nights,
@@ -584,8 +581,7 @@ router.post('/api/bookings/new', reqStaff, async (req,res) => {
       totalPrice: parseFloat(totalPrice)||0,
       paidAmount: parseFloat(paidAmount)||0,
       paymentMethod: paymentMethod||'',
-      idType: idType||'',
-      idNumber: idNumber||'',
+      idType: idType||'', idNumber: idNumber||'',
       companions: Array.isArray(companions) ? companions.filter(c=>c.name).map(c=>({name:c.name,idType:c.idType||'',idNumber:c.idNumber||''})) : [],
       status: status||'awaiting_checkin',
       notes: notes||'',
@@ -593,17 +589,38 @@ router.post('/api/bookings/new', reqStaff, async (req,res) => {
       propertyId: req.staff.propertyId || null,
     }).save();
 
+    // إنشاء سند قبض + دفعة تلقائية إذا كان هناك مبلغ مدفوع
+    let voucherNumber = null;
+    if (paid > 0) {
+      const V = require('../models/Voucher');
+      const pid = req.staff.propertyId || null;
+      const vCount = await V.countDocuments({ building: req.staff.building, type: 'receipt', propertyId: pid });
+      voucherNumber = 'QBD-' + String(vCount + 1).padStart(4, '0');
+      const voucher = await new V({
+        building: req.staff.building, type: 'receipt', number: voucherNumber,
+        date: new Date(), name, phone, apt, amount: paid,
+        description: `دفعة حجز — شقة ${apt} — ${name}`,
+        paymentMethod: paymentMethod || 'cash',
+        bookingId: bk._id, createdBy: req.staff.name, propertyId: pid,
+      }).save();
+      bk.payments.push({
+        date: new Date(), amount: paid,
+        paymentMethod: paymentMethod || 'cash',
+        isDeposit: false, notes: '', createdBy: req.staff.name,
+        voucherId: voucher._id,
+      });
+      await bk.save();
+    }
+
     AL.create({building:req.staff.building,staffName:req.staff.name,action:'booking_add',apt,guestName:name,bookingId:bk._id,details:'حجز يدوي',propertyId:req.staff.propertyId||null}).catch(e=>console.warn('audit log:',e.message));
-    // Upsert guest record with all available data
     const Guest = require('../models/Guest');
     Guest.findOneAndUpdate(
       { phone, propertyId: req.staff.propertyId || null },
       { $set: { name, idType: idType||'', idNumber: idNumber||'', building: req.staff.building, lastSeen: new Date(), email: req.body.email||'' }, $inc: { totalBookings: 1 }, $setOnInsert: { category: 'regular' } },
       { upsert: true, new: true, setDefaultsOnInsert: true }
     ).catch(e => console.warn('guest upsert:', e.message));
-    // WhatsApp booking confirmation
     WA.sendBookingConfirmed(phone, name, apt, req.staff.building, bk.checkIn, bk.checkOut, bk.totalPrice).catch(e=>console.warn('WA confirm:',e.message));
-    res.json({success:true, id:bk._id});
+    res.json({success:true, id:bk._id, voucherNumber});
   } catch(e){ res.status(500).json({error:e.message}); }
 });
 
