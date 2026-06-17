@@ -639,13 +639,13 @@ router.get('/api/vouchers', reqStaff, async (req,res) => {
 router.post('/api/vouchers', reqStaff, async (req,res) => {
   try {
     const V = require('../models/Voucher');
-    const { type, date, name, phone, apt, amount, description, notes, checkNumber, bankName, dueDate, bookingId } = req.body;
+    const { type, date, name, phone, apt, amount, description, notes, checkNumber, bankName, dueDate, bookingId, paymentMethod } = req.body;
     if(!type||!amount) return res.status(400).json({error:'نوع الوثيقة والمبلغ مطلوبان'});
     const pid = req.staff.propertyId || null;
     const count = await V.countDocuments({ building: req.staff.building, type, propertyId: pid });
     const prefixes = { receipt:'QBD', invoice:'INV', disbursement:'SRF', check:'KMB', tax:'ZRB' };
     const number = (prefixes[type]||'DOC') + '-' + String(count+1).padStart(4,'0');
-    const v = await new V({ building:req.staff.building, type, number, date:date?new Date(date):new Date(), name, phone, apt, amount:parseFloat(amount)||0, description, notes, checkNumber, bankName, dueDate:dueDate?new Date(dueDate):undefined, bookingId:bookingId||undefined, createdBy:req.staff.name, propertyId:pid }).save();
+    const v = await new V({ building:req.staff.building, type, number, date:date?new Date(date):new Date(), name, phone, apt, amount:parseFloat(amount)||0, description, notes, checkNumber, bankName, dueDate:dueDate?new Date(dueDate):undefined, bookingId:bookingId||undefined, createdBy:req.staff.name, paymentMethod:paymentMethod||'', propertyId:pid }).save();
     res.json({ success:true, id:v._id, number:v.number });
   } catch(e){ res.status(500).json({error:e.message}); }
 });
@@ -2147,6 +2147,103 @@ router.get('/api/daily-closing', reqStaff, async (req, res) => {
       })),
       arrivals: arrivals.map(b => ({ _id: b._id, apt: b.apt, name: b.name, phone: b.phone, checkIn: b.checkIn, checkOut: b.checkOut, status: b.status })),
       departures: departures.map(b => ({ _id: b._id, apt: b.apt, name: b.name, phone: b.phone, checkIn: b.checkIn, checkOut: b.checkOut, status: b.status })),
+    });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── Cash Flow Report ─────────────────────────────────────
+router.get('/api/reports/cash-flow', reqStaff, async (req, res) => {
+  try {
+    const V = require('../models/Voucher');
+    const B = require('../models/Booking');
+    const baseFilter = req.staff.propertyId
+      ? { propertyId: req.staff.propertyId }
+      : { building: req.staff.building, propertyId: null };
+
+    const { dateFrom, dateTo, user, includeClosed, includeServices, includeDeposits } = req.query;
+    const from = dateFrom ? new Date(dateFrom) : (() => { const d=new Date(); d.setHours(0,0,0,0); return d; })();
+    const to   = dateTo   ? new Date(dateTo)   : (() => { const d=new Date(); d.setHours(23,59,59,999); return d; })();
+
+    const vFilter = { ...baseFilter, date: { $gte: from, $lte: to } };
+    if (user) vFilter.createdBy = user;
+
+    // أنواع سندات القبض
+    const receiptTypes = ['receipt'];
+    if (includeServices === 'true') receiptTypes.push('invoice');
+
+    const [rawReceipts, rawDisbursements, rawChecks, users] = await Promise.all([
+      V.find({ ...vFilter, type: { $in: receiptTypes } }).sort({ date: 1 }).lean(),
+      V.find({ ...vFilter, type: 'disbursement' }).sort({ date: 1 }).lean(),
+      V.find({ ...baseFilter, type: 'check', date: { $gte: from, $lte: to } }).sort({ date: 1 }).lean(),
+      V.distinct('createdBy', baseFilter),
+    ]);
+
+    // helper: استنتاج طريقة الدفع من الحقول المتاحة
+    const resolveMethod = v => v.paymentMethod || (v.bankName ? 'transfer' : 'cash');
+
+    const mapV = v => ({
+      _id: v._id, number: v.number || '-', date: v.date,
+      name: v.name || '', apt: v.apt || '', description: v.description || '',
+      paymentMethod: resolveMethod(v), bankName: v.bankName || '',
+      amount: v.amount || 0, createdBy: v.createdBy || '',
+    });
+
+    let receipts     = rawReceipts.map(mapV);
+    let disbursements = rawDisbursements.map(mapV);
+    const checks      = rawChecks.map(mapV);
+
+    // حجوزات مغلقة (اختياري)
+    if (includeClosed === 'true') {
+      const bkFilter = { ...baseFilter, status: 'checkout', checkOut: { $gte: from, $lte: to } };
+      if (user) bkFilter.createdBy = user;
+      const closed = await B.find(bkFilter).sort({ checkOut: 1 }).lean();
+      const bkRows = closed.filter(b => (b.paidAmount||0) > 0).map(b => ({
+        _id: b._id,
+        number: 'BK-' + b._id.toString().slice(-5).toUpperCase(),
+        date: b.checkOut, name: b.name, apt: b.apt,
+        description: `حجز شقة ${b.apt}`,
+        paymentMethod: b.paymentMethod || 'cash', bankName: '',
+        amount: b.paidAmount || 0, createdBy: '',
+      }));
+      receipts = [...receipts, ...bkRows].sort((a,b) => new Date(a.date)-new Date(b.date));
+    }
+
+    // حسابات الملخص
+    const sum   = arr => arr.reduce((s,v) => s+v.amount, 0);
+    const byPm  = (arr, pm) => sum(arr.filter(v => resolveMethod(v) === pm || v.paymentMethod === pm));
+
+    const totalReceipts      = sum(receipts);
+    const totalDisbursements = sum(disbursements);
+    const bankReceipts       = byPm(receipts, 'transfer');
+    const bankDisbursements  = byPm(disbursements, 'transfer');
+    const cashReceipts       = sum(receipts.filter(v => v.paymentMethod !== 'transfer'));
+    const cashDisbursements  = sum(disbursements.filter(v => v.paymentMethod !== 'transfer'));
+    const totalChecks        = sum(checks);
+    const vatOnReceipts      = Math.round(totalReceipts / 1.15 * 0.15 * 100) / 100;
+    const vatOnDisbursements = Math.round(totalDisbursements / 1.15 * 0.15 * 100) / 100;
+
+    // الرصيد الإجمالي للبنك (كل الفترات)
+    const [allBankR, allBankD] = await Promise.all([
+      V.aggregate([{ $match: { ...baseFilter, type: { $in: ['receipt','invoice'] }, $or:[{paymentMethod:'transfer'},{bankName:{$ne:'',$exists:true}}] } }, { $group:{_id:null,t:{$sum:'$amount'}} }]),
+      V.aggregate([{ $match: { ...baseFilter, type: 'disbursement', $or:[{paymentMethod:'transfer'},{bankName:{$ne:'',$exists:true}}] } }, { $group:{_id:null,t:{$sum:'$amount'}} }]),
+    ]);
+    const totalBankBalance = (allBankR[0]?.t||0) - (allBankD[0]?.t||0);
+
+    res.json({
+      receipts, disbursements, checks,
+      users: users.filter(Boolean),
+      summary: {
+        totalReceipts, totalDisbursements,
+        countReceipts: receipts.length, countDisbursements: disbursements.length,
+        bankReceipts, bankDisbursements, cashReceipts, cashDisbursements,
+        vatOnReceipts, vatOnDisbursements,
+        net:  totalReceipts - totalDisbursements,
+        netBank: bankReceipts - bankDisbursements,
+        netCash: cashReceipts - cashDisbursements,
+        totalFund: cashReceipts - cashDisbursements,
+        bankBalance: bankReceipts - bankDisbursements,
+        totalBankBalance, totalChecks,
+      },
     });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
