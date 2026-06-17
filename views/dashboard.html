@@ -1054,6 +1054,8 @@ const fmt=n=>Number(n||0).toLocaleString('ar-SA');
 const toAr=n=>String(n).replace(/\d/g,d=>'٠١٢٣٤٥٦٧٨٩'[d]);
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5);
 function daysTo(d){if(!d)return 999;const p=String(d).trim().split('/');if(p.length!==3)return 999;const dt=new Date(`${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`);return isNaN(dt)?999:Math.round((dt-today)/864e5);}
+function daysToISO(d){if(!d)return 999;const dt=new Date(d);return isNaN(dt)?999:Math.round((dt-today)/864e5);}
+function fmtDate(d){if(!d)return'—';return new Date(d).toLocaleDateString('ar-SA',{day:'numeric',month:'short',year:'2-digit'});}
 function set(id,v){const e=document.getElementById(id);if(e)e.innerHTML=v;}
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3500);}
 function currMonthKey(){const n=new Date();return`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;}
@@ -1085,13 +1087,15 @@ async function loadData(){
   document.getElementById('pageDate').textContent=`${n.getDate()} ${ms[n.getMonth()]} ${n.getFullYear()}`;
   set('curr-month-lbl',monthLabel(currMonthKey()));
   try{
-    const [cRes,chRes]=await Promise.all([fetch('/api/contracts'),fetch('/api/commission-history')]);
+    const [cRes,chRes,bsRes,sbRes]=await Promise.all([fetch('/api/contracts'),fetch('/api/commission-history'),fetch('/api/booking-stats'),fetch('/api/staff-bookings-full')]);
     if(cRes.status===401){location.href='/login';return;}
     if(!cRes.ok){let ed='';try{const ej=await cRes.json();ed=ej.error||'';}catch{}throw new Error(`${cRes.status}: ${ed||'unknown'}`);};
     const cData=await cRes.json();
     const chData=await chRes.json();
     allC=Array.isArray(cData)?cData:[];
     commHistory=Array.isArray(chData)?chData:[];
+    if(bsRes.ok){try{window._bkStats=await bsRes.json();}catch{window._bkStats=null;}}
+    if(sbRes.ok){try{const sbData=await sbRes.json();allStaffBookings=Array.isArray(sbData)?sbData:[];}catch{}}
     const key=currMonthKey();
     const curr=commHistory.find(h=>h.key===key);
     currComm=curr?curr.comm:(lsGet('fs-curr-comm')||getInitialComm());
@@ -1129,18 +1133,23 @@ function renderAll(){
   const tv=allC.reduce((a,c)=>a+c.v,0),tp=allC.reduce((a,c)=>a+c.p,0),tr=allC.reduce((a,c)=>a+c.r,0);
   const op=allC.filter(c=>c.st==='مفتوح').length,cl=allC.filter(c=>c.st==='مغلق').length;
   const amT=currComm.filter(c=>c.m==='عبدالملك').reduce((a,c)=>a+c.a,0),amN=currComm.filter(c=>c.m==='عبدالملك').length;
-  set('k0',toAr(allC.filter(c=>c.n).length));set('k1',fmt(Math.round(tp/1000))+'ك');set('k1n',Math.round(tp/(tv||1)*100)+'٪ تحصيل');
-  set('k2',fmt(Math.round(tr/1000))+'ك');set('k3',fmt(amT)+' ﷼');set('k3n',toAr(amN)+' عقد');
-  set('k4',toAr(op));set('k4n',toAr(cl)+' مغلق');
-  set('nb-total',toAr(allC.filter(c=>c.n).length));set('nb-debt',toAr(allC.filter(c=>c.r>0).length));
-  const exp7=allC.filter(c=>c.st==='مفتوح'&&c.ex).map(c=>({...c,d:daysTo(c.ex)})).filter(c=>c.d>=0&&c.d<=7);
-  set('alerts-wrap',exp7.length?`<div class="alert-box"><span>⏰</span><span>تنبيه: ${toAr(exp7.length)} عقد تنتهي خلال ٧ أيام — <strong>${exp7.map(c=>c.n).join('، ')}</strong></span></div>`:'');
-  const dbs=allC.filter(c=>c.r>0).sort((a,b)=>b.r-a.r).slice(0,5);
+  const bs=window._bkStats||{total:0,revenue:0,paid:0,remaining:0,open:0,closed:0};
+  const bsTotal=bs.total,bsPaid=bs.paid,bsRev=bs.revenue,bsRem=bs.remaining,bsOpen=bs.open,bsClosed=bs.closed;
+  set('k0',toAr(bsTotal));set('k1',fmt(Math.round(bsPaid/1000))+'ك');set('k1n',Math.round(bsPaid/(bsRev||1)*100)+'٪ تحصيل');
+  set('k2',fmt(Math.round(bsRem/1000))+'ك');set('k3',fmt(amT)+' ﷼');set('k3n',toAr(amN)+' عقد');
+  set('k4',toAr(bsOpen));set('k4n',toAr(bsClosed)+' مغلق');
+  const _activeStatuses=['active','awaiting_checkin','awaiting_payment'];
+  const _sbDebt=allStaffBookings.filter(b=>b.name&&(b.paidAmount||0)<(b.totalPrice||0));
+  const _sbActive=allStaffBookings.filter(b=>_activeStatuses.includes(b.status));
+  set('nb-total',toAr(bsTotal));set('nb-debt',toAr(_sbDebt.length));
+  const exp7=_sbActive.filter(b=>b.checkOut).map(b=>({...b,d:daysToISO(b.checkOut)})).filter(b=>b.d>=0&&b.d<=7);
+  set('alerts-wrap',exp7.length?`<div class="alert-box"><span>⏰</span><span>تنبيه: ${toAr(exp7.length)} حجز ينتهي خلال ٧ أيام — <strong>${exp7.map(b=>b.name).join('، ')}</strong></span></div>`:'');
+  const dbs=_sbDebt.map(b=>({...b,rem:(b.totalPrice||0)-(b.paidAmount||0)})).sort((a,b2)=>b2.rem-a.rem).slice(0,5);
   set('bd-count',toAr(dbs.length)+' حالات');
-  set('top-debts',dbs.map(c=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--b);"><div><div style="font-size:11px;font-weight:600;">${c.n}</div><div style="font-size:9px;color:var(--t3);">شقة ${c.a} · <span class="pill ${SP[c.sheet]||''}">${c.sheet}</span></div></div><div style="font-size:12px;font-weight:700;color:var(--red);">${fmt(c.r)} ﷼</div></div>`).join(''));
-  const exps=allC.filter(c=>c.st==='مفتوح'&&c.ex).map(c=>({...c,d:daysTo(c.ex)})).filter(c=>c.d>=0&&c.d<=30).sort((a,b)=>a.d-b.d).slice(0,5);
-  set('exp-count',toAr(exps.length)+' عقد');
-  set('top-expiry',exps.map(c=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--b);"><div><div style="font-size:11px;font-weight:600;">${c.n}</div><div style="font-size:9px;color:var(--t3);">شقة ${c.a} · ${c.ex}</div></div><div style="font-size:12px;font-weight:700;color:${c.d<=7?'var(--red)':c.d<=15?'var(--gold)':'var(--green)'};">${toAr(c.d)} يوم</div></div>`).join(''));
+  set('top-debts',dbs.map(b=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--b);"><div><div style="font-size:11px;font-weight:600;">${b.name}</div><div style="font-size:9px;color:var(--t3);">شقة ${b.apt} · <span class="pill ${SP[b.building]||''}">${b.building}</span></div></div><div style="font-size:12px;font-weight:700;color:var(--red);">${fmt(b.rem)} ﷼</div></div>`).join(''));
+  const exps=_sbActive.filter(b=>b.checkOut).map(b=>({...b,d:daysToISO(b.checkOut)})).filter(b=>b.d>=0&&b.d<=30).sort((a,b2)=>a.d-b2.d).slice(0,5);
+  set('exp-count',toAr(exps.length)+' حجز');
+  set('top-expiry',exps.map(b=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--b);"><div><div style="font-size:11px;font-weight:600;">${b.name}</div><div style="font-size:9px;color:var(--t3);">شقة ${b.apt} · ${fmtDate(b.checkOut)}</div></div><div style="font-size:12px;font-weight:700;color:${b.d<=7?'var(--red)':b.d<=15?'var(--gold)':'var(--green)'};">${toAr(b.d)} يوم</div></div>`).join(''));
   renderContracts();renderCommissions();renderCollection();renderExpiry();renderMap();renderPerformance();renderSources();renderReports();
 }
 
@@ -1254,20 +1263,21 @@ function renderCommissions(){
 }
 
 function renderCollection(){
-  const d=allC.filter(c=>c.r>0&&c.n).sort((a,b)=>b.r-a.r);
-  set('total-debt-amt',fmt(d.reduce((a,c)=>a+c.r,0))+' ﷼');
-  set('debt-list',d.map(c=>`<div class="debt-item"><div class="debt-info"><div class="debt-name">${c.n}</div><div class="debt-meta">شقة ${c.a} · <span class="pill ${SP[c.sheet]||''}">${c.sheet}</span></div></div><div class="debt-amt">${fmt(c.r)} ﷼</div><a class="wa-btn" href="https://wa.me/${(c.ph||'').replace(/\D/g,'')}?text=${encodeURIComponent('السلام عليكم '+c.n+'، نود تذكيركم بالمبلغ المتبقي '+fmt(c.r)+' ﷼ لشقة رقم '+c.a+'. شكراً لتعاملكم مع BAREZ.')}" target="_blank">📱 واتساب</a></div>`).join(''));
+  const d=allStaffBookings.filter(b=>b.name&&(b.paidAmount||0)<(b.totalPrice||0)).map(b=>({...b,rem:(b.totalPrice||0)-(b.paidAmount||0)})).sort((a,b2)=>b2.rem-a.rem);
+  set('total-debt-amt',fmt(d.reduce((a,b)=>a+b.rem,0))+' ﷼');
+  set('debt-list',d.length?d.map(b=>`<div class="debt-item"><div class="debt-info"><div class="debt-name">${b.name}</div><div class="debt-meta">شقة ${b.apt} · <span class="pill ${SP[b.building]||''}">${b.building||'—'}</span></div></div><div class="debt-amt">${fmt(b.rem)} ﷼</div><a class="wa-btn" href="https://wa.me/${(b.phone||'').replace(/^0/,'966')}?text=${encodeURIComponent('السلام عليكم '+b.name+'، نود تذكيركم بالمبلغ المتبقي '+fmt(b.rem)+' ﷼ لشقة رقم '+b.apt+'. شكراً لتعاملكم مع BAREZ.')}" target="_blank">📱 واتساب</a></div>`).join(''):'<div style="text-align:center;padding:32px;color:var(--t3);">لا توجد مديونيات ✓</div>');
 }
 
 function renderExpiry(){
-  const up=allC.filter(c=>c.n&&c.st==='مفتوح'&&c.ex).map(c=>({...c,d:daysTo(c.ex)})).filter(c=>c.d>=0&&c.d<=60).sort((a,b)=>a.d-b.d);
-  set('cnt7',toAr(up.filter(c=>c.d<=7).length));set('cnt15',toAr(up.filter(c=>c.d<=15).length));set('cnt30',toAr(up.filter(c=>c.d<=30).length));
-  set('expiry-list',up.map(c=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--b);"><div style="font-size:18px;font-weight:700;width:36px;text-align:center;color:${c.d<=7?'var(--red)':c.d<=15?'var(--gold)':'var(--green)'};">${toAr(c.d)}</div><div style="flex:1;"><div style="font-size:11px;font-weight:600;">${c.n}</div><div style="font-size:9px;color:var(--t3);">شقة ${c.a} · <span class="pill ${SP[c.sheet]||''}">${c.sheet}</span> · ${c.ex}</div></div><a class="wa-btn" href="https://wa.me/${(c.ph||'').replace(/\D/g,'')}?text=${encodeURIComponent('السلام عليكم '+c.n+'، عقدكم ينتهي قريباً.')}" target="_blank">📱 تجديد</a></div>`).join(''));
+  const actv=['active','awaiting_checkin','awaiting_payment'];
+  const up=allStaffBookings.filter(b=>b.name&&actv.includes(b.status)&&b.checkOut).map(b=>({...b,d:daysToISO(b.checkOut)})).filter(b=>b.d>=0&&b.d<=60).sort((a,b2)=>a.d-b2.d);
+  set('cnt7',toAr(up.filter(b=>b.d<=7).length));set('cnt15',toAr(up.filter(b=>b.d<=15).length));set('cnt30',toAr(up.filter(b=>b.d<=30).length));
+  set('expiry-list',up.length?up.map(b=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--b);"><div style="font-size:18px;font-weight:700;width:36px;text-align:center;color:${b.d<=7?'var(--red)':b.d<=15?'var(--gold)':'var(--green)'};">${toAr(b.d)}</div><div style="flex:1;"><div style="font-size:11px;font-weight:600;">${b.name}</div><div style="font-size:9px;color:var(--t3);">شقة ${b.apt} · <span class="pill ${SP[b.building]||''}">${b.building}</span> · ${fmtDate(b.checkOut)}</div></div><a class="wa-btn" href="https://wa.me/${(b.phone||'').replace(/^0/,'966')}?text=${encodeURIComponent('السلام عليكم '+b.name+'، موعد خروجكم قريب.')}" target="_blank">📱 تذكير</a></div>`).join(''):'<div style="text-align:center;padding:32px;color:var(--t3);">لا توجد عقود منتهية قريباً</div>');
 }
 
 function setMapFilter(f,btn){mapFilter=f;document.querySelectorAll('.mf-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderMap();}
-function getRoomInfo(sheet,apt){const cs=allC.filter(c=>c.n&&c.sheet===sheet&&c.a===apt&&c.st!=='مغلق');if(!cs.length)return{status:'empty',cs:[]};if(cs.some(c=>c.st==='بانتظار دخول العميل'))return{status:'waiting',cs};return{status:'occupied',cs};}
-function shouldShow(sheet,apt,info){const{status,cs}=info;const q=(document.getElementById('mapSearch')?.value||'').trim().toLowerCase();if(q&&!cs.some(c=>c.n.toLowerCase().includes(q))&&!apt.includes(q))return false;if(mapFilter==='all')return true;if(mapFilter==='occupied')return status==='occupied';if(mapFilter==='free')return status==='free'||status==='empty';if(mapFilter==='debt')return cs.some(c=>c.r>0);if(mapFilter==='expiring')return cs.some(c=>{const d=daysTo(c.ex);return d>=0&&d<=30;});return true;}
+function getRoomInfo(sheet,apt){const actv=['active','awaiting_checkin','awaiting_payment'];const cs=allStaffBookings.filter(b=>b.name&&b.building===sheet&&b.apt===apt&&actv.includes(b.status));if(!cs.length)return{status:'empty',cs:[]};if(cs.some(b=>b.status==='awaiting_checkin'))return{status:'waiting',cs};return{status:'occupied',cs};}
+function shouldShow(sheet,apt,info){const{status,cs}=info;const q=(document.getElementById('mapSearch')?.value||'').trim().toLowerCase();if(q&&!cs.some(b=>b.name.toLowerCase().includes(q))&&!apt.includes(q))return false;if(mapFilter==='all')return true;if(mapFilter==='occupied')return status==='occupied';if(mapFilter==='free')return status==='free'||status==='empty';if(mapFilter==='debt')return cs.some(b=>(b.paidAmount||0)<(b.totalPrice||0));if(mapFilter==='expiring')return cs.some(b=>{const d=daysToISO(b.checkOut);return d>=0&&d<=30;});return true;}
 function renderMap(){
   const wrap=document.getElementById('buildings-wrap');if(!wrap)return;wrap.innerHTML='';
   let totOcc=0,totFree=0,totWait=0,totDebt=0,totRooms=0;
@@ -1278,10 +1288,10 @@ function renderMap(){
       floor.r.forEach(apt=>{
         const info=getRoomInfo(bName,apt);const{status,cs}=info;bTotal++;totRooms++;
         if(status==='occupied')bOcc++;else if(status==='waiting')bWait++;else bFree++;
-        totDebt+=cs.reduce((a,c)=>a+c.r,0);
+        const _aptRem=cs.reduce((a,b)=>a+Math.max(0,(b.totalPrice||0)-(b.paidAmount||0)),0);totDebt+=_aptRem;
         const show=shouldShow(bName,apt,info);
-        const debt=cs.some(c=>c.r>0)?`<div class="room-debt">${fmt(Math.round(cs.reduce((a,c)=>a+c.r,0)/1000))}ك</div>`:'';
-        const name=cs[0]?cs[0].n.split(' ')[0]:'—';
+        const debt=_aptRem>0?`<div class="room-debt">${fmt(Math.round(_aptRem/1000))}ك</div>`:'';
+        const name=cs[0]?cs[0].name.split(' ')[0]:'—';
         rHtml+=`<div class="room ${status}" style="opacity:${show?1:.15}" onclick="showRoom('${bName}','${apt}')">${debt}<div class="room-num">${apt}</div><div class="room-name">${name}</div></div>`;
       });
       floorsHtml+=`<div class="floor"><div class="floor-lbl">${floor.l}</div><div class="rooms">${rHtml}</div></div>`;
@@ -1297,8 +1307,8 @@ function showRoom(sheet,apt){
   const sl={occupied:'مشغولة',free:'فارغة',waiting:'بانتظار دخول',empty:'فارغة'};
   const sc={occupied:'pup',free:'pp',waiting:'pm',empty:'pcl'};
   document.getElementById('roomHd').innerHTML=`<div><div class="modal-title">شقة ${apt} — ${sheet}</div><span class="pill ${sc[status]}">${sl[status]}</span></div><button class="modal-close" onclick="closeRoom()">×</button>`;
-  if(!cs.length){document.getElementById('roomBody').innerHTML=`<div style="text-align:center;padding:16px;color:var(--t3);">لا يوجد عقد نشط</div>`;}
-  else{const c=cs[0];const days=daysTo(c.ex);document.getElementById('roomBody').innerHTML=`<div class="pop-row"><span class="pop-lbl">العميل</span><span class="pop-val">${c.n}</span></div><div class="pop-row"><span class="pop-lbl">قيمة العقد</span><span class="pop-val">${fmt(c.v)} ﷼</span></div><div class="pop-row"><span class="pop-lbl">المدفوع</span><span class="pop-val" style="color:var(--green);">${fmt(c.p)} ﷼</span></div><div class="pop-row"><span class="pop-lbl">الخروج</span><span class="pop-val">${c.ex||'—'}</span></div>${c.r>0?`<div class="pop-debt"><span style="font-size:11px;color:var(--red);">المبلغ المتبقي</span><span style="font-size:16px;font-weight:700;color:var(--red);">${fmt(c.r)} ﷼</span></div>`:''}<a class="wa-btn" style="margin-top:10px;display:flex;" href="https://wa.me/${(c.ph||'').replace(/\D/g,'')}?text=${encodeURIComponent('السلام عليكم '+c.n+' من BAREZ.')}" target="_blank">📱 واتساب</a>`;}
+  if(!cs.length){document.getElementById('roomBody').innerHTML=`<div style="text-align:center;padding:16px;color:var(--t3);">لا يوجد حجز نشط</div>`;}
+  else{const b=cs[0];const rem=Math.max(0,(b.totalPrice||0)-(b.paidAmount||0));document.getElementById('roomBody').innerHTML=`<div class="pop-row"><span class="pop-lbl">العميل</span><span class="pop-val">${b.name}</span></div><div class="pop-row"><span class="pop-lbl">قيمة الحجز</span><span class="pop-val">${fmt(b.totalPrice||0)} ﷼</span></div><div class="pop-row"><span class="pop-lbl">المدفوع</span><span class="pop-val" style="color:var(--green);">${fmt(b.paidAmount||0)} ﷼</span></div><div class="pop-row"><span class="pop-lbl">الدخول</span><span class="pop-val">${fmtDate(b.checkIn)}</span></div><div class="pop-row"><span class="pop-lbl">الخروج</span><span class="pop-val">${fmtDate(b.checkOut)}</span></div>${rem>0?`<div class="pop-debt"><span style="font-size:11px;color:var(--red);">المبلغ المتبقي</span><span style="font-size:16px;font-weight:700;color:var(--red);">${fmt(rem)} ﷼</span></div>`:''}<a class="wa-btn" style="margin-top:10px;display:flex;" href="https://wa.me/${(b.phone||'').replace(/^0/,'966')}?text=${encodeURIComponent('السلام عليكم '+b.name+' من BAREZ.')}" target="_blank">📱 واتساب</a>`;}
   document.getElementById('roomOverlay').style.display='flex';
 }
 function closeRoom(){document.getElementById('roomOverlay').style.display='none';}
@@ -1307,20 +1317,20 @@ function renderPerformance(){
   const amT=currComm.filter(c=>c.m==='عبدالملك').reduce((a,c)=>a+c.a,0),jT=currComm.filter(c=>c.m==='جود').reduce((a,c)=>a+c.a,0),tot=Math.max(amT+jT,1);
   set('perf-marketers',`<div class="perf-bar"><div class="perf-lbl">عبد الملك</div><div class="perf-track"><div class="perf-fill" style="width:${Math.round(amT/tot*100)}%;background:var(--gold);"></div></div><div class="perf-val" style="color:var(--gold);">${fmt(amT)} ﷼</div></div><div class="perf-bar"><div class="perf-lbl">جود</div><div class="perf-track"><div class="perf-fill" style="width:${Math.round(jT/tot*100)}%;background:var(--blue);"></div></div><div class="perf-val" style="color:var(--blue);">${fmt(jT)} ﷼</div></div>`);
   const clrs=['var(--gold)','var(--green)','var(--blue)','#A04000'];
-  let sh='';SHEETS.forEach((s,i)=>{const cs=allC.filter(c=>c.sheet===s&&c.n),p=cs.reduce((a,c)=>a+c.p,0),v=cs.reduce((a,c)=>a+c.v,0),pct=Math.round(p/(v||1)*100);sh+=`<div class="perf-bar"><div class="perf-lbl">${s}</div><div class="perf-track"><div class="perf-fill" style="width:${pct}%;background:${clrs[i]};"></div></div><div class="perf-val">${toAr(pct)}٪</div></div>`;});
+  let sh='';SHEETS.forEach((s,i)=>{const bs=allStaffBookings.filter(b=>b.building===s&&b.name),p=bs.reduce((a,b)=>a+(b.paidAmount||0),0),v=bs.reduce((a,b)=>a+(b.totalPrice||0),0),pct=Math.round(p/(v||1)*100);sh+=`<div class="perf-bar"><div class="perf-lbl">${s}</div><div class="perf-track"><div class="perf-fill" style="width:${pct}%;background:${clrs[i]};"></div></div><div class="perf-val">${toAr(pct)}٪</div></div>`;});
   set('perf-sheets',sh);
-  const tv=allC.reduce((a,c)=>a+c.v,0),tp=allC.reduce((a,c)=>a+c.p,0),tr=allC.reduce((a,c)=>a+c.r,0);
-  set('month-summary',`<div class="ssr"><span style="color:var(--t3)">العقود</span><span style="font-weight:600;">${toAr(allC.filter(c=>c.n).length)}</span></div><div class="ssr"><span style="color:var(--t3)">المحصّل</span><span style="font-weight:600;color:var(--green);">${fmt(tp)} ﷼</span></div><div class="ssr"><span style="color:var(--t3)">المتبقي</span><span style="font-weight:600;color:var(--red);">${fmt(tr)} ﷼</span></div><div class="ssr" style="border:none;"><span style="color:var(--t3)">التحصيل</span><span style="font-weight:700;color:var(--gold);">${Math.round(tp/(tv||1)*100)}٪</span></div>`);
-  const types={};allC.filter(c=>c.n).forEach(c=>{const t=c.type||'ورقي';types[t]=(types[t]||0)+1;});const tts=Object.values(types).reduce((a,b)=>a+b,0);
-  set('perf-types',Object.entries(types).map(([t,n],i)=>`<div class="perf-bar"><div class="perf-lbl">${t}</div><div class="perf-track"><div class="perf-fill" style="width:${Math.round(n/tts*100)}%;background:${clrs[i]};"></div></div><div class="perf-val">${toAr(n)} عقد</div></div>`).join(''));
+  const bs=window._bkStats||{total:0,revenue:0,paid:0,remaining:0};
+  set('month-summary',`<div class="ssr"><span style="color:var(--t3)">الحجوزات</span><span style="font-weight:600;">${toAr(bs.total)}</span></div><div class="ssr"><span style="color:var(--t3)">المحصّل</span><span style="font-weight:600;color:var(--green);">${fmt(bs.paid)} ﷼</span></div><div class="ssr"><span style="color:var(--t3)">المتبقي</span><span style="font-weight:600;color:var(--red);">${fmt(bs.remaining)} ﷼</span></div><div class="ssr" style="border:none;"><span style="color:var(--t3)">التحصيل</span><span style="font-weight:700;color:var(--gold);">${Math.round(bs.paid/(bs.revenue||1)*100)}٪</span></div>`);
+  const types={};allStaffBookings.filter(b=>b.name).forEach(b=>{const t=b.bookingType==='annual'?'شهري':b.bookingType==='daily'?'يومي':'أخرى';types[t]=(types[t]||0)+1;});const tts=Object.values(types).reduce((a,b)=>a+b,0);
+  set('perf-types',Object.entries(types).map(([t,n],i)=>`<div class="perf-bar"><div class="perf-lbl">${t}</div><div class="perf-track"><div class="perf-fill" style="width:${Math.round(n/tts*100)}%;background:${clrs[i]};"></div></div><div class="perf-val">${toAr(n)} حجز</div></div>`).join(''));
 }
 
 function renderSources(){
-  const sc={},sv={};allC.filter(c=>c.n).forEach(c=>{const s=c.src||'أخرى';sc[s]=(sc[s]||0)+1;sv[s]=(sv[s]||0)+c.v;});
+  const sc={},sv={};allStaffBookings.filter(b=>b.name).forEach(b=>{const s=b.source||'أخرى';sc[s]=(sc[s]||0)+1;sv[s]=(sv[s]||0)+(b.totalPrice||0);});
   const sorted=Object.entries(sc).sort((a,b)=>b[1]-a[1]),total=Object.values(sc).reduce((a,b)=>a+b,0);
-  set('src-count',sorted.map((s,i)=>`<div class="sri"><div class="srn">${s[0]||'غير محدد'}</div><div class="srt"><div class="srf" style="width:${Math.round(s[1]/total*100)}%;background:${SC[i]||'#888'};"></div></div><div class="srv">${toAr(s[1])} عقد</div></div>`).join(''));
+  set('src-count',sorted.length?sorted.map((s,i)=>`<div class="sri"><div class="srn">${s[0]||'غير محدد'}</div><div class="srt"><div class="srf" style="width:${Math.round(s[1]/total*100)}%;background:${SC[i]||'#888'};"></div></div><div class="srv">${toAr(s[1])} حجز</div></div>`).join(''):'<div style="text-align:center;padding:16px;color:var(--t3);">لا توجد بيانات</div>');
   const svS=Object.entries(sv).sort((a,b)=>b[1]-a[1]),maxV=svS[0]?.[1]||1;
-  set('src-value',svS.map((s,i)=>`<div class="sri"><div class="srn">${s[0]||'غير محدد'}</div><div class="srt"><div class="srf" style="width:${Math.round(s[1]/maxV*100)}%;background:${SC[i]||'#888'};"></div></div><div class="srv">${fmt(Math.round(s[1]/1000))}ك</div></div>`).join(''));
+  set('src-value',svS.length?svS.map((s,i)=>`<div class="sri"><div class="srn">${s[0]||'غير محدد'}</div><div class="srt"><div class="srf" style="width:${Math.round(s[1]/maxV*100)}%;background:${SC[i]||'#888'};"></div></div><div class="srv">${fmt(Math.round(s[1]/1000))}ك</div></div>`).join(''):'<div style="text-align:center;padding:16px;color:var(--t3);">لا توجد بيانات</div>');
 }
 
 function openAdd(){editId=null;set('formTitle','+ إضافة عقد جديد');['name','apt','val','paid','entry','exit','phone','src','notes','ejar'].forEach(f=>{const e=document.getElementById('f-'+f);if(e)e.value='';});document.getElementById('f-pay-method').value='';document.getElementById('f-sheet').value='المنارا';document.getElementById('f-status').value='مفتوح';document.getElementById('f-pay').value='تم السداد';document.getElementById('f-type').value='ورقي';document.getElementById('f-mkt').value='';document.getElementById('formOverlay').style.display='flex';}
@@ -1684,11 +1694,10 @@ async function deleteListing(id){
 let allStaffBookings = [];
 async function loadStaffBookings() {
   try {
-    const r = await fetch('/api/bookings');
+    const r = await fetch('/api/staff-bookings-full');
     if (!r.ok) return;
-    const all = await r.json();
-    allStaffBookings = all.filter(b => b.building && !b.listing);
-    // populate building filter dynamically
+    const data = await r.json();
+    allStaffBookings = Array.isArray(data) ? data : [];
     const sel = document.getElementById('sbk-building');
     if (sel) {
       const buildings = [...new Set(allStaffBookings.map(b => b.building).filter(Boolean))].sort();
@@ -1696,6 +1705,7 @@ async function loadStaffBookings() {
       sel.innerHTML = '<option value="">كل المباني</option>' + buildings.map(b => `<option${b===cur?' selected':''}>${b}</option>`).join('');
     }
     renderStaffBookings();
+    renderAll();
   } catch(e) {}
 }
 function renderStaffBookings() {
@@ -1806,21 +1816,20 @@ function renderReports(){
   const ms=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
   const monthName=ms[month-1];
 
-  const monthContracts=allC.filter(c=>{
-    if(!c.en||!c.n)return false;
-    const parts=c.en.split('/');
-    if(parts.length!==3)return false;
-    return parseInt(parts[1])===month && parseInt(parts[2])===year;
+  const monthContracts=allStaffBookings.filter(b=>{
+    if(!b.checkIn||!b.name)return false;
+    const d=new Date(b.checkIn);
+    return d.getMonth()+1===month && d.getFullYear()===year;
   });
 
   const totalNew=monthContracts.length;
-  const totalCollected=monthContracts.reduce((a,c)=>a+c.p,0);
+  const totalCollected=monthContracts.reduce((a,b)=>a+(b.paidAmount||0),0);
 
   // أداء الفروع
   let branchRows='';
   SHEETS.forEach(sh=>{
-    const bc=monthContracts.filter(c=>c.sheet===sh);
-    const bp=bc.reduce((a,c)=>a+c.p,0);
+    const bc=monthContracts.filter(b=>b.building===sh);
+    const bp=bc.reduce((a,b)=>a+(b.paidAmount||0),0);
     branchRows+=`
       <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--b);">
         <div style="display:flex;align-items:center;gap:10px;">
@@ -1832,8 +1841,8 @@ function renderReports(){
   });
 
   // أداء المسوقين من العمولات
-  const amContracts=monthContracts.filter(c=>c.src==='عبدالملك').length;
-  const jContracts=monthContracts.filter(c=>c.src==='جود').length;
+  const amContracts=monthContracts.filter(b=>b.source==='عبدالملك').length;
+  const jContracts=monthContracts.filter(b=>b.source==='جود').length;
   const amComm=currComm.filter(c=>c.m==='عبدالملك').reduce((a,c)=>a+c.a,0);
   const jComm=currComm.filter(c=>c.m==='جود').reduce((a,c)=>a+c.a,0);
 
@@ -1890,7 +1899,7 @@ function renderReports(){
         <div style="font-size:56px;font-weight:700;color:var(--gold);line-height:1;">${toAr(totalNew)}</div>
         <div style="font-size:13px;color:var(--t3);margin-top:8px;">شقة مؤجرة هذا الشهر</div>
         <div style="margin-top:16px;display:flex;justify-content:center;gap:8px;flex-wrap:wrap;">
-          ${SHEETS.map(sh=>{const n=monthContracts.filter(c=>c.sheet===sh).length;return n>0?`<span style="background:var(--gl);border:1px solid var(--gb);border-radius:8px;padding:6px 12px;font-size:11px;font-weight:600;color:var(--gold);">${sh}: ${toAr(n)}</span>`:''}).join('')}
+          ${SHEETS.map(sh=>{const n=monthContracts.filter(b=>b.building===sh).length;return n>0?`<span style="background:var(--gl);border:1px solid var(--gb);border-radius:8px;padding:6px 12px;font-size:11px;font-weight:600;color:var(--gold);">${sh}: ${toAr(n)}</span>`:''}).join('')}
         </div>
       </div>
     </div>

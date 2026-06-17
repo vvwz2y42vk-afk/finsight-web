@@ -62,7 +62,9 @@ async function autoCloseExpired() {
 router.get('/contracts', auth, async (req, res) => {
   try {
     await autoCloseExpired();
-    const contracts = await Contract.find().sort({ createdAt: -1 }).lean();
+    const page  = Math.max(1, parseInt(req.query.page)  || 1);
+    const limit = Math.min(500, parseInt(req.query.limit) || 500);
+    const contracts = await Contract.find().sort({ createdAt: -1 }).skip((page-1)*limit).limit(limit).lean();
     res.json(contracts);
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -115,7 +117,7 @@ router.post('/contracts/bulk', auth, requireRole('admin'), async (req, res) => {
 // ─── Commissions History ──────────────────────────────────
 router.get('/commission-history', auth, async (req, res) => {
   try {
-    const history = await CommissionHistory.find().sort({ createdAt: -1 }).lean();
+    const history = await CommissionHistory.find().sort({ createdAt: -1 }).limit(200).lean();
     res.json(history);
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -207,8 +209,13 @@ router.post('/inquiries', async (req, res) => {
 
 router.get('/inquiries', auth, async (req, res) => {
   try {
-    const inquiries = await Inquiry.find().sort({ createdAt: -1 }).lean();
-    res.json(inquiries);
+    const page  = Math.max(1, parseInt(req.query.page)  || 1);
+    const limit = Math.min(200, parseInt(req.query.limit) || 100);
+    const [inquiries, total] = await Promise.all([
+      Inquiry.find().sort({ createdAt: -1 }).skip((page-1)*limit).limit(limit).lean(),
+      Inquiry.countDocuments(),
+    ]);
+    res.json({ data: inquiries, total, page, limit });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -243,12 +250,7 @@ router.get('/app/listings', async (req, res) => {
     const { cat='', sort='newest', q='', page=1, limit=20 } = req.query;
     const filter = {};
     if(cat) filter.category = cat;
-    if(q) filter.$or = [
-      { title: { $regex: q, $options:'i' } },
-      { description: { $regex: q, $options:'i' } },
-      { location: { $regex: q, $options:'i' } },
-      { building: { $regex: q, $options:'i' } },
-    ];
+    if(q) filter.$text = { $search: q.trim().slice(0, 100) };
     const sortMap = { newest:{createdAt:-1}, featured:{featured:-1,createdAt:-1}, price_asc:{price_daily:1}, price_desc:{price_daily:-1} };
     const skip = (parseInt(page)-1)*parseInt(limit);
     const [listings, total] = await Promise.all([
@@ -392,6 +394,34 @@ router.delete('/bookings/:id', auth, requireRole('admin', 'manager'), async (req
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ─── Booking Stats (staff bookings aggregate) ─────────────
+router.get('/booking-stats', auth, async (req, res) => {
+  try {
+    const baseFilter = { building: { $exists: true, $ne: null }, listing: null, status: { $ne: 'cancelled' } };
+    const [agg, openCount, closedCount] = await Promise.all([
+      Booking.aggregate([
+        { $match: baseFilter },
+        { $group: { _id: null, count: { $sum: 1 }, revenue: { $sum: '$totalPrice' }, paid: { $sum: '$paidAmount' } } }
+      ]),
+      Booking.countDocuments({ ...baseFilter, status: { $in: ['active', 'awaiting_checkin', 'awaiting_payment'] } }),
+      Booking.countDocuments({ ...baseFilter, status: 'checkout' })
+    ]);
+    const s = agg[0] || { count: 0, revenue: 0, paid: 0 };
+    res.json({ total: s.count, revenue: s.revenue, paid: s.paid, remaining: s.revenue - s.paid, open: openCount, closed: closedCount });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ─── Staff Bookings Full List (for admin dashboard) ────────
+router.get('/staff-bookings-full', auth, async (req, res) => {
+  try {
+    const bookings = await Booking.find(
+      { building: { $exists: true, $ne: null }, listing: null, status: { $ne: 'cancelled' } },
+      { name:1, phone:1, building:1, apt:1, totalPrice:1, paidAmount:1, status:1, checkIn:1, checkOut:1, source:1, bookingType:1, nights:1 }
+    ).sort({ checkIn: -1 }).lean();
+    res.json(bookings);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 // ─── Customers ───────────────────────────────────────────
 router.get('/customers', auth, async (req, res) => {
   try {
@@ -440,6 +470,7 @@ router.post('/host/change-password', hostAuth, async (req, res) => {
     if (!newPassword || newPassword.length < 6) return res.status(400).json({ error: 'كلمة المرور الجديدة 6 أحرف على الأقل' });
     host.password = newPassword;
     await host.save();
+    audit(req, 'update', 'Host', host._id, 'تغيير كلمة المرور');
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -478,21 +509,45 @@ router.delete('/host/listings/:id', hostAuth, async (req, res) => {
 
 router.get('/host/bookings', hostAuth, async (req, res) => {
   try {
-    const listings = await Listing.find({ host: req.hostAccount.id }, '_id').lean();
-    const ids = listings.map(l => l._id);
-    const bookings = await Booking.find({ listing: { $in: ids } })
-      .sort({ createdAt: -1 }).populate('listing', 'title photos').lean();
-    res.json(bookings);
+    const page  = Math.max(1, parseInt(req.query.page)  || 1);
+    const limit = Math.min(100, parseInt(req.query.limit) || 50);
+    const mongoose = require('mongoose');
+    const hostId = new mongoose.Types.ObjectId(req.hostAccount.id);
+    const [bookings, total] = await Promise.all([
+      Booking.aggregate([
+        { $lookup: { from: 'listings', localField: 'listing', foreignField: '_id', as: 'listing' } },
+        { $unwind: { path: '$listing', preserveNullAndEmpty: false } },
+        { $match: { 'listing.host': hostId } },
+        { $sort: { createdAt: -1 } },
+        { $skip: (page-1)*limit },
+        { $limit: limit },
+        { $project: { 'listing.title': 1, 'listing.photos': 1, apt: 1, name: 1, phone: 1, status: 1, checkIn: 1, checkOut: 1, totalPrice: 1, paidAmount: 1, bookingType: 1, createdAt: 1 } },
+      ]),
+      Booking.aggregate([
+        { $lookup: { from: 'listings', localField: 'listing', foreignField: '_id', as: 'listing' } },
+        { $unwind: '$listing' },
+        { $match: { 'listing.host': hostId } },
+        { $count: 'total' },
+      ]).then(r => r[0]?.total || 0),
+    ]);
+    res.json({ data: bookings, total, page, limit });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 router.put('/host/bookings/:id/status', hostAuth, async (req, res) => {
   try {
     const { status } = req.body;
-    // Verify this booking belongs to host
-    const hostListingIds = (await Listing.find({ host: req.hostAccount.id }, '_id').lean()).map(l => l._id);
-    if (!hostListingIds.length) return res.status(403).json({ error: 'غير مسموح' });
-    const booking = await Booking.findOne({ _id: req.params.id, listing: { $in: hostListingIds } }).lean();
+    const mongoose = require('mongoose');
+    const hostId = new mongoose.Types.ObjectId(req.hostAccount.id);
+    const bookingId = new mongoose.Types.ObjectId(req.params.id);
+    // Single aggregation to verify ownership and fetch booking
+    const [booking] = await Booking.aggregate([
+      { $match: { _id: bookingId } },
+      { $lookup: { from: 'listings', localField: 'listing', foreignField: '_id', as: 'listing' } },
+      { $unwind: { path: '$listing', preserveNullAndEmpty: false } },
+      { $match: { 'listing.host': hostId } },
+    ]);
+    if (!booking) return res.status(404).json({ error: 'الحجز غير موجود' });
     if (!booking) return res.status(404).json({ error: 'الحجز غير موجود' });
 
     const prevStatus = booking.status;
@@ -522,24 +577,38 @@ router.put('/host/bookings/:id/status', hostAuth, async (req, res) => {
 
 router.get('/host/stats', hostAuth, async (req, res) => {
   try {
-    const listings = await Listing.find({ host: req.hostAccount.id }, '_id').lean();
-    const ids = listings.map(l => l._id);
-    const bookings = await Booking.find({ listing: { $in: ids } }).lean();
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const thisMonthEarnings = bookings
-      .filter(b => new Date(b.createdAt) >= startOfMonth && !['cancelled'].includes(b.status))
-      .reduce((s, b) => s + (b.totalPrice || 0), 0);
-    const totalEarnings = bookings
-      .filter(b => b.status === 'checkout')
-      .reduce((s, b) => s + (b.totalPrice || 0), 0);
+    const mongoose = require('mongoose');
+    const hostId = new mongoose.Types.ObjectId(req.hostAccount.id);
+    const startOfMonth = new Date(); startOfMonth.setDate(1); startOfMonth.setHours(0,0,0,0);
+
+    const [listingStats, bookingStats] = await Promise.all([
+      Listing.aggregate([
+        { $match: { host: hostId } },
+        { $group: { _id: null, total: { $sum: 1 }, active: { $sum: { $cond: ['$available', 1, 0] } } } },
+      ]),
+      Booking.aggregate([
+        { $lookup: { from: 'listings', localField: 'listing', foreignField: '_id', as: 'listing' } },
+        { $unwind: { path: '$listing', preserveNullAndEmpty: false } },
+        { $match: { 'listing.host': hostId } },
+        { $group: {
+          _id: null,
+          pending:          { $sum: { $cond: [{ $eq: ['$status','pending'] }, 1, 0] } },
+          active:           { $sum: { $cond: [{ $eq: ['$status','active'] }, 1, 0] } },
+          totalEarnings:    { $sum: { $cond: [{ $eq: ['$status','checkout'] }, '$totalPrice', 0] } },
+          thisMonthEarnings:{ $sum: { $cond: [{ $and: [{ $gte: ['$createdAt', startOfMonth] }, { $ne: ['$status','cancelled'] }] }, '$totalPrice', 0] } },
+        }},
+      ]),
+    ]);
+
+    const ls = listingStats[0] || { total: 0, active: 0 };
+    const bs = bookingStats[0]  || { pending: 0, active: 0, totalEarnings: 0, thisMonthEarnings: 0 };
     res.json({
-      totalListings: listings.length,
-      activeListings: (await Listing.countDocuments({ host: req.hostAccount.id, available: true })),
-      pendingBookings: bookings.filter(b => b.status === 'pending').length,
-      activeBookings: bookings.filter(b => b.status === 'active').length,
-      thisMonthEarnings,
-      totalEarnings,
+      totalListings:     ls.total,
+      activeListings:    ls.active,
+      pendingBookings:   bs.pending,
+      activeBookings:    bs.active,
+      thisMonthEarnings: bs.thisMonthEarnings,
+      totalEarnings:     bs.totalEarnings,
     });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -547,8 +616,15 @@ router.get('/host/stats', hostAuth, async (req, res) => {
 // ─── Admin: Hosts management ──────────────────────────────
 router.get('/hosts', auth, async (req, res) => {
   try {
-    const hosts = await Host.find().sort({ createdAt: -1 }).select('-password').lean();
-    res.json(hosts);
+    const page  = Math.max(1, parseInt(req.query.page)  || 1);
+    const limit = Math.min(100, parseInt(req.query.limit) || 50);
+    const filter = {};
+    if (req.query.status) filter.status = req.query.status;
+    const [hosts, total] = await Promise.all([
+      Host.find(filter).sort({ createdAt: -1 }).select('-password').skip((page-1)*limit).limit(limit).lean(),
+      Host.countDocuments(filter),
+    ]);
+    res.json({ data: hosts, total, page, limit });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -678,27 +754,22 @@ router.get('/weekly-stats', auth, async (req, res) => {
 
     const totalApts = Object.values(GRID_BUILDINGS).reduce((sum,b)=>sum+b.floors.reduce((s,f)=>s+f.r.length,0),0);
 
-    const since = new Date(today); since.setDate(today.getDate()-6);
-    const bookings = await Booking.find({
-      status:{ $in:['active','checkout','awaiting_checkin'] },
-      checkIn:{ $exists:true }, checkOut:{ $exists:true },
-      propertyId: null,
-    }).select('checkIn checkOut status').limit(2000).lean();
-
-    const weekly=[];
-    for(let i=6;i>=0;i--){
-      const d=new Date(today); d.setDate(today.getDate()-i);
-      const nd=new Date(d); nd.setDate(d.getDate()+1);
-      const occ=bookings.filter(b=>{
-        if(!b.checkIn||!b.checkOut)return false;
-        return new Date(b.checkIn)<nd && new Date(b.checkOut)>d;
-      }).length;
-      weekly.push({
-        label:d.toLocaleDateString('ar-SA',{weekday:'short',day:'numeric',month:'numeric'}),
-        date:d.toISOString().split('T')[0],
-        occupied:occ,
-      });
-    }
+    const weekly = await Promise.all(
+      Array.from({ length: 7 }, (_, i) => {
+        const d  = new Date(today); d.setDate(today.getDate() - (6 - i));
+        const nd = new Date(d);     nd.setDate(d.getDate() + 1);
+        return Booking.countDocuments({
+          propertyId: null,
+          status: { $in: ['active','checkout','awaiting_checkin'] },
+          checkIn:  { $lt: nd },
+          checkOut: { $gt: d },
+        }).then(occ => ({
+          label: d.toLocaleDateString('ar-SA', { weekday:'short', day:'numeric', month:'numeric' }),
+          date:  d.toISOString().split('T')[0],
+          occupied: occ,
+        }));
+      })
+    );
     res.json({weekly,total:totalApts});
   } catch(e){ res.status(500).json({error:e.message}); }
 });
@@ -706,19 +777,27 @@ router.get('/weekly-stats', auth, async (req, res) => {
 // ─── Housekeeping Stats (admin) ───────────────────────────
 router.get('/housekeeping-stats', auth, async (req, res) => {
   try {
-    const tasks = await HousekeepingTask.find({}).lean();
     const totalRooms = Object.values(GRID_BUILDINGS).reduce((sum,b)=>sum+b.floors.reduce((s,f)=>s+f.r.length,0),0);
-    const dirty = tasks.filter(t=>t.status==='dirty'||t.status==='inspection'||t.status==='maintenance').length;
-    const clean = totalRooms - dirty;
-    res.json({ clean, dirty, total: totalRooms });
+    const [result] = await HousekeepingTask.aggregate([
+      { $group: { _id: null, dirty: { $sum: { $cond: [{ $in: ['$status',['dirty','inspection','maintenance']] }, 1, 0] } } } },
+    ]);
+    const dirty = result?.dirty || 0;
+    res.json({ clean: totalRooms - dirty, dirty, total: totalRooms });
   } catch(e){ res.status(500).json({ error: e.message }); }
 });
 
 // ─── Messaging (admin) ───────────────────────────────────
 router.get('/conversations', auth, async (req, res) => {
   try {
-    const convs = await Conversation.find().sort({ lastAt: -1 }).lean();
-    res.json(convs);
+    const page  = Math.max(1, parseInt(req.query.page)  || 1);
+    const limit = Math.min(100, parseInt(req.query.limit) || 50);
+    const filter = {};
+    if (req.query.status) filter.status = req.query.status;
+    const [convs, total] = await Promise.all([
+      Conversation.find(filter).sort({ lastAt: -1 }).skip((page-1)*limit).limit(limit).lean(),
+      Conversation.countDocuments(filter),
+    ]);
+    res.json({ data: convs, total, page, limit });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -779,8 +858,14 @@ router.post('/ai/chat', auth, async (req, res) => {
 // ─── Admin Users CRUD (admin only) ───────────────────────
 router.get('/admin-users', auth, requireRole('admin'), async (req, res) => {
   try {
-    const users = await AdminUser.find().select('-password').sort({ createdAt: 1 }).lean();
-    res.json(users);
+    const page  = Math.max(1, parseInt(req.query.page)  || 1);
+    const limit = Math.min(100, parseInt(req.query.limit) || 50);
+    const skip  = (page - 1) * limit;
+    const [users, total] = await Promise.all([
+      AdminUser.find().select('-password').sort({ createdAt: 1 }).skip(skip).limit(limit).lean(),
+      AdminUser.countDocuments(),
+    ]);
+    res.json({ data: users, total, page, limit });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
