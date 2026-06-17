@@ -1371,8 +1371,20 @@ function renderPerformance(){
   set('perf-types',Object.entries(types).map(([t,n],i)=>`<div class="perf-bar"><div class="perf-lbl">${t}</div><div class="perf-track"><div class="perf-fill" style="width:${Math.round(n/tts*100)}%;background:${clrs[i]};"></div></div><div class="perf-val">${toAr(n)} حجز</div></div>`).join(''));
 }
 
+function normSource(s){
+  if(!s)return'مباشر';
+  if(/^nazeel-jouan/i.test(s))return'نزيل — جوان ان';
+  if(/^nazeel/i.test(s))return'نزيل';
+  if(s==='manual')return'يدوي';
+  if(s==='reception')return'استقبال مباشر';
+  if(/^gathering|^gatherin/i.test(s))return'جاذرين';
+  if(/^booking/i.test(s))return'Booking.com';
+  if(/^airbnb/i.test(s))return'Airbnb';
+  if(/^agoda/i.test(s))return'Agoda';
+  return s;
+}
 function renderSources(){
-  const sc={},sv={};allStaffBookings.filter(b=>b.name).forEach(b=>{const s=b.source||'أخرى';sc[s]=(sc[s]||0)+1;sv[s]=(sv[s]||0)+(b.totalPrice||0);});
+  const sc={},sv={};allStaffBookings.filter(b=>b.name).forEach(b=>{const s=normSource(b.source);sc[s]=(sc[s]||0)+1;sv[s]=(sv[s]||0)+(b.totalPrice||0);});
   const sorted=Object.entries(sc).sort((a,b)=>b[1]-a[1]),total=Object.values(sc).reduce((a,b)=>a+b,0);
   set('src-count',sorted.length?sorted.map((s,i)=>`<div class="sri"><div class="srn">${s[0]||'غير محدد'}</div><div class="srt"><div class="srf" style="width:${Math.round(s[1]/total*100)}%;background:${SC[i]||'#888'};"></div></div><div class="srv">${toAr(s[1])} حجز</div></div>`).join(''):'<div style="text-align:center;padding:16px;color:var(--t3);">لا توجد بيانات</div>');
   const svS=Object.entries(sv).sort((a,b)=>b[1]-a[1]),maxV=svS[0]?.[1]||1;
