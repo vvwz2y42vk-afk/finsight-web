@@ -1373,10 +1373,9 @@ function renderPerformance(){
 
 function normSource(s){
   if(!s)return'مباشر';
-  if(/^nazeel-jouan/i.test(s))return'نزيل — جوان ان';
   if(/^nazeel/i.test(s))return'نزيل';
-  if(s==='manual')return'يدوي';
-  if(s==='reception')return'استقبال مباشر';
+  if(s==='manual'||s==='يدوي')return'يدوي';
+  if(s==='reception'||s==='استقبال مباشر')return'استقبال مباشر';
   if(/^gathering|^gatherin/i.test(s))return'جاذرين';
   if(/^booking/i.test(s))return'Booking.com';
   if(/^airbnb/i.test(s))return'Airbnb';
