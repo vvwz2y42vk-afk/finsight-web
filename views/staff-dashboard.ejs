@@ -4700,11 +4700,12 @@ async function loadCashFlow(){
     const tdS='padding:7px 10px;border-bottom:1px solid #f1f5f9;font-size:12px;';
 
     const vLabel=(v,isDisb)=>{
-      if(v.name) return esc(v.name);
+      if(v.apt) return `<span style="font-weight:800;color:var(--brand);">${esc(v.apt)}</span>`;
       if(v.description) return esc(v.description);
       if(v.paymentMethod==='transfer') return isDisb
         ? '<span style="color:#b45309;font-style:italic;">صرف بنكي</span>'
         : '<span style="color:#0369a1;font-style:italic;">تحويل بنكي</span>';
+      if(v.name) return esc(v.name);
       return '<span style="color:#94a3b8;font-style:italic;">غير محدد</span>';
     };
     const rowsR=d.receipts.length
