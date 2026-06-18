@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title><%= staff.building %> — بوابة الموظفين</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -4978,8 +4978,9 @@ window.addEventListener('load',()=>{
   updateClock();
   setTimeout(initFP,300);
   _startIntervals();
+  // إلغاء تسجيل أي Service Worker قديم لمنع تقديم نسخ قديمة من الصفحة
   if('serviceWorker' in navigator)
-    navigator.serviceWorker.register('/sw-staff.js',{scope:'/staff/'}).catch(()=>{});
+    navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
   // Auto-save draft on any modal input/change
   const _modal=document.getElementById('newBkModal');
   if(_modal){
