@@ -402,6 +402,10 @@ router.put('/api/bookings/:id/status', reqStaff, async (req,res) => {
     if(status !== prev && !STATUS_TRANSITIONS[prev]?.includes(status))
       return res.status(400).json({error:`لا يمكن الانتقال من "${prev}" إلى "${status}"`});
 
+    // إلغاء حجز مدفوع → مدير فقط
+    if (status === 'cancelled' && status !== prev && (bk.paidAmount||0) > 0 && req.staff.role !== 'manager')
+      return res.status(403).json({ error: `لا يمكن إلغاء حجز مدفوع (${bk.paidAmount} ر.س) — تواصل مع المدير` });
+
     await B.findByIdAndUpdate(bk._id,{status});
     if(bk.listing&&status!==prev){
       if(status==='awaiting_checkin'&&bk.bookingType==='daily'&&bk.checkIn&&bk.checkOut)
@@ -469,11 +473,14 @@ router.put('/api/bookings/:id/edit', reqStaff, async (req,res) => {
     }
 
     const newTotal = parseFloat(totalPrice) || bk.totalPrice;
-    // If tracked payments exist, recompute from their sum — manual paidAmount override ignored
-    // to prevent staff from zeroing out a paid booking. Manual override only for legacy bookings.
+    // تخفيض السعر الإجمالي يحتاج صلاحية مدير
+    if (totalPrice !== undefined && newTotal < bk.totalPrice && req.staff.role !== 'manager')
+      return res.status(403).json({ error: 'تخفيض سعر الحجز للمديرين فقط' });
+
+    // paidAmount: حجوزات بدون دفعات مُتتبّعة — التعديل للمدير فقط
     const newPaid = bk.payments?.length
       ? bk.payments.reduce((s, p) => s + (p.amount || 0), 0)
-      : (paidAmount !== undefined
+      : (paidAmount !== undefined && req.staff.role === 'manager'
         ? Math.min(Math.max(0, parseFloat(paidAmount) || 0), newTotal)
         : bk.paidAmount);
 
@@ -499,7 +506,12 @@ router.put('/api/bookings/:id/edit', reqStaff, async (req,res) => {
       status: safeStatus, notes: notes !== undefined ? notes : bk.notes,
       ...(bookingSource && VALID_BOOKING_SOURCES.includes(bookingSource) && { source: bookingSource }),
     });
-    AL.create({building:req.staff.building,staffName:req.staff.name,action:'status_change',apt:bk.apt,guestName:name||bk.name,bookingId:bk._id,details:'تعديل الحجز'}).catch(()=>{});
+    // تسجيل كل التغييرات المالية بالقيم القديمة والجديدة
+    const changes = [];
+    if (totalPrice !== undefined && newTotal !== bk.totalPrice) changes.push(`السعر: ${bk.totalPrice}→${newTotal}`);
+    if (newPaid !== bk.paidAmount) changes.push(`المدفوع: ${bk.paidAmount}→${newPaid}`);
+    if (safeStatus !== bk.status) changes.push(`الحالة: ${bk.status}→${safeStatus}`);
+    AL.create({building:req.staff.building,staffName:req.staff.name,action:'booking_edit',apt:bk.apt,guestName:name||bk.name,bookingId:bk._id,details:changes.length?changes.join(' | '):'تعديل بيانات'}).catch(()=>{});
     res.json({success:true});
   } catch(e){ res.status(500).json({error:e.message}); }
 });
@@ -549,6 +561,8 @@ router.post('/api/bookings/:id/payments', reqStaff, async (req, res) => {
 });
 
 router.delete('/api/bookings/:id/payments/:pid', reqStaff, async (req, res) => {
+  if (req.staff.role !== 'manager')
+    return res.status(403).json({ error: 'حذف الدفعات للمديرين فقط' });
   try {
     const B = require('../models/Booking');
     const V = require('../models/Voucher');
@@ -825,9 +839,9 @@ router.delete('/api/vouchers/:id', reqStaff, async (req,res) => {
     const voucher = await V.findOne(vFilter);
     if (!voucher) return res.status(404).json({ error: 'السند غير موجود' });
 
-    // سندات الصرف للمديرين فقط
-    if (['disbursement','check'].includes(voucher.type) && req.staff.role !== 'manager')
-      return res.status(403).json({ error: 'حذف سندات الصرف للمديرين فقط' });
+    // حذف أي سند مالي للمديرين فقط — يمنع حذف القبض لإخفاء السرقة
+    if (req.staff.role !== 'manager')
+      return res.status(403).json({ error: 'حذف السندات للمديرين فقط' });
 
     // إذا كان سند قبض مرتبط بحجز → حذف الدفعة من الحجز أيضاً لمنع التناقض
     if (voucher.type === 'receipt' && voucher.bookingId) {

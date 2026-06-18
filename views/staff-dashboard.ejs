@@ -1745,6 +1745,8 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
 
 <script>
 const BUILDING = '<%= staff.building %>';
+const STAFF_ROLE = '<%= staff.role %>';
+const isManager = STAFF_ROLE === 'manager';
 const PERMS = <%- JSON.stringify(staff.permissions && staff.permissions.length ? staff.permissions : ['dashboard','apartments','bookings','customers','housekeeping','activity','new_booking','edit_booking','cancel_booking','vouchers']) %>;
 const can = p => PERMS.includes(p);
 let aptsFilter='all', aptsRawData=null, roomInfoMap={};
@@ -2375,7 +2377,7 @@ async function openBkModal(bookingId, apt, status) {
               <div style="font-size:11px;color:var(--t4);">${pmLbl[p.paymentMethod]||p.paymentMethod} • ${pDate}${p.createdBy?' • '+esc(p.createdBy):''}${p.notes?' — '+esc(p.notes):''}</div>
             </div>
           </div>
-          <button onclick="delPayment('${p._id}')" style="border:none;background:#fee2e2;color:#dc2626;border-radius:7px;padding:4px 9px;cursor:pointer;font-size:12px;font-weight:700;flex-shrink:0;">×</button>
+          ${isManager?`<button onclick="delPayment('${p._id}')" style="border:none;background:#fee2e2;color:#dc2626;border-radius:7px;padding:4px 9px;cursor:pointer;font-size:12px;font-weight:700;flex-shrink:0;">×</button>`:''}
         </div>`;
       });
     } else {
@@ -3403,7 +3405,7 @@ function renderVouRow(v,type,i){
   const amt=(v.amount||0).toLocaleString();
   const actions=`<div style="display:flex;gap:4px;">
     <button onclick="printVoucher('${v._id}')" style="padding:3px 8px;background:#1a3d8f;color:#111;border:none;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer;">🖨️ طباعة</button>
-    <button onclick="deleteVou('${v._id}','${type}')" style="padding:3px 8px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer;">🗑️</button>
+    ${isManager?`<button onclick="deleteVou('${v._id}','${type}')" style="padding:3px 8px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer;">🗑️</button>`:''}
   </div>`;
   if(type==='receipt'||type==='invoice')
     return `<td style="font-size:10px;color:#94a3b8;">${esc(v.number||'—')}</td><td>${date}</td><td><b>${esc(v.name||'—')}</b></td><td>${esc(v.apt||'—')}</td><td style="font-size:11px;color:#64748b;">${esc(v.description||'—')}</td><td style="font-weight:700;">${amt} ر</td><td>${actions}</td>`;
