@@ -401,20 +401,30 @@ router.get('/booking-stats', auth, async (req, res) => {
     const now = new Date();
     const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const [agg, openCount, closedCount, thisMonthAgg, prevMonthAgg] = await Promise.all([
-      Booking.aggregate([
-        { $match: baseFilter },
-        { $group: { _id: null, count: { $sum: 1 }, revenue: { $sum: '$totalPrice' }, paid: { $sum: '$paidAmount' } } }
-      ]),
-      Booking.countDocuments({ ...baseFilter, status: { $in: ['active', 'awaiting_checkin', 'awaiting_payment'] } }),
-      Booking.countDocuments({ ...baseFilter, status: 'checkout' }),
-      Booking.aggregate([{ $match: { ...baseFilter, checkIn: { $gte: thisMonthStart } } }, { $group: { _id: null, count: { $sum: 1 }, paid: { $sum: '$paidAmount' } } }]),
-      Booking.aggregate([{ $match: { ...baseFilter, checkIn: { $gte: prevMonthStart, $lt: thisMonthStart } } }, { $group: { _id: null, count: { $sum: 1 }, paid: { $sum: '$paidAmount' } } }]),
+
+    // Single aggregation with $facet replaces 5 parallel queries
+    const [result] = await Booking.aggregate([
+      { $match: baseFilter },
+      { $facet: {
+        overall: [{ $group: { _id: null, count: { $sum: 1 }, revenue: { $sum: '$totalPrice' }, paid: { $sum: '$paidAmount' },
+          open:   { $sum: { $cond: [{ $in: ['$status', ['active','awaiting_checkin','awaiting_payment']] }, 1, 0] } },
+          closed: { $sum: { $cond: [{ $eq: ['$status','checkout'] }, 1, 0] } },
+        }}],
+        thisMonth: [{ $match: { checkIn: { $gte: thisMonthStart } } },
+          { $group: { _id: null, count: { $sum: 1 }, paid: { $sum: '$paidAmount' } } }],
+        prevMonth: [{ $match: { checkIn: { $gte: prevMonthStart, $lt: thisMonthStart } } },
+          { $group: { _id: null, count: { $sum: 1 }, paid: { $sum: '$paidAmount' } } }],
+      }},
     ]);
-    const s = agg[0] || { count: 0, revenue: 0, paid: 0 };
-    const tm = thisMonthAgg[0] || { count: 0, paid: 0 };
-    const pm = prevMonthAgg[0] || { count: 0, paid: 0 };
-    res.json({ total: s.count, revenue: s.revenue, paid: s.paid, remaining: s.revenue - s.paid, open: openCount, closed: closedCount, thisMonth: { count: tm.count, paid: tm.paid }, prevMonth: { count: pm.count, paid: pm.paid } });
+
+    const s  = result.overall[0]   || { count:0, revenue:0, paid:0, open:0, closed:0 };
+    const tm = result.thisMonth[0] || { count:0, paid:0 };
+    const pm = result.prevMonth[0] || { count:0, paid:0 };
+    res.json({ total: s.count, revenue: s.revenue, paid: s.paid, remaining: s.revenue - s.paid,
+      open: s.open, closed: s.closed,
+      thisMonth: { count: tm.count, paid: tm.paid },
+      prevMonth: { count: pm.count, paid: pm.paid },
+    });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
