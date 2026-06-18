@@ -5,6 +5,7 @@
     "src": "server.js",
     "use": "@vercel/node",
     "config": {
+      "maxDuration": 30,
       "includeFiles": ["views/**", "public/**", "middleware/**", "utils/**", "models/**", "scripts/**"]
     }
   }],

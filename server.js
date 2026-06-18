@@ -17,48 +17,33 @@ app.set('trust proxy', 1);
 
 // ── MongoDB ──────────────────────────────────────────────
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/finsight';
-let _seeded = false;
 
 const MONGO_OPTS = {
-  serverSelectionTimeoutMS: 15000,
-  socketTimeoutMS: 45000,
-  connectTimeoutMS: 15000,
+  serverSelectionTimeoutMS: 8000,
+  socketTimeoutMS: 30000,
+  connectTimeoutMS: 8000,
   family: 4,
   tls: true,
   tlsAllowInvalidCertificates: false,
   maxPoolSize: 10,
+  bufferCommands: false,
 };
 
-async function connectDB(retries = 3) {
+// Promise caching — survives warm Vercel invocations within the same worker process.
+// If the connection drops, readyState leaves 1 and we reconnect.
+let _connPromise = null;
+
+async function connectDB() {
   if (mongoose.connection.readyState === 1) return;
-  if (mongoose.connection.readyState === 2) {
-    await new Promise((resolve, reject) => {
-      const t = setTimeout(() => reject(new Error('MongoDB connection timeout')), 10000);
-      mongoose.connection.once('connected', () => { clearTimeout(t); resolve(); });
-      mongoose.connection.once('error', (e) => { clearTimeout(t); reject(e); });
-    });
-    return;
+  if (!_connPromise) {
+    _connPromise = mongoose.connect(MONGO_URI, MONGO_OPTS)
+      .then(async () => {
+        console.log('✅ MongoDB متصل');
+        await seedAdminUsers();
+      })
+      .catch(e => { _connPromise = null; throw e; });
   }
-  for (let attempt = 1; attempt <= retries; attempt++) {
-    try {
-      await mongoose.connect(MONGO_URI, MONGO_OPTS);
-      console.log('✅ MongoDB متصل');
-      break;
-    } catch (e) {
-      if (attempt === retries) throw e;
-      await new Promise(r => setTimeout(r, attempt * 2000));
-      try { await mongoose.disconnect(); } catch (_) {}
-    }
-  }
-  if (!_seeded) {
-    await seedAdminUsers();
-    // Sync indexes after schema changes (drops stale indexes, creates new ones)
-    const models = ['HousekeepingTask','RoomInfo','Guest','Booking','Voucher','ActivityLog','StaffUser','Host','Customer','Message','Conversation','Contract','Review','Listing','AuditLog','ChannelConfig','ChannelListing'];
-    for (const m of models) {
-      try { await mongoose.model(m).syncIndexes(); } catch(e) { console.warn(`syncIndexes ${m}:`, e.message); }
-    }
-    _seeded = true;
-  }
+  return _connPromise;
 }
 
 // ── Seed admin users on first run ────────────────────────

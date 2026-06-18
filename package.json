@@ -7,7 +7,8 @@
     "dev": "set NODE_OPTIONS=--openssl-legacy-provider && nodemon server.js",
     "verify": "node scripts/verify-views.js",
     "build": "node scripts/verify-views.js",
-    "predeploy": "node scripts/verify-views.js"
+    "predeploy": "node scripts/verify-views.js",
+    "sync-indexes": "node scripts/sync-indexes.js"
   },
   "dependencies": {
     "@vercel/blob": "^2.4.0",
