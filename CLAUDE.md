@@ -527,7 +527,7 @@ res.render('staff-dashboard', { staff: req.staff })
 
 ```
 MONGO_URI                 # رابط MongoDB Atlas
-JWT_SECRET                # مفتاح JWT (أو secret في utils/auth.js)
+SESSION_SECRET            # مفتاح JWT — الاسم الفعلي في utils/auth.js (ليس JWT_SECRET)
 DASHBOARD_PASSWORD        # كلمة مرور عبدالملك (fallback)
 PASSWORD_YOMNA            # كلمة مرور Yomna (fallback)
 PASSWORD_ABDULRAHIM       # كلمة مرور Abdulrahim (fallback)

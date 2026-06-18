@@ -464,10 +464,13 @@ router.put('/api/bookings/:id/edit', reqStaff, async (req,res) => {
     }
 
     const newTotal = parseFloat(totalPrice) || bk.totalPrice;
-    // paidAmount: clamp between 0 and newTotal, preserve current value if not sent
-    const newPaid = paidAmount !== undefined
-      ? Math.min(Math.max(0, parseFloat(paidAmount) || 0), newTotal)
-      : bk.paidAmount;
+    // If tracked payments exist, recompute from their sum — manual paidAmount override ignored
+    // to prevent staff from zeroing out a paid booking. Manual override only for legacy bookings.
+    const newPaid = bk.payments?.length
+      ? bk.payments.reduce((s, p) => s + (p.amount || 0), 0)
+      : (paidAmount !== undefined
+        ? Math.min(Math.max(0, parseFloat(paidAmount) || 0), newTotal)
+        : bk.paidAmount);
 
     // If status change requested via edit, enforce transition matrix too
     let safeStatus = bk.status;
@@ -999,6 +1002,7 @@ router.post('/api/whatsapp/send', reqStaff, async (req, res) => {
     const { phone, type, message, name, apt, building, checkIn, checkOut, total } = req.body;
     if (!phone) return res.status(400).json({ error: 'رقم الجوال مطلوب' });
     if (type === 'free') {
+      if (req.staff.role !== 'manager') return res.status(403).json({ error: 'إرسال الرسائل الحرة للمديرين فقط' });
       if (!message?.trim()) return res.status(400).json({ error: 'الرسالة فارغة' });
       await WA.send(phone, message.trim());
     } else if (type === 'booking_confirmed') {
@@ -2141,7 +2145,9 @@ router.post('/api/listings/bulk', reqStaff, async (req, res) => {
     const rows = Array.isArray(req.body) ? req.body : [];
     let saved = 0, errors = [];
     for (const row of rows) {
-      const { building, apt, platform, icalImport, platformListingId } = row;
+      const { apt, platform, icalImport, platformListingId } = row;
+      // building always from staff token for internal users — never from body
+      const building = req.staff.propertyId ? (row.building || req.staff.building) : req.staff.building;
       if (!building || !apt || !platform) continue;
       try {
         await ChannelListing.findOneAndUpdate(
