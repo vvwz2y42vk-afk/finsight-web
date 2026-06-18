@@ -369,6 +369,9 @@ router.get('/api/bookings', reqStaff, async (req,res) => {
   } catch(e){ res.status(500).json({error:e.message}); }
 });
 
+// Allowed booking sources — staff can only set these values, not arbitrary strings
+const VALID_BOOKING_SOURCES = ['يدوي','استقبال مباشر','جاذرين','Booking.com','Airbnb','Agoda','نزيل'];
+
 // Allowed status transitions — prevents arbitrary state manipulation
 const STATUS_TRANSITIONS = {
   pending:           ['active','awaiting_payment','awaiting_checkin','cancelled'],
@@ -492,7 +495,7 @@ router.put('/api/bookings/:id/edit', reqStaff, async (req,res) => {
       companions: Array.isArray(companions) ? companions.filter(c=>c.name).map(c=>({name:c.name,idType:c.idType||'',idNumber:c.idNumber||''})) : bk.companions,
       idType: idType||bk.idType, idNumber: idNumber||bk.idNumber,
       status: safeStatus, notes: notes !== undefined ? notes : bk.notes,
-      ...(bookingSource !== undefined && bookingSource !== '' && { source: bookingSource }),
+      ...(bookingSource && VALID_BOOKING_SOURCES.includes(bookingSource) && { source: bookingSource }),
     });
     AL.create({building:req.staff.building,staffName:req.staff.name,action:'status_change',apt:bk.apt,guestName:name||bk.name,bookingId:bk._id,details:'تعديل الحجز'}).catch(()=>{});
     res.json({success:true});
@@ -1737,7 +1740,23 @@ const PLATFORM_LABELS = {
   website:  'موقعنا',
 };
 
+// Block SSRF — private IPs, localhost, AWS metadata, etc.
+function isSafeICalUrl(url) {
+  try {
+    const { protocol, hostname } = new URL(url);
+    if (!['http:', 'https:'].includes(protocol)) return false;
+    const h = hostname.toLowerCase();
+    if (h === 'localhost' || h === '127.0.0.1' || h === '::1') return false;
+    if (/^10\./.test(h) || /^192\.168\./.test(h)) return false;
+    if (/^172\.(1[6-9]|2\d|3[01])\./.test(h)) return false;
+    if (h === '169.254.169.254') return false;        // AWS/GCP metadata
+    if (h.endsWith('.internal') || h.endsWith('.local')) return false;
+    return true;
+  } catch { return false; }
+}
+
 function fetchUrl(url, timeoutMs = 12000) {
+  if (!isSafeICalUrl(url)) return Promise.reject(new Error('رابط iCal غير مسموح'));
   return new Promise((resolve, reject) => {
     const mod = url.startsWith('https') ? https : http;
     const req = mod.get(url, { timeout: timeoutMs }, res => {
