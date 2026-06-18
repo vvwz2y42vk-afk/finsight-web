@@ -1,6 +1,5 @@
-const CACHE = 'barez-staff-v1';
+const CACHE = 'barez-staff-v3';
 const SHELL = [
-  '/staff/dashboard',
   '/images/logo-dark.png',
   '/images/barez-logo.svg',
   'https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap',
@@ -34,24 +33,9 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // Navigation (HTML pages) — network first, fall back to cached shell
-  if (e.request.mode === 'navigate') {
-    e.respondWith(
-      fetch(e.request)
-        .then(res => {
-          if (res.ok) {
-            const clone = res.clone();
-            caches.open(CACHE).then(c => c.put(e.request, clone));
-          }
-          return res;
-        })
-        .catch(() =>
-          caches.match(e.request)
-            .then(r => r || caches.match('/staff/dashboard'))
-        )
-    );
-    return;
-  }
+  // Navigation (HTML) — always network, never cache
+  // الصفحة دايماً تجي طازجة من السيرفر
+  if (e.request.mode === 'navigate') return;
 
   // Static assets — cache first
   e.respondWith(
