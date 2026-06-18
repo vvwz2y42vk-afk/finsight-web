@@ -4510,7 +4510,9 @@ async function loadCashFlow(){
 
     const fmt2=n=>(n||0).toLocaleString('ar',{minimumFractionDigits:2,maximumFractionDigits:2});
     const fmtDt=dt=>{
+      if(!dt) return '—';
       const x=new Date(dt);
+      if(isNaN(x.getTime())) return '—';
       return x.toLocaleDateString('ar-SA',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+x.toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
     };
     const pmL={cash:'نقداً',transfer:'تحويل بنكي',network:'شبكة',check:'كمبيالة',digital:'دفع رقمي',travel_agent:'وكيل سفر','':'نقداً'};
@@ -4520,11 +4522,17 @@ async function loadCashFlow(){
     const thS='padding:8px 10px;text-align:right;font-size:11px;font-weight:700;color:var(--t3);border-bottom:2px solid var(--border);background:#f8fafc;';
     const tdS='padding:7px 10px;border-bottom:1px solid #f1f5f9;font-size:12px;';
 
+    const vLabel=(v)=>{
+      if(v.name) return esc(v.name);
+      if(v.description) return esc(v.description);
+      if(v.paymentMethod==='transfer') return '<span style="color:#0369a1;font-style:italic;">تحويل بنكي</span>';
+      return '<span style="color:#94a3b8;font-style:italic;">غير محدد</span>';
+    };
     const rowsR=d.receipts.length
       ? d.receipts.map(v=>`<tr>
           <td style="${tdS}color:var(--t4);">${esc(v.number)}</td>
           <td style="${tdS}font-size:11px;">${fmtDt(v.date)}</td>
-          <td style="${tdS}font-weight:600;">${esc(v.name||v.description||'-')}</td>
+          <td style="${tdS}font-weight:600;">${vLabel(v)}</td>
           <td style="${tdS}"><span style="font-size:10px;padding:2px 8px;background:${pmBg[v.paymentMethod]||'#f0fdf4'};color:${pmC[v.paymentMethod]||'#166534'};border-radius:12px;font-weight:600;">${pmL[v.paymentMethod]||v.paymentMethod||'نقداً'}</span></td>
           <td style="${tdS}font-weight:800;color:#047857;text-align:left;">${fmt2(v.amount)}</td>
         </tr>`).join('')
@@ -4534,7 +4542,7 @@ async function loadCashFlow(){
       ? d.disbursements.map(v=>`<tr>
           <td style="${tdS}color:var(--t4);">${esc(v.number)}</td>
           <td style="${tdS}font-size:11px;">${fmtDt(v.date)}</td>
-          <td style="${tdS}font-weight:600;">${esc(v.name||v.description||'-')}</td>
+          <td style="${tdS}font-weight:600;">${vLabel(v)}</td>
           <td style="${tdS}"><span style="font-size:10px;padding:2px 8px;background:${pmBg[v.paymentMethod]||'#fff1f2'};color:${pmC[v.paymentMethod]||'#dc2626'};border-radius:12px;font-weight:600;">${pmL[v.paymentMethod]||v.paymentMethod||'نقداً'}</span></td>
           <td style="${tdS}font-weight:800;color:#dc2626;text-align:left;">${fmt2(v.amount)}</td>
         </tr>`).join('')

@@ -2404,7 +2404,7 @@ router.get('/api/reports/cash-flow', reqStaff, async (req, res) => {
     const resolveMethod = v => v.paymentMethod || (v.bankName ? 'transfer' : 'cash');
 
     const mapV = v => ({
-      _id: v._id, number: v.number || '-', date: v.date,
+      _id: v._id, number: v.number || '-', date: v.date || v.createdAt || null,
       name: v.name || '', apt: v.apt || '', description: v.description || '',
       paymentMethod: resolveMethod(v), bankName: v.bankName || '',
       amount: v.amount || 0, createdBy: v.createdBy || '',
