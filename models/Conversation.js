@@ -10,4 +10,8 @@ const schema = new mongoose.Schema({
   unreadCustomer:{ type: Number, default: 0 },
   lastAt:        { type: Date, default: Date.now },
 }, { timestamps: true });
+
+schema.index({ customer: 1 });
+schema.index({ status: 1, lastAt: -1 });
+
 module.exports = mongoose.model('Conversation', schema);

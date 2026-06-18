@@ -20,8 +20,10 @@ const contractSchema = new mongoose.Schema({
   pm:    String,   // payment method
 }, { timestamps: true });
 
+contractSchema.index({ id: 1 }, { unique: true });
 contractSchema.index({ st: 1 });
 contractSchema.index({ ex: 1 });
 contractSchema.index({ sheet: 1, st: 1 });
+contractSchema.index({ st: 1, ex: 1 });
 
 module.exports = mongoose.model('Contract', contractSchema);

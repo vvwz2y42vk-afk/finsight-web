@@ -8,10 +8,13 @@ const customerSchema = new mongoose.Schema({
   email:       { type: String, trim: true },
   nationalId:  { type: String, trim: true },
   nationality: { type: String, default: 'سعودي' },
-  notes:       { type: String, default: '' },
+  notes:            { type: String, default: '' },
+  resetToken:       { type: String },
+  resetTokenExpiry: { type: Date },
 }, { timestamps: true });
 
 customerSchema.index({ createdAt: -1 });
+customerSchema.index({ resetTokenExpiry: 1 }, { expireAfterSeconds: 0, sparse: true });
 
 customerSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();

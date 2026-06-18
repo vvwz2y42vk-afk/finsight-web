@@ -37,6 +37,9 @@
     <h2 class="auth-title">تسجيل الدخول</h2>
     <p class="auth-sub">أدخل بيانات حسابك للمتابعة</p>
 
+    <% if (reset) { %>
+    <div class="auth-err" style="background:rgba(16,185,129,.08);border-color:rgba(16,185,129,.3);color:#059669;">✓ تم تغيير كلمة المرور بنجاح، يمكنك الدخول الآن</div>
+    <% } %>
     <% if (error) { %>
     <div class="auth-err">⚠️ <%= error %></div>
     <% } %>
@@ -57,6 +60,9 @@
       <button type="submit" class="auth-btn">دخول ←</button>
     </form>
 
+    <div class="auth-foot" style="margin-top:12px;">
+      <a href="/account/forgot-password" style="color:var(--text3);font-size:12px;">نسيت كلمة المرور؟</a>
+    </div>
     <div class="auth-foot">
       ليس لديك حساب؟ <a href="/account/register">إنشاء حساب جديد</a>
     </div>

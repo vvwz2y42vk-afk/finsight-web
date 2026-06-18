@@ -41,5 +41,7 @@ const listingSchema = new mongoose.Schema({
 listingSchema.index({ category: 1, available: 1 });
 listingSchema.index({ host: 1 });
 listingSchema.index({ featured: -1, createdAt: -1 });
+listingSchema.index({ available: 1 });
+listingSchema.index({ title: 'text', description: 'text', location: 'text', building: 'text' });
 
 module.exports = mongoose.model('Listing', listingSchema);

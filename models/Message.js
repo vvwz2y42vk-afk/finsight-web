@@ -5,4 +5,7 @@ const schema = new mongoose.Schema({
   senderName:   String,
   body:         { type: String, required: true, maxlength: 2000, trim: true },
 }, { timestamps: true });
+
+schema.index({ conversation: 1, createdAt: 1 });
+
 module.exports = mongoose.model('Message', schema);

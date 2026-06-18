@@ -155,6 +155,11 @@ button:active{transform:translateY(0);}
   <div class="brand">BAREZ</div>
   <div class="brand-sub">بوابة الموظفين</div>
   <% if (error) { %><div class="err">⚠️ <%= error %></div><% } %>
+  <% if (typeof query !== 'undefined' && query?.reset) { %>
+  <div class="err" style="background:rgba(16,185,129,.12);border-color:rgba(16,185,129,.3);color:#6ee7b7;">
+    ✓ تم تغيير كلمة المرور بنجاح، يمكنك الدخول الآن
+  </div>
+  <% } %>
   <% if (typeof query !== 'undefined' && query?.expired) { %>
   <div class="err" style="background:rgba(180,83,9,.15);border-color:rgba(180,83,9,.4);color:#FCD34D;">
     ⏰ انتهت صلاحية اشتراكك — تواصل مع الإدارة لتجديده
@@ -167,6 +172,9 @@ button:active{transform:translateY(0);}
     <input type="password" name="password" placeholder="••••••••" required>
     <button type="submit">دخول ←</button>
   </form>
+  <div style="text-align:center;margin-top:14px;font-size:12px;color:rgba(255,255,255,.35);">
+    <a href="/staff/forgot-password" style="color:rgba(255,255,255,.45);text-decoration:none;transition:color .2s;" onmouseover="this.style.color='rgba(255,255,255,.75)'" onmouseout="this.style.color='rgba(255,255,255,.45)'">نسيت كلمة المرور؟</a>
+  </div>
   <div class="back"><a href="/">← العودة للموقع</a></div>
   <div style="text-align:center;margin-top:14px;font-size:12px;color:rgba(255,255,255,.35);">
     منشأة جديدة؟ <a href="/staff/register" style="color:rgba(255,255,255,.65);font-weight:700;text-decoration:none;transition:color .2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,.65)'">سجّل الآن مجاناً</a>

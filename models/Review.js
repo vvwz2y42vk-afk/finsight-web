@@ -9,4 +9,8 @@ const reviewSchema = new mongoose.Schema({
   comment:  { type: String, trim: true, maxlength: 600 },
 }, { timestamps: true });
 
+reviewSchema.index({ booking: 1 }, { unique: true });
+reviewSchema.index({ listing: 1 });
+reviewSchema.index({ customer: 1 });
+
 module.exports = mongoose.model('Review', reviewSchema);

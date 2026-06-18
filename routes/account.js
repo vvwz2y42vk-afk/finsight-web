@@ -23,7 +23,7 @@ router.post('/register', async (req, res) => {
   try {
     const { name, phone, password, email, nationalId, nationality } = req.body;
     if (!name || !phone || !password) return res.render('register', { error: 'الرجاء تعبئة الاسم والجوال وكلمة المرور' });
-    if (password.length < 6) return res.render('register', { error: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' });
+    if (password.length < 8) return res.render('register', { error: 'كلمة المرور يجب أن تكون 8 أحرف على الأقل' });
     const exists = await Customer.findOne({ phone: phone.trim() });
     if (exists) return res.render('register', { error: 'رقم الجوال مسجل مسبقاً' });
     const customer = await new Customer({
@@ -42,7 +42,7 @@ router.post('/register', async (req, res) => {
 // ─── Login ───────────────────────────────────────────────
 router.get('/login', (req, res) => {
   if (req.customer) return res.redirect('/account');
-  res.render('customer-login', { error: null, next: req.query.next || '' });
+  res.render('customer-login', { error: null, next: req.query.next || '', reset: req.query.reset || '' });
 });
 
 router.post('/login', async (req, res) => {
@@ -58,6 +58,67 @@ router.post('/login', async (req, res) => {
   } catch (e) {
     res.render('customer-login', { error: 'حدث خطأ: ' + e.message, next: '' });
   }
+});
+
+// ─── Forgot / Reset Password ─────────────────────────────
+const crypto = require('crypto');
+const { sendEmail } = require('../utils/mailer');
+const custForgotLimit = (()=>{const{createRateLimiter}=require('../utils/rateLimit');return createRateLimiter({windowMs:60*60*1000,max:5,message:'محاولات كثيرة، انتظر ساعة'});})();
+
+router.get('/forgot-password', (req, res) => {
+  if (req.customer) return res.redirect('/account');
+  res.render('forgot-password', { error: null, success: null });
+});
+
+router.post('/forgot-password', custForgotLimit, async (req, res) => {
+  try {
+    const phone = (req.body.phone || '').trim();
+    const customer = await Customer.findOne({ phone });
+    if (customer) {
+      const token = crypto.randomBytes(32).toString('hex');
+      customer.resetToken = token;
+      customer.resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000);
+      await customer.save();
+      const base = process.env.BASE_URL || '';
+      const resetUrl = `${base}/account/reset-password/${token}`;
+      sendEmail({
+        to: customer.email || 'no-email',
+        subject: 'إعادة تعيين كلمة المرور — BAREZ',
+        html: `<div dir="rtl" style="font-family:Cairo,sans-serif;max-width:480px;margin:auto;padding:32px;background:#f9f9f9;border-radius:12px;">
+          <h2 style="color:#C9A844;margin-bottom:8px;">إعادة تعيين كلمة المرور</h2>
+          <p>مرحباً ${customer.name}، انقر على الرابط أدناه لإعادة تعيين كلمة المرور:</p>
+          <a href="${resetUrl}" style="display:inline-block;margin:20px 0;padding:12px 28px;background:#C9A844;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">إعادة تعيين كلمة المرور</a>
+          <p style="color:#888;font-size:13px;">الرابط صالح ساعة واحدة. إذا لم تطلب ذلك تجاهل هذا البريد.</p>
+        </div>`,
+      }).catch(() => {});
+    }
+    res.render('forgot-password', { error: null, success: 'إذا كان رقم الجوال مسجلاً، ستصلك رسالة بالبريد الإلكتروني' });
+  } catch(e) { res.render('forgot-password', { error: 'حدث خطأ، حاول لاحقاً', success: null }); }
+});
+
+router.get('/reset-password/:token', async (req, res) => {
+  try {
+    const customer = await Customer.findOne({ resetToken: req.params.token, resetTokenExpiry: { $gt: new Date() } }).lean();
+    if (!customer) return res.render('reset-password', { error: 'الرابط غير صالح أو منتهي الصلاحية', token: '' });
+    res.render('reset-password', { error: null, token: req.params.token });
+  } catch(e) { res.render('reset-password', { error: 'حدث خطأ', token: '' }); }
+});
+
+router.post('/reset-password/:token', custForgotLimit, async (req, res) => {
+  try {
+    const { password, confirmPassword } = req.body;
+    if (!password || password.length < 8)
+      return res.render('reset-password', { error: 'كلمة المرور يجب أن تكون 8 أحرف على الأقل', token: req.params.token });
+    if (password !== confirmPassword)
+      return res.render('reset-password', { error: 'كلمتا المرور غير متطابقتين', token: req.params.token });
+    const customer = await Customer.findOne({ resetToken: req.params.token, resetTokenExpiry: { $gt: new Date() } });
+    if (!customer) return res.render('reset-password', { error: 'الرابط غير صالح أو منتهي الصلاحية', token: '' });
+    customer.password = password;
+    customer.resetToken = undefined;
+    customer.resetTokenExpiry = undefined;
+    await customer.save();
+    res.redirect('/account/login?reset=1');
+  } catch(e) { res.render('reset-password', { error: 'حدث خطأ', token: req.params.token }); }
 });
 
 // ─── Logout ──────────────────────────────────────────────
