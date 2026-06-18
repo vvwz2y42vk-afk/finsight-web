@@ -65,8 +65,11 @@ async function seedAdminUsers() {
 async function dbMiddleware(req, res, next) {
   try { await connectDB(); next(); }
   catch (e) {
-    try { await mongoose.disconnect(); } catch (_) {}
-    res.status(503).json({ error: 'فشل الاتصال بقاعدة البيانات: ' + e.message });
+    _connPromise = null; // allow retry on next request
+    const isApi = req.path.startsWith('/api') || req.path.startsWith('/staff/api');
+    if (isApi) return res.status(503).json({ error: 'الخدمة متوقفة مؤقتاً، يُرجى المحاولة بعد قليل' });
+    try { return res.status(503).render('maintenance'); }
+    catch (_) { res.status(503).send('<meta charset="utf-8"><h2 style="font-family:sans-serif;text-align:center;padding:80px">الخدمة متوقفة مؤقتاً — <a href="javascript:location.reload()">أعد المحاولة</a></h2>'); }
   }
 }
 
@@ -145,7 +148,7 @@ app.use('/account', dbMiddleware, customerMiddleware, require('./routes/account'
 app.use('/host', dbMiddleware, hostMiddleware, require('./routes/host'));
 app.use('/staff', dbMiddleware, require('./routes/staff'));
 
-app.use('/', dbMiddleware, customerMiddleware, require('./routes/client'));
+app.use('/', customerMiddleware, require('./routes/client'));
 app.use('/api', require('./routes/api'));
 
 // ── Dashboard ────────────────────────────────────────────
@@ -209,33 +212,22 @@ app.use((req, res) => {
 
 // ── Global error handler ─────────────────────────────────
 app.use((err, req, res, _next) => {
-  const status  = err.status || err.statusCode || 500;
-  const isProd  = process.env.NODE_ENV === 'production';
-  const isMissing = err.message?.includes('Failed to lookup view') ||
-                    err.message?.includes('Cannot find module');
+  const status = err.status || err.statusCode || 500;
 
-  // Always log everything — visible in Vercel Functions logs
-  console.error(
-    `\n[ERROR] ${req.method} ${req.path} → ${status}`,
-    '\nMessage:', err.message,
-    '\nStack:', err.stack || '(no stack)',
-    '\n'
-  );
+  console.error(`[ERROR] ${req.method} ${req.path} → ${status}`, err.message, err.stack || '');
 
   if (res.headersSent) return;
 
-  // Client response: never expose internals in production
-  const clientMsg = isProd
-    ? (isMissing ? 'خطأ في إعداد الخادم — تم إبلاغ الفريق' : 'حدث خطأ في الخادم')
-    : err.message;
-
   if (req.path.startsWith('/api') || (req.accepts('json') && !req.accepts('html'))) {
-    return res.status(status).json({ error: clientMsg });
+    return res.status(status).json({ error: 'حدث خطأ، يُرجى المحاولة مجدداً' });
   }
   try {
-    res.status(status).render('error', { code: status, message: clientMsg });
+    const msg = status === 404
+      ? 'الصفحة التي تبحث عنها غير موجودة'
+      : 'حدث خطأ غير متوقع، يُرجى المحاولة مجدداً';
+    res.status(status).render('error', { code: status, message: msg });
   } catch (_) {
-    res.status(status).send(`<h2>${status} — ${clientMsg}</h2>`);
+    res.status(status).send('<meta charset="utf-8"><h2 style="font-family:sans-serif;text-align:center;padding:80px">حدث خطأ — <a href="/">العودة للرئيسية</a></h2>');
   }
 });
 
