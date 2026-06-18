@@ -25,7 +25,9 @@ const MONGO_OPTS = {
   family: 4,
   tls: true,
   tlsAllowInvalidCertificates: false,
-  maxPoolSize: 10,
+  maxPoolSize: 3,      // M0 free tier: 500 connection limit — keep per-instance pool tiny
+  minPoolSize: 0,      // release idle connections immediately
+  maxIdleTimeMS: 8000, // close idle connections after 8s so M0 slot freed fast
   bufferCommands: false,
 };
 
