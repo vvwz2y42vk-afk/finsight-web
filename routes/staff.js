@@ -780,6 +780,7 @@ router.get('/api/activity', reqStaff, async (req,res) => {
 
 // ── API: Vouchers ─────────────────────────────────────────
 router.get('/api/vouchers', reqStaff, async (req,res) => {
+  if (!req.staff.permissions?.includes('vouchers')) return res.status(403).json({ error: 'ليس لديك صلاحية السندات' });
   try {
     const V = require('../models/Voucher');
     const filter = req.staff.propertyId ? { propertyId: req.staff.propertyId } : { building: req.staff.building, propertyId: null };
@@ -790,24 +791,59 @@ router.get('/api/vouchers', reqStaff, async (req,res) => {
 });
 
 router.post('/api/vouchers', reqStaff, async (req,res) => {
+  if (!req.staff.permissions?.includes('vouchers')) return res.status(403).json({ error: 'ليس لديك صلاحية السندات' });
   try {
     const V = require('../models/Voucher');
     const { type, date, name, phone, apt, amount, description, notes, checkNumber, bankName, dueDate, bookingId, paymentMethod } = req.body;
     if(!type||!amount) return res.status(400).json({error:'نوع الوثيقة والمبلغ مطلوبان'});
+    const VALID_TYPES = ['receipt','invoice','disbursement','check','tax'];
+    if (!VALID_TYPES.includes(type)) return res.status(400).json({ error: 'نوع سند غير صالح' });
+    // سندات الصرف للمديرين فقط — يمنع الموظف من تسجيل مصروفات وهمية
+    if (['disbursement','check'].includes(type) && req.staff.role !== 'manager')
+      return res.status(403).json({ error: 'سندات الصرف والشيكات للمديرين فقط' });
+    const parsedAmount = parseFloat(amount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) return res.status(400).json({ error: 'المبلغ يجب أن يكون أكبر من صفر' });
     const pid = req.staff.propertyId || null;
     const count = await V.countDocuments({ building: req.staff.building, type, propertyId: pid });
     const prefixes = { receipt:'QBD', invoice:'INV', disbursement:'SRF', check:'KMB', tax:'ZRB' };
-    const number = (prefixes[type]||'DOC') + '-' + String(count+1).padStart(4,'0');
-    const v = await new V({ building:req.staff.building, type, number, date:date?new Date(date):new Date(), name, phone, apt, amount:parseFloat(amount)||0, description, notes, checkNumber, bankName, dueDate:dueDate?new Date(dueDate):undefined, bookingId:bookingId||undefined, createdBy:req.staff.name, paymentMethod:paymentMethod||'', propertyId:pid }).save();
+    const number = prefixes[type] + '-' + String(count+1).padStart(4,'0');
+    const v = await new V({ building:req.staff.building, type, number, date:date?new Date(date):new Date(), name, phone, apt, amount:parsedAmount, description, notes, checkNumber, bankName, dueDate:dueDate?new Date(dueDate):undefined, bookingId:bookingId||undefined, createdBy:req.staff.name, paymentMethod:paymentMethod||'', propertyId:pid }).save();
     res.json({ success:true, id:v._id, number:v.number });
   } catch(e){ res.status(500).json({error:e.message}); }
 });
 
 router.delete('/api/vouchers/:id', reqStaff, async (req,res) => {
+  if (!req.staff.permissions?.includes('vouchers')) return res.status(403).json({ error: 'ليس لديك صلاحية السندات' });
   try {
     const V = require('../models/Voucher');
-    const vFilter = req.staff.propertyId ? { _id:req.params.id, propertyId:req.staff.propertyId } : { _id:req.params.id, building:req.staff.building };
-    await V.findOneAndDelete(vFilter);
+    const B = require('../models/Booking');
+    const vFilter = req.staff.propertyId
+      ? { _id: req.params.id, propertyId: req.staff.propertyId }
+      : { _id: req.params.id, building: req.staff.building, propertyId: null };
+    const voucher = await V.findOne(vFilter);
+    if (!voucher) return res.status(404).json({ error: 'السند غير موجود' });
+
+    // سندات الصرف للمديرين فقط
+    if (['disbursement','check'].includes(voucher.type) && req.staff.role !== 'manager')
+      return res.status(403).json({ error: 'حذف سندات الصرف للمديرين فقط' });
+
+    // إذا كان سند قبض مرتبط بحجز → حذف الدفعة من الحجز أيضاً لمنع التناقض
+    if (voucher.type === 'receipt' && voucher.bookingId) {
+      const bkFilter = req.staff.propertyId
+        ? { _id: voucher.bookingId, propertyId: req.staff.propertyId }
+        : { _id: voucher.bookingId, building: req.staff.building, propertyId: null };
+      const bk = await B.findOne(bkFilter);
+      if (bk) {
+        const payEntry = bk.payments.find(p => p.voucherId?.toString() === voucher._id.toString());
+        if (payEntry) {
+          bk.payments.pull(payEntry._id);
+          bk.paidAmount = bk.payments.reduce((s, p) => s + (p.amount || 0), 0);
+          await bk.save();
+        }
+      }
+    }
+
+    await V.findByIdAndDelete(voucher._id);
     res.json({ success:true });
   } catch(e){ res.status(500).json({error:e.message}); }
 });
@@ -1701,7 +1737,9 @@ router.get('/api/export/guests.csv', reqStaff, async (req, res) => {
   if (!req.staff.permissions?.includes('reports')) return res.status(403).json({ error: 'صلاحية التقارير مطلوبة' });
   try {
     const Guest = require('../models/Guest');
-    const filter = { propertyId: req.staff.propertyId || null };
+    const filter = req.staff.propertyId
+      ? { propertyId: req.staff.propertyId }
+      : { propertyId: null, building: req.staff.building };
     const guests = await Guest.find(filter).sort({ name: 1 }).limit(50000).lean();
     const cols = [
       { key: 'name',         label: 'الاسم' },
