@@ -352,7 +352,8 @@ router.put('/bookings/:id', auth, async (req, res) => {
     const prevStatus = booking.status;
     const newStatus  = req.body.status;
 
-    const BOOKING_UPDATE_FIELDS = ['status','paidAmount','notes','name','phone','checkIn','checkOut','nights','totalPrice','idType','idNumber','bookingType','guests'];
+    // paidAmount excluded — must go through /staff/api/bookings/:id/payments to keep vouchers in sync
+    const BOOKING_UPDATE_FIELDS = ['status','notes','name','phone','checkIn','checkOut','nights','totalPrice','idType','idNumber','bookingType','guests'];
     const update = Object.fromEntries(BOOKING_UPDATE_FIELDS.filter(k => k in req.body).map(k => [k, req.body[k]]));
     await Booking.findByIdAndUpdate(req.params.id, update);
     audit(req, 'update', 'Booking', req.params.id, `تحديث الحجز${newStatus && newStatus !== prevStatus ? ': ' + prevStatus + ' → ' + newStatus : ''}`);

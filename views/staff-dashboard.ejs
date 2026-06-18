@@ -2607,9 +2607,67 @@ async function cancelBk(id){
   try{
     const r=await fetch('/staff/api/bookings/'+id+'/status',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'cancelled'})});
     const d=await r.json();
-    if(d.success){ toast('🗑️ تم إلغاء الحجز','success'); closeBkModal(); loadApartments(); loadStats(); loadBookings(); _pollKick(); }
-    else toast('❌ '+d.error,'error');
+    if(!d.success){ toast('❌ '+d.error,'error'); return; }
+    toast('🗑️ تم إلغاء الحجز','success');
+    closeBkModal();
+    loadApartments(); loadStats(); loadBookings(); _pollKick();
+    // إذا كان فيه مبلغ مدفوع → اعرض مودال الاسترداد
+    if(d.paidAmount > 0) showRefundModal(id, d.paidAmount, d.name, d.apt);
   }catch(e){ toast('❌ حدث خطأ'); }
+}
+
+function showRefundModal(bookingId, amount, guestName, apt){
+  const fmt=n=>(n||0).toLocaleString('ar',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const overlay=document.createElement('div');
+  overlay.id='refund-overlay';
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+  overlay.innerHTML=`
+    <div style="background:#fff;border-radius:20px;padding:28px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.25);">
+      <div style="font-size:32px;text-align:center;margin-bottom:12px;">💸</div>
+      <div style="font-size:15px;font-weight:800;color:#0f172a;text-align:center;margin-bottom:6px;">استرداد المبلغ المدفوع</div>
+      <div style="font-size:12px;color:#64748b;text-align:center;margin-bottom:20px;">${esc(guestName)} — شقة ${esc(apt)}</div>
+      <div style="background:#fef3c7;border:1.5px solid #fbbf24;border-radius:12px;padding:14px;text-align:center;margin-bottom:20px;">
+        <div style="font-size:11px;color:#92400e;margin-bottom:4px;">المبلغ المدفوع</div>
+        <div style="font-size:24px;font-weight:900;color:#b45309;">${fmt(amount)} ر.س</div>
+      </div>
+      <div style="font-size:12px;color:#475569;margin-bottom:16px;text-align:center;">هل تم استرداد هذا المبلغ للنزيل؟<br>سيُنشأ سند صرف تلقائياً إذا أجبت بنعم.</div>
+      <div id="refund-method-row" style="margin-bottom:16px;">
+        <label style="font-size:11px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">طريقة الاسترداد</label>
+        <select id="refund-method" style="width:100%;padding:8px;border:1.5px solid #e2e8f0;border-radius:9px;font-family:inherit;font-size:12px;outline:none;">
+          <option value="cash">نقداً</option>
+          <option value="transfer">تحويل بنكي</option>
+          <option value="network">شبكة</option>
+        </select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <button onclick="confirmRefund('${bookingId}',${amount},'${esc(guestName)}','${esc(apt)}')" style="padding:11px;background:linear-gradient(135deg,#dc2626,#b91c1c);border:none;border-radius:11px;color:#fff;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;">✅ نعم، تم الاسترداد</button>
+        <button onclick="document.getElementById('refund-overlay').remove()" style="padding:11px;background:#f1f5f9;border:none;border-radius:11px;color:#475569;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;">لا، لم يُسترد</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+async function confirmRefund(bookingId, amount, guestName, apt){
+  const method=document.getElementById('refund-method')?.value||'cash';
+  document.getElementById('refund-overlay')?.remove();
+  try{
+    const r=await fetch('/staff/api/vouchers',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        type:'disbursement',
+        name: guestName,
+        apt,
+        amount,
+        description: `استرداد إلغاء حجز — شقة ${apt} — ${guestName}`,
+        paymentMethod: method,
+        bookingId,
+      })
+    });
+    const d=await r.json();
+    if(d.success) toast('✅ سند الاسترداد: '+d.number,'success');
+    else toast('❌ فشل إنشاء سند الاسترداد: '+(d.error||''),'error');
+  }catch(e){ toast('❌ حدث خطأ في إنشاء سند الاسترداد'); }
 }
 
 async function changeStatus(id,status){

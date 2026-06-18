@@ -416,7 +416,9 @@ router.put('/api/bookings/:id/status', reqStaff, async (req,res) => {
     AL.create({building:req.staff.building,staffName:req.staff.name,action:status==='active'?'check_in':status==='checkout'?'check_out':'status_change',apt:bk.apt,guestName:bk.name,bookingId:bk._id,details:`${prev} → ${status}`}).catch(e=>console.warn('audit log:',e.message));
     if (status !== prev && status === 'active')   WA.sendCheckIn(bk.phone, bk.name, req.staff.building, bk.apt).catch(e=>console.warn('WA checkin:',e.message));
     if (status !== prev && status === 'checkout') WA.sendCheckOut(bk.phone, bk.name, bk.apt).catch(e=>console.warn('WA checkout:',e.message));
-    res.json({success:true});
+    // إرجاع المبلغ المدفوع عند الإلغاء لإتاحة إنشاء سند استرداد
+    const paidOnCancel = (status === 'cancelled' && status !== prev) ? (bk.paidAmount || 0) : 0;
+    res.json({ success: true, paidAmount: paidOnCancel, name: bk.name, apt: bk.apt });
   } catch(e){ res.status(500).json({error:e.message}); }
 });
 
