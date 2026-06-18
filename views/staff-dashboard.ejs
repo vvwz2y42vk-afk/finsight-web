@@ -4700,7 +4700,12 @@ async function loadCashFlow(){
     const tdS='padding:7px 10px;border-bottom:1px solid #f1f5f9;font-size:12px;';
 
     const vLabel=(v,isDisb)=>{
-      if(v.apt) return `<span style="font-weight:800;color:var(--brand);">${esc(v.apt)}</span>`;
+      if(v.apt){
+        const roomType = roomInfoMap[v.apt]?.roomType || '';
+        const desc = v.description || (isDisb ? '' : 'قيمة إيجار');
+        const aptPart = `الشقة — <b style="color:var(--brand);">${esc(v.apt)}</b>${roomType ? ' ' + esc(roomType) : ''}`;
+        return desc ? `${esc(desc)} — ${aptPart}` : aptPart;
+      }
       if(v.description) return esc(v.description);
       if(v.paymentMethod==='transfer') return isDisb
         ? '<span style="color:#b45309;font-style:italic;">صرف بنكي</span>'
