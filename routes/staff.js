@@ -451,6 +451,24 @@ router.put('/api/bookings/:id/edit', reqStaff, async (req,res) => {
       nights = (parseInt(months)||1)*30;
     }
 
+    // Double-booking check when dates change
+    if(checkIn || checkOut) {
+      const newIn  = checkIn  ? new Date(checkIn)  : bk.checkIn;
+      const newOut = checkout ? new Date(checkout) : bk.checkOut;
+      const conflict = await B.findOne({
+        _id: { $ne: bk._id }, apt: bk.apt, building: bk.building,
+        status: { $in: ['awaiting_checkin','active'] },
+        checkIn: { $lt: newOut }, checkOut: { $gt: newIn },
+      });
+      if(conflict) return res.status(400).json({ error: `تعارض مع حجز موجود للضيف "${conflict.name}"` });
+    }
+
+    const newTotal = parseFloat(totalPrice) || bk.totalPrice;
+    // paidAmount: clamp between 0 and newTotal, preserve current value if not sent
+    const newPaid = paidAmount !== undefined
+      ? Math.min(Math.max(0, parseFloat(paidAmount) || 0), newTotal)
+      : bk.paidAmount;
+
     // If status change requested via edit, enforce transition matrix too
     let safeStatus = bk.status;
     if(status && status !== bk.status) {
@@ -465,8 +483,8 @@ router.put('/api/bookings/:id/edit', reqStaff, async (req,res) => {
       name: name||bk.name, phone: phone||bk.phone,
       checkIn: checkIn?new Date(checkIn):bk.checkIn,
       checkOut: checkout?new Date(checkout):bk.checkOut,
-      nights, totalPrice: parseFloat(totalPrice)||bk.totalPrice,
-      paidAmount: parseFloat(paidAmount)||0,
+      nights, totalPrice: newTotal,
+      paidAmount: newPaid,
       paymentMethod: paymentMethod !== undefined ? paymentMethod : bk.paymentMethod,
       companions: Array.isArray(companions) ? companions.filter(c=>c.name).map(c=>({name:c.name,idType:c.idType||'',idNumber:c.idNumber||''})) : bk.companions,
       idType: idType||bk.idType, idNumber: idNumber||bk.idNumber,
@@ -1638,6 +1656,7 @@ function toCSV(rows, cols) {
 }
 
 router.get('/api/export/bookings.csv', reqStaff, async (req, res) => {
+  if (!req.staff.permissions?.includes('reports')) return res.status(403).json({ error: 'صلاحية التقارير مطلوبة' });
   try {
     const B = require('../models/Booking');
     const filter = req.staff.propertyId
@@ -1672,6 +1691,7 @@ router.get('/api/export/bookings.csv', reqStaff, async (req, res) => {
 });
 
 router.get('/api/export/guests.csv', reqStaff, async (req, res) => {
+  if (!req.staff.permissions?.includes('reports')) return res.status(403).json({ error: 'صلاحية التقارير مطلوبة' });
   try {
     const Guest = require('../models/Guest');
     const filter = { propertyId: req.staff.propertyId || null };
@@ -2095,7 +2115,9 @@ router.post('/api/listings', reqStaff, async (req, res) => {
   if (req.staff.role !== 'manager') return res.status(403).json({ error: 'للمديرين فقط' });
   try {
     const ChannelListing = require('../models/ChannelListing');
-    const { building, apt, platform, icalImport, platformListingId, enabled } = req.body;
+    const { apt, platform, icalImport, platformListingId, enabled } = req.body;
+    // building must come from staff context, never from body — prevents cross-building tampering
+    const building = req.staff.propertyId ? req.body.building : req.staff.building;
     if (!building || !apt || !platform) return res.status(400).json({ error: 'building, apt, platform مطلوبة' });
     const filter = { building, apt, platform, propertyId: req.staff.propertyId || null };
     const update = {
@@ -2136,6 +2158,10 @@ router.post('/api/listings/bulk', reqStaff, async (req, res) => {
 
 // POST /staff/api/listings/sync/:building — sync all listings in a building (or single apt)
 router.post('/api/listings/sync/:building', reqStaff, async (req, res) => {
+  if (req.staff.role !== 'manager') return res.status(403).json({ error: 'للمديرين فقط' });
+  // non-propertyId staff can only sync their own building
+  if (!req.staff.propertyId && req.params.building !== req.staff.building)
+    return res.status(403).json({ error: 'غير مصرح بالوصول لهذا المبنى' });
   try {
     const ChannelListing = require('../models/ChannelListing');
     const Booking        = require('../models/Booking');
@@ -2217,7 +2243,11 @@ router.delete('/api/listings/:id', reqStaff, async (req, res) => {
   if (req.staff.role !== 'manager') return res.status(403).json({ error: 'للمديرين فقط' });
   try {
     const ChannelListing = require('../models/ChannelListing');
-    await ChannelListing.findByIdAndDelete(req.params.id);
+    const ownerFilter = req.staff.propertyId
+      ? { _id: req.params.id, propertyId: req.staff.propertyId }
+      : { _id: req.params.id, building: req.staff.building };
+    const doc = await ChannelListing.findOneAndDelete(ownerFilter);
+    if (!doc) return res.status(404).json({ error: 'الربط غير موجود أو غير مصرح' });
     res.json({ success: true });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
