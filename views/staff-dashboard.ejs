@@ -92,8 +92,9 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
   display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:99;
   backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);
   opacity:0;transition:opacity .25s var(--ease);
+  pointer-events:none;
 }
-#sb-overlay.show{opacity:1;}
+#sb-overlay.show{opacity:1;pointer-events:auto;}
 
 /* ══ Hamburger ══ */
 #hamburger{
