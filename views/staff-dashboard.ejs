@@ -11,31 +11,6 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ar.js"></script>
 <style>
 /* ═══ BAREZ — LUXURY DASHBOARD SYSTEM ═══ */
-/* App-shell reset */
-html{
-  overscroll-behavior:none;
-  -webkit-text-size-adjust:100%;
-}
-body{
-  overscroll-behavior:none;
-  -webkit-tap-highlight-color:transparent;
-  -webkit-touch-callout:none;
-}
-button,a,.sn,.kpi-c,.apt-card{
-  -webkit-tap-highlight-color:transparent;
-  touch-action:manipulation;
-}
-/* Safe areas (iPhone notch + home bar) */
-.sb{
-  padding-top:calc(20px + env(safe-area-inset-top));
-  padding-bottom:calc(10px + env(safe-area-inset-bottom));
-}
-.topbar{
-  padding-top:calc(14px + env(safe-area-inset-top));
-}
-@media(max-width:767px){
-  .topbar{padding-top:calc(12px + env(safe-area-inset-top));}
-}
 :root{
   --bg:#F8FAFC;--surface:#FFFFFF;--s2:#F1F5F9;--s3:#E8EEF8;
   --border:#E2E8F0;--border-s:#EEF2F8;
@@ -605,6 +580,14 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
 
 /* ══ Mobile — يجب أن يكون آخر شيء في الـ CSS ══ */
 @media(max-width:767px){
+  /* App-shell: mobile only */
+  html{overscroll-behavior:none;-webkit-text-size-adjust:100%;}
+  body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;}
+  button,a,.sn,.kpi-c,.apt-card{-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+  /* Safe areas */
+  .sb{padding-top:calc(20px + env(safe-area-inset-top));padding-bottom:calc(10px + env(safe-area-inset-bottom));}
+  .topbar{padding-top:calc(12px + env(safe-area-inset-top));}
+
   /* Sidebar */
   .sb{right:0;transform:translateX(100%);width:var(--sb-exp)!important;transition:transform .28s var(--ease);box-shadow:none;}
   .sb.open{transform:translateX(0);box-shadow:-8px 0 40px rgba(0,0,0,.35);}
