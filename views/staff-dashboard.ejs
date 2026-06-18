@@ -150,84 +150,60 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
   .sb .sb-bld{max-width:200px!important;opacity:1!important;}
   .sb .sb-occ{max-height:80px!important;opacity:1!important;}
 
-  /* Layout */
+  /* Layout — منع التمرير الجانبي */
   html,body{overflow-x:hidden;}
-  .main{margin-right:0;max-width:100vw;}
+  .main{margin-right:0;}
+  .content{padding:12px;overflow-x:hidden;}
   .topbar{padding:12px 14px;}
   .tb-info{display:none;}
-  .tb-title{font-size:14px;}
-  .content{padding:12px;max-width:100vw;overflow-x:hidden;}
+  .tb-title{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:55vw;}
   #sb-overlay{display:block;}
   #hamburger{display:flex;}
 
-  /* KPI — 2 columns */
-  .kpi-row{grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
-  .kpi-c{padding:14px 12px;border-radius:12px;}
-  .kpi-ico{width:36px;height:36px;margin-bottom:10px;}
-  .kpi-num{font-size:26px;}
-  .kpi-lbl{font-size:10px;margin-top:6px;}
+  /* KPI — 3 أعمدة صغيرة */
+  .kpi-row{grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
+  .kpi-c{padding:12px 10px;border-radius:12px;}
+  .kpi-ico{width:32px;height:32px;margin-bottom:8px;}
+  .kpi-num{font-size:22px;}
+  .kpi-lbl{font-size:9px;margin-top:4px;}
 
-  /* Today schedule — stack */
-  #today-schedule-wrap{grid-template-columns:1fr!important;}
+  /* Charts — تمرير أفقي بدل تكديس */
+  .charts-row{
+    display:flex;gap:10px;
+    overflow-x:auto;-webkit-overflow-scrolling:touch;
+    padding-bottom:4px;scroll-snap-type:x mandatory;
+  }
+  .charts-row .chart-card{
+    flex:0 0 80vw;scroll-snap-align:start;border-radius:12px;
+  }
+  .charts-row .chart-card:first-child{flex:0 0 90vw;}
 
-  /* Charts — stack vertically */
-  .charts-row{grid-template-columns:1fr!important;gap:10px;}
-
-  /* Apt grid — 4 per row */
+  /* Apt grid — 4 بالصف */
   .apt{width:calc(25% - 7px);min-width:0;border-radius:10px;padding:10px 4px 8px;}
-  .apt-n{font-size:16px;}
-  .apt-s{font-size:9px;}
-  .apt-g{font-size:9px;}
-  .apt-floor-row{gap:6px;}
+  .apt-n{font-size:15px;}
+  .apt-s,.apt-g,.apt-type{font-size:9px;}
 
-  /* Tables — تضمن عدم التجاوز */
-  .tbl-wrap{border-radius:10px;}
-  .stbl{font-size:12px;}
-  .stbl th,.stbl td{padding:8px 8px;white-space:nowrap;}
+  /* Search */
+  .sinp{min-width:0;font-size:13px;}
 
-  /* Search bar */
-  .search-bar{gap:8px;}
-  .sinp{min-width:0;width:100%;font-size:13px;}
-  .sbtn{width:100%;}
-
-  /* Calendar */
-  .cal-layout{flex-direction:column;}
-  .cal-panel{width:100%;position:static;margin-bottom:12px;}
+  /* Calendar — الجدول يتمرر أفقياً، يخفي الـ side panel */
+  .cal-panel{display:none;}
+  .cal-layout{display:block;}
   .cal-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
-
-  /* HK grid */
-  .hk-grid{grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:6px;}
-  .hk-apt{font-size:16px;}
-
-  /* Activity */
-  .act-row{gap:10px;}
-  .act-time{font-size:10px;}
-
-  /* Voucher cards */
-  .vou-cards{gap:8px;}
-  .vou-card{min-width:0;flex:1;padding:14px 10px 12px;border-radius:12px;}
-  .vou-ico-w{width:40px;height:40px;border-radius:10px;margin-bottom:8px;}
-  .vou-lbl{font-size:11px;}
 
   /* Modals — bottom sheet */
   .overlay{align-items:flex-end;padding:0;}
-  .modal{width:100%;max-width:100%;border-radius:20px 20px 0 0;max-height:92vh;overflow-y:auto;}
+  .modal{width:100%;max-width:100%;border-radius:20px 20px 0 0;max-height:90vh;overflow-y:auto;}
   .mbody{padding:16px 18px;}
-  .mhd{padding:16px 18px;}
-  .mbtn{padding:13px 10px;font-size:12px;}
+  .mhd{padding:14px 18px;}
 
-  /* Topbar title overflow */
-  .tb-title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;}
+  /* Voucher cards — صغّر */
+  .vou-card{min-width:0;padding:14px 10px 12px;border-radius:12px;}
+  .vou-ico-w{width:40px;height:40px;margin-bottom:8px;}
+  .vou-lbl{font-size:11px;}
 
-  /* Apt filters */
-  .apt-filters{gap:5px;}
-  .af{font-size:10px;padding:5px 10px;}
-
-  /* Pager */
-  .pager button{min-width:28px;height:28px;font-size:11px;}
-
-  /* Toast — adjust for home bar */
-  #toast{bottom:calc(20px + env(safe-area-inset-bottom));font-size:12px;padding:11px 20px;}
+  /* Toast */
+  #toast{bottom:calc(16px + env(safe-area-inset-bottom));font-size:12px;padding:11px 18px;}
 }
 .tb-left{}
 .tb-title{font-size:16px;font-weight:700;color:var(--t1);letter-spacing:-.01em;}
