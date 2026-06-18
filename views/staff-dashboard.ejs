@@ -140,71 +140,6 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
   box-shadow:0 1px 12px rgba(15,23,42,.05);
 }
 
-/* ══ Mobile breakpoint ══ */
-@media(max-width:767px){
-  /* Sidebar */
-  .sb{right:0;transform:translateX(100%);width:var(--sb-exp)!important;transition:transform .28s var(--ease);box-shadow:none;}
-  .sb.open{transform:translateX(0);box-shadow:-8px 0 40px rgba(0,0,0,.35);}
-  .sb:hover{width:var(--sb-exp)!important;}
-  .sb .sn-lbl{opacity:1!important;}
-  .sb .sb-bld{max-width:200px!important;opacity:1!important;}
-  .sb .sb-occ{max-height:80px!important;opacity:1!important;}
-
-  /* Layout — منع التمرير الجانبي */
-  html,body{overflow-x:hidden;}
-  .main{margin-right:0;}
-  .content{padding:12px;overflow-x:hidden;}
-  .topbar{padding:12px 14px;}
-  .tb-info{display:none;}
-  .tb-title{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:55vw;}
-  #sb-overlay{display:block;}
-  #hamburger{display:flex;}
-
-  /* KPI — 3 أعمدة صغيرة */
-  .kpi-row{grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
-  .kpi-c{padding:12px 10px;border-radius:12px;}
-  .kpi-ico{width:32px;height:32px;margin-bottom:8px;}
-  .kpi-num{font-size:22px;}
-  .kpi-lbl{font-size:9px;margin-top:4px;}
-
-  /* Charts — تمرير أفقي بدل تكديس */
-  .charts-row{
-    display:flex;gap:10px;
-    overflow-x:auto;-webkit-overflow-scrolling:touch;
-    padding-bottom:4px;scroll-snap-type:x mandatory;
-  }
-  .charts-row .chart-card{
-    flex:0 0 80vw;scroll-snap-align:start;border-radius:12px;
-  }
-  .charts-row .chart-card:first-child{flex:0 0 90vw;}
-
-  /* Apt grid — 4 بالصف */
-  .apt{width:calc(25% - 7px);min-width:0;border-radius:10px;padding:10px 4px 8px;}
-  .apt-n{font-size:15px;}
-  .apt-s,.apt-g,.apt-type{font-size:9px;}
-
-  /* Search */
-  .sinp{min-width:0;font-size:13px;}
-
-  /* Calendar — الجدول يتمرر أفقياً، يخفي الـ side panel */
-  .cal-panel{display:none;}
-  .cal-layout{display:block;}
-  .cal-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
-
-  /* Modals — bottom sheet */
-  .overlay{align-items:flex-end;padding:0;}
-  .modal{width:100%;max-width:100%;border-radius:20px 20px 0 0;max-height:90vh;overflow-y:auto;}
-  .mbody{padding:16px 18px;}
-  .mhd{padding:14px 18px;}
-
-  /* Voucher cards — صغّر */
-  .vou-card{min-width:0;padding:14px 10px 12px;border-radius:12px;}
-  .vou-ico-w{width:40px;height:40px;margin-bottom:8px;}
-  .vou-lbl{font-size:11px;}
-
-  /* Toast */
-  #toast{bottom:calc(16px + env(safe-area-inset-bottom));font-size:12px;padding:11px 18px;}
-}
 .tb-left{}
 .tb-title{font-size:16px;font-weight:700;color:var(--t1);letter-spacing:-.01em;}
 .tb-title span{color:var(--brand);}
@@ -667,6 +602,66 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
 .ch-how-text strong{display:block;font-size:13px;font-weight:700;color:var(--t1);margin-bottom:3px;}
 .ch-how-text p{font-size:12px;color:var(--t3);line-height:1.6;margin:0;}
 .ch-how-text code{background:var(--s2);color:var(--brand);padding:2px 7px;border-radius:6px;font-family:monospace;font-size:11px;}
+
+/* ══ Mobile — يجب أن يكون آخر شيء في الـ CSS ══ */
+@media(max-width:767px){
+  /* Sidebar */
+  .sb{right:0;transform:translateX(100%);width:var(--sb-exp)!important;transition:transform .28s var(--ease);box-shadow:none;}
+  .sb.open{transform:translateX(0);box-shadow:-8px 0 40px rgba(0,0,0,.35);}
+  .sb:hover{width:var(--sb-exp)!important;}
+  .sb .sn-lbl{opacity:1!important;}
+  .sb .sb-bld{max-width:200px!important;opacity:1!important;}
+  .sb .sb-occ{max-height:80px!important;opacity:1!important;}
+
+  /* Layout */
+  html,body{overflow-x:hidden;}
+  .main{margin-right:0;}
+  .content{padding:12px;overflow-x:hidden;}
+  .topbar{padding:12px 14px;}
+  .tb-info{display:none;}
+  .tb-title{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:55vw;}
+  #sb-overlay{display:block;}
+  #hamburger{display:flex;}
+
+  /* KPI — 3 أعمدة */
+  .kpi-row{grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
+  .kpi-c{padding:12px 10px;border-radius:12px;}
+  .kpi-ico{width:32px;height:32px;margin-bottom:8px;}
+  .kpi-num{font-size:22px;}
+  .kpi-lbl{font-size:9px;margin-top:4px;}
+
+  /* Charts — تمرير أفقي */
+  .charts-row{display:flex;gap:10px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;scroll-snap-type:x mandatory;}
+  .charts-row .chart-card{flex:0 0 80vw;scroll-snap-align:start;}
+  .charts-row .chart-card:first-child{flex:0 0 90vw;}
+
+  /* Apt grid — 4 بالصف */
+  .apt{width:calc(25% - 7px);min-width:0;border-radius:10px;padding:10px 4px 8px;}
+  .apt-n{font-size:15px;}
+  .apt-s,.apt-g,.apt-type{font-size:9px;}
+
+  /* Search */
+  .sinp{min-width:0;font-size:13px;}
+
+  /* Calendar */
+  .cal-panel{display:none;}
+  .cal-layout{display:block;}
+  .cal-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+
+  /* Modals — bottom sheet */
+  .overlay{align-items:flex-end;padding:0;}
+  .modal{width:100%;max-width:100%;border-radius:20px 20px 0 0;max-height:90vh;overflow-y:auto;}
+  .mbody{padding:16px 18px;}
+  .mhd{padding:14px 18px;}
+
+  /* Voucher cards */
+  .vou-card{min-width:0;padding:14px 10px 12px;border-radius:12px;}
+  .vou-ico-w{width:40px;height:40px;margin-bottom:8px;}
+  .vou-lbl{font-size:11px;}
+
+  /* Toast */
+  #toast{bottom:calc(16px + env(safe-area-inset-bottom));font-size:12px;padding:11px 18px;}
+}
 </style>
 <link rel="manifest" href="/manifest-staff.json">
 <meta name="theme-color" content="#0A1628">
