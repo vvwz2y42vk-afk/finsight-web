@@ -16,7 +16,7 @@
   --border:#E2E8F0;--border-s:#EEF2F8;
   --t1:#0F172A;--t2:#334155;--t3:#64748B;--t4:#94A3B8;
   --brand:#1a3d8f;--brand-l:#2563eb;--brand-m:rgba(26,61,143,.08);
-  --naz:#0EA5D8;--naz-d:#0B87B5;--naz-bg:rgba(14,165,216,.08);
+  --naz:var(--brand);--naz-d:var(--brand);--naz-bg:var(--brand-m);
   --green:#047857;--green-bg:rgba(4,120,87,.08);--green-b:rgba(4,120,87,.2);
   --amber:#B45309;--amber-bg:rgba(180,83,9,.08);--amber-b:rgba(180,83,9,.2);
   --red:#B91C1C;--red-bg:rgba(185,28,28,.08);--red-b:rgba(185,28,28,.2);
@@ -67,14 +67,14 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
 }
 .sn:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.85);}
 .sn.active{
-  background:linear-gradient(180deg,rgba(14,165,216,.25),rgba(14,165,216,.15));
+  background:linear-gradient(180deg,rgba(26,61,143,.25),rgba(26,61,143,.15));
   color:#7DD3FA;
 }
 .sn.active::after{
   content:'';position:absolute;right:0;top:20%;bottom:20%;
   width:3px;border-radius:2px 0 0 2px;
-  background:var(--naz);
-  box-shadow:0 0 10px rgba(14,165,216,.8);
+  background:var(--brand);
+  box-shadow:0 0 10px rgba(26,61,143,.4);
 }
 .sn-ico{
   width:24px;height:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0;
@@ -137,12 +137,12 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
 }
 .tb-left{display:flex;align-items:center;gap:10px;}
 .tb-title{font-size:14px;font-weight:700;color:var(--t1);letter-spacing:-.01em;}
-.tb-title span{color:var(--naz);}
+.tb-title span{color:var(--brand);}
 .tb-meta{font-size:11px;color:var(--t4);margin-top:1px;font-weight:400;}
 .tb-right{display:flex;align-items:center;gap:10px;}
 .tb-avatar{
   width:32px;height:32px;border-radius:8px;
-  background:linear-gradient(135deg,var(--naz-d),var(--naz));
+  background:var(--brand);
   display:flex;align-items:center;justify-content:center;
   font-size:13px;font-weight:700;color:#fff;flex-shrink:0;
 }
@@ -151,11 +151,11 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
 .tb-info-role{font-size:10px;color:var(--t4);margin-top:1px;}
 .tb-occ-badge{
   display:flex;align-items:center;gap:6px;padding:5px 12px;
-  background:var(--naz-bg);border:1px solid rgba(14,165,216,.2);
+  background:var(--brand-m);border:1px solid rgba(26,61,143,.2);
   border-radius:20px;
 }
-.tb-occ-dot{width:7px;height:7px;border-radius:50%;background:var(--naz);box-shadow:0 0 6px rgba(14,165,216,.6);}
-.tb-occ-txt{font-size:11px;font-weight:600;color:var(--naz-d);}
+.tb-occ-dot{width:7px;height:7px;border-radius:50%;background:var(--brand);box-shadow:0 0 6px rgba(26,61,143,.3);}
+.tb-occ-txt{font-size:11px;font-weight:600;color:var(--brand);}
 .content{padding:20px 24px;flex:1;}
 /* ══ KPI Cards — نمط نزيل ══ */
 .kpi-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;margin-bottom:20px;}
@@ -168,8 +168,8 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
   display:flex;flex-direction:column;
   position:relative;overflow:hidden;
 }
-.kpi-c::before{content:'';position:absolute;top:0;right:0;left:0;height:3px;background:var(--naz);border-radius:10px 10px 0 0;pointer-events:none;}
-.kpi-c:hover{box-shadow:var(--sh);transform:translateY(-2px);border-color:rgba(14,165,216,.25);}
+.kpi-c::before{content:'';position:absolute;top:0;right:0;left:0;height:3px;background:var(--brand);border-radius:10px 10px 0 0;pointer-events:none;}
+.kpi-c:hover{box-shadow:var(--sh);transform:translateY(-2px);border-color:rgba(26,61,143,.25);}
 .kpi-ico{
   width:44px;height:44px;border-radius:10px;
   display:flex;align-items:center;justify-content:center;
@@ -189,9 +189,9 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
 .chart-title{
   font-size:13px;font-weight:700;margin-bottom:16px;color:var(--t1);
   display:flex;align-items:center;gap:8px;
-  padding-bottom:10px;border-bottom:2px solid var(--naz);
+  padding-bottom:10px;border-bottom:2px solid var(--brand);
 }
-.chart-title::before{content:'';display:block;width:3px;height:14px;background:var(--naz);border-radius:3px;flex-shrink:0;}
+.chart-title::before{content:'';display:block;width:3px;height:14px;background:var(--brand);border-radius:3px;flex-shrink:0;}
 .donut-wrap{position:relative;display:inline-flex;align-items:center;justify-content:center;}
 .donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;}
 .donut-pct{font-size:24px;font-weight:700;color:var(--t1);letter-spacing:-.03em;line-height:1;}
@@ -205,11 +205,11 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
 .af .af-cnt{font-size:10px;background:rgba(255,255,255,.25);border-radius:10px;padding:0 5px;min-width:18px;text-align:center;display:inline-block;}
 .af:not(.active) .af-cnt{background:var(--s3);color:var(--brand);}
 .apt-bld{background:#fff;border-radius:10px;border:1px solid var(--border);box-shadow:var(--sh-sm);margin-bottom:12px;overflow:hidden;}
-.apt-bld-hd{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:linear-gradient(135deg,#0EA5D8,#0B87B5);margin-bottom:0;}
+.apt-bld-hd{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:linear-gradient(135deg,#1a3d8f,#1a3d8f);margin-bottom:0;}
 .apt-bld-name{font-size:14px;font-weight:700;color:#fff;letter-spacing:-.01em;}
 .apt-bld-inner{padding:14px 16px;}
 .apt-floor-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;margin-top:4px;}
-.apt-floor-lbl{font-size:11px;font-weight:700;color:var(--naz-d);letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;}
+.apt-floor-lbl{font-size:11px;font-weight:700;color:var(--brand);letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;}
 .apt-floor-stats{font-size:10px;font-weight:700;padding:2px 9px;background:rgba(26,61,143,.08);color:var(--brand);border-radius:20px;white-space:nowrap;flex-shrink:0;}
 .apt-floor-line{flex:1;height:1px;background:rgba(26,61,143,.1);}
 .apt-grid{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:16px;}
@@ -249,8 +249,8 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
 .stbl th:first-child{border-radius:0 6px 0 0;}
 .stbl th:last-child{border-radius:6px 0 0 0;}
 .stbl td{padding:9px 12px;border-bottom:1px solid var(--border-s);color:var(--t2);}
-.stbl tbody tr:hover td{background:rgba(14,165,216,.07)!important;}
-.stbl tbody tr.co-row td{background:rgba(14,165,216,.08)!important;}
+.stbl tbody tr:hover td{background:rgba(26,61,143,.07)!important;}
+.stbl tbody tr.co-row td{background:rgba(26,61,143,.08)!important;}
 .stbl tbody tr.co-row:hover td{background:rgba(26,61,143,.12)!important;}
 .stbl tbody tr{transition:background .12s;}
 
@@ -858,7 +858,7 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
       <div style="background:#fff;border:1px solid var(--border);border-radius:12px;margin-bottom:14px;overflow:hidden;">
         <div style="display:flex;align-items:center;justify-content:space-between;padding:0;border-bottom:1px solid var(--border);">
           <div style="display:flex;">
-            <button id="apt-tab-checkin" onclick="switchAptTab('checkin')" style="padding:12px 20px;border:none;background:none;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;color:var(--naz);border-bottom:2px solid var(--naz);display:flex;align-items:center;gap:6px;">
+            <button id="apt-tab-checkin" onclick="switchAptTab('checkin')" style="padding:12px 20px;border:none;background:none;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;color:var(--brand);border-bottom:2px solid var(--brand);display:flex;align-items:center;gap:6px;">
               <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
               تسجيل الدخول
             </button>
@@ -912,7 +912,7 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
             <span style="font-size:11px;font-weight:700;color:var(--t2);">انتظار:</span>
             <span style="font-size:13px;font-weight:800;color:#8b5cf6;" id="fc-awaiting">—</span>
           </div>
-          <span id="apts-occ-rate" style="font-size:12px;font-weight:700;color:var(--naz-d);margin-right:auto;padding:5px 12px;background:var(--naz-bg);border-radius:8px;border:1px solid rgba(14,165,216,.2);"></span>
+          <span id="apts-occ-rate" style="font-size:12px;font-weight:700;color:var(--brand);margin-right:auto;padding:5px 12px;background:var(--brand-m);border-radius:8px;border:1px solid rgba(26,61,143,.2);"></span>
         </div>
 
         <!-- فلاتر (تبويب إدارة حالة الشقق) -->
@@ -947,9 +947,9 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
         <div style="padding:8px 16px;background:#f8fafc;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
           <span style="font-size:11px;color:var(--t3);">نسبة الإشغال</span>
           <div style="flex:1;margin:0 12px;background:#e2e8f0;border-radius:20px;height:6px;overflow:hidden;">
-            <div id="apt-occ-bar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--naz-d),var(--naz));border-radius:20px;transition:width 1s ease;"></div>
+            <div id="apt-occ-bar" style="height:100%;width:0%;background:var(--brand);border-radius:20px;transition:width 1s ease;"></div>
           </div>
-          <span id="apt-occ-pct" style="font-size:12px;font-weight:800;color:var(--naz-d);">0%</span>
+          <span id="apt-occ-pct" style="font-size:12px;font-weight:800;color:var(--brand);">0%</span>
         </div>
       </div>
 
@@ -1082,7 +1082,7 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
           <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--t2);cursor:pointer;white-space:nowrap;">
             <input type="checkbox" id="custShowCompanies" style="cursor:pointer;accent-color:var(--brand);" onchange="loadCustomers()"> عرض الشركات
           </label>
-          <button onclick="loadCustomers()" style="padding:7px 20px;border-radius:8px;background:var(--naz);border:none;color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">بحث</button>
+          <button onclick="loadCustomers()" style="padding:7px 20px;border-radius:8px;background:var(--brand);border:none;color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">بحث</button>
           <button onclick="clearCustFilters()" style="padding:7px 14px;border-radius:8px;border:1px solid #e2e8f0;background:#f8fafc;color:#64748b;font-family:inherit;font-size:12px;cursor:pointer;">مسح</button>
           <span style="font-size:11px;color:#94a3b8;margin-right:auto;" id="custCount"></span>
         </div>
@@ -1124,7 +1124,7 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
             <option value="">-- الشقة --</option>
           </select>
           <span style="font-size:11px;color:var(--t3);">العرض:</span>
-          <button id="hk-view-grid" onclick="switchHkView('grid')" style="padding:5px 12px;border-radius:8px;border:1.5px solid var(--naz);background:var(--naz);color:#fff;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">شبكة</button>
+          <button id="hk-view-grid" onclick="switchHkView('grid')" style="padding:5px 12px;border-radius:8px;border:1.5px solid var(--brand);background:var(--brand);color:#fff;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">شبكة</button>
           <button id="hk-view-table" onclick="switchHkView('table')" style="padding:5px 12px;border-radius:8px;border:1.5px solid var(--border);background:#fff;color:var(--t3);font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">جدول</button>
           <span style="margin-right:auto;font-size:11px;font-weight:700;color:var(--t3);" id="hk-summary-txt"></span>
         </div>
@@ -1624,7 +1624,7 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
         <div class="cust-ff"><label>رقم العقد / السند</label><input type="text" id="act-ref" class="cff" style="width:140px;" placeholder="رقم..."></div>
         <div class="cust-ff"><label>اسم المستخدم</label><input type="text" id="act-user" class="cff" style="width:140px;" placeholder="اسم الموظف..."></div>
         <div style="display:flex;gap:6px;align-self:flex-end;padding-bottom:2px;">
-          <button onclick="loadActivity()" style="padding:7px 18px;border-radius:8px;background:var(--naz);border:none;color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">بحث</button>
+          <button onclick="loadActivity()" style="padding:7px 18px;border-radius:8px;background:var(--brand);border:none;color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">بحث</button>
           <button onclick="exportActivityLog()" style="padding:7px 14px;border-radius:8px;border:1.5px solid var(--border);background:#fff;color:var(--t2);font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;">
             <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             تصدير
@@ -1705,7 +1705,7 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
               <option value="digital">دفع رقمي</option>
             </select>
           </div>
-          <button onclick="loadVouList('receipt')" style="padding:7px 18px;border-radius:8px;background:var(--naz);border:none;color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">بحث</button>
+          <button onclick="loadVouList('receipt')" style="padding:7px 18px;border-radius:8px;background:var(--brand);border:none;color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">بحث</button>
         </div>
         <div class="apt-bld">
           <div style="font-size:15px;font-weight:800;color:#1e293b;margin-bottom:14px;">سندات القبض</div>
@@ -1727,7 +1727,7 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
           <div class="cust-ff"><label>من تاريخ</label><input type="date" id="vou-i-from" class="cff" style="width:130px;" onchange="loadVouList('invoice')"></div>
           <div class="cust-ff"><label>إلى تاريخ</label><input type="date" id="vou-i-to" class="cff" style="width:130px;" onchange="loadVouList('invoice')"></div>
           <div class="cust-ff"><label>رقم الفاتورة</label><input type="text" id="vou-i-num" class="cff" style="width:120px;" placeholder="INV-..."></div>
-          <button onclick="loadVouList('invoice')" style="padding:7px 18px;border-radius:8px;background:var(--naz);border:none;color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">بحث</button>
+          <button onclick="loadVouList('invoice')" style="padding:7px 18px;border-radius:8px;background:var(--brand);border:none;color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">بحث</button>
         </div>
         <div class="apt-bld">
           <div style="font-size:15px;font-weight:800;color:#1e293b;margin-bottom:14px;">الفواتير</div>
@@ -1749,7 +1749,7 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
           <div class="cust-ff"><label>من تاريخ</label><input type="date" id="vou-d-from" class="cff" style="width:130px;" onchange="loadVouList('disbursement')"></div>
           <div class="cust-ff"><label>إلى تاريخ</label><input type="date" id="vou-d-to" class="cff" style="width:130px;" onchange="loadVouList('disbursement')"></div>
           <div class="cust-ff"><label>رقم السند</label><input type="text" id="vou-d-num" class="cff" style="width:120px;" placeholder="EXP-..."></div>
-          <button onclick="loadVouList('disbursement')" style="padding:7px 18px;border-radius:8px;background:var(--naz);border:none;color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">بحث</button>
+          <button onclick="loadVouList('disbursement')" style="padding:7px 18px;border-radius:8px;background:var(--brand);border:none;color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">بحث</button>
         </div>
         <div class="apt-bld">
           <div style="font-size:15px;font-weight:800;color:#1e293b;margin-bottom:14px;">سندات الصرف</div>
@@ -2488,8 +2488,8 @@ function switchAptTab(tab){
     const pane=document.getElementById('apt-pane-'+t);
     const isActive=(t===tab);
     if(btn){
-      btn.style.color=isActive?'var(--naz)':'var(--t3)';
-      btn.style.borderBottom=isActive?'2px solid var(--naz)':'2px solid transparent';
+      btn.style.color=isActive?'var(--brand)':'var(--t3)';
+      btn.style.borderBottom=isActive?'2px solid var(--brand)':'2px solid transparent';
     }
     if(pane) pane.style.display=isActive?'block':'none';
   });
@@ -2570,8 +2570,8 @@ function switchHkView(v){
   const tBtn=document.getElementById('hk-view-table');
   const gWrap=document.getElementById('hk-view-grid-wrap');
   const tWrap=document.getElementById('hk-view-table-wrap');
-  if(gBtn){gBtn.style.background=v==='grid'?'var(--naz)':'#fff';gBtn.style.color=v==='grid'?'#fff':'var(--t3)';gBtn.style.borderColor=v==='grid'?'var(--naz)':'var(--border)';}
-  if(tBtn){tBtn.style.background=v==='table'?'var(--naz)':'#fff';tBtn.style.color=v==='table'?'#fff':'var(--t3)';tBtn.style.borderColor=v==='table'?'var(--naz)':'var(--border)';}
+  if(gBtn){gBtn.style.background=v==='grid'?'var(--brand)':'#fff';gBtn.style.color=v==='grid'?'#fff':'var(--t3)';gBtn.style.borderColor=v==='grid'?'var(--brand)':'var(--border)';}
+  if(tBtn){tBtn.style.background=v==='table'?'var(--brand)':'#fff';tBtn.style.color=v==='table'?'#fff':'var(--t3)';tBtn.style.borderColor=v==='table'?'var(--brand)':'var(--border)';}
   if(gWrap) gWrap.style.display=v==='grid'?'block':'none';
   if(tWrap) tWrap.style.display=v==='table'?'block':'none';
   if(v==='table') renderHkTable();
@@ -3244,7 +3244,7 @@ function renderBkRows(){
     const bkNum='#'+b._id.toString().slice(-5).toUpperCase();
     return`<tr>
       <td data-label="رقم العقد" style="${bg}font-family:monospace;font-weight:700;color:var(--t4);font-size:11px;white-space:nowrap;">
-        <span style="cursor:pointer;color:var(--naz-d);" onclick="openBkModal('${b._id}','${esc(b.apt||'')}','${b.status}')">${bkNum}</span>
+        <span style="cursor:pointer;color:var(--brand);" onclick="openBkModal('${b._id}','${esc(b.apt||'')}','${b.status}')">${bkNum}</span>
       </td>
       <td data-label="الحالة" style="${bg}">${statusBadge(b.status)}</td>
       <td data-label="الشقة" style="${bg}"><b style="font-size:14px;color:var(--t1);">${esc(b.apt||'—')}</b></td>
@@ -4006,7 +4006,7 @@ function renderVouRow(v,type,i){
   if(type==='receipt'){
     const bkRef=v.bookingId?'#'+String(v.bookingId).slice(-5).toUpperCase():'—';
     const pm=PM_LABEL[v.paymentMethod]||v.paymentMethod||'—';
-    return `<td style="font-size:10px;color:#94a3b8;font-family:monospace;">${esc(v.number||'—')}</td><td style="font-size:11px;font-family:monospace;color:#0EA5D8;">${bkRef}</td><td style="font-size:11px;">${date}</td><td><b>${esc(v.name||'—')}</b></td><td style="text-align:center;">${esc(v.apt||'—')}</td><td style="font-weight:700;">${amt} ر</td><td style="font-size:11px;color:#64748b;">${esc(v.description||'—')}</td><td><span style="padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;background:#f1f5f9;color:#475569;">${pm}</span></td><td>${actions}</td>`;
+    return `<td style="font-size:10px;color:#94a3b8;font-family:monospace;">${esc(v.number||'—')}</td><td style="font-size:11px;font-family:monospace;color:#1a3d8f;">${bkRef}</td><td style="font-size:11px;">${date}</td><td><b>${esc(v.name||'—')}</b></td><td style="text-align:center;">${esc(v.apt||'—')}</td><td style="font-weight:700;">${amt} ر</td><td style="font-size:11px;color:#64748b;">${esc(v.description||'—')}</td><td><span style="padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;background:#f1f5f9;color:#475569;">${pm}</span></td><td>${actions}</td>`;
   }
   if(type==='invoice')
     return `<td style="font-size:10px;color:#94a3b8;">${esc(v.number||'—')}</td><td>${date}</td><td><b>${esc(v.name||'—')}</b></td><td>${esc(v.apt||'—')}</td><td style="font-size:11px;color:#64748b;">${esc(v.description||'—')}</td><td style="font-weight:700;">${amt} ر</td><td>${actions}</td>`;
