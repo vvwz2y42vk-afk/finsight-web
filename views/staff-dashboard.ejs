@@ -5439,48 +5439,82 @@ async function loadCashFlow(){
       </div>`;
     const divider=`<div style="border-top:1px dashed #e2e8f0;margin:4px 0;"></div>`;
 
+    // بناء صفوف الجدول الموحد (دائن/مدين) — كل صف يجمع قبض + صرف
+    const maxRows=Math.max(d.receipts.length,d.disbursements.length,1);
+    const pairedRows=Array.from({length:maxRows},(_,i)=>{
+      const vr=d.receipts[i];
+      const vd=d.disbursements[i];
+      const tdR=vr?`
+          <td style="${tdS}color:var(--t4);">${esc(vr.number)}</td>
+          <td style="${tdS}font-size:11px;">${fmtDt(vr.date)}</td>
+          <td style="${tdS}max-width:160px;">${vLabel(vr)}</td>
+          <td style="${tdS}"><span style="font-size:10px;padding:2px 7px;background:${pmBg[vr.paymentMethod]||'#f0fdf4'};color:${pmC[vr.paymentMethod]||'#166534'};border-radius:10px;font-weight:600;">${pmL[vr.paymentMethod]||vr.paymentMethod||'نقداً'}</span></td>
+          <td style="${tdS}font-weight:800;color:#047857;text-align:left;">${fmt2(vr.amount)}</td>`
+        :`<td colspan="5" style="${tdS}"></td>`;
+      const tdD=vd?`
+          <td style="${tdS}color:var(--t4);border-right:none;">${esc(vd.number)}</td>
+          <td style="${tdS}font-size:11px;">${fmtDt(vd.date)}</td>
+          <td style="${tdS}max-width:160px;">${vLabel(vd,true)}</td>
+          <td style="${tdS}"><span style="font-size:10px;padding:2px 7px;background:${pmBg[vd.paymentMethod]||'#fff1f2'};color:${pmC[vd.paymentMethod]||'#dc2626'};border-radius:10px;font-weight:600;">${pmL[vd.paymentMethod]||vd.paymentMethod||'نقداً'}</span></td>
+          <td style="${tdS}font-weight:800;color:#dc2626;text-align:left;">${fmt2(vd.amount)}</td>`
+        :`<td colspan="5" style="${tdS}"></td>`;
+      return `<tr>${tdR}<td style="width:3px;padding:0;background:#e2e8f0;"></td>${tdD}</tr>`;
+    }).join('');
+
     body.innerHTML=`<div id="cf-printable">
-      <!-- جداول السندات -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
-        <div style="background:#fff;border:1.5px solid #bbf7d0;border-radius:14px;overflow:hidden;">
-          <div style="background:linear-gradient(135deg,#dcfce7,#f0fdf4);padding:12px 16px;display:flex;justify-content:space-between;align-items:center;">
-            <div style="font-size:13px;font-weight:800;color:#166534;">💰 سندات القبض</div>
-            <div style="font-size:12px;font-weight:700;color:#047857;">${fmt2(s.totalReceipts)} ر.س</div>
+      <!-- جدول دائن/مدين الموحد -->
+      <div style="background:#fff;border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:20px;">
+        <!-- عنوان -->
+        <div style="background:var(--brand);padding:11px 18px;text-align:center;">
+          <span style="font-size:14px;font-weight:800;color:#fff;letter-spacing:.03em;">تقرير حركة الصندوق</span>
+        </div>
+        <!-- رؤوس القسمين -->
+        <div style="display:grid;grid-template-columns:1fr 3px 1fr;">
+          <div style="background:rgba(4,120,87,.1);padding:9px 14px;text-align:center;font-size:12px;font-weight:800;color:#047857;border-bottom:2px solid #bbf7d0;">
+            سندات القبض — <span style="color:#1a3d8f;">دائن</span>
+            <span style="float:left;font-size:11px;font-weight:700;color:#047857;">${fmt2(s.totalReceipts)} ر.س</span>
           </div>
-          <div style="overflow-x:auto;">
-            <table style="width:100%;border-collapse:collapse;">
-              <thead><tr>
-                <th style="${thS}">رقم السند</th><th style="${thS}">التاريخ</th>
-                <th style="${thS}">من أجل</th><th style="${thS}">طريقة الدفع</th>
-                <th style="${thS}text-align:left;">المبلغ</th>
-              </tr></thead>
-              <tbody>${rowsR}</tbody>
-              <tfoot><tr style="background:#f0fdf4;">
-                <td colspan="4" style="padding:10px;font-weight:800;color:#047857;font-size:12px;">الإجمالي</td>
-                <td style="padding:10px;font-weight:900;font-size:15px;color:#047857;text-align:left;">${fmt2(s.totalReceipts)}</td>
-              </tr></tfoot>
-            </table>
+          <div style="background:#e2e8f0;"></div>
+          <div style="background:rgba(220,38,38,.08);padding:9px 14px;text-align:center;font-size:12px;font-weight:800;color:#b91c1c;border-bottom:2px solid #fecaca;">
+            سندات الصرف — <span style="color:#7c3aed;">مدين</span>
+            <span style="float:left;font-size:11px;font-weight:700;color:#dc2626;">${fmt2(s.totalDisbursements)} ر.س</span>
           </div>
         </div>
-        <div style="background:#fff;border:1.5px solid #fecaca;border-radius:14px;overflow:hidden;">
-          <div style="background:linear-gradient(135deg,#fee2e2,#fff1f2);padding:12px 16px;display:flex;justify-content:space-between;align-items:center;">
-            <div style="font-size:13px;font-weight:800;color:#881337;">📤 سندات الصرف</div>
-            <div style="font-size:12px;font-weight:700;color:#dc2626;">${fmt2(s.totalDisbursements)} ر.س</div>
-          </div>
-          <div style="overflow-x:auto;">
-            <table style="width:100%;border-collapse:collapse;">
-              <thead><tr>
-                <th style="${thS}">رقم السند</th><th style="${thS}">التاريخ</th>
-                <th style="${thS}">من أجل</th><th style="${thS}">طريقة الدفع</th>
+        <!-- رؤوس الأعمدة -->
+        <div style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;min-width:800px;">
+            <thead>
+              <tr style="background:#f1f5f9;">
+                <th style="${thS}width:90px;">رقم السند</th>
+                <th style="${thS}">التاريخ</th>
+                <th style="${thS}">من أجل</th>
+                <th style="${thS}">طريقة الدفع</th>
                 <th style="${thS}text-align:left;">المبلغ</th>
-              </tr></thead>
-              <tbody>${rowsD}</tbody>
-              <tfoot><tr style="background:#fff1f2;">
-                <td colspan="4" style="padding:10px;font-weight:800;color:#dc2626;font-size:12px;">الإجمالي</td>
-                <td style="padding:10px;font-weight:900;font-size:15px;color:#dc2626;text-align:left;">${fmt2(s.totalDisbursements)}</td>
-              </tr></tfoot>
-            </table>
-          </div>
+                <th style="width:3px;padding:0;background:#e2e8f0;border:none;"></th>
+                <th style="${thS}width:90px;">رقم السند</th>
+                <th style="${thS}">التاريخ</th>
+                <th style="${thS}">من أجل</th>
+                <th style="${thS}">طريقة الدفع</th>
+                <th style="${thS}text-align:left;">المبلغ</th>
+              </tr>
+            </thead>
+            <tbody>${pairedRows}</tbody>
+            <tfoot>
+              <tr style="background:#f8fafc;">
+                <td colspan="4" style="padding:10px 14px;font-weight:800;color:#047857;font-size:12px;">إجمالي القبض</td>
+                <td style="padding:10px 14px;font-weight:900;font-size:14px;color:#047857;text-align:left;">${fmt2(s.totalReceipts)}</td>
+                <td style="background:#e2e8f0;padding:0;"></td>
+                <td colspan="4" style="padding:10px 14px;font-weight:800;color:#dc2626;font-size:12px;">إجمالي الصرف</td>
+                <td style="padding:10px 14px;font-weight:900;font-size:14px;color:#dc2626;text-align:left;">${fmt2(s.totalDisbursements)}</td>
+              </tr>
+              <tr style="background:#eff6ff;">
+                <td colspan="5" style="padding:8px 14px;font-size:12px;color:#475569;">عدد سندات القبض: <b>${d.receipts.length}</b></td>
+                <td style="background:#e2e8f0;padding:0;"></td>
+                <td colspan="4" style="padding:8px 14px;font-size:12px;color:#475569;">عدد سندات الصرف: <b>${d.disbursements.length}</b></td>
+                <td style="padding:8px 14px;font-weight:800;font-size:13px;color:${s.net>=0?'#047857':'#dc2626'};">الصافي: ${fmt2(s.net)}</td>
+              </tr>
+            </tfoot>
+          </table>
         </div>
       </div>
 
