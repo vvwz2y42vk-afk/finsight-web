@@ -473,15 +473,11 @@ router.put('/api/bookings/:id/edit', reqStaff, async (req,res) => {
     }
 
     const newTotal = parseFloat(totalPrice) || bk.totalPrice;
-    // تخفيض السعر الإجمالي يحتاج صلاحية مدير
-    if (totalPrice !== undefined && newTotal < bk.totalPrice && req.staff.role !== 'manager')
-      return res.status(403).json({ error: 'تخفيض سعر الحجز للمديرين فقط' });
 
-    // paidAmount: حجوزات بدون دفعات مُتتبّعة — التعديل للمدير فقط
-    const newPaid = bk.payments?.length
-      ? bk.payments.reduce((s, p) => s + (p.amount || 0), 0)
-      : (paidAmount !== undefined && req.staff.role === 'manager'
-        ? Math.min(Math.max(0, parseFloat(paidAmount) || 0), newTotal)
+    const newPaid = paidAmount !== undefined
+      ? Math.min(Math.max(0, parseFloat(paidAmount) || 0), newTotal)
+      : (bk.payments?.length
+        ? bk.payments.reduce((s, p) => s + (p.amount || 0), 0)
         : bk.paidAmount);
 
     // If status change requested via edit, enforce transition matrix too
@@ -2624,6 +2620,160 @@ router.get('/api/reports/cash-flow', reqStaff, async (req, res) => {
       },
     });
   } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── Receipts ─────────────────────────────────────────────────────────────────
+
+const BUILDING_ENTITIES = {
+  'المنارا':  ['بارز برايم', 'barez prime', 'جهد وأمان', 'jahd', 'waman', 'جهد'],
+  'جوان ان': ['بارز برايم', 'barez prime', 'جهد وأمان', 'jahd', 'waman', 'جهد'],
+  'الماسة':  ['الزاحم', 'alzahim', 'إبراهيم', 'ibrahim'],
+  'الواحة':  ['الزاحم', 'alzahim', 'أحمد', 'ahmed'],
+};
+
+const receiptUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 12 * 1024 * 1024 } });
+
+router.post('/api/receipts/analyze', reqStaff, receiptUpload.single('receipt'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'لم يتم رفع ملف' });
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) return res.status(500).json({ error: 'ANTHROPIC_API_KEY غير مضبوط في متغيرات البيئة' });
+
+    const imageBase64 = req.file.buffer.toString('base64');
+    const mimeType    = req.file.mimetype || 'image/jpeg';
+    const building    = (req.body.building || req.staff.building || '').trim();
+    const payMethod   = (req.body.payMethod || '').trim();
+    const expectedPaid = parseFloat(req.body.expectedPaid) || null;
+
+    const isCash = payMethod === 'cash';
+
+    const prompt = isCash
+      ? `هذه صورة لعملات ورقية سعودية (ريالات). حدد القطع الموجودة في الصورة وأحسب المجموع.
+أجب بـ JSON فقط بدون أي نص خارجه:
+{
+  "bills": [ { "denomination": 500, "count": 1 }, ... ],
+  "totalAmount": 1500,
+  "currency": "SAR",
+  "confidence": "high أو medium أو low"
+}
+إذا لم تجد عملات واضحة أو الصورة غير واضحة، ضع totalAmount: null وconfidence: "low".`
+      : `استخرج المعلومات التالية من هذا الإيصال البنكي. أجب بـ JSON فقط بدون أي نص خارجه:
+{
+  "paymentType": "network أو transfer أو other",
+  "amount": رقم المبلغ (أرقام فقط وإلا null),
+  "date": "YYYY-MM-DD أو null",
+  "transactionNumber": "رقم العملية أو المرجع أو null",
+  "entityName": "اسم المستفيد أو الجهة المستلمة أو null",
+  "bankName": "اسم البنك أو null"
+}
+network = مدفوعات عبر نقاط البيع أو الشبكة السعودية (SPAN/POS).
+transfer = تحويل بنكي إلكتروني.`;
+
+    const apiRes = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key':          apiKey,
+        'anthropic-version':  '2023-06-01',
+        'content-type':       'application/json',
+      },
+      body: JSON.stringify({
+        model:      'claude-haiku-4-5-20251001',
+        max_tokens: 512,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: mimeType, data: imageBase64 } },
+            { type: 'text', text: prompt },
+          ],
+        }],
+      }),
+    });
+
+    if (!apiRes.ok) {
+      const errText = await apiRes.text();
+      return res.status(500).json({ error: 'Claude API error', detail: errText.slice(0, 200) });
+    }
+
+    const apiData = await apiRes.json();
+    const rawText = apiData.content?.[0]?.text || '{}';
+
+    let parsed = {};
+    try {
+      const m = rawText.match(/\{[\s\S]*\}/);
+      if (m) parsed = JSON.parse(m[0]);
+    } catch(_) {}
+
+    let analysis = {};
+
+    if (isCash) {
+      const cashTotal = typeof parsed.totalAmount === 'number' ? parsed.totalAmount : null;
+      analysis = {
+        paymentType:      'cash',
+        amount:           cashTotal,
+        cashTotal,
+        cashMatchesPaid:  expectedPaid !== null && cashTotal !== null ? Math.abs(cashTotal - expectedPaid) <= 1 : null,
+        rawSummary:       rawText.slice(0, 300),
+      };
+    } else {
+      const amount = typeof parsed.amount === 'number' ? parsed.amount : (parseFloat(parsed.amount) || null);
+      const entityName = parsed.entityName || null;
+      const expectedEntities = BUILDING_ENTITIES[building] || [];
+      const entityLower = (entityName || '').toLowerCase();
+      const matchesBuilding = entityName
+        ? expectedEntities.some(e => entityLower.includes(e.toLowerCase()) || (entityName).includes(e))
+        : null;
+
+      analysis = {
+        paymentType:       parsed.paymentType || 'other',
+        amount,
+        date:              parsed.date || null,
+        transactionNumber: parsed.transactionNumber || null,
+        entityName,
+        bankName:          parsed.bankName || null,
+        matchesBuilding,
+        rawSummary:        rawText.slice(0, 300),
+      };
+    }
+
+    res.json({ success: true, analysis });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+router.post('/api/receipts', reqStaff, async (req, res) => {
+  try {
+    const Receipt = require('../models/Receipt');
+    const { bookingId, building, apt, guestName, imageData, imageMimeType, analysis } = req.body;
+    const rec = await Receipt.create({
+      bookingId:     bookingId || null,
+      building:      building || req.staff.building,
+      apt:           apt || '',
+      guestName:     guestName || '',
+      imageData:     imageData || '',
+      imageMimeType: imageMimeType || 'image/jpeg',
+      analysis:      analysis || {},
+      analysisStatus:'success',
+      propertyId:    req.staff.propertyId || null,
+      createdBy:     req.staff.name,
+    });
+    res.json({ success: true, receiptId: rec._id });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+router.get('/api/receipts', reqStaff, async (req, res) => {
+  try {
+    const Receipt = require('../models/Receipt');
+    const filter = { propertyId: req.staff.propertyId || null };
+    if (req.query.building) filter.building = req.query.building;
+    else                    filter.building = req.staff.building;
+    const recs = await Receipt.find(filter).sort({ createdAt: -1 }).limit(120).lean();
+    res.json(recs);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // ── Staff router error handler — shows real error instead of generic message ──
