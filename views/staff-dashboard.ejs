@@ -249,7 +249,6 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);direction:rtl;display:f
 .stbl th:first-child{border-radius:0 6px 0 0;}
 .stbl th:last-child{border-radius:6px 0 0 0;}
 .stbl td{padding:9px 12px;border-bottom:1px solid var(--border-s);color:var(--t2);}
-.stbl tbody tr:nth-child(even) td{background:rgba(14,165,216,.03);}
 .stbl tbody tr:hover td{background:rgba(14,165,216,.07)!important;}
 .stbl tbody tr.co-row td{background:rgba(14,165,216,.08)!important;}
 .stbl tbody tr.co-row:hover td{background:rgba(26,61,143,.12)!important;}
@@ -1092,17 +1091,6 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
           <button id="custFilterBlocked" onclick="setCustFilter('blocked')" style="padding:5px 14px;border-radius:20px;border:1.5px solid #e2e8f0;background:#fff;color:#dc2626;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">🚫 المحظورون</button>
           <button id="custFilterVip" onclick="setCustFilter('vip')" style="padding:5px 14px;border-radius:20px;border:1.5px solid #e2e8f0;background:#fff;color:#b45309;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">⭐ VIP</button>
         </div>
-      </div>
-      </div>
-
-      <!-- زر إضافة -->
-      <div style="margin-bottom:10px;">
-        <% if(P.includes('new_booking')){ %>
-        <button onclick="openNewBkModal()" style="display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:8px;background:#0891b2;border:none;color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">
-          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          إضافة عميل
-        </button>
-        <% } %>
       </div>
 
       <!-- الجدول — نمط نزيل -->
