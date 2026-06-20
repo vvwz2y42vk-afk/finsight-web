@@ -1258,6 +1258,67 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
         <div id="cf-body"></div>
       </div>
 
+      <!-- ── التقرير الشهري ── -->
+      <div style="margin-bottom:32px;border-bottom:2.5px solid var(--border);padding-bottom:28px;">
+        <div style="font-size:11px;font-weight:700;color:var(--brand);text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px;">التقرير الشهري</div>
+        <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:16px;margin-bottom:16px;">
+          <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+            <div>
+              <label style="font-size:11px;font-weight:600;color:var(--t3);display:block;margin-bottom:4px;">السنة</label>
+              <select id="mr-year" style="padding:8px 10px;border:1.5px solid var(--border);border-radius:9px;font-family:inherit;font-size:12px;background:#fff;outline:none;"></select>
+            </div>
+            <div>
+              <label style="font-size:11px;font-weight:600;color:var(--t3);display:block;margin-bottom:4px;">الشهر</label>
+              <select id="mr-month" style="padding:8px 10px;border:1.5px solid var(--border);border-radius:9px;font-family:inherit;font-size:12px;background:#fff;outline:none;">
+                <% for(let i=1;i<=12;i++){ %><option value="<%=i%>"><%=i%></option><% } %>
+              </select>
+            </div>
+            <div style="display:flex;gap:6px;">
+              <button onclick="loadMonthlyReport()" style="padding:8px 20px;background:var(--brand);border:none;border-radius:9px;color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">عرض</button>
+              <button onclick="printMonthlyReport()" style="padding:8px 14px;background:var(--surface);border:1.5px solid var(--border);border-radius:9px;font-family:inherit;font-size:12px;cursor:pointer;" title="طباعة">🖨️</button>
+            </div>
+          </div>
+          <div style="display:flex;gap:20px;margin-top:14px;flex-wrap:wrap;">
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t2);cursor:pointer;"><input type="radio" name="mr-type" value="detail" checked style="cursor:pointer;accent-color:var(--brand);"> تفصيلي للحجوزات</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t2);cursor:pointer;"><input type="radio" name="mr-type" value="summary" style="cursor:pointer;accent-color:var(--brand);"> تجميعي للحجوزات</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t2);cursor:pointer;"><input type="radio" name="mr-type" value="total" style="cursor:pointer;accent-color:var(--brand);"> تجميعي كلي</label>
+          </div>
+        </div>
+        <div id="mr-body"></div>
+      </div>
+
+      <!-- ── تقرير نسب الإشغال ── -->
+      <div style="margin-bottom:32px;border-bottom:2.5px solid var(--border);padding-bottom:28px;">
+        <div style="font-size:11px;font-weight:700;color:var(--brand);text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px;">تقرير نسب الإشغال</div>
+        <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:16px;margin-bottom:16px;">
+          <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+            <div>
+              <label style="font-size:11px;font-weight:600;color:var(--t3);display:block;margin-bottom:4px;">من</label>
+              <input type="date" id="occ-from" style="padding:8px 10px;border:1.5px solid var(--border);border-radius:9px;font-family:inherit;font-size:12px;background:#fff;outline:none;">
+            </div>
+            <div>
+              <label style="font-size:11px;font-weight:600;color:var(--t3);display:block;margin-bottom:4px;">إلى</label>
+              <input type="date" id="occ-to" style="padding:8px 10px;border:1.5px solid var(--border);border-radius:9px;font-family:inherit;font-size:12px;background:#fff;outline:none;">
+            </div>
+            <div>
+              <label style="font-size:11px;font-weight:600;color:var(--t3);display:block;margin-bottom:4px;">الشقة</label>
+              <select id="occ-apt" style="padding:8px 10px;border:1.5px solid var(--border);border-radius:9px;font-family:inherit;font-size:12px;background:#fff;outline:none;min-width:120px;">
+                <option value="">الجميع</option>
+              </select>
+            </div>
+            <div style="display:flex;gap:6px;">
+              <button onclick="loadOccupancyReport()" style="padding:8px 20px;background:var(--brand);border:none;border-radius:9px;color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">عرض</button>
+              <button onclick="printOccupancyReport()" style="padding:8px 14px;background:var(--surface);border:1.5px solid var(--border);border-radius:9px;font-family:inherit;font-size:12px;cursor:pointer;" title="طباعة">🖨️</button>
+            </div>
+          </div>
+          <div style="display:flex;gap:20px;margin-top:14px;flex-wrap:wrap;">
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t2);cursor:pointer;"><input type="radio" name="occ-type" value="rooms" checked style="cursor:pointer;accent-color:var(--brand);"> نسبة الإشغال للغرف</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t2);cursor:pointer;"><input type="radio" name="occ-type" value="types" style="cursor:pointer;accent-color:var(--brand);"> نسبة الإشغال لأنواع الغرف</label>
+          </div>
+        </div>
+        <div id="occ-body"></div>
+      </div>
+
       <!-- اليوم -->
       <div style="font-size:11px;font-weight:700;color:var(--brand);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">اليوم</div>
       <div class="kpi-row" style="margin-bottom:24px;" id="rpt-today-kpis">
@@ -2179,7 +2240,7 @@ function goTab(id, el){
           <div style="font-size:17px;font-weight:700;color:var(--t1);margin-bottom:8px;">ليس لديك صلاحية</div>
           <div style="font-size:13px;color:var(--t3);">تواصل مع المدير لتفعيل صلاحية التقارير</div>
         </div>`;
-    } else { loadReports(); loadYearlyChart(); cfInitDates(); }
+    } else { loadReports(); loadYearlyChart(); cfInitDates(); initOccAptDropdown(); }
   }
   if(id==='analytics')  loadAnalytics();
   if(id==='calendar')   loadCalendar();
@@ -5383,6 +5444,227 @@ function printCashFlow(){
   </body></html>`);
   w.document.close();
   setTimeout(()=>w.print(),400);
+}
+
+// ── Monthly Report ───────────────────────────────────────
+(function initMrSelects(){
+  const now=new Date();
+  const yEl=document.getElementById('mr-year');
+  const mEl=document.getElementById('mr-month');
+  if(yEl){ for(let y=now.getFullYear();y>=now.getFullYear()-5;y--){ const o=document.createElement('option'); o.value=y; o.textContent=y; yEl.appendChild(o); } }
+  if(mEl) mEl.value=now.getMonth()+1;
+})();
+
+async function loadMonthlyReport(){
+  const year=document.getElementById('mr-year')?.value;
+  const month=document.getElementById('mr-month')?.value;
+  const type=document.querySelector('input[name="mr-type"]:checked')?.value||'detail';
+  const body=document.getElementById('mr-body');
+  body.innerHTML='<div style="padding:20px;color:var(--t4);">⏳ جاري التحميل...</div>';
+  try{
+    const r=await fetch(`/staff/api/reports/monthly?year=${year}&month=${month}&type=${type}`);
+    const d=await r.json();
+    if(!r.ok){ body.innerHTML=`<div style="color:#dc2626;padding:20px;">${d.error||'حدث خطأ'}</div>`; return; }
+    renderMonthlyReport(d,type,year,month);
+  }catch(e){ body.innerHTML='<div style="color:#dc2626;padding:20px;">❌ حدث خطأ</div>'; }
+}
+
+function renderMonthlyReport(d,type,year,month){
+  const body=document.getElementById('mr-body');
+  const mName=MONTHS_AR[parseInt(month)-1]||month;
+
+  if(type==='total'){
+    body.innerHTML=`
+      <div style="background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden;" id="mr-printable">
+        <div style="background:var(--brand);color:#fff;padding:12px 18px;font-weight:700;font-size:14px;">التقرير الشهري الكلي — ${mName} ${year}</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:0;">
+          ${[
+            {lbl:'إجمالي الحجوزات',val:d.totalBookings,c:'#1a3d8f'},
+            {lbl:'إجمالي الإيرادات',val:fmt(d.totalRevenue)+' ﷼',c:'#047857'},
+            {lbl:'المحصّل',val:fmt(d.totalPaid)+' ﷼',c:'#0369a1'},
+            {lbl:'المتبقي',val:fmt(d.totalRemaining)+' ﷼',c:'#dc2626'},
+            {lbl:'نسبة الإشغال',val:(d.occupancyRate||0)+'%',c:'#7c3aed'},
+          ].map(x=>`<div style="padding:16px 18px;border-left:1px solid var(--border);border-bottom:1px solid var(--border);">
+            <div style="font-size:11px;color:var(--t3);margin-bottom:4px;">${x.lbl}</div>
+            <div style="font-size:20px;font-weight:900;color:${x.c};">${x.val}</div>
+          </div>`).join('')}
+        </div>
+      </div>`;
+    return;
+  }
+
+  if(type==='summary'){
+    const rows=(d.byApt||[]);
+    body.innerHTML=`
+      <div style="background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden;" id="mr-printable">
+        <div style="background:var(--brand);color:#fff;padding:12px 18px;font-weight:700;font-size:14px;">التقرير التجميعي — ${mName} ${year}</div>
+        <div class="tbl-wrap"><table class="stbl">
+          <thead><tr><th>الشقة</th><th>عدد الحجوزات</th><th>عدد الليالي</th><th>الإجمالي</th><th>المحصّل</th><th>المتبقي</th></tr></thead>
+          <tbody>${rows.length?rows.map(r=>`<tr>
+            <td style="font-weight:700;">${esc(r.apt)}</td>
+            <td style="text-align:center;">${r.count}</td>
+            <td style="text-align:center;">${r.nights||0}</td>
+            <td style="font-weight:700;">${fmt(r.revenue)} ﷼</td>
+            <td style="color:#047857;">${fmt(r.paid)} ﷼</td>
+            <td style="color:#dc2626;">${fmt(r.remaining)} ﷼</td>
+          </tr>`).join(''):'<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--t4);">لا توجد بيانات</td></tr>'}</tbody>
+          <tfoot><tr style="background:var(--brand-m);font-weight:700;">
+            <td>الإجمالي</td><td style="text-align:center;">${d.totalBookings||0}</td><td style="text-align:center;">${d.totalNights||0}</td>
+            <td>${fmt(d.totalRevenue)} ﷼</td><td style="color:#047857;">${fmt(d.totalPaid)} ﷼</td><td style="color:#dc2626;">${fmt(d.totalRemaining)} ﷼</td>
+          </tr></tfoot>
+        </table></div>
+      </div>`;
+    return;
+  }
+
+  // detail
+  const rows=(d.bookings||[]);
+  const ST_L={awaiting_checkin:'انتظار دخول',active:'مسكّن',checkout:'خروج',cancelled:'ملغي',pending:'قيد الانتظار',awaiting_payment:'انتظار دفع'};
+  body.innerHTML=`
+    <div style="background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden;" id="mr-printable">
+      <div style="background:var(--brand);color:#fff;padding:12px 18px;font-weight:700;font-size:14px;display:flex;justify-content:space-between;align-items:center;">
+        <span>التقرير التفصيلي — ${mName} ${year}</span>
+        <span style="font-size:12px;opacity:.8;">${rows.length} حجز</span>
+      </div>
+      <div class="tbl-wrap"><table class="stbl">
+        <thead><tr><th>رقم العقد</th><th>الشقة</th><th>العميل</th><th>الدخول</th><th>الخروج</th><th>الليالي</th><th>الإجمالي</th><th>المحصّل</th><th>المتبقي</th><th>الحالة</th></tr></thead>
+        <tbody>${rows.length?rows.map(b=>{
+          const remain=Math.max(0,(b.totalPrice||0)-(b.paidAmount||0));
+          return`<tr>
+            <td style="font-family:monospace;font-size:11px;color:var(--t4);">#${b._id.toString().slice(-5).toUpperCase()}</td>
+            <td style="font-weight:700;">${esc(b.apt||'—')}</td>
+            <td>${esc(b.name||'—')}</td>
+            <td style="font-size:11px;">${b.checkIn?new Date(b.checkIn).toLocaleDateString('ar-SA'):'—'}</td>
+            <td style="font-size:11px;">${b.checkOut?new Date(b.checkOut).toLocaleDateString('ar-SA'):'—'}</td>
+            <td style="text-align:center;">${b.nights||0}</td>
+            <td style="font-weight:700;">${fmt(b.totalPrice)} ﷼</td>
+            <td style="color:#047857;">${fmt(b.paidAmount)} ﷼</td>
+            <td style="color:#dc2626;">${fmt(remain)} ﷼</td>
+            <td><span style="padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;background:var(--brand-m);color:var(--brand);">${ST_L[b.status]||b.status}</span></td>
+          </tr>`;
+        }).join(''):'<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--t4);">لا توجد حجوزات لهذا الشهر</td></tr>'}
+        </tbody>
+        <tfoot><tr style="background:var(--brand-m);font-weight:700;">
+          <td colspan="6">الإجمالي (${rows.length} حجز)</td>
+          <td>${fmt(d.totalRevenue)} ﷼</td><td style="color:#047857;">${fmt(d.totalPaid)} ﷼</td><td style="color:#dc2626;">${fmt(d.totalRemaining)} ﷼</td><td></td>
+        </tr></tfoot>
+      </table></div>
+    </div>`;
+}
+
+function printMonthlyReport(){
+  const c=document.getElementById('mr-printable');
+  if(!c){toast('اضغط عرض أولاً');return;}
+  const year=document.getElementById('mr-year')?.value;
+  const month=document.getElementById('mr-month')?.value;
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="utf-8"><title>التقرير الشهري</title><style>
+    *{box-sizing:border-box;}body{font-family:Tahoma,Arial,sans-serif;direction:rtl;padding:20px;font-size:12px;}
+    table{width:100%;border-collapse:collapse;}th{background:#1a3d8f;color:#fff;padding:7px 10px;font-size:11px;text-align:right;}
+    td{padding:6px 10px;border:1px solid #e2e8f0;font-size:11px;}tfoot td{background:#f8fafc;font-weight:700;}
+    @media print{@page{size:A4 landscape;margin:10mm;}}
+  </style></head><body>${c.innerHTML}</body></html>`);
+  w.document.close(); setTimeout(()=>w.print(),400);
+}
+
+// ── Occupancy Report ─────────────────────────────────────
+(function initOccDates(){
+  const now=new Date();
+  const y=now.getFullYear(), m=String(now.getMonth()+1).padStart(2,'0');
+  const el1=document.getElementById('occ-from');
+  const el2=document.getElementById('occ-to');
+  if(el1) el1.value=`${y}-${m}-01`;
+  if(el2) el2.value=now.toISOString().split('T')[0];
+})();
+
+async function loadOccupancyReport(){
+  const from=document.getElementById('occ-from')?.value;
+  const to=document.getElementById('occ-to')?.value;
+  const apt=document.getElementById('occ-apt')?.value||'';
+  const type=document.querySelector('input[name="occ-type"]:checked')?.value||'rooms';
+  const body=document.getElementById('occ-body');
+  if(!from||!to){ toast('اختر نطاق التاريخ'); return; }
+  body.innerHTML='<div style="padding:20px;color:var(--t4);">⏳ جاري التحميل...</div>';
+  try{
+    const params=new URLSearchParams({from,to,apt,type});
+    const r=await fetch('/staff/api/reports/occupancy?'+params);
+    const d=await r.json();
+    if(!r.ok){ body.innerHTML=`<div style="color:#dc2626;padding:20px;">${d.error||'حدث خطأ'}</div>`; return; }
+    renderOccupancyReport(d,type,from,to);
+  }catch(e){ body.innerHTML='<div style="color:#dc2626;padding:20px;">❌ حدث خطأ</div>'; }
+}
+
+function renderOccupancyReport(d,type,from,to){
+  const body=document.getElementById('occ-body');
+  const rows=d.rows||[];
+  const totalDays=d.totalDays||1;
+  body.innerHTML=`
+    <div style="background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden;" id="occ-printable">
+      <div style="background:var(--brand);color:#fff;padding:12px 18px;font-weight:700;font-size:14px;display:flex;justify-content:space-between;align-items:center;">
+        <span>تقرير نسب الإشغال${type==='types'?' (أنواع الغرف)':' (الغرف)'}</span>
+        <span style="font-size:12px;opacity:.8;">${from} — ${to} (${totalDays} يوم)</span>
+      </div>
+      <div class="tbl-wrap"><table class="stbl">
+        <thead><tr>
+          <th>${type==='types'?'نوع الغرفة':'الشقة'}</th>
+          <th style="text-align:center;">أيام مشغولة</th>
+          <th style="text-align:center;">أيام شاغرة</th>
+          <th style="text-align:center;">نسبة الإشغال</th>
+          <th>شريط الإشغال</th>
+        </tr></thead>
+        <tbody>${rows.length?rows.map(r=>{
+          const pct=Math.round((r.occupiedDays/totalDays)*100);
+          const barColor=pct>=80?'#047857':pct>=50?'#1a3d8f':'#dc2626';
+          return`<tr>
+            <td style="font-weight:700;">${esc(r.label)}</td>
+            <td style="text-align:center;color:#047857;font-weight:700;">${r.occupiedDays}</td>
+            <td style="text-align:center;color:var(--t3);">${totalDays-r.occupiedDays}</td>
+            <td style="text-align:center;font-weight:900;color:${barColor};font-size:14px;">${pct}%</td>
+            <td style="min-width:120px;">
+              <div style="background:#f1f5f9;border-radius:20px;height:8px;overflow:hidden;">
+                <div style="background:${barColor};height:100%;width:${pct}%;border-radius:20px;transition:width .6s;"></div>
+              </div>
+            </td>
+          </tr>`;
+        }).join(''):'<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--t4);">لا توجد بيانات</td></tr>'}
+        </tbody>
+        ${rows.length?`<tfoot><tr style="background:var(--brand-m);font-weight:700;">
+          <td>الإجمالي (${rows.length} ${type==='types'?'نوع':'شقة'})</td>
+          <td style="text-align:center;color:#047857;">${Math.round(rows.reduce((s,r)=>s+r.occupiedDays,0)/rows.length)}</td>
+          <td style="text-align:center;"></td>
+          <td style="text-align:center;font-size:14px;">${Math.round(rows.reduce((s,r)=>s+(r.occupiedDays/totalDays)*100,0)/rows.length)}%</td>
+          <td></td>
+        </tr></tfoot>`:''}
+      </table></div>
+    </div>`;
+}
+
+async function initOccAptDropdown(){
+  const sel=document.getElementById('occ-apt');
+  if(!sel||sel.options.length>1) return;
+  try{
+    const r=await fetch('/staff/api/apartments');
+    const d=await r.json();
+    const apts=[];
+    (d.floors||[]).forEach(f=>(f.rooms||[]).forEach(r=>apts.push(r.apt)));
+    apts.sort((a,b)=>a.localeCompare(b,'ar')).forEach(a=>{
+      const o=document.createElement('option'); o.value=a; o.textContent=a; sel.appendChild(o);
+    });
+  }catch(e){}
+}
+
+function printOccupancyReport(){
+  const c=document.getElementById('occ-printable');
+  if(!c){toast('اضغط عرض أولاً');return;}
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="utf-8"><title>تقرير الإشغال</title><style>
+    *{box-sizing:border-box;}body{font-family:Tahoma,Arial,sans-serif;direction:rtl;padding:20px;font-size:12px;}
+    table{width:100%;border-collapse:collapse;}th{background:#1a3d8f;color:#fff;padding:7px 10px;font-size:11px;text-align:right;}
+    td{padding:6px 10px;border:1px solid #e2e8f0;font-size:11px;}tfoot td{background:#f8fafc;font-weight:700;}
+    .bar-wrap{background:#f1f5f9;border-radius:10px;height:6px;}.bar{background:#1a3d8f;height:100%;border-radius:10px;}
+    @media print{@page{size:A4 landscape;margin:10mm;}}
+  </style></head><body>${c.innerHTML}</body></html>`);
+  w.document.close(); setTimeout(()=>w.print(),400);
 }
 
 // ── Date Pickers ─────────────────────────────────────────

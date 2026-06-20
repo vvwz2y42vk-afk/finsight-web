@@ -966,6 +966,107 @@ router.get('/api/reports', reqStaff, async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── Monthly Report ───────────────────────────────────────
+router.get('/api/reports/monthly', reqStaff, async (req, res) => {
+  try {
+    const B = require('../models/Booking');
+    const { year, month, type='detail' } = req.query;
+    if (!year || !month) return res.status(400).json({ error: 'السنة والشهر مطلوبان' });
+    const y = parseInt(year), m = parseInt(month) - 1;
+    const from = new Date(y, m, 1);
+    const to   = new Date(y, m + 1, 0, 23, 59, 59, 999);
+    const baseFilter = req.staff.propertyId
+      ? { propertyId: req.staff.propertyId }
+      : { building: req.staff.building, propertyId: null };
+    const filter = { ...baseFilter, status: { $nin: ['cancelled'] },
+      $or: [
+        { checkIn: { $gte: from, $lte: to } },
+        { checkOut: { $gte: from, $lte: to } },
+        { checkIn: { $lte: from }, checkOut: { $gte: to } },
+      ]
+    };
+    const bookings = await B.find(filter).sort({ checkIn: 1 }).lean();
+    const totalRevenue   = bookings.reduce((s,b) => s+(b.totalPrice||0), 0);
+    const totalPaid      = bookings.reduce((s,b) => s+(b.paidAmount||0), 0);
+    const totalRemaining = bookings.reduce((s,b) => s+Math.max(0,(b.totalPrice||0)-(b.paidAmount||0)), 0);
+    const totalNights    = bookings.reduce((s,b) => s+(b.nights||0), 0);
+
+    if (type === 'total') {
+      const { bldgs } = await getBldgConfig(req.staff);
+      const bld = req.staff.building;
+      const totalApts = totalAptsFromConfig(bldgs, bld);
+      const daysInMonth = new Date(y, m+1, 0).getDate();
+      const occRate = totalApts > 0 ? Math.round((totalNights / (totalApts * daysInMonth)) * 100) : 0;
+      return res.json({ totalBookings: bookings.length, totalRevenue, totalPaid, totalRemaining, totalNights, occupancyRate: occRate });
+    }
+
+    if (type === 'summary') {
+      const byApt = {};
+      bookings.forEach(b => {
+        if (!byApt[b.apt]) byApt[b.apt] = { apt:b.apt, count:0, nights:0, revenue:0, paid:0, remaining:0 };
+        const r = byApt[b.apt];
+        r.count++; r.nights += (b.nights||0); r.revenue += (b.totalPrice||0);
+        r.paid += (b.paidAmount||0); r.remaining += Math.max(0,(b.totalPrice||0)-(b.paidAmount||0));
+      });
+      return res.json({ byApt: Object.values(byApt).sort((a,b)=>a.apt.localeCompare(b.apt,'ar')), totalBookings: bookings.length, totalRevenue, totalPaid, totalRemaining, totalNights });
+    }
+
+    // detail
+    return res.json({ bookings, totalBookings: bookings.length, totalRevenue, totalPaid, totalRemaining, totalNights });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── Occupancy Report ─────────────────────────────────────
+router.get('/api/reports/occupancy', reqStaff, async (req, res) => {
+  try {
+    const B = require('../models/Booking');
+    const RI = require('../models/RoomInfo');
+    const { from, to, apt='', type='rooms' } = req.query;
+    if (!from || !to) return res.status(400).json({ error: 'التاريخ مطلوب' });
+    const fromD = new Date(from);
+    const toD   = new Date(to); toD.setHours(23,59,59,999);
+    const totalDays = Math.max(1, Math.round((toD - fromD) / 86400000) + 1);
+    const baseFilter = req.staff.propertyId
+      ? { propertyId: req.staff.propertyId }
+      : { building: req.staff.building, propertyId: null };
+    const bkFilter = { ...baseFilter, status: { $in: ['active','checkout','awaiting_checkin'] },
+      checkIn: { $lt: toD }, checkOut: { $gt: fromD } };
+    if (apt) bkFilter.apt = apt;
+    const bookings = await B.find(bkFilter).select('apt checkIn checkOut nights').lean();
+
+    if (type === 'rooms') {
+      const aptDays = {};
+      bookings.forEach(b => {
+        const bFrom = new Date(Math.max(fromD, new Date(b.checkIn)));
+        const bTo   = new Date(Math.min(toD, new Date(b.checkOut)));
+        const days  = Math.max(0, Math.round((bTo - bFrom) / 86400000));
+        if (!aptDays[b.apt]) aptDays[b.apt] = 0;
+        aptDays[b.apt] += days;
+      });
+      const rows = Object.entries(aptDays).map(([apt, occupiedDays]) => ({ label: apt, occupiedDays: Math.min(occupiedDays, totalDays) }))
+        .sort((a,b) => a.label.localeCompare(b.label,'ar'));
+      return res.json({ rows, totalDays });
+    }
+
+    // types
+    const riFilter = req.staff.propertyId ? { propertyId: req.staff.propertyId } : { building: req.staff.building, propertyId: null };
+    const riRows = await RI.find(riFilter).select('apt roomType').lean();
+    const aptType = {};
+    riRows.forEach(r => { aptType[r.apt] = r.roomType || 'غير محدد'; });
+    const typeDays = {};
+    bookings.forEach(b => {
+      const t = aptType[b.apt] || 'غير محدد';
+      const bFrom = new Date(Math.max(fromD, new Date(b.checkIn)));
+      const bTo   = new Date(Math.min(toD, new Date(b.checkOut)));
+      const days  = Math.max(0, Math.round((bTo - bFrom) / 86400000));
+      if (!typeDays[t]) typeDays[t] = 0;
+      typeDays[t] += days;
+    });
+    const rows = Object.entries(typeDays).map(([label, occupiedDays]) => ({ label, occupiedDays }));
+    return res.json({ rows, totalDays });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 // ── Yearly Revenue Chart ─────────────────────────────────
 router.get('/api/reports/yearly', reqStaff, async (req, res) => {
   try {
