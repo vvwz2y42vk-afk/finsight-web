@@ -2089,7 +2089,7 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
               <label style="font-size:12px;font-weight:700;color:#0369a1;">إيصال الدفع</label>
               <div style="display:flex;align-items:center;gap:6px;">
                 <span id="receipt-status-badge" style="display:none;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;"></span>
-                <span id="receipt-optional-lbl" style="font-size:10px;color:#94a3b8;">(اختياري للدفع النقدي بدون صورة)</span>
+                <span id="receipt-optional-lbl" style="font-size:10px;color:#dc2626;font-weight:600;">* إلزامي لجميع طرق الدفع</span>
               </div>
             </div>
             <input type="file" id="receipt-file" accept="image/*" capture="environment" style="display:none;" onchange="onReceiptFile(this)">
@@ -4522,8 +4522,8 @@ async function submitNewBk(){
   if(!checkin){ shakeField('nb-checkin','fw-checkin','fh-checkin','اختر تاريخ الدخول'); valid=false; }
   if(type==='daily'&&!checkout){ shakeField('nb-checkout','nb-checkout-grp','fh-checkout','اختر تاريخ الخروج'); valid=false; }
   if(!price){ shakeField('nb-price','fw-price','fh-price','أدخل سعر الإيجار'); valid=false; }
-  // إيصال إلزامي عند الدفع بالشبكة أو التحويل أو النقد مع وجود مبلغ
-  const needsReceipt = paid > 0 && ['network','transfer','cash'].includes(paymentMethod);
+  // إيصال إلزامي عند الدفع بالشبكة أو التحويل أو النقد
+  const needsReceipt = ['network','transfer','cash'].includes(paymentMethod);
   if(needsReceipt && !_receiptAccepted){
     errEl.textContent='يجب رفع إيصال الدفع وقبوله قبل إتمام الحجز';
     errEl.style.display='block';
