@@ -3362,6 +3362,36 @@ function openBkContract(id){
     `<tr><td style="padding:5px 8px;border:1px solid #e2e8f0;">${i+1}</td><td style="padding:5px 8px;border:1px solid #e2e8f0;">${esc(c.name)}</td><td style="padding:5px 8px;border:1px solid #e2e8f0;">${esc(c.idType||'')}</td><td style="padding:5px 8px;border:1px solid #e2e8f0;">${esc(c.idNumber||'')}</td></tr>`
   ).join('');
 
+  // ── كشف حساب: دائن/مدين ──
+  const PM_LBL={cash:'نقداً',transfer:'تحويل',network:'شبكة',check:'كمبيالة',digital:'رقمي',travel_agent:'وكالة سفر',other:'أخرى'};
+  const fDt=d=>d?new Date(d).toLocaleDateString('ar-SA',{year:'numeric',month:'2-digit',day:'2-digit'}):'—';
+  const payments=b.payments||[];
+  const nonDepPay=payments.filter(p=>!p.isDeposit);
+  const depPay=payments.filter(p=>p.isDeposit);
+  // دائن = الرسوم المستحقة
+  const chargeRows=[
+    {date:b.checkIn,desc:'قيمة الإيجار',amount:(b.totalPrice||0)-deposits},
+    ...(deposits>0?[{date:b.checkIn,desc:'مبلغ التأمين',amount:deposits}]:[]),
+  ];
+  // مدين = الدفعات المسددة
+  const payRows=[
+    ...nonDepPay.map(p=>({date:p.date,desc:PM_LBL[p.paymentMethod]||p.paymentMethod||'دفعة',amount:p.amount||0})),
+    ...depPay.map(p=>({date:p.date,desc:'تأمين — '+(PM_LBL[p.paymentMethod]||p.paymentMethod||''),amount:p.amount||0})),
+  ];
+  const maxLedger=Math.max(chargeRows.length,payRows.length);
+  const ledgerRows=Array.from({length:maxLedger},(_,i)=>{
+    const c=chargeRows[i];
+    const p=payRows[i];
+    const tdC=c?`<td style="padding:5px 8px;border:1px solid #e2e8f0;font-size:11px;color:#475569;">${fDt(c.date)}</td><td style="padding:5px 8px;border:1px solid #e2e8f0;">${esc(c.desc)}</td><td style="padding:5px 8px;border:1px solid #e2e8f0;font-weight:700;color:#dc2626;text-align:left;">${fN(c.amount)}</td>`
+                :`<td colspan="3" style="border:1px solid #e2e8f0;"></td>`;
+    const tdP=p?`<td style="padding:5px 8px;border:1px solid #e2e8f0;font-size:11px;color:#475569;">${fDt(p.date)}</td><td style="padding:5px 8px;border:1px solid #e2e8f0;">${esc(p.desc)}</td><td style="padding:5px 8px;border:1px solid #e2e8f0;font-weight:700;color:#047857;text-align:left;">${fN(p.amount)}</td>`
+                :`<td colspan="3" style="border:1px solid #e2e8f0;"></td>`;
+    return `<tr>${tdC}<td style="width:2px;padding:0;background:#cbd5e1;"></td>${tdP}</tr>`;
+  }).join('');
+  const totalCharges=(b.totalPrice||0);
+  const totalPaid=(b.paidAmount||0);
+  const balance=Math.max(0,totalCharges-totalPaid);
+
   const terms = [
     'بأمر من وزارة الداخلية يُمنع رهن أي مستندات رسمية.',
     'على المستأجر مراعاة السلوك والآداب الإسلامية خلال فترة تواجده في الوحدة، وعدم السماح بإقامة أشخاص آخرين من غير المرافقين المسجّلين.',
@@ -3446,6 +3476,47 @@ function openBkContract(id){
         <div class="amount-row"><span>التأمين</span><b style="color:#b45309;">${fN(deposits)} ﷼</b></div>
         <div class="amount-row total"><span>الرصيد المتبقي</span><b style="color:${remain>0?'#dc2626':'#047857'};">${remain>0?fN(remain)+' ﷼':'مسدّد ✓'}</b></div>
       </div>
+    </div>
+  </div>
+
+  <!-- كشف الحساب: دائن / مدين -->
+  <div class="section">
+    <div class="sec-hd">كشف حساب الحجز</div>
+    <div class="sec-body" style="padding:0;">
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead>
+          <tr>
+            <th colspan="3" style="background:#fff1f2;color:#b91c1c;padding:7px 10px;border:1px solid #e2e8f0;text-align:center;font-size:12px;">مدين — الرسوم المستحقة</th>
+            <th style="width:2px;padding:0;background:#cbd5e1;border:none;"></th>
+            <th colspan="3" style="background:#f0fdf4;color:#047857;padding:7px 10px;border:1px solid #e2e8f0;text-align:center;font-size:12px;">دائن — المبالغ المسددة</th>
+          </tr>
+          <tr style="background:#f8fafc;">
+            <th style="padding:5px 8px;border:1px solid #e2e8f0;font-weight:600;color:#64748b;">التاريخ</th>
+            <th style="padding:5px 8px;border:1px solid #e2e8f0;font-weight:600;color:#64748b;">البيان</th>
+            <th style="padding:5px 8px;border:1px solid #e2e8f0;font-weight:600;color:#64748b;text-align:left;">المبلغ ﷼</th>
+            <th style="width:2px;padding:0;background:#cbd5e1;border:none;"></th>
+            <th style="padding:5px 8px;border:1px solid #e2e8f0;font-weight:600;color:#64748b;">التاريخ</th>
+            <th style="padding:5px 8px;border:1px solid #e2e8f0;font-weight:600;color:#64748b;">طريقة الدفع</th>
+            <th style="padding:5px 8px;border:1px solid #e2e8f0;font-weight:600;color:#64748b;text-align:left;">المبلغ ﷼</th>
+          </tr>
+        </thead>
+        <tbody>${ledgerRows}</tbody>
+        <tfoot>
+          <tr style="background:#fef2f2;">
+            <td colspan="2" style="padding:7px 10px;border:1px solid #e2e8f0;font-weight:700;color:#b91c1c;">إجمالي المستحق</td>
+            <td style="padding:7px 10px;border:1px solid #e2e8f0;font-weight:900;color:#b91c1c;text-align:left;">${fN(totalCharges)}</td>
+            <td style="width:2px;padding:0;background:#cbd5e1;"></td>
+            <td colspan="2" style="padding:7px 10px;border:1px solid #e2e8f0;font-weight:700;color:#047857;">إجمالي المسدّد</td>
+            <td style="padding:7px 10px;border:1px solid #e2e8f0;font-weight:900;color:#047857;text-align:left;">${fN(totalPaid)}</td>
+          </tr>
+          <tr style="background:${balance>0?'#fff7ed':'#f0fdf4'};">
+            <td colspan="3" style="padding:7px 10px;border:1px solid #e2e8f0;"></td>
+            <td style="width:2px;padding:0;background:#cbd5e1;"></td>
+            <td colspan="2" style="padding:7px 10px;border:1px solid #e2e8f0;font-weight:800;color:${balance>0?'#b45309':'#047857'};">الرصيد المتبقي</td>
+            <td style="padding:7px 10px;border:1px solid #e2e8f0;font-weight:900;font-size:14px;color:${balance>0?'#dc2626':'#047857'};text-align:left;">${balance>0?fN(balance)+' ﷼':'مسدّد ✓'}</td>
+          </tr>
+        </tfoot>
+      </table>
     </div>
   </div>
 
