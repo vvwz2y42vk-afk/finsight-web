@@ -1,0 +1,59 @@
+{
+  "title": "نزيل للفنادق والشقق المفروشة",
+  "tables": [
+    {
+      "headers": [],
+      "rowCount": 1
+    }
+  ],
+  "selects": [
+    {
+      "label": "MainContent_ddl_HousekeeperFilter",
+      "options": [
+        "-- إختر موظف خدمة الغرف --"
+      ]
+    },
+    {
+      "label": "MainContent_ddl_TaskStatusFilter",
+      "options": [
+        "-- إختر حالة المهمة --",
+        "قيد التنفيذ",
+        "مكتملة",
+        "ملغاة"
+      ]
+    },
+    {
+      "label": "MainContent_ddl_HKForAll",
+      "options": [
+        "-- حدد موظف خدمة الغرف --"
+      ]
+    },
+    {
+      "label": "MainContent_ddl_tskStatusForAll",
+      "options": [
+        "-- حدد حالة المهمة --",
+        "قيد التنفيذ",
+        "مكتملة",
+        "ملغاة"
+      ]
+    }
+  ],
+  "buttons": [
+    "طباعة",
+    "بحث",
+    "حفظ",
+    "حفظ",
+    "خروج",
+    "×",
+    "×",
+    "×",
+    "×",
+    "×",
+    "×",
+    "×",
+    "×",
+    "×"
+  ],
+  "panels": [],
+  "labels": []
+}

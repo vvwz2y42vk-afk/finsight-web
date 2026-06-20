@@ -1,0 +1,400 @@
+{
+  "title": "نزيل للفنادق والشقق المفروشة",
+  "tables": [
+    {
+      "headers": [
+        "الغرفة",
+        "نوع الغرفة",
+        "حالة نظافة الغرفة",
+        "حالة تسكين الغرفة",
+        "ملاحظات",
+        "التناقضات",
+        "تاريخ الدخول",
+        "تاريخ الخروج",
+        "إسناد إلى"
+      ],
+      "rowCount": 21
+    }
+  ],
+  "selects": [
+    {
+      "label": "MainContent_ddl_HKStatusFilter",
+      "options": [
+        "-- اختر حالة نظافة الغرفة --",
+        "نظيف",
+        "غير نظيف",
+        "إعادة ترتيب"
+      ]
+    },
+    {
+      "label": "MainContent_ddl_AvailabilityStatusFilter",
+      "options": [
+        "-- اختر حالة تسكين الغرفة --",
+        "إنتظار تسجيل الدخول",
+        "مؤجر",
+        "شاغر",
+        "صيانة",
+        "خروج اليوم"
+      ]
+    },
+    {
+      "label": "MainContent_ddl_HousekeeperFilter",
+      "options": [
+        "-- اختر موظف خدمة الغرف --"
+      ]
+    },
+    {
+      "label": "MainContent_ddlFloors",
+      "options": [
+        "-- اختر الطابق --",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7"
+      ]
+    },
+    {
+      "label": "MainContent_ddlApartmentTypes",
+      "options": [
+        "-- اختر نوع الغرفة --",
+        "غرفة مفردة",
+        "غرفة وصالة",
+        "غرفتين وصالة",
+        "استديو",
+        "جناح ديلوكس",
+        "جناح عائلي 1 حمام (4 أشخاص)"
+      ]
+    },
+    {
+      "label": "MainContent_ddl_HKStatusForAll",
+      "options": [
+        "-- حدد حالة نظافة الغرف --",
+        "نظيف",
+        "غير نظيف",
+        "إعادة ترتيب"
+      ]
+    },
+    {
+      "label": "MainContent_ddl_HKForAll",
+      "options": [
+        "-- حدد موظف خدمة الغرف --"
+      ]
+    },
+    {
+      "label": "MainContent_lstvw_hKStatus_ddl_HKStatusInside_0",
+      "options": [
+        "نظيف",
+        "غير نظيف",
+        "إعادة ترتيب"
+      ]
+    },
+    {
+      "label": "MainContent_lstvw_hKStatus_ddl_HKInside_0",
+      "options": [
+        "-- إلغاء التحديد --"
+      ]
+    },
+    {
+      "label": "MainContent_lstvw_hKStatus_ddl_HKStatusInside_1",
+      "options": [
+        "نظيف",
+        "غير نظيف",
+        "إعادة ترتيب"
+      ]
+    },
+    {
+      "label": "MainContent_lstvw_hKStatus_ddl_HKInside_1",
+      "options": [
+        "-- إلغاء التحديد --"
+      ]
+    },
+    {
+      "label": "MainContent_lstvw_hKStatus_ddl_HKStatusInside_2",
+      "options": [
+        "نظيف",
+        "غير نظيف",
+        "إعادة ترتيب"
+      ]
+    },
+    {
+      "label": "MainContent_lstvw_hKStatus_ddl_HKInside_2",
+      "options": [
+        "-- إلغاء التحديد --"
+      ]
+    },
+    {
+      "label": "MainContent_lstvw_hKStatus_ddl_HKStatusInside_3",
+      "options": [
+        "نظيف",
+        "غير نظيف",
+        "إعادة ترتيب"
+      ]
+    },
+    {
+      "label": "MainContent_lstvw_hKStatus_ddl_HKInside_3",
+      "options": [
+        "-- إلغاء التحديد --"
+      ]
+    },
+    {
+      "label": "MainContent_lstvw_hKStatus_ddl_HKStatusInside_4",
+      "options": [
+        "نظيف",
+        "غير نظيف",
+        "إعادة ترتيب"
+      ]
+    },
+    {
+      "label": "MainContent_lstvw_hKStatus_ddl_HKInside_4",
+      "options": [
+        "-- إلغاء التحديد --"
+      ]
+    },
+    {
+      "label": "MainContent_lstvw_hKStatus_ddl_HKStatusInside_5",
+      "options": [
+        "نظيف",
+        "غير نظيف",
+        "إعادة ترتيب"
+      ]
+    },
+    {
+      "label": "MainContent_lstvw_hKStatus_ddl_HKInside_5",
+      "options": [
+        "-- إلغاء التحديد --"
+      ]
+    },
+    {
+      "label": "MainContent_lstvw_hKStatus_ddl_HKStatusInside_6",
+      "options": [
+        "نظيف",
+        "غير نظيف",
+        "إعادة ترتيب"
+      ]
+    },
+    {
+      "label": "MainContent_lstvw_hKStatus_ddl_HKInside_6",
+      "options": [
+        "-- إلغاء التحديد --"
+      ]
+    },
+    {
+      "label": "MainContent_lstvw_hKStatus_ddl_HKStatusInside_7",
+      "options": [
+        "نظيف",
+        "غير نظيف",
+        "إعادة ترتيب"
+      ]
+    },
+    {
+      "label": "MainContent_lstvw_hKStatus_ddl_HKInside_7",
+      "options": [
+        "-- إلغاء التحديد --"
+      ]
+    },
+    {
+      "label": "MainContent_lstvw_hKStatus_ddl_HKStatusInside_8",
+      "options": [
+        "نظيف",
+        "غير نظيف",
+        "إعادة ترتيب"
+      ]
+    },
+    {
+      "label": "MainContent_lstvw_hKStatus_ddl_HKInside_8",
+      "options": [
+        "-- إلغاء التحديد --"
+      ]
+    },
+    {
+      "label": "MainContent_lstvw_hKStatus_ddl_HKStatusInside_9",
+      "options": [
+        "نظيف",
+        "غير نظيف",
+        "إعادة ترتيب"
+      ]
+    },
+    {
+      "label": "MainContent_lstvw_hKStatus_ddl_HKInside_9",
+      "options": [
+        "-- إلغاء التحديد --"
+      ]
+    },
+    {
+      "label": "MainContent_lstvw_hKStatus_ddl_HKStatusInside_10",
+      "options": [
+        "نظيف",
+        "غير نظيف",
+        "إعادة ترتيب"
+      ]
+    },
+    {
+      "label": "MainContent_lstvw_hKStatus_ddl_HKInside_10",
+      "options": [
+        "-- إلغاء التحديد --"
+      ]
+    },
+    {
+      "label": "MainContent_lstvw_hKStatus_ddl_HKStatusInside_11",
+      "options": [
+        "نظيف",
+        "غير نظيف",
+        "إعادة ترتيب"
+      ]
+    },
+    {
+      "label": "MainContent_lstvw_hKStatus_ddl_HKInside_11",
+      "options": [
+        "-- إلغاء التحديد --"
+      ]
+    },
+    {
+      "label": "MainContent_lstvw_hKStatus_ddl_HKStatusInside_12",
+      "options": [
+        "نظيف",
+        "غير نظيف",
+        "إعادة ترتيب"
+      ]
+    },
+    {
+      "label": "MainContent_lstvw_hKStatus_ddl_HKInside_12",
+      "options": [
+        "-- إلغاء التحديد --"
+      ]
+    },
+    {
+      "label": "MainContent_lstvw_hKStatus_ddl_HKStatusInside_13",
+      "options": [
+        "نظيف",
+        "غير نظيف",
+        "إعادة ترتيب"
+      ]
+    },
+    {
+      "label": "MainContent_lstvw_hKStatus_ddl_HKInside_13",
+      "options": [
+        "-- إلغاء التحديد --"
+      ]
+    },
+    {
+      "label": "MainContent_lstvw_hKStatus_ddl_HKStatusInside_14",
+      "options": [
+        "نظيف",
+        "غير نظيف",
+        "إعادة ترتيب"
+      ]
+    },
+    {
+      "label": "MainContent_lstvw_hKStatus_ddl_HKInside_14",
+      "options": [
+        "-- إلغاء التحديد --"
+      ]
+    },
+    {
+      "label": "MainContent_lstvw_hKStatus_ddl_HKStatusInside_15",
+      "options": [
+        "نظيف",
+        "غير نظيف",
+        "إعادة ترتيب"
+      ]
+    },
+    {
+      "label": "MainContent_lstvw_hKStatus_ddl_HKInside_15",
+      "options": [
+        "-- إلغاء التحديد --"
+      ]
+    },
+    {
+      "label": "MainContent_lstvw_hKStatus_ddl_HKStatusInside_16",
+      "options": [
+        "نظيف",
+        "غير نظيف",
+        "إعادة ترتيب"
+      ]
+    },
+    {
+      "label": "MainContent_lstvw_hKStatus_ddl_HKInside_16",
+      "options": [
+        "-- إلغاء التحديد --"
+      ]
+    },
+    {
+      "label": "MainContent_lstvw_hKStatus_ddl_HKStatusInside_17",
+      "options": [
+        "نظيف",
+        "غير نظيف",
+        "إعادة ترتيب"
+      ]
+    },
+    {
+      "label": "MainContent_lstvw_hKStatus_ddl_HKInside_17",
+      "options": [
+        "-- إلغاء التحديد --"
+      ]
+    },
+    {
+      "label": "MainContent_lstvw_hKStatus_ddl_HKStatusInside_18",
+      "options": [
+        "نظيف",
+        "غير نظيف",
+        "إعادة ترتيب"
+      ]
+    },
+    {
+      "label": "MainContent_lstvw_hKStatus_ddl_HKInside_18",
+      "options": [
+        "-- إلغاء التحديد --"
+      ]
+    },
+    {
+      "label": "MainContent_lstvw_hKStatus_ddl_HKStatusInside_19",
+      "options": [
+        "نظيف",
+        "غير نظيف",
+        "إعادة ترتيب"
+      ]
+    },
+    {
+      "label": "MainContent_lstvw_hKStatus_ddl_HKInside_19",
+      "options": [
+        "-- إلغاء التحديد --"
+      ]
+    },
+    {
+      "label": "MainContent_lstvw_hKStatus_ddl_HKStatusInside_20",
+      "options": [
+        "نظيف",
+        "غير نظيف",
+        "إعادة ترتيب"
+      ]
+    },
+    {
+      "label": "MainContent_lstvw_hKStatus_ddl_HKInside_20",
+      "options": [
+        "-- إلغاء التحديد --"
+      ]
+    }
+  ],
+  "buttons": [
+    "بحث",
+    "حفظ",
+    "حفظ",
+    "إلغاء",
+    "حفظ",
+    "إلغاء",
+    "حفظ",
+    "إلغاء",
+    "حفظ",
+    "إلغاء",
+    "حفظ",
+    "إلغاء",
+    "حفظ",
+    "إلغاء",
+    "حفظ"
+  ],
+  "panels": [],
+  "labels": []
+}

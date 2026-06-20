@@ -1,0 +1,122 @@
+[
+  {
+    "text": "الدفع الالكتروني",
+    "href": "https://pms.nazeel.net/Pages/Modules/EPayment.aspx"
+  },
+  {
+    "text": "سجل الطلبات",
+    "href": "https://pms.nazeel.net/Pages/Modules/EPaymentOrdersHistory.aspx"
+  },
+  {
+    "text": "تذاكر الدعم الفني",
+    "href": "https://pms.nazeel.net/Pages/Management/ManageTickets.aspx"
+  },
+  {
+    "text": "الملف الشخصي",
+    "href": "https://pms.nazeel.net/Pages/Modules/ViewProfile.aspx"
+  },
+  {
+    "text": "لوحة المعلومات",
+    "href": "https://pms.nazeel.net/Pages/Default.aspx"
+  },
+  {
+    "text": "ترقيةلوحة معلومات متقدمة",
+    "href": "https://pms.nazeel.net/Pages/Modules/EPayment.aspx?selectedOption=AD"
+  },
+  {
+    "text": "تسجيل دخول",
+    "href": "https://pms.nazeel.net/Pages/Management/ManageApartmentsInfo.aspx?tab=CheckIn"
+  },
+  {
+    "text": "تسجيل خروج",
+    "href": "https://pms.nazeel.net/Pages/Management/ManageApartmentsInfo.aspx?tab=CheckOut"
+  },
+  {
+    "text": "إدارة حالة الشقق",
+    "href": "https://pms.nazeel.net/Pages/Management/ManageApartmentsInfo.aspx?tab=ChangeStatus"
+  },
+  {
+    "text": "الحجوزات",
+    "href": "https://pms.nazeel.net/Pages/Management/ManageBookings.aspx"
+  },
+  {
+    "text": "سندات القبض",
+    "href": "https://pms.nazeel.net/Pages/Management/ManageReciptVouchers.aspx"
+  },
+  {
+    "text": "سندات الكمبيالات",
+    "href": "https://pms.nazeel.net/Pages/Management/ManageDrafts.aspx"
+  },
+  {
+    "text": "سندات الصرف",
+    "href": "https://pms.nazeel.net/Pages/Management/ManagePaymentVouchers.aspx"
+  },
+  {
+    "text": "الفواتير",
+    "href": "https://pms.nazeel.net/Pages/Management/ManageInvoices.aspx?type=1"
+  },
+  {
+    "text": "الإشعارات الضريبية",
+    "href": "https://pms.nazeel.net/Pages/Management/ManageInvoices.aspx?type=2"
+  },
+  {
+    "text": "العملاء",
+    "href": "https://pms.nazeel.net/Pages/Management/ManageCustomers.aspx"
+  },
+  {
+    "text": "إضافة خدمات",
+    "href": "https://pms.nazeel.net/Pages/Modules/AddService.aspx"
+  },
+  {
+    "text": "سجل الخدمات",
+    "href": "https://pms.nazeel.net/Pages/Management/ManageServices.aspx"
+  },
+  {
+    "text": "حالة خدمة الغرف",
+    "href": "https://pms.nazeel.net/Pages/Management/ManageHouseKeepingStatus.aspx"
+  },
+  {
+    "text": "مهام خدمة الغرف",
+    "href": "https://pms.nazeel.net/Pages/Management/ManageHouseKeepingTasks.aspx"
+  },
+  {
+    "text": "الرسائل",
+    "href": "https://pms.nazeel.net/Pages/management/SMS.aspx"
+  },
+  {
+    "text": "سجل الحركات",
+    "href": "https://pms.nazeel.net/Pages/Reports/ActivitiesLogReport.aspx"
+  },
+  {
+    "text": "تقرير حركة الصندوق",
+    "href": "https://pms.nazeel.net/Pages/Reports/GenerateFundsTransactions.aspx"
+  },
+  {
+    "text": "تقرير شهري إجمالي",
+    "href": "https://pms.nazeel.net/Pages/Reports/GenerateApartmentControl.aspx"
+  },
+  {
+    "text": "تقرير الحركة اليومية",
+    "href": "https://pms.nazeel.net/Pages/Reports/GenerateApartment.aspx"
+  },
+  {
+    "text": "تقرير نسبة الاشغال",
+    "href": "https://pms.nazeel.net/Pages/Reports/GenerateOccupancyRates.aspx"
+  },
+  {
+    "text": "تقرير بنود الصرف",
+    "href": "https://pms.nazeel.net/Pages/Reports/GeneratePaymentVoucher.aspx?Type=WithCostCenter"
+  },
+  {
+    "text": "تقرير الكمبيالات",
+    "href": "https://pms.nazeel.net/Pages/Reports/GenerateDraftVoucher.aspx?Type=2"
+  },
+  {
+    "text": "تقرير سندات القبض",
+    "href": "https://pms.nazeel.net/Pages/Reports/GenerateRecieptVoucher.aspx?Type=1"
+  },
+  {
+    "text": "تقرير حجوزات العملاء",
+    "href": "https://pms.nazeel.net/Pages/Reports/GenerateCustomers.aspx"
+  }
+]
