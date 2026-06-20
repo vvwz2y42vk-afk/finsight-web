@@ -720,6 +720,7 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
     <div class="sn" onclick="goTab('activity',this)" id="sn-activity" style="display:<%= P.includes('activity')?'flex':'none' %>"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span><span class="sn-lbl">سجل الحركات</span></div>
     <div class="sn" onclick="goTab('vouchers',this)" id="sn-vouchers" style="display:<%= P.includes('vouchers')?'flex':'none' %>"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></span><span class="sn-lbl">السندات والفواتير</span></div>
     <div class="sn" onclick="goTab('analytics',this)" id="sn-analytics" style="display:<%= staff.role==='manager'?'flex':'none' %>"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="18" y="3" width="4" height="18"/><rect x="10" y="8" width="4" height="13"/><rect x="2" y="13" width="4" height="8"/></svg></span><span class="sn-lbl">التحليلات</span></div>
+    <div class="sn" onclick="goTab('receipts',this)" id="sn-receipts" style="display:<%= staff.role==='manager'?'flex':'none' %>"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span><span class="sn-lbl">إيصالات الدفع</span></div>
     <div class="sn" onclick="goTab('reports',this)" id="sn-reports"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></span><span class="sn-lbl">التقارير</span></div>
     <div class="sn" onclick="goTab('calendar',this)" id="sn-calendar" style="display:<%= P.includes('reports')?'flex':'none' %>"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/></svg></span><span class="sn-lbl">التقويم</span></div>
     <% if(staff.role==='manager'){ %>
@@ -1214,6 +1215,25 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
           <canvas id="an-type-chart" height="260"></canvas>
         </div>
       </div>
+    </div>
+
+    <!-- ── Receipts ── -->
+    <div class="tab-section" id="tab-receipts">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:18px;">
+        <div style="font-size:15px;font-weight:700;color:var(--t1);">إيصالات الدفع</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <select id="rec-bld-filter" onchange="loadReceipts()" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:12px;outline:none;background:#fff;color:var(--t1);">
+            <option value="">جميع المباني</option>
+            <option value="المنارا">المنارا</option>
+            <option value="جوان ان">جوان ان</option>
+            <option value="الماسة">الماسة</option>
+            <option value="الواحة">الواحة</option>
+          </select>
+          <button onclick="loadReceipts()" style="padding:7px 14px;background:var(--brand);color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">تحديث</button>
+        </div>
+      </div>
+      <div id="rec-stats-row" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;"></div>
+      <div id="rec-grid"></div>
     </div>
 
     <!-- ── Reports ── -->
@@ -2062,6 +2082,53 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
             <option value="other">أخرى</option>
           </select>
         </div>
+        <!-- ── إيصال الدفع ── -->
+        <div style="grid-column:1/-1;" id="receipt-section">
+          <div id="receipt-box" style="background:#f0f9ff;border:1.5px solid #bae6fd;border-radius:12px;padding:14px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+              <label style="font-size:12px;font-weight:700;color:#0369a1;">إيصال الدفع</label>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span id="receipt-status-badge" style="display:none;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;"></span>
+                <span id="receipt-optional-lbl" style="font-size:10px;color:#94a3b8;">(اختياري للدفع النقدي بدون صورة)</span>
+              </div>
+            </div>
+            <input type="file" id="receipt-file" accept="image/*" capture="environment" style="display:none;" onchange="onReceiptFile(this)">
+            <div id="receipt-upload-area" onclick="document.getElementById('receipt-file').click()" style="border:2px dashed #93c5fd;border-radius:10px;padding:18px;text-align:center;cursor:pointer;transition:border-color .2s;" onmouseenter="this.style.borderColor='#3b82f6'" onmouseleave="this.style.borderColor='#93c5fd'">
+              <div style="font-size:26px;margin-bottom:5px;">📷</div>
+              <div style="font-size:12px;font-weight:600;color:#0369a1;">اضغط لتصوير أو رفع صورة الإيصال</div>
+              <div style="font-size:10px;color:#94a3b8;margin-top:3px;">JPEG • PNG • يدعم التصوير المباشر</div>
+            </div>
+            <div id="receipt-preview-wrap" style="display:none;margin-top:10px;">
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <div style="flex-shrink:0;position:relative;">
+                  <img id="receipt-preview-img" src="" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:2px solid #bae6fd;cursor:pointer;display:block;" onclick="openReceiptFullscreen()" title="اضغط للتكبير">
+                  <div onclick="rejectReceipt()" title="حذف الإيصال" style="position:absolute;top:-6px;left:-6px;width:18px;height:18px;background:#dc2626;border-radius:50%;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;line-height:1;">×</div>
+                </div>
+                <div id="receipt-analysis-box" style="flex:1;min-width:0;">
+                  <div id="receipt-analyzing" style="color:#0369a1;font-size:12px;font-weight:600;padding:6px 0;">⏳ جاري قراءة الإيصال بالذكاء الاصطناعي...</div>
+                  <div id="receipt-result" style="display:none;">
+                    <div id="receipt-entity-warn" style="display:none;background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:7px 10px;margin-bottom:7px;font-size:11px;color:#92400e;font-weight:600;line-height:1.5;"></div>
+                    <div id="receipt-entity-ok" style="display:none;background:#d1fae5;border:1px solid #6ee7b7;border-radius:8px;padding:7px 10px;margin-bottom:7px;font-size:11px;color:#065f46;font-weight:600;"></div>
+                    <div id="receipt-cash-result" style="display:none;border-radius:8px;padding:7px 10px;margin-bottom:7px;font-size:11px;font-weight:600;line-height:1.5;"></div>
+                    <table style="width:100%;border-collapse:collapse;font-size:11px;" id="receipt-data-table">
+                      <tr><td style="color:#64748b;padding:2px 0;white-space:nowrap;">النوع:</td><td id="ra-type" style="font-weight:700;color:#0f172a;padding-right:8px;"></td></tr>
+                      <tr><td style="color:#64748b;padding:2px 0;white-space:nowrap;">المبلغ:</td><td id="ra-amount" style="font-weight:700;color:#059669;padding-right:8px;"></td></tr>
+                      <tr id="ra-date-row"><td style="color:#64748b;padding:2px 0;white-space:nowrap;">التاريخ:</td><td id="ra-date" style="font-weight:700;color:#0f172a;padding-right:8px;"></td></tr>
+                      <tr id="ra-txn-row"><td style="color:#64748b;padding:2px 0;white-space:nowrap;">رقم العملية:</td><td id="ra-txn" style="font-weight:700;color:#0f172a;padding-right:8px;"></td></tr>
+                      <tr id="ra-entity-row"><td style="color:#64748b;padding:2px 0;white-space:nowrap;">الجهة:</td><td id="ra-entity" style="font-weight:700;color:#0f172a;padding-right:8px;"></td></tr>
+                    </table>
+                    <div style="display:flex;gap:6px;margin-top:8px;">
+                      <button type="button" onclick="acceptReceiptData()" id="receipt-accept-btn" style="flex:1;padding:7px;background:#059669;color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">✓ قبول وتطبيق</button>
+                    </div>
+                  </div>
+                  <div id="receipt-error" style="display:none;color:#dc2626;font-size:11px;font-weight:600;padding:6px 0;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- ── نهاية إيصال الدفع ── -->
+
         <div>
           <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">نوع الإثبات</label>
           <select id="nb-idtype" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;">
@@ -2123,6 +2190,11 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
 </div>
 
 <div id="toast"></div>
+<!-- Receipt fullscreen overlay -->
+<div id="receipt-fullscreen" onclick="this.style.display='none'" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;align-items:center;justify-content:center;flex-direction:column;">
+  <img id="receipt-fullscreen-img" src="" style="max-width:92vw;max-height:88vh;object-fit:contain;border-radius:10px;">
+  <div style="color:rgba(255,255,255,.5);font-size:12px;margin-top:10px;">اضغط في أي مكان للإغلاق</div>
+</div>
 <div id="successOverlay"><div class="success-burst" id="successBurst"></div></div>
 
 <!-- مودال تعديل بيانات الشقة -->
@@ -2238,7 +2310,7 @@ function goTab(id, el){
   tab.classList.add('active');
   el.classList.add('active');
   if(window.innerWidth < 768) closeSidebar();
-  const labels={dashboard:'لوحة المعلومات',apartments:'الشقق والتسكين',bookings:'الحجوزات',customers:'العملاء',housekeeping:'خدمة الغرف',activity:'سجل الحركات',vouchers:'السندات والفواتير',reports:'التقارير والإحصاءات',calendar:'التقويم الشهري',channels:'إدارة قنوات الحجز',analytics:'التحليلات',settings:'إعدادات المبنى'};
+  const labels={dashboard:'لوحة المعلومات',apartments:'الشقق والتسكين',bookings:'الحجوزات',customers:'العملاء',housekeeping:'خدمة الغرف',activity:'سجل الحركات',vouchers:'السندات والفواتير',reports:'التقارير والإحصاءات',calendar:'التقويم الشهري',channels:'إدارة قنوات الحجز',analytics:'التحليلات',settings:'إعدادات المبنى',receipts:'إيصالات الدفع'};
   document.getElementById('tbTitle').innerHTML=`${esc(BUILDING)} — <span>${labels[id]||id}</span>`;
   if(id==='apartments') loadApartments();
   if(id==='bookings')   loadBookings();
@@ -2257,6 +2329,7 @@ function goTab(id, el){
     } else { loadReports(); loadYearlyChart(); cfInitDates(); initOccAptDropdown(); }
   }
   if(id==='analytics')  loadAnalytics();
+  if(id==='receipts')   loadReceipts();
   if(id==='calendar')   loadCalendar();
   if(id==='settings')   loadSettings();
   if(id==='channels')   loadChannels();
@@ -4151,6 +4224,7 @@ function closeNewBkModal(){
     const el=document.getElementById(id);
     if(el){el.textContent='';el.className='field-hint';}
   });
+  resetReceiptUI();
 }
 
 function toggleNbType(){
@@ -4179,6 +4253,236 @@ function calcNbRemain(){
   const remain=Math.max(0,total-paid);
   document.getElementById('nb-remain').value=remain||'';
   document.getElementById('nb-remain').style.color=remain>0?'#dc2626':'#16a34a';
+}
+
+// ── Receipt AI ───────────────────────────────────────────────────────────────
+let _receiptBase64=null, _receiptMime=null, _receiptAnalysis=null, _receiptAccepted=false;
+
+function resetReceiptUI(){
+  _receiptBase64=null; _receiptMime=null; _receiptAnalysis=null; _receiptAccepted=false;
+  const fi=document.getElementById('receipt-file');
+  if(fi) fi.value='';
+  const pw=document.getElementById('receipt-preview-wrap');
+  if(pw) pw.style.display='none';
+  const ua=document.getElementById('receipt-upload-area');
+  if(ua) ua.style.display='block';
+  const sb=document.getElementById('receipt-status-badge');
+  if(sb) sb.style.display='none';
+  const rb=document.getElementById('receipt-box');
+  if(rb) rb.style.border='1.5px solid #bae6fd';
+}
+
+async function compressImg(file, maxPx, q){
+  return new Promise(resolve=>{
+    const rd=new FileReader();
+    rd.onload=e=>{
+      const img=new Image();
+      img.onload=()=>{
+        let w=img.width, h=img.height;
+        if(w>maxPx||h>maxPx){
+          if(w>h){h=Math.round(h*maxPx/w);w=maxPx;}
+          else{w=Math.round(w*maxPx/h);h=maxPx;}
+        }
+        const cv=document.createElement('canvas');
+        cv.width=w; cv.height=h;
+        cv.getContext('2d').drawImage(img,0,0,w,h);
+        resolve(cv.toDataURL('image/jpeg',q));
+      };
+      img.src=e.target.result;
+    };
+    rd.readAsDataURL(file);
+  });
+}
+
+async function onReceiptFile(input){
+  const file=input.files[0];
+  if(!file) return;
+  const dataUrl=await compressImg(file,1400,0.82);
+  _receiptBase64=dataUrl.split(',')[1];
+  _receiptMime='image/jpeg';
+  document.getElementById('receipt-preview-img').src=dataUrl;
+  document.getElementById('receipt-fullscreen-img').src=dataUrl;
+  document.getElementById('receipt-upload-area').style.display='none';
+  document.getElementById('receipt-preview-wrap').style.display='block';
+  document.getElementById('receipt-analyzing').style.display='block';
+  document.getElementById('receipt-result').style.display='none';
+  document.getElementById('receipt-error').style.display='none';
+  document.getElementById('receipt-status-badge').style.display='none';
+  document.getElementById('receipt-box').style.border='1.5px solid #bae6fd';
+  _receiptAccepted=false;
+  await analyzeReceipt();
+}
+
+async function analyzeReceipt(){
+  try{
+    const payMethod=document.getElementById('nb-paymethod').value;
+    const expectedPaid=parseFloat(document.getElementById('nb-paid').value)||0;
+    const blob=await fetch(`data:${_receiptMime};base64,${_receiptBase64}`).then(r=>r.blob());
+    const fd=new FormData();
+    fd.append('receipt',blob,'receipt.jpg');
+    fd.append('building',BUILDING||'');
+    fd.append('payMethod',payMethod);
+    fd.append('expectedPaid',String(expectedPaid));
+    const r=await fetch('/staff/api/receipts/analyze',{method:'POST',body:fd});
+    const d=await r.json();
+    document.getElementById('receipt-analyzing').style.display='none';
+    if(!r.ok||!d.success){
+      document.getElementById('receipt-error').textContent=d.error||'فشل التحليل';
+      document.getElementById('receipt-error').style.display='block';
+      return;
+    }
+    _receiptAnalysis=d.analysis;
+    showReceiptResult(d.analysis, payMethod, expectedPaid);
+  }catch(e){
+    document.getElementById('receipt-analyzing').style.display='none';
+    document.getElementById('receipt-error').textContent='خطأ في الاتصال بالذكاء الاصطناعي';
+    document.getElementById('receipt-error').style.display='block';
+  }
+}
+
+function showReceiptResult(a, payMethod, expectedPaid){
+  const isCash = payMethod==='cash' || a.paymentType==='cash';
+  const typeMap={network:'شبكة (POS)',transfer:'تحويل بنكي',cash:'نقداً',other:'أخرى'};
+
+  if(isCash){
+    const cashEl=document.getElementById('receipt-cash-result');
+    const cashTotal=a.cashTotal;
+    if(cashTotal===null||cashTotal===undefined){
+      cashEl.style.background='#fef3c7'; cashEl.style.border='1px solid #fcd34d'; cashEl.style.color='#92400e';
+      cashEl.innerHTML='⚠️ لم يتم التعرف على العملات في الصورة. تأكد من وضوح الصورة.';
+    } else if(a.cashMatchesPaid===true){
+      cashEl.style.background='#d1fae5'; cashEl.style.border='1px solid #6ee7b7'; cashEl.style.color='#065f46';
+      cashEl.innerHTML=`✓ المبلغ النقدي <strong>${cashTotal.toLocaleString('ar-SA')} ريال</strong> يطابق المبلغ المدفوع`;
+    } else if(a.cashMatchesPaid===false){
+      cashEl.style.background='#fee2e2'; cashEl.style.border='1px solid #fca5a5'; cashEl.style.color='#991b1b';
+      cashEl.innerHTML=`⚠️ المبلغ النقدي المتعرف عليه <strong>${cashTotal.toLocaleString('ar-SA')} ريال</strong> لا يطابق المدفوع <strong>${expectedPaid.toLocaleString('ar-SA')} ريال</strong>`;
+    } else {
+      cashEl.style.background='#f0f9ff'; cashEl.style.border='1px solid #bae6fd'; cashEl.style.color='#0369a1';
+      cashEl.innerHTML=`تم التعرف على مبلغ نقدي: <strong>${cashTotal.toLocaleString('ar-SA')} ريال</strong>`;
+    }
+    cashEl.style.display='block';
+    document.getElementById('ra-type').textContent='نقداً';
+    document.getElementById('ra-amount').textContent=cashTotal!=null?`${cashTotal.toLocaleString('ar-SA')} ريال`:'—';
+    document.getElementById('ra-date-row').style.display='none';
+    document.getElementById('ra-txn-row').style.display='none';
+    document.getElementById('ra-entity-row').style.display='none';
+  } else {
+    document.getElementById('receipt-cash-result').style.display='none';
+    document.getElementById('ra-date-row').style.display='';
+    document.getElementById('ra-txn-row').style.display='';
+    document.getElementById('ra-entity-row').style.display='';
+    // Entity check
+    const warnEl=document.getElementById('receipt-entity-warn');
+    const okEl=document.getElementById('receipt-entity-ok');
+    const expectedMap={'المنارا':'شركة بارز برايم أو مؤسسة جهد وأمان','جوان ان':'شركة بارز برايم أو مؤسسة جهد وأمان','الماسة':'إبراهيم الزاحم','الواحة':'أحمد الزاحم'};
+    if(a.matchesBuilding===false&&a.entityName){
+      warnEl.innerHTML=`⚠️ تحذير: الجهة في الإيصال "<strong>${esc(a.entityName)}</strong>" لا تطابق الجهة المتوقعة لـ ${esc(BUILDING||'')}: <strong>${esc(expectedMap[BUILDING||'']||'الجهة المحددة')}</strong>`;
+      warnEl.style.display='block'; okEl.style.display='none';
+    } else if(a.matchesBuilding===true){
+      okEl.textContent=`✓ الجهة "${a.entityName}" مطابقة للمبنى`;
+      okEl.style.display='block'; warnEl.style.display='none';
+    } else { warnEl.style.display='none'; okEl.style.display='none'; }
+    document.getElementById('ra-type').textContent=typeMap[a.paymentType]||a.paymentType||'—';
+    document.getElementById('ra-amount').textContent=a.amount!=null?`${Number(a.amount).toLocaleString('ar-SA')} ريال`:'—';
+    document.getElementById('ra-date').textContent=a.date||'—';
+    document.getElementById('ra-txn').textContent=a.transactionNumber||'—';
+    document.getElementById('ra-entity').textContent=a.entityName||'—';
+  }
+  document.getElementById('receipt-result').style.display='block';
+}
+
+function acceptReceiptData(){
+  if(!_receiptAnalysis) return;
+  const a=_receiptAnalysis;
+  // Auto-fill
+  if(a.paymentType==='network') document.getElementById('nb-paymethod').value='network';
+  else if(a.paymentType==='transfer') document.getElementById('nb-paymethod').value='transfer';
+  const amt=a.paymentType==='cash'?a.cashTotal:a.amount;
+  if(amt&&parseFloat(amt)>0){ document.getElementById('nb-paid').value=amt; calcNbRemain(); }
+  if(a.date&&!document.getElementById('nb-checkin').value){
+    const d=new Date(a.date);
+    if(!isNaN(d)){ document.getElementById('nb-checkin').value=d.toISOString().split('T')[0]; calcNbTotal(); }
+  }
+  _receiptAccepted=true;
+  const btn=document.getElementById('receipt-accept-btn');
+  btn.textContent='✓ تم القبول'; btn.style.background='#047857'; btn.disabled=true;
+  const badge=document.getElementById('receipt-status-badge');
+  badge.textContent='✓ مقبول'; badge.style.background='#d1fae5'; badge.style.color='#065f46'; badge.style.display='inline-block';
+  document.getElementById('receipt-box').style.border='1.5px solid #6ee7b7';
+}
+
+function rejectReceipt(){
+  resetReceiptUI();
+  const btn=document.getElementById('receipt-accept-btn');
+  if(btn){ btn.textContent='✓ قبول وتطبيق'; btn.style.background='#059669'; btn.disabled=false; }
+}
+
+function openReceiptFullscreen(){
+  const el=document.getElementById('receipt-fullscreen');
+  if(el) el.style.display='flex';
+}
+
+// ── Receipts Tab (Manager) ────────────────────────────────────────────────────
+async function loadReceipts(){
+  const el=document.getElementById('rec-grid');
+  const statsEl=document.getElementById('rec-stats-row');
+  if(!el) return;
+  el.innerHTML='<div style="padding:40px;text-align:center;color:#94a3b8;font-size:13px;">⏳ جاري التحميل...</div>';
+  const bld=document.getElementById('rec-bld-filter')?.value||'';
+  const r=await fetch(`/staff/api/receipts${bld?'?building='+encodeURIComponent(bld):''}`).catch(()=>null);
+  if(!r||!r.ok){ el.innerHTML='<div style="padding:40px;text-align:center;color:#dc2626;">خطأ في تحميل الإيصالات</div>'; return; }
+  const recs=await r.json();
+  // Stats
+  const total=recs.length;
+  const matched=recs.filter(r=>r.analysis?.matchesBuilding===true).length;
+  const warned=recs.filter(r=>r.analysis?.matchesBuilding===false).length;
+  const sumAmt=recs.reduce((s,r)=>s+(r.analysis?.amount||r.analysis?.cashTotal||0),0);
+  if(statsEl) statsEl.innerHTML=`
+    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:10px 16px;flex:1;min-width:100px;text-align:center;">
+      <div style="font-size:20px;font-weight:800;color:#0f172a;">${total}</div><div style="font-size:11px;color:#64748b;">إجمالي الإيصالات</div>
+    </div>
+    <div style="background:#d1fae5;border:1px solid #6ee7b7;border-radius:10px;padding:10px 16px;flex:1;min-width:100px;text-align:center;">
+      <div style="font-size:20px;font-weight:800;color:#065f46;">${matched}</div><div style="font-size:11px;color:#065f46;">مطابق للجهة</div>
+    </div>
+    <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:10px;padding:10px 16px;flex:1;min-width:100px;text-align:center;">
+      <div style="font-size:20px;font-weight:800;color:#92400e;">${warned}</div><div style="font-size:11px;color:#92400e;">تحذير جهة</div>
+    </div>
+    <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:10px 16px;flex:1;min-width:100px;text-align:center;">
+      <div style="font-size:20px;font-weight:800;color:#1a3d8f;">${sumAmt.toLocaleString('ar-SA')}</div><div style="font-size:11px;color:#1a3d8f;">إجمالي المبالغ (ريال)</div>
+    </div>`;
+  if(!recs.length){ el.innerHTML='<div style="padding:60px;text-align:center;color:#94a3b8;font-size:13px;">لا توجد إيصالات مسجلة</div>'; return; }
+  const typeMap={network:'شبكة',transfer:'تحويل',cash:'نقداً',other:'أخرى'};
+  el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;">${
+    recs.map(rec=>{
+      const a=rec.analysis||{};
+      const date=new Date(rec.createdAt).toLocaleDateString('ar-SA',{year:'numeric',month:'short',day:'numeric'});
+      const isMismatch=a.matchesBuilding===false;
+      const isMatch=a.matchesBuilding===true;
+      const borderColor=isMismatch?'#fcd34d':isMatch?'#6ee7b7':'#e2e8f0';
+      const amtVal=a.cashTotal!=null?a.cashTotal:a.amount;
+      const imgSrc=rec.imageData?`data:${rec.imageMimeType||'image/jpeg'};base64,${rec.imageData}`:null;
+      return `<div style="background:#fff;border:1.5px solid ${borderColor};border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.06);">
+        ${imgSrc?`<img src="${imgSrc}" style="width:100%;height:150px;object-fit:cover;cursor:pointer;display:block;" onclick="document.getElementById('receipt-fullscreen-img').src=this.src;document.getElementById('receipt-fullscreen').style.display='flex'" onerror="this.parentNode.removeChild(this)">`:
+        '<div style="height:70px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:28px;">🧾</div>'}
+        <div style="padding:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <span style="font-size:14px;font-weight:700;color:#0f172a;">${esc(rec.apt||'—')}</span>
+            <span style="font-size:10px;color:#64748b;">${date}</span>
+          </div>
+          <div style="font-size:11px;color:#475569;margin-bottom:2px;">${esc(rec.guestName||'—')}</div>
+          <div style="font-size:11px;color:#64748b;margin-bottom:8px;">${esc(rec.building||'')}</div>
+          <div style="background:#f8fafc;border-radius:8px;padding:8px;font-size:11px;display:grid;grid-template-columns:auto 1fr;gap:3px 8px;">
+            <span style="color:#64748b;">النوع:</span><span style="font-weight:700;">${typeMap[a.paymentType]||a.paymentType||'—'}</span>
+            <span style="color:#64748b;">المبلغ:</span><span style="font-weight:700;color:#059669;">${amtVal!=null?Number(amtVal).toLocaleString('ar-SA')+' ريال':'—'}</span>
+            ${a.transactionNumber?`<span style="color:#64748b;">العملية:</span><span style="font-weight:700;word-break:break-all;">${esc(a.transactionNumber)}</span>`:''}
+            ${a.entityName?`<span style="color:#64748b;">الجهة:</span><span style="font-weight:700;">${esc(a.entityName)} ${isMismatch?'⚠️':isMatch?'✓':''}</span>`:''}
+          </div>
+          ${isMismatch?`<div style="margin-top:6px;font-size:10px;color:#92400e;font-weight:600;">⚠️ الجهة لا تطابق المبنى</div>`:''}
+          ${rec.bookingId?`<div style="margin-top:6px;font-size:10px;color:#64748b;">الحجز: ${String(rec.bookingId).slice(-8)}</div>`:''}
+        </div>
+      </div>`;
+    }).join('')
+  }</div>`;
 }
 
 function updateNbPrice(){
@@ -4218,6 +4522,15 @@ async function submitNewBk(){
   if(!checkin){ shakeField('nb-checkin','fw-checkin','fh-checkin','اختر تاريخ الدخول'); valid=false; }
   if(type==='daily'&&!checkout){ shakeField('nb-checkout','nb-checkout-grp','fh-checkout','اختر تاريخ الخروج'); valid=false; }
   if(!price){ shakeField('nb-price','fw-price','fh-price','أدخل سعر الإيجار'); valid=false; }
+  // إيصال إلزامي عند الدفع بالشبكة أو التحويل أو النقد مع وجود مبلغ
+  const needsReceipt = paid > 0 && ['network','transfer','cash'].includes(paymentMethod);
+  if(needsReceipt && !_receiptAccepted){
+    errEl.textContent='يجب رفع إيصال الدفع وقبوله قبل إتمام الحجز';
+    errEl.style.display='block';
+    document.getElementById('receipt-box').style.border='1.5px solid #dc2626';
+    document.getElementById('receipt-box').scrollIntoView({behavior:'smooth',block:'center'});
+    valid=false;
+  }
   if(!valid) return;
   const companions=_companions.filter(c=>c.name.trim());
   const _bkBody={apt,name,phone,bookingType:type,checkIn:checkin,checkOut:checkout,months,pricePerUnit:price,totalPrice:total,paidAmount:paid,paymentMethod,bookingSource,idType,idNumber,status,notes,companions};
@@ -4227,6 +4540,14 @@ async function submitNewBk(){
     const r=await fetch(url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(_bkBody)});
     const d=await r.json();
     if(!r.ok){errEl.textContent=d.error||'حدث خطأ';errEl.style.display='block';return;}
+    // حفظ الإيصال مرتبطاً بالحجز
+    if(_receiptBase64&&_receiptAccepted){
+      fetch('/staff/api/receipts',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({bookingId:d._id||d.id||null,building:BUILDING,apt,guestName:name,imageData:_receiptBase64,imageMimeType:_receiptMime||'image/jpeg',analysis:_receiptAnalysis}),
+      }).catch(()=>{});
+    }
     _clearDraft();
     closeNewBkModal();
     toast(editBkId?'✏️ تم تعديل الحجز':'✅ تم إضافة الحجز بنجاح','success');
