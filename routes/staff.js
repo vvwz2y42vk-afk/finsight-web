@@ -694,16 +694,23 @@ router.post('/api/bookings/new', reqStaff, async (req,res) => {
 router.get('/api/customers', reqStaff, async (req,res) => {
   try {
     const Guest = require('../models/Guest');
-    const { q='', page=1, limit=100, category='' } = req.query;
+    const { q='', page=1, limit=100, category='', idNumber='', phone:phoneQ='' } = req.query;
     const skip = (parseInt(page)-1) * parseInt(limit);
     const filter = { propertyId: req.staff.propertyId || null };
     if (category && ['regular','vip','blocked'].includes(category)) filter.category = category;
-    const qClean = q.trim().slice(0, 100);
-    if (qClean) {
-      const pat = qClean.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-        .replace(/[أإآا]/g, '[أإآا]').replace(/[يى]/g, '[يى]').replace(/[هة]/g, '[هة]');
-      const re = new RegExp(pat, 'i');
-      filter.$or = [{ name: re }, { phone: re }, { idNumber: re }];
+
+    const makeRe = s => new RegExp(s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&').replace(/[أإآا]/g,'[أإآا]').replace(/[يى]/g,'[يى]').replace(/[هة]/g,'[هة]'), 'i');
+
+    if (idNumber.trim()) {
+      filter.idNumber = makeRe(idNumber.trim().slice(0,50));
+    } else if (phoneQ.trim()) {
+      filter.phone = makeRe(phoneQ.trim().slice(0,30));
+    } else {
+      const qClean = q.trim().slice(0, 100);
+      if (qClean) {
+        const re = makeRe(qClean);
+        filter.$or = [{ name: re }, { phone: re }, { idNumber: re }];
+      }
     }
     const [guests, total] = await Promise.all([
       Guest.find(filter).sort({ name: 1 }).skip(skip).limit(parseInt(limit)).lean(),
@@ -789,7 +796,16 @@ router.get('/api/activity', reqStaff, async (req,res) => {
   try {
     const AL = require('../models/ActivityLog');
     const alFilter = req.staff.propertyId ? { propertyId: req.staff.propertyId } : { building: req.staff.building, propertyId: null };
-    const logs = await AL.find(alFilter).sort({createdAt:-1}).limit(100).lean();
+    const { from, to, action, ref, user } = req.query;
+    if(from || to){
+      alFilter.createdAt = {};
+      if(from) alFilter.createdAt.$gte = new Date(from);
+      if(to){ const d=new Date(to); d.setHours(23,59,59,999); alFilter.createdAt.$lte=d; }
+    }
+    if(action) alFilter.action = action;
+    if(ref) alFilter.$or = [{apt:new RegExp(ref,'i')},{guestName:new RegExp(ref,'i')}];
+    if(user) alFilter.staffName = new RegExp(user.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i');
+    const logs = await AL.find(alFilter).sort({createdAt:-1}).limit(200).lean();
     res.json(logs);
   } catch(e){ res.status(500).json({error:e.message}); }
 });
@@ -801,6 +817,15 @@ router.get('/api/vouchers', reqStaff, async (req,res) => {
     const V = require('../models/Voucher');
     const filter = req.staff.propertyId ? { propertyId: req.staff.propertyId } : { building: req.staff.building, propertyId: null };
     if(req.query.type) filter.type = req.query.type;
+    const { from, to, method, num, bknum } = req.query;
+    if(from || to){
+      filter.date = {};
+      if(from) filter.date.$gte = new Date(from);
+      if(to){ const d=new Date(to); d.setHours(23,59,59,999); filter.date.$lte=d; }
+    }
+    if(method) filter.paymentMethod = method;
+    if(num) filter.number = new RegExp(num.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i');
+    if(bknum) filter.description = new RegExp(bknum.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i');
     const list = await V.find(filter).sort({ createdAt: -1 }).lean();
     res.json(list);
   } catch(e){ res.status(500).json({error:e.message}); }
