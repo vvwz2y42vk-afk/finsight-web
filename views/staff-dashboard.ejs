@@ -4317,13 +4317,11 @@ async function analyzeReceipt(){
   try{
     const payMethod=document.getElementById('nb-paymethod').value;
     const expectedPaid=parseFloat(document.getElementById('nb-paid').value)||0;
-    const blob=await fetch(`data:${_receiptMime};base64,${_receiptBase64}`).then(r=>r.blob());
-    const fd=new FormData();
-    fd.append('receipt',blob,'receipt.jpg');
-    fd.append('building',BUILDING||'');
-    fd.append('payMethod',payMethod);
-    fd.append('expectedPaid',String(expectedPaid));
-    const r=await fetch('/staff/api/receipts/analyze',{method:'POST',body:fd});
+    const r=await fetch('/staff/api/receipts/analyze',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({imageBase64:_receiptBase64,mimeType:_receiptMime||'image/jpeg',building:BUILDING||'',payMethod,expectedPaid}),
+    });
     const d=await r.json();
     document.getElementById('receipt-analyzing').style.display='none';
     if(!r.ok||!d.success){

@@ -2623,27 +2623,27 @@ router.get('/api/reports/cash-flow', reqStaff, async (req, res) => {
 });
 
 // ── Receipts ─────────────────────────────────────────────────────────────────
+// يستقبل JSON: { imageBase64, mimeType, building, payMethod, expectedPaid }
 
-const BUILDING_ENTITIES = {
-  'المنارا':  ['بارز برايم', 'barez prime', 'جهد وأمان', 'jahd', 'waman', 'جهد'],
-  'جوان ان': ['بارز برايم', 'barez prime', 'جهد وأمان', 'jahd', 'waman', 'جهد'],
-  'الماسة':  ['الزاحم', 'alzahim', 'إبراهيم', 'ibrahim'],
-  'الواحة':  ['الزاحم', 'alzahim', 'أحمد', 'ahmed'],
-};
-
-const receiptUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 12 * 1024 * 1024 } });
-
-router.post('/api/receipts/analyze', reqStaff, receiptUpload.single('receipt'), async (req, res) => {
+router.post('/api/receipts/analyze', reqStaff, async (req, res) => {
   try {
-    if (!req.file) return res.status(400).json({ error: 'لم يتم رفع ملف' });
+    const { imageBase64, mimeType: rawMime, building: bldBody, payMethod: pmBody, expectedPaid: ep } = req.body;
+    if (!imageBase64) return res.status(400).json({ error: 'لم يتم إرسال الصورة' });
+
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) return res.status(500).json({ error: 'ANTHROPIC_API_KEY غير مضبوط في متغيرات البيئة' });
 
-    const imageBase64 = req.file.buffer.toString('base64');
-    const mimeType    = req.file.mimetype || 'image/jpeg';
-    const building    = (req.body.building || req.staff.building || '').trim();
-    const payMethod   = (req.body.payMethod || '').trim();
-    const expectedPaid = parseFloat(req.body.expectedPaid) || null;
+    const mimeType     = rawMime || 'image/jpeg';
+    const building     = (bldBody || req.staff.building || '').trim();
+    const payMethod    = (pmBody || '').trim();
+    const expectedPaid = parseFloat(ep) || null;
+
+    const BUILDING_ENTITIES = {
+      'المنارا':  ['بارز برايم', 'barez prime', 'جهد وأمان', 'jahd', 'waman', 'جهد'],
+      'جوان ان': ['بارز برايم', 'barez prime', 'جهد وأمان', 'jahd', 'waman', 'جهد'],
+      'الماسة':  ['الزاحم', 'alzahim', 'إبراهيم', 'ibrahim'],
+      'الواحة':  ['الزاحم', 'alzahim', 'أحمد', 'ahmed'],
+    };
 
     const isCash = payMethod === 'cash';
 
