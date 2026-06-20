@@ -3330,6 +3330,7 @@ function renderBkRows(){
           <button class="ia ia-view" data-tip="عرض التفاصيل" onclick="openBkModal('${b._id}','${esc(b.apt||'')}','${b.status}')"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
           ${!['cancelled','checkout'].includes(b.status)&&can('edit_booking')?`<button class="ia ia-edit" data-tip="تعديل" onclick="editBk('${b._id}')"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>`:''}
           ${!['cancelled','checkout'].includes(b.status)&&can('cancel_booking')?`<button class="ia ia-cancel" data-tip="إلغاء الحجز" onclick="cancelBk('${b._id}')"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></button>`:''}
+          <button class="ia" data-tip="ملخص الحجز" onclick="openBkContract('${b._id}')" style="color:#7c3aed;background:rgba(124,58,237,.07);border-color:rgba(124,58,237,.2);"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></button>
           <button class="ia ia-print" data-tip="طباعة فاتورة" onclick="printBkInvoice('${b._id}')"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg></button>
         </div>
       </td>
@@ -3339,6 +3340,153 @@ function renderBkRows(){
 
 let _bkTimer;
 function bkSearchDebounce(){ clearTimeout(_bkTimer); _bkTimer=setTimeout(loadBookings,300); }
+
+// ── ملخص الحجز (عقد إيجار) ───────────────────────────────
+function openBkContract(id){
+  const b=_bkData.find(x=>x._id===id);
+  if(!b){ toast('لم يتم العثور على الحجز'); return; }
+
+  const bkNum='#'+b._id.toString().slice(-5).toUpperCase();
+  const today=new Date().toLocaleDateString('ar-SA',{year:'numeric',month:'2-digit',day:'2-digit'});
+  const BK_TYPE={daily:'يومي',annual:'شهري',inquiry:'استفسار'};
+  const ID_TYPE={national_id:'بطاقة هوية وطنية',passport:'جواز سفر',iqama:'إقامة',family_card:'بطاقة عائلة'};
+  const fD=d=>d?new Date(d).toLocaleDateString('ar-SA',{year:'numeric',month:'2-digit',day:'2-digit',weekday:'long'}):'—';
+  const fN=n=>(n||0).toLocaleString('ar-SA');
+  const nights=b.nights||(b.checkIn&&b.checkOut?Math.round((new Date(b.checkOut)-new Date(b.checkIn))/(864e5)):0);
+  const remain=Math.max(0,(b.totalPrice||0)-(b.paidAmount||0));
+  const deposits=(b.payments||[]).filter(p=>p.isDeposit).reduce((s,p)=>s+(p.amount||0),0);
+  const priceLabel=b.bookingType==='daily'?'الإيجار اليومي':'الإيجار الشهري';
+  const durationLabel=b.bookingType==='daily'?`${nights} ليلة`:`${b.nights||nights} شهر`;
+
+  const companions=(b.companions||[]).filter(c=>c.name).map((c,i)=>
+    `<tr><td style="padding:5px 8px;border:1px solid #e2e8f0;">${i+1}</td><td style="padding:5px 8px;border:1px solid #e2e8f0;">${esc(c.name)}</td><td style="padding:5px 8px;border:1px solid #e2e8f0;">${esc(c.idType||'')}</td><td style="padding:5px 8px;border:1px solid #e2e8f0;">${esc(c.idNumber||'')}</td></tr>`
+  ).join('');
+
+  const terms = [
+    'بأمر من وزارة الداخلية يُمنع رهن أي مستندات رسمية.',
+    'على المستأجر مراعاة السلوك والآداب الإسلامية خلال فترة تواجده في الوحدة، وعدم السماح بإقامة أشخاص آخرين من غير المرافقين المسجّلين.',
+    'الرجاء المحافظة على النظام والآداب العامة.',
+    'في حالة الإخلال بالنظام، يحق للإدارة فسخ العقد دون إعادة المبلغ المدفوع.',
+    'في حالة الخروج خارج الوحدة، يُرجى التأكد من إغلاق الغاز والمكيفات والترشيد في استخدام الماء.',
+    'يمنع دخول الطيور والحيوانات منعًا باتًا.',
+    'لا يحق للمستأجر تحويل العقد أو تأجير الوحدة لشخص آخر.',
+    'في حالة رغبة المستأجر في تجديد المدة، عليه إشعار الاستقبال قبل انتهاء المدة بيوم كامل على الأقل.',
+    'يُعتبر العقد لاغيًا في حالة الإخلال بأي من الشروط المذكورة.',
+    'إدراج أسماء وأرقام هويات النزلاء المصاحبين بخط يده أسفل التوقيع.',
+  ].map((t,i)=>`<div style="padding:4px 0;font-size:11px;line-height:1.7;">${i+1}. ${t}</div>`).join('');
+
+  const w=window.open('','_blank','width=820,height=900,scrollbars=yes');
+  w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="utf-8">
+<title>ملخص الحجز ${bkNum}</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:Tahoma,Arial,'Segoe UI',sans-serif;direction:rtl;padding:20px;font-size:12px;color:#0f172a;background:#fff;}
+  .page{max-width:780px;margin:0 auto;}
+  .logo-bar{text-align:center;padding-bottom:14px;border-bottom:2px solid #1a3d8f;margin-bottom:14px;}
+  .logo-bar h1{font-size:22px;font-weight:900;color:#1a3d8f;}
+  .logo-bar p{font-size:11px;color:#475569;margin-top:3px;}
+  .doc-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+  .doc-title{font-size:20px;font-weight:900;color:#1a3d8f;border:2px solid #1a3d8f;padding:6px 20px;border-radius:6px;}
+  .doc-meta{font-size:11px;color:#475569;text-align:left;}
+  .doc-meta b{color:#0f172a;}
+  .section{border:1px solid #cbd5e1;border-radius:8px;margin-bottom:14px;overflow:hidden;}
+  .sec-hd{background:#1a3d8f;color:#fff;padding:7px 14px;font-weight:700;font-size:12px;}
+  .sec-body{padding:12px 14px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:0;}
+  .field{padding:6px 10px;border-bottom:1px solid #f1f5f9;}
+  .field:nth-child(odd){border-left:1px solid #f1f5f9;}
+  .field label{font-size:10px;color:#64748b;display:block;margin-bottom:2px;}
+  .field span{font-size:13px;font-weight:700;color:#0f172a;}
+  .terms-list{font-size:11px;color:#334155;line-height:1.8;}
+  .sig-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-top:20px;text-align:center;}
+  .sig-box{border-top:1.5px solid #94a3b8;padding-top:8px;}
+  .sig-box label{font-size:11px;color:#64748b;}
+  .companions table{width:100%;border-collapse:collapse;font-size:11px;}
+  .companions th{background:#f8fafc;padding:5px 8px;border:1px solid #e2e8f0;font-weight:700;}
+  .amount-row{display:flex;justify-content:space-between;padding:5px 10px;border-bottom:1px solid #f1f5f9;}
+  .amount-row.total{background:#f8fafc;font-weight:700;font-size:13px;}
+  .print-btn{position:fixed;top:14px;left:14px;padding:8px 18px;background:#1a3d8f;color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;}
+  @media print{.print-btn{display:none;}@page{size:A4;margin:12mm;}}
+</style>
+</head><body>
+<button class="print-btn" onclick="window.print()">🖨️ طباعة</button>
+<div class="page">
+
+  <!-- Header -->
+  <div class="logo-bar">
+    <h1>${esc(BUILDING)}</h1>
+    <p>عقد إيجار — رقم العقد: ${bkNum}</p>
+  </div>
+
+  <!-- Doc header -->
+  <div class="doc-header">
+    <div class="doc-title">عقد إيجار</div>
+    <div class="doc-meta">
+      التاريخ: <b>${today}</b><br>
+      رقم العقد: <b>${bkNum}</b>
+    </div>
+  </div>
+
+  <!-- العقد -->
+  <div class="section">
+    <div class="sec-hd">بيانات العقد</div>
+    <div class="sec-body">
+      <div class="grid2">
+        <div class="field"><label>تاريخ الدخول</label><span>${fD(b.checkIn)}</span></div>
+        <div class="field"><label>تاريخ الخروج</label><span>${fD(b.checkOut)}</span></div>
+        <div class="field"><label>نوع الإيجار</label><span>${BK_TYPE[b.bookingType]||b.bookingType}</span></div>
+        <div class="field"><label>الشقة</label><span>${esc(b.apt||'—')}</span></div>
+        <div class="field"><label>${priceLabel}</label><span>${fN(b.pricePerNight||b.pricePerMonth)} ﷼</span></div>
+        <div class="field"><label>المدة</label><span>${durationLabel}</span></div>
+      </div>
+      <div style="margin-top:10px;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;">
+        <div class="amount-row"><span>الإجمالي</span><b>${fN(b.totalPrice)} ﷼</b></div>
+        <div class="amount-row"><span>الخصم</span><b>0 ﷼</b></div>
+        <div class="amount-row"><span>المدفوع</span><b style="color:#047857;">${fN(b.paidAmount)} ﷼</b></div>
+        <div class="amount-row"><span>التأمين</span><b style="color:#b45309;">${fN(deposits)} ﷼</b></div>
+        <div class="amount-row total"><span>الرصيد المتبقي</span><b style="color:${remain>0?'#dc2626':'#047857'};">${remain>0?fN(remain)+' ﷼':'مسدّد ✓'}</b></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- العميل -->
+  <div class="section">
+    <div class="sec-hd">بيانات العميل</div>
+    <div class="sec-body">
+      <div class="grid2">
+        <div class="field"><label>اسم العميل</label><span>${esc(b.name||'—')}</span></div>
+        <div class="field"><label>الجوال</label><span>${esc(b.phone||'—')}</span></div>
+        <div class="field"><label>نوع الإثبات</label><span>${ID_TYPE[b.idType]||b.idType||'—'}</span></div>
+        <div class="field"><label>رقم الإثبات</label><span>${esc(b.idNumber||'—')}</span></div>
+        <div class="field"><label>الجنسية</label><span>—</span></div>
+        <div class="field"><label>المصدر</label><span>${esc(b.source||'—')}</span></div>
+      </div>
+      ${companions?`<div class="companions" style="margin-top:12px;">
+        <div style="font-size:11px;font-weight:700;color:#475569;margin-bottom:6px;">المرافقون (${b.companions.filter(c=>c.name).length})</div>
+        <table><thead><tr><th>#</th><th>الاسم</th><th>نوع الهوية</th><th>رقم الهوية</th></tr></thead>
+        <tbody>${companions}</tbody></table>
+      </div>`:''}
+      ${b.notes?`<div style="margin-top:10px;padding:8px 12px;background:#f8fafc;border-radius:6px;font-size:11px;color:#475569;"><b>ملاحظات:</b> ${esc(b.notes)}</div>`:''}
+    </div>
+  </div>
+
+  <!-- الشروط -->
+  <div class="section">
+    <div class="sec-hd">الشروط والأحكام</div>
+    <div class="sec-body terms-list">${terms}</div>
+  </div>
+
+  <!-- التوقيع -->
+  <div class="sig-row">
+    <div class="sig-box"><label>توقيع المستأجر</label></div>
+    <div class="sig-box"><label>توقيع المسؤول</label></div>
+    <div class="sig-box"><label>التاريخ والوقت<br><span style="font-size:10px;color:#64748b;">${today}</span></label></div>
+  </div>
+
+</div>
+</body></html>`);
+  w.document.close();
+}
 
 async function loadBookings(){
   const sf          = document.getElementById('bk-status-filter')?.value||'open';
