@@ -720,6 +720,7 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
     <div class="sn" onclick="goTab('activity',this)" id="sn-activity" style="display:<%= P.includes('activity')?'flex':'none' %>"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span><span class="sn-lbl">سجل الحركات</span></div>
     <div class="sn" onclick="goTab('vouchers',this)" id="sn-vouchers" style="display:<%= P.includes('vouchers')?'flex':'none' %>"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></span><span class="sn-lbl">السندات والفواتير</span></div>
     <div class="sn" onclick="goTab('analytics',this)" id="sn-analytics" style="display:<%= staff.role==='manager'?'flex':'none' %>"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="18" y="3" width="4" height="18"/><rect x="10" y="8" width="4" height="13"/><rect x="2" y="13" width="4" height="8"/></svg></span><span class="sn-lbl">التحليلات</span></div>
+    <div class="sn" onclick="goTab('maintenance',this)" id="sn-maintenance" style="display:<%= (staff.role==='manager'||(staff.permissions||[]).includes('maintenance'))?'flex':'none' %>"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></span><span class="sn-lbl">طلبات الصيانة</span></div>
     <div class="sn" onclick="goTab('receipts',this)" id="sn-receipts" style="display:<%= staff.role==='manager'?'flex':'none' %>"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span><span class="sn-lbl">إيصالات الدفع</span></div>
     <div class="sn" onclick="goTab('reports',this)" id="sn-reports"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></span><span class="sn-lbl">التقارير</span></div>
     <div class="sn" onclick="goTab('calendar',this)" id="sn-calendar" style="display:<%= P.includes('reports')?'flex':'none' %>"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/></svg></span><span class="sn-lbl">التقويم</span></div>
@@ -1234,6 +1235,42 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
       </div>
       <div id="rec-stats-row" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;"></div>
       <div id="rec-grid"></div>
+    </div>
+
+    <!-- ── Maintenance ── -->
+    <div class="tab-section" id="tab-maintenance">
+      <!-- Header -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+        <div>
+          <div style="font-size:15px;font-weight:700;color:var(--t1);">🔧 طلبات الصيانة</div>
+          <div style="font-size:11px;color:var(--t4);margin-top:2px;" id="maint-count-lbl">—</div>
+        </div>
+        <button class="sbtn" onclick="openMaintModal('')">+ طلب صيانة جديد</button>
+      </div>
+
+      <!-- Filters -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center;">
+        <select id="mf-status" onchange="loadMaintenance()" style="padding:7px 12px;border:1.5px solid var(--border);border-radius:9px;background:var(--surface);color:var(--t2);font-family:inherit;font-size:12px;outline:none;">
+          <option value="all">كل الحالات</option>
+          <option value="new">جديد</option>
+          <option value="in_progress">قيد التنفيذ</option>
+          <option value="done">منتهي</option>
+        </select>
+        <select id="mf-priority" onchange="loadMaintenance()" style="padding:7px 12px;border:1.5px solid var(--border);border-radius:9px;background:var(--surface);color:var(--t2);font-family:inherit;font-size:12px;outline:none;">
+          <option value="all">كل الأولويات</option>
+          <option value="urgent">🔴 عاجل</option>
+          <option value="medium">🟡 متوسط</option>
+          <option value="normal">🟢 عادي</option>
+        </select>
+        <input id="mf-apt" type="text" placeholder="رقم الشقة..." onchange="loadMaintenance()" style="width:110px;padding:7px 12px;border:1.5px solid var(--border);border-radius:9px;background:var(--surface);color:var(--t1);font-family:inherit;font-size:12px;outline:none;">
+        <button onclick="loadMaintenance()" style="padding:7px 14px;border:1.5px solid var(--border);border-radius:9px;background:var(--surface);color:var(--t2);font-family:inherit;font-size:12px;cursor:pointer;">↺ تحديث</button>
+      </div>
+
+      <!-- Stats row -->
+      <div id="maint-stats-row" style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;"></div>
+
+      <!-- List -->
+      <div id="maint-list" style="display:flex;flex-direction:column;gap:10px;"></div>
     </div>
 
     <!-- ── Reports ── -->
@@ -2092,11 +2129,11 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
                 <span id="receipt-optional-lbl" style="font-size:10px;color:#dc2626;font-weight:600;">* إلزامي لجميع طرق الدفع</span>
               </div>
             </div>
-            <input type="file" id="receipt-file" accept="image/*" capture="environment" style="display:none;" onchange="onReceiptFile(this)">
-            <div id="receipt-upload-area" onclick="document.getElementById('receipt-file').click()" style="border:2px dashed #93c5fd;border-radius:10px;padding:18px;text-align:center;cursor:pointer;transition:border-color .2s;" onmouseenter="this.style.borderColor='#3b82f6'" onmouseleave="this.style.borderColor='#93c5fd'">
+            <input type="file" id="receipt-file-gallery" accept="image/*" style="display:none;" onchange="onReceiptFile(this)">
+            <div id="receipt-upload-area" onclick="document.getElementById('receipt-file-gallery').click()" style="border:2px dashed #93c5fd;border-radius:10px;padding:18px;text-align:center;cursor:pointer;transition:border-color .2s;" onmouseenter="this.style.borderColor='#3b82f6'" onmouseleave="this.style.borderColor='#93c5fd'">
               <div style="font-size:26px;margin-bottom:5px;">📷</div>
               <div style="font-size:12px;font-weight:600;color:#0369a1;">اضغط لتصوير أو رفع صورة الإيصال</div>
-              <div style="font-size:10px;color:#94a3b8;margin-top:3px;">JPEG • PNG • يدعم التصوير المباشر</div>
+              <div style="font-size:10px;color:#94a3b8;margin-top:3px;">JPEG • PNG • تصوير مباشر أو من الألبوم</div>
             </div>
             <div id="receipt-preview-wrap" style="display:none;margin-top:10px;">
               <div style="display:flex;gap:10px;align-items:flex-start;">
@@ -2190,6 +2227,100 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
 </div>
 
 <div id="toast"></div>
+<!-- ── مودال طلب الصيانة ── -->
+<div id="maint-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:3000;align-items:center;justify-content:center;padding:16px;" onclick="if(event.target===this)closeMaintModal()">
+  <div style="background:var(--surface);border-radius:18px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);" onclick="event.stopPropagation()">
+    <div style="padding:18px 20px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+      <div style="font-size:15px;font-weight:700;color:var(--t1);">🔧 إبلاغ عن عطل</div>
+      <button onclick="closeMaintModal()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--t3);padding:4px 8px;">×</button>
+    </div>
+    <div style="padding:18px 20px;display:flex;flex-direction:column;gap:14px;">
+      <!-- شقة -->
+      <div>
+        <label style="font-size:11px;font-weight:700;color:var(--t3);display:block;margin-bottom:5px;">رقم الشقة *</label>
+        <input id="maint-apt" type="text" placeholder="مثال: 101" style="width:100%;box-sizing:border-box;padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;outline:none;background:var(--bg);color:var(--t1);">
+      </div>
+
+      <!-- صورة العطل -->
+      <div>
+        <label style="font-size:11px;font-weight:700;color:var(--t3);display:block;margin-bottom:5px;">صورة العطل</label>
+        <input type="file" id="maint-file" accept="image/*" style="display:none;" onchange="onMaintFile(this)">
+        <div id="maint-upload-area" onclick="document.getElementById('maint-file').click()" style="border:2px dashed #93c5fd;border-radius:10px;padding:16px;text-align:center;cursor:pointer;transition:border-color .2s;" onmouseenter="this.style.borderColor='#3b82f6'" onmouseleave="this.style.borderColor='#93c5fd'">
+          <div style="font-size:22px;margin-bottom:4px;">📷</div>
+          <div style="font-size:12px;font-weight:600;color:#0369a1;">تصوير أو رفع صورة</div>
+          <div style="font-size:10px;color:#94a3b8;margin-top:2px;">من الألبوم أو الكاميرا</div>
+        </div>
+        <div id="maint-preview-wrap" style="display:none;margin-top:10px;display:none;gap:10px;align-items:flex-start;">
+          <div style="position:relative;flex-shrink:0;">
+            <img id="maint-preview-img" src="" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:2px solid #bae6fd;cursor:pointer;display:block;" onclick="openMaintFullscreen()" title="تكبير">
+            <div onclick="resetMaintImage()" style="position:absolute;top:-6px;left:-6px;width:18px;height:18px;background:#dc2626;border-radius:50%;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;">×</div>
+          </div>
+          <div id="maint-ai-box" style="flex:1;">
+            <div id="maint-analyzing" style="font-size:12px;color:#0369a1;font-weight:600;">⏳ جاري تحليل الصورة...</div>
+            <div id="maint-ai-result" style="display:none;font-size:11px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:7px 10px;color:#0369a1;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- نوع العطل -->
+      <div>
+        <label style="font-size:11px;font-weight:700;color:var(--t3);display:block;margin-bottom:5px;">نوع العطل</label>
+        <select id="maint-type" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;outline:none;background:var(--bg);color:var(--t1);">
+          <option value="electrical">⚡ كهرباء</option>
+          <option value="plumbing">🚿 سباكة</option>
+          <option value="furniture">🪑 أثاث</option>
+          <option value="ac">❄️ تكييف</option>
+          <option value="internet">📶 إنترنت</option>
+          <option value="other">🔧 أخرى</option>
+        </select>
+      </div>
+
+      <!-- وصف المشكلة -->
+      <div>
+        <label style="font-size:11px;font-weight:700;color:var(--t3);display:block;margin-bottom:5px;">وصف المشكلة *</label>
+        <textarea id="maint-desc" rows="3" placeholder="اكتب وصفاً مختصراً للعطل..." style="width:100%;box-sizing:border-box;padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;outline:none;resize:vertical;background:var(--bg);color:var(--t1);"></textarea>
+      </div>
+
+      <!-- الأولوية -->
+      <div>
+        <label style="font-size:11px;font-weight:700;color:var(--t3);display:block;margin-bottom:8px;">الأولوية</label>
+        <div style="display:flex;gap:8px;">
+          <label id="mp-urgent-lbl" style="flex:1;padding:9px;border:2px solid #fca5a5;border-radius:10px;text-align:center;cursor:pointer;background:#fff5f5;font-size:12px;font-weight:700;color:#dc2626;transition:all .15s;">
+            <input type="radio" name="maint-priority" value="urgent" style="display:none;" onchange="highlightPriority('urgent')"> 🔴 عاجل
+          </label>
+          <label id="mp-medium-lbl" style="flex:1;padding:9px;border:2px solid #fde68a;border-radius:10px;text-align:center;cursor:pointer;background:#fffbeb;font-size:12px;font-weight:700;color:#b45309;transition:all .15s;">
+            <input type="radio" name="maint-priority" value="medium" style="display:none;" onchange="highlightPriority('medium')"> 🟡 متوسط
+          </label>
+          <label id="mp-normal-lbl" style="flex:1;padding:9px;border:2px solid #bbf7d0;border-radius:10px;text-align:center;cursor:pointer;background:#f0fdf4;font-size:12px;font-weight:700;color:#15803d;transition:all .15s;">
+            <input type="radio" name="maint-priority" value="normal" style="display:none;" onchange="highlightPriority('normal')" checked> 🟢 عادي
+          </label>
+        </div>
+      </div>
+
+      <!-- ملاحظات -->
+      <div>
+        <label style="font-size:11px;font-weight:700;color:var(--t3);display:block;margin-bottom:5px;">ملاحظات إضافية</label>
+        <input id="maint-notes" type="text" placeholder="اختياري..." style="width:100%;box-sizing:border-box;padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;outline:none;background:var(--bg);color:var(--t1);">
+      </div>
+
+      <!-- Error -->
+      <div id="maint-err" style="display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:9px 12px;font-size:12px;color:#b91c1c;font-weight:600;"></div>
+
+      <!-- Buttons -->
+      <div style="display:flex;gap:10px;margin-top:4px;">
+        <button onclick="closeMaintModal()" style="flex:1;padding:11px;border:1.5px solid var(--border);border-radius:10px;background:var(--surface);color:var(--t2);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;">إلغاء</button>
+        <button onclick="submitMaintRequest()" id="maint-submit-btn" style="flex:2;padding:11px;border:none;border-radius:10px;background:var(--brand);color:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;">إرسال الطلب</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Maintenance image fullscreen -->
+<div id="maint-fullscreen" onclick="this.style.display='none'" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9998;align-items:center;justify-content:center;flex-direction:column;">
+  <img id="maint-fullscreen-img" src="" style="max-width:92vw;max-height:88vh;object-fit:contain;border-radius:10px;">
+  <div style="color:rgba(255,255,255,.5);font-size:12px;margin-top:10px;">اضغط في أي مكان للإغلاق</div>
+</div>
+
 <!-- Receipt fullscreen overlay -->
 <div id="receipt-fullscreen" onclick="this.style.display='none'" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;align-items:center;justify-content:center;flex-direction:column;">
   <img id="receipt-fullscreen-img" src="" style="max-width:92vw;max-height:88vh;object-fit:contain;border-radius:10px;">
@@ -2223,6 +2354,7 @@ const STAFF_ROLE = '<%= staff.role %>';
 const isManager = STAFF_ROLE === 'manager';
 const PERMS = <%- JSON.stringify(staff.permissions && staff.permissions.length ? staff.permissions : ['dashboard','apartments','bookings','customers','housekeeping','activity','new_booking','edit_booking','cancel_booking','vouchers']) %>;
 const can = p => PERMS.includes(p);
+const canMaintenance = () => isManager || PERMS.includes('maintenance');
 let aptsFilter='all', aptsRawData=null, roomInfoMap={};
 let weeklyChartInst=null, donutChartInst=null, hkDonutInst=null;
 let hkCurrentApt=null;
@@ -2310,7 +2442,7 @@ function goTab(id, el){
   tab.classList.add('active');
   el.classList.add('active');
   if(window.innerWidth < 768) closeSidebar();
-  const labels={dashboard:'لوحة المعلومات',apartments:'الشقق والتسكين',bookings:'الحجوزات',customers:'العملاء',housekeeping:'خدمة الغرف',activity:'سجل الحركات',vouchers:'السندات والفواتير',reports:'التقارير والإحصاءات',calendar:'التقويم الشهري',channels:'إدارة قنوات الحجز',analytics:'التحليلات',settings:'إعدادات المبنى',receipts:'إيصالات الدفع'};
+  const labels={dashboard:'لوحة المعلومات',apartments:'الشقق والتسكين',bookings:'الحجوزات',customers:'العملاء',housekeeping:'خدمة الغرف',activity:'سجل الحركات',vouchers:'السندات والفواتير',reports:'التقارير والإحصاءات',calendar:'التقويم الشهري',channels:'إدارة قنوات الحجز',analytics:'التحليلات',settings:'إعدادات المبنى',receipts:'إيصالات الدفع',maintenance:'طلبات الصيانة'};
   document.getElementById('tbTitle').innerHTML=`${esc(BUILDING)} — <span>${labels[id]||id}</span>`;
   if(id==='apartments') loadApartments();
   if(id==='bookings')   loadBookings();
@@ -2329,8 +2461,9 @@ function goTab(id, el){
     } else { loadReports(); loadYearlyChart(); cfInitDates(); initOccAptDropdown(); }
   }
   if(id==='analytics')  loadAnalytics();
-  if(id==='receipts')   loadReceipts();
-  if(id==='calendar')   loadCalendar();
+  if(id==='receipts')     loadReceipts();
+  if(id==='maintenance')  loadMaintenance();
+  if(id==='calendar')     loadCalendar();
   if(id==='settings')   loadSettings();
   if(id==='channels')   loadChannels();
 }
@@ -2883,6 +3016,7 @@ function renderAptGrid(){
       const rt=dbInfo?.roomType||fbInfo?.t||'';
       const bd=dbInfo?.beds||fbInfo?.b||'';
       const editBtn=can('edit_room_info')?`<div onclick="event.stopPropagation();openRoomInfoModal('${r.apt}','${esc(rt)}','${esc(bd)}')" style="position:absolute;top:4px;left:4px;width:15px;height:15px;background:rgba(255,255,255,.2);border-radius:4px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:8px;" title="تعديل">✏️</div>`:'';
+      const maintBtn=canMaintenance()?`<div onclick="event.stopPropagation();openMaintModal('${r.apt}')" style="position:absolute;bottom:4px;left:4px;width:17px;height:17px;background:rgba(220,38,38,.15);border-radius:4px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:10px;" title="إبلاغ عن عطل">🔧</div>`:'';
       let nightsHtml='';
       if(r.checkOut&&['occupied','checkout_today'].includes(r.status)){
         const co=new Date(r.checkOut); co.setHours(0,0,0,0);
@@ -2890,7 +3024,7 @@ function renderAptGrid(){
         nightsHtml=days<=0?`<div class="apt-nights">خروج اليوم</div>`:days===1?`<div class="apt-nights">غداً</div>`:`<div class="apt-nights">${days} يوم</div>`;
       }
       html+=`<div class="apt ${s.cls} ${hkClass}" onclick="openBkModal('${r.bookingId||''}','${r.apt}','${r.status}')">
-        ${editBtn}
+        ${editBtn}${maintBtn}
         <div class="apt-n">${esc(r.apt)}</div>
         ${rt?`<div class="apt-type">${esc(rt)}${bd?' · '+esc(bd)+' سرير':''}</div>`:''}
         <div class="apt-s">${s.lbl}</div>
@@ -4255,13 +4389,210 @@ function calcNbRemain(){
   document.getElementById('nb-remain').style.color=remain>0?'#dc2626':'#16a34a';
 }
 
+// ── Maintenance ──────────────────────────────────────────────────────────────
+let _maintBase64=null, _maintMime=null;
+
+const MAINT_TYPE_AR  = {electrical:'⚡ كهرباء',plumbing:'🚿 سباكة',furniture:'🪑 أثاث',ac:'❄️ تكييف',internet:'📶 إنترنت',other:'🔧 أخرى'};
+const MAINT_PRI_AR   = {urgent:'🔴 عاجل',medium:'🟡 متوسط',normal:'🟢 عادي'};
+const MAINT_PRI_CLR  = {urgent:'#dc2626',medium:'#b45309',normal:'#15803d'};
+const MAINT_PRI_BG   = {urgent:'#fef2f2',medium:'#fffbeb',normal:'#f0fdf4'};
+const MAINT_STA_AR   = {new:'جديد',in_progress:'قيد التنفيذ',done:'منتهي'};
+const MAINT_STA_CLR  = {new:'#1d4ed8',in_progress:'#b45309',done:'#15803d'};
+const MAINT_STA_BG   = {new:'#eff6ff',in_progress:'#fffbeb',done:'#f0fdf4'};
+
+function openMaintModal(apt){
+  if(!canMaintenance()){ toast('ليس لديك صلاحية','error'); return; }
+  document.getElementById('maint-apt').value = apt||'';
+  document.getElementById('maint-type').value = 'other';
+  document.getElementById('maint-desc').value = '';
+  document.getElementById('maint-notes').value = '';
+  document.querySelector('input[name="maint-priority"][value="normal"]').checked=true;
+  highlightPriority('normal');
+  resetMaintImage();
+  document.getElementById('maint-err').style.display='none';
+  document.getElementById('maint-modal').style.display='flex';
+}
+function closeMaintModal(){ document.getElementById('maint-modal').style.display='none'; }
+
+function highlightPriority(val){
+  const styles={
+    urgent:{border:'2px solid #fca5a5',background:'rgba(220,38,38,.18)'},
+    medium:{border:'2px solid #fde68a',background:'rgba(180,83,9,.12)'},
+    normal:{border:'2px solid #bbf7d0',background:'rgba(21,128,61,.12)'},
+  };
+  const def={
+    urgent:{border:'2px solid #fca5a5',background:'#fff5f5'},
+    medium:{border:'2px solid #fde68a',background:'#fffbeb'},
+    normal:{border:'2px solid #bbf7d0',background:'#f0fdf4'},
+  };
+  ['urgent','medium','normal'].forEach(p=>{
+    const lbl=document.getElementById(`mp-${p}-lbl`);
+    if(!lbl) return;
+    const s = p===val ? styles[p] : def[p];
+    lbl.style.border=s.border; lbl.style.background=s.background;
+    lbl.style.boxShadow= p===val ? '0 0 0 2px rgba(0,0,0,.15)' : '';
+  });
+}
+
+function resetMaintImage(){
+  _maintBase64=null; _maintMime=null;
+  const fi=document.getElementById('maint-file'); if(fi) fi.value='';
+  document.getElementById('maint-preview-wrap').style.display='none';
+  document.getElementById('maint-upload-area').style.display='block';
+}
+
+async function onMaintFile(input){
+  const file=input.files[0]; if(!file) return;
+  const dataUrl = await compressImg(file, 900, 0.82);
+  _maintBase64 = dataUrl.split(',')[1];
+  _maintMime = 'image/jpeg';
+  const pw=document.getElementById('maint-preview-wrap');
+  document.getElementById('maint-preview-img').src=dataUrl;
+  pw.style.display='flex';
+  document.getElementById('maint-upload-area').style.display='none';
+  // تحليل AI
+  document.getElementById('maint-analyzing').style.display='block';
+  document.getElementById('maint-ai-result').style.display='none';
+  try {
+    const r=await fetch('/staff/api/maintenance/analyze',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({imageBase64:_maintBase64, mimeType:_maintMime}),
+    });
+    const d=await r.json();
+    if(d.type)        document.getElementById('maint-type').value=d.type;
+    if(d.description) document.getElementById('maint-desc').value=d.description;
+    if(d.priority){
+      document.querySelector(`input[name="maint-priority"][value="${d.priority}"]`).checked=true;
+      highlightPriority(d.priority);
+    }
+    document.getElementById('maint-ai-result').style.display='block';
+    document.getElementById('maint-ai-result').textContent=`✓ تم التعرف تلقائياً — راجع البيانات وعدّل إن لزم`;
+  } catch(_){
+    document.getElementById('maint-ai-result').style.display='block';
+    document.getElementById('maint-ai-result').textContent='⚠️ لم يتمكن الذكاء الاصطناعي من تحليل الصورة — أكمل البيانات يدوياً';
+    document.getElementById('maint-ai-result').style.background='#fef9c3';
+    document.getElementById('maint-ai-result').style.borderColor='#fde047';
+    document.getElementById('maint-ai-result').style.color='#713f12';
+  }
+  document.getElementById('maint-analyzing').style.display='none';
+}
+
+function openMaintFullscreen(){
+  const el=document.getElementById('maint-fullscreen');
+  document.getElementById('maint-fullscreen-img').src=document.getElementById('maint-preview-img').src;
+  el.style.display='flex';
+}
+
+async function submitMaintRequest(){
+  const apt=document.getElementById('maint-apt').value.trim();
+  const desc=document.getElementById('maint-desc').value.trim();
+  const errEl=document.getElementById('maint-err');
+  errEl.style.display='none';
+  if(!apt){ errEl.textContent='رقم الشقة مطلوب'; errEl.style.display='block'; return; }
+  if(!desc){ errEl.textContent='وصف المشكلة مطلوب'; errEl.style.display='block'; return; }
+
+  const btn=document.getElementById('maint-submit-btn');
+  btn.disabled=true; btn.textContent='⏳ جاري الإرسال...';
+  try {
+    const priority=document.querySelector('input[name="maint-priority"]:checked')?.value||'normal';
+    const r=await fetch('/staff/api/maintenance',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        apt,
+        type:        document.getElementById('maint-type').value,
+        description: desc,
+        priority,
+        imageBase64:  _maintBase64||null,
+        imageMimeType:_maintMime||null,
+        notes:       document.getElementById('maint-notes').value.trim(),
+      }),
+    });
+    const d=await r.json();
+    if(!r.ok) throw new Error(d.error||'فشل الإرسال');
+    closeMaintModal();
+    toast('تم إرسال طلب الصيانة بنجاح ✓','success');
+    loadMaintenance();
+  } catch(e){
+    errEl.textContent=e.message; errEl.style.display='block';
+  } finally {
+    btn.disabled=false; btn.textContent='إرسال الطلب';
+  }
+}
+
+async function loadMaintenance(){
+  if(!canMaintenance()) return;
+  const status   = document.getElementById('mf-status')?.value   || 'all';
+  const priority = document.getElementById('mf-priority')?.value || 'all';
+  const apt      = document.getElementById('mf-apt')?.value.trim() || '';
+  const params   = new URLSearchParams();
+  if(status   !== 'all') params.set('status',   status);
+  if(priority !== 'all') params.set('priority',  priority);
+  if(apt)                params.set('apt',        apt);
+  const r=await fetch('/staff/api/maintenance?'+params);
+  const list=await r.json();
+  renderMaintenanceList(list);
+}
+
+function renderMaintenanceList(list){
+  const el=document.getElementById('maint-list');
+  const statsEl=document.getElementById('maint-stats-row');
+  const countEl=document.getElementById('maint-count-lbl');
+  if(!el) return;
+
+  // stats
+  const tot=list.length, urg=list.filter(x=>x.priority==='urgent').length;
+  const inP=list.filter(x=>x.status==='in_progress').length, done=list.filter(x=>x.status==='done').length;
+  countEl.textContent=`${tot} طلب${urg?' — '+urg+' عاجل':''}`;
+  const mkStat=(label,val,clr)=>`<div style="flex:1;min-width:80px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 14px;text-align:center;"><div style="font-size:18px;font-weight:800;color:${clr};">${val}</div><div style="font-size:11px;color:var(--t4);margin-top:2px;">${label}</div></div>`;
+  statsEl.innerHTML=mkStat('إجمالي',tot,'var(--brand)')+mkStat('عاجل',urg,'#dc2626')+mkStat('قيد التنفيذ',inP,'#b45309')+mkStat('منتهي',done,'#15803d');
+
+  if(!list.length){ el.innerHTML='<div style="padding:40px;text-align:center;color:var(--t4);font-size:13px;">لا توجد طلبات صيانة</div>'; return; }
+
+  el.innerHTML=list.map(m=>{
+    const priBg=MAINT_PRI_BG[m.priority]||'#f8fafc';
+    const priClr=MAINT_PRI_CLR[m.priority]||'#64748b';
+    const staBg=MAINT_STA_BG[m.status]||'#f8fafc';
+    const staClr=MAINT_STA_CLR[m.status]||'#64748b';
+    const imgHtml=m.imageUrl?`<img src="${esc(m.imageUrl)}" style="width:70px;height:70px;object-fit:cover;border-radius:8px;border:1.5px solid var(--border);cursor:pointer;flex-shrink:0;" onclick="document.getElementById('maint-fullscreen-img').src=this.src;document.getElementById('maint-fullscreen').style.display='flex'" onerror="this.style.display='none'">`:'';
+    const assignOpts=['','...'].concat([]).join('');
+    return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;">
+      <div style="display:flex;gap:12px;padding:14px 16px;align-items:flex-start;">
+        ${imgHtml}
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px;">
+            <span style="font-size:14px;font-weight:800;color:var(--t1);">شقة ${esc(m.apt)}</span>
+            <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:${priBg};color:${priClr};">${MAINT_PRI_AR[m.priority]||m.priority}</span>
+            <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:${staBg};color:${staClr};">${MAINT_STA_AR[m.status]||m.status}</span>
+            <span style="font-size:11px;color:var(--t4);">${MAINT_TYPE_AR[m.type]||m.type}</span>
+          </div>
+          <div style="font-size:13px;color:var(--t2);margin-bottom:6px;">${esc(m.description)}</div>
+          ${m.notes?`<div style="font-size:11px;color:var(--t4);margin-bottom:4px;">📝 ${esc(m.notes)}</div>`:''}
+          <div style="font-size:10px;color:var(--t4);">أبلغ: <strong>${esc(m.reportedBy)}</strong>${m.assignedTo?' · مسؤول: <strong>'+esc(m.assignedTo)+'</strong>':''} · ${new Date(m.createdAt).toLocaleDateString('ar-SA')}</div>
+        </div>
+      </div>
+      <div style="border-top:1px solid var(--border);padding:10px 16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:var(--bg);">
+        <span style="font-size:11px;color:var(--t4);font-weight:600;margin-left:auto;">تغيير الحالة:</span>
+        ${['new','in_progress','done'].map(s=>`<button onclick="updMaint('${m._id}','status','${s}')" style="padding:5px 12px;border:1.5px solid ${s===m.status?MAINT_STA_CLR[s]:'var(--border)'};background:${s===m.status?MAINT_STA_BG[s]:'var(--surface)'};color:${s===m.status?MAINT_STA_CLR[s]:'var(--t3)'};border-radius:8px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">${MAINT_STA_AR[s]}</button>`).join('')}
+        ${isManager?`<input type="text" placeholder="تعيين لـ..." value="${esc(m.assignedTo||'')}" onblur="updMaint('${m._id}','assignedTo',this.value)" style="padding:5px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:11px;outline:none;background:var(--surface);color:var(--t2);width:120px;">`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function updMaint(id, field, value){
+  const body={};
+  body[field]=value;
+  const r=await fetch(`/staff/api/maintenance/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  if(r.ok){ toast('تم التحديث','success'); loadMaintenance(); }
+  else toast('فشل التحديث','error');
+}
+
 // ── Receipt AI ───────────────────────────────────────────────────────────────
 let _receiptBase64=null, _receiptMime=null, _receiptAnalysis=null, _receiptAccepted=false;
 
 function resetReceiptUI(){
   _receiptBase64=null; _receiptMime=null; _receiptAnalysis=null; _receiptAccepted=false;
-  const fi=document.getElementById('receipt-file');
-  if(fi) fi.value='';
+  const fi=document.getElementById('receipt-file-gallery'); if(fi) fi.value='';
   const pw=document.getElementById('receipt-preview-wrap');
   if(pw) pw.style.display='none';
   const ua=document.getElementById('receipt-upload-area');
@@ -4345,18 +4676,24 @@ function showReceiptResult(a, payMethod, expectedPaid){
   if(isCash){
     const cashEl=document.getElementById('receipt-cash-result');
     const cashTotal=a.cashTotal;
+    const bills=a.bills||[];
+    const billsHtml=bills.length
+      ? '<div style="margin-top:6px;font-size:12px;display:flex;flex-wrap:wrap;gap:6px;">'
+        + bills.map(b=>`<span style="background:rgba(0,0,0,.08);padding:2px 8px;border-radius:12px;">${b.denomination} × ${b.count} = ${(b.denomination*b.count).toLocaleString('ar-SA')}</span>`).join('')
+        + '</div>'
+      : '';
     if(cashTotal===null||cashTotal===undefined){
       cashEl.style.background='#fef3c7'; cashEl.style.border='1px solid #fcd34d'; cashEl.style.color='#92400e';
-      cashEl.innerHTML='⚠️ لم يتم التعرف على العملات في الصورة. تأكد من وضوح الصورة.';
+      cashEl.innerHTML='⚠️ لم يتم التعرف على العملات في الصورة. تأكد من وضوح الصورة وأن الأوراق النقدية واضحة.';
     } else if(a.cashMatchesPaid===true){
       cashEl.style.background='#d1fae5'; cashEl.style.border='1px solid #6ee7b7'; cashEl.style.color='#065f46';
-      cashEl.innerHTML=`✓ المبلغ النقدي <strong>${cashTotal.toLocaleString('ar-SA')} ريال</strong> يطابق المبلغ المدفوع`;
+      cashEl.innerHTML=`✓ المبلغ النقدي <strong>${cashTotal.toLocaleString('ar-SA')} ريال</strong> يطابق المبلغ المدفوع`+billsHtml;
     } else if(a.cashMatchesPaid===false){
       cashEl.style.background='#fee2e2'; cashEl.style.border='1px solid #fca5a5'; cashEl.style.color='#991b1b';
-      cashEl.innerHTML=`⚠️ المبلغ النقدي المتعرف عليه <strong>${cashTotal.toLocaleString('ar-SA')} ريال</strong> لا يطابق المدفوع <strong>${expectedPaid.toLocaleString('ar-SA')} ريال</strong>`;
+      cashEl.innerHTML=`⚠️ المبلغ النقدي المتعرف عليه <strong>${cashTotal.toLocaleString('ar-SA')} ريال</strong> لا يطابق المدفوع <strong>${expectedPaid.toLocaleString('ar-SA')} ريال</strong>`+billsHtml;
     } else {
       cashEl.style.background='#f0f9ff'; cashEl.style.border='1px solid #bae6fd'; cashEl.style.color='#0369a1';
-      cashEl.innerHTML=`تم التعرف على مبلغ نقدي: <strong>${cashTotal.toLocaleString('ar-SA')} ريال</strong>`;
+      cashEl.innerHTML=`تم التعرف على مبلغ نقدي: <strong>${cashTotal.toLocaleString('ar-SA')} ريال</strong>`+billsHtml;
     }
     cashEl.style.display='block';
     document.getElementById('ra-type').textContent='نقداً';

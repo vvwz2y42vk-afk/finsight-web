@@ -83,7 +83,11 @@ function reqStaff(req,res,next){
   }
   next();
 }
-const DEFAULT_PERMS=['dashboard','apartments','bookings','customers','housekeeping','activity','new_booking','edit_booking','cancel_booking','vouchers','reports','guests'];
+const DEFAULT_PERMS=['dashboard','apartments','bookings','customers','housekeeping','activity','new_booking','edit_booking','cancel_booking','vouchers','reports','guests','maintenance'];
+
+function hasMaintenance(req) {
+  return req.staff.role === 'manager' || (req.staff.permissions || []).includes('maintenance');
+}
 
 function buildBookingFilter(staff, { sf='open', apt='', booking_type='', date_from='', date_to='' }) {
   const today = new Date(); today.setHours(0,0,0,0);
@@ -2648,15 +2652,34 @@ router.post('/api/receipts/analyze', reqStaff, async (req, res) => {
     const isCash = payMethod === 'cash';
 
     const prompt = isCash
-      ? `هذه صورة لعملات ورقية سعودية (ريالات). حدد القطع الموجودة في الصورة وأحسب المجموع.
-أجب بـ JSON فقط بدون أي نص خارجه:
+      ? `You are analyzing an image of Saudi Riyal (SAR) banknotes. Count every visible bill carefully.
+
+Saudi Riyal denominations to look for:
+- 500 SAR (خمسمائة ريال) — purple/dark violet color
+- 200 SAR (مئتا ريال) — dark green/brown color
+- 100 SAR (مائة ريال) — blue/teal color
+- 50 SAR (خمسون ريالاً) — green color
+- 20 SAR (عشرون ريالاً) — orange/yellow color
+- 10 SAR (عشرة ريالات) — brown/olive color
+- 5 SAR (خمسة ريالات) — brown color
+- 1 SAR (ريال واحد) — silver/light
+
+Instructions:
+1. Look at the denomination number printed on each bill (in both Arabic numerals ٥٠٠،١٠٠،٥٠ and Western numerals 500,100,50).
+2. Count how many bills of each denomination are visible (even partially).
+3. Multiply each denomination by its count to get subtotal.
+4. Sum all subtotals for totalAmount.
+
+Respond ONLY with valid JSON, no other text:
 {
-  "bills": [ { "denomination": 500, "count": 1 }, ... ],
-  "totalAmount": 1500,
-  "currency": "SAR",
-  "confidence": "high أو medium أو low"
+  "bills": [
+    { "denomination": 500, "count": 2, "subtotal": 1000 },
+    { "denomination": 100, "count": 3, "subtotal": 300 }
+  ],
+  "totalAmount": 1300,
+  "confidence": "high or medium or low"
 }
-إذا لم تجد عملات واضحة أو الصورة غير واضحة، ضع totalAmount: null وconfidence: "low".`
+If you cannot clearly identify any bills (blurry image, no cash visible), set totalAmount to null and confidence to "low".`
       : `استخرج المعلومات التالية من هذا الإيصال البنكي. أجب بـ JSON فقط بدون أي نص خارجه:
 {
   "paymentType": "network أو transfer أو other",
@@ -2677,8 +2700,8 @@ transfer = تحويل بنكي إلكتروني.`;
         'content-type':       'application/json',
       },
       body: JSON.stringify({
-        model:      'claude-haiku-4-5-20251001',
-        max_tokens: 512,
+        model:      isCash ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001',
+        max_tokens: isCash ? 1024 : 512,
         messages: [{
           role: 'user',
           content: [
@@ -2707,12 +2730,19 @@ transfer = تحويل بنكي إلكتروني.`;
 
     if (isCash) {
       const cashTotal = typeof parsed.totalAmount === 'number' ? parsed.totalAmount : null;
+      const bills = Array.isArray(parsed.bills)
+        ? parsed.bills.filter(b => b.denomination && b.count).map(b => ({
+            denomination: Number(b.denomination),
+            count:        Number(b.count),
+          }))
+        : [];
       analysis = {
         paymentType:      'cash',
         amount:           cashTotal,
         cashTotal,
+        bills,
         cashMatchesPaid:  expectedPaid !== null && cashTotal !== null ? Math.abs(cashTotal - expectedPaid) <= 1 : null,
-        rawSummary:       rawText.slice(0, 300),
+        rawSummary:       rawText.slice(0, 400),
       };
     } else {
       const amount = typeof parsed.amount === 'number' ? parsed.amount : (parseFloat(parsed.amount) || null);
@@ -2774,6 +2804,164 @@ router.get('/api/receipts', reqStaff, async (req, res) => {
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
+});
+
+// ── Maintenance Requests ──────────────────────────────────────────────────────
+
+// POST /staff/api/maintenance/analyze — AI تحليل صورة العطل
+router.post('/api/maintenance/analyze', reqStaff, async (req, res) => {
+  try {
+    if (!hasMaintenance(req)) return res.status(403).json({ error: 'غير مصرح' });
+    const { imageBase64, mimeType: rawMime } = req.body;
+    if (!imageBase64) return res.status(400).json({ error: 'لم يتم إرسال الصورة' });
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) return res.status(500).json({ error: 'ANTHROPIC_API_KEY غير مضبوط' });
+
+    const apiRes = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 400,
+        messages: [{ role: 'user', content: [
+          { type: 'image', source: { type: 'base64', media_type: rawMime || 'image/jpeg', data: imageBase64 } },
+          { type: 'text', text: `You are a maintenance expert for a furnished apartment. Analyze this image carefully and write a detailed Arabic maintenance report.
+
+Respond ONLY with valid JSON:
+{
+  "type": "electrical OR plumbing OR furniture OR ac OR internet OR other",
+  "description": "2-3 sentences in Arabic. Describe: (1) exactly what you see broken/damaged, (2) the visible symptoms or signs (e.g. water leak, burn marks, crack, rust, missing part), (3) where exactly it is located if visible. Be specific and technical so a maintenance worker knows exactly what to fix.",
+  "priority": "urgent OR medium OR normal"
+}
+
+Priority guide:
+- urgent: immediate safety risk or completely blocks guest use (flooding, no electricity, no water, gas leak, broken door lock)
+- medium: functional problem affecting comfort (AC not cooling well, broken furniture, hot water issue, partial power loss)
+- normal: cosmetic or minor issue (paint scratch, small crack, loose handle, slow drain)
+
+If image is unclear or shows multiple issues, describe the most critical one first.` }
+        ]}],
+      }),
+    });
+    if (!apiRes.ok) return res.status(500).json({ error: 'Claude API error' });
+    const data = await apiRes.json();
+    const raw = data.content?.[0]?.text || '{}';
+    let parsed = {};
+    try { const m = raw.match(/\{[\s\S]*\}/); if (m) parsed = JSON.parse(m[0]); } catch(_) {}
+    res.json({
+      type:        ['electrical','plumbing','furniture','ac','internet','other'].includes(parsed.type) ? parsed.type : 'other',
+      description: parsed.description || '',
+      priority:    ['urgent','medium','normal'].includes(parsed.priority) ? parsed.priority : 'normal',
+    });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// POST /staff/api/maintenance — إنشاء طلب صيانة
+router.post('/api/maintenance', reqStaff, async (req, res) => {
+  try {
+    if (!hasMaintenance(req)) return res.status(403).json({ error: 'غير مصرح' });
+    const MR = require('../models/MaintenanceRequest');
+    const { apt, type, description, priority, imageBase64, imageMimeType, notes } = req.body;
+    if (!apt || !description) return res.status(400).json({ error: 'الشقة والوصف مطلوبان' });
+
+    let imageUrl = '', imagePublicId = '';
+
+    // رفع الصورة على Cloudinary إذا توفرت المفاتيح وتوفرت الصورة
+    if (imageBase64 && process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
+      try {
+        const crypto = require('crypto');
+        const cloudName  = process.env.CLOUDINARY_CLOUD_NAME;
+        const apiKey     = process.env.CLOUDINARY_API_KEY;
+        const apiSecret  = process.env.CLOUDINARY_API_SECRET;
+        const folder     = 'barez/maintenance';
+        const timestamp  = Math.floor(Date.now() / 1000);
+        const toSign     = `folder=${folder}&timestamp=${timestamp}${apiSecret}`;
+        const signature  = crypto.createHash('sha1').update(toSign).digest('hex');
+        const upRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            file:      `data:${imageMimeType || 'image/jpeg'};base64,${imageBase64}`,
+            api_key:   apiKey,
+            timestamp,
+            signature,
+            folder,
+          }),
+        });
+        if (upRes.ok) {
+          const upData = await upRes.json();
+          imageUrl      = upData.secure_url || '';
+          imagePublicId = upData.public_id  || '';
+        }
+      } catch(_) {}
+    } else if (imageBase64) {
+      // fallback: خزّن base64 مباشرة (بدون Cloudinary)
+      imageUrl = `data:${imageMimeType || 'image/jpeg'};base64,${imageBase64}`;
+    }
+
+    const mr = await new MR({
+      building:    req.staff.building,
+      apt,
+      propertyId:  req.staff.propertyId || null,
+      type:        type || 'other',
+      description,
+      priority:    priority || 'normal',
+      imageUrl,
+      imagePublicId,
+      notes:       notes || '',
+      reportedBy:  req.staff.name,
+      status:      'new',
+    }).save();
+
+    // إشعار بريد إلكتروني للمدير إذا كانت الأولوية عاجلة
+    if (priority === 'urgent' && process.env.NOTIFY_EMAIL) {
+      const { sendEmail } = require('../utils/mailer');
+      sendEmail(
+        process.env.NOTIFY_EMAIL,
+        `🚨 طلب صيانة عاجل — شقة ${apt} (${req.staff.building})`,
+        `<div dir="rtl" style="font-family:sans-serif;">
+          <h2 style="color:#dc2626;">طلب صيانة عاجل</h2>
+          <p><strong>المبنى:</strong> ${req.staff.building}</p>
+          <p><strong>الشقة:</strong> ${apt}</p>
+          <p><strong>النوع:</strong> ${type}</p>
+          <p><strong>الوصف:</strong> ${description}</p>
+          <p><strong>أبلغ عنه:</strong> ${req.staff.name}</p>
+          ${imageUrl && !imageUrl.startsWith('data:') ? `<p><a href="${imageUrl}">📷 عرض الصورة</a></p>` : ''}
+        </div>`
+      ).catch(() => {});
+    }
+
+    res.json({ success: true, id: mr._id });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// GET /staff/api/maintenance — قائمة طلبات الصيانة
+router.get('/api/maintenance', reqStaff, async (req, res) => {
+  try {
+    if (!hasMaintenance(req)) return res.status(403).json({ error: 'غير مصرح' });
+    const MR = require('../models/MaintenanceRequest');
+    const filter = req.staff.propertyId ? { propertyId: req.staff.propertyId } : { building: req.staff.building, propertyId: null };
+    if (req.query.status   && req.query.status   !== 'all') filter.status   = req.query.status;
+    if (req.query.priority && req.query.priority !== 'all') filter.priority = req.query.priority;
+    if (req.query.apt) filter.apt = req.query.apt;
+    const list = await MR.find(filter).sort({ createdAt: -1 }).limit(200).lean();
+    res.json(list);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// PUT /staff/api/maintenance/:id — تحديث الحالة / المسؤول
+router.put('/api/maintenance/:id', reqStaff, async (req, res) => {
+  try {
+    if (!hasMaintenance(req)) return res.status(403).json({ error: 'غير مصرح' });
+    const MR = require('../models/MaintenanceRequest');
+    const { status, assignedTo, notes } = req.body;
+    const upd = { updatedAt: new Date() };
+    if (status)     upd.status     = status;
+    if (assignedTo !== undefined) upd.assignedTo = assignedTo;
+    if (notes      !== undefined) upd.notes      = notes;
+    await MR.findByIdAndUpdate(req.params.id, upd);
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
 // ── Staff router error handler — shows real error instead of generic message ──
