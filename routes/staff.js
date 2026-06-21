@@ -2806,6 +2806,71 @@ router.get('/api/receipts', reqStaff, async (req, res) => {
   }
 });
 
+// ── ID Card Scan ─────────────────────────────────────────────────────────────
+router.post('/api/id/analyze', reqStaff, async (req, res) => {
+  try {
+    const { imageBase64, mimeType: rawMime } = req.body;
+    if (!imageBase64) return res.status(400).json({ error: 'لم يتم إرسال الصورة' });
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) return res.status(500).json({ error: 'ANTHROPIC_API_KEY غير مضبوط' });
+
+    const apiRes = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 600,
+        messages: [{ role: 'user', content: [
+          { type: 'image', source: { type: 'base64', media_type: rawMime || 'image/jpeg', data: imageBase64 } },
+          { type: 'text', text: `Extract all data from this identity document (Saudi national ID, iqama/residence permit, passport, or Gulf ID).
+
+Respond ONLY with valid JSON — no other text:
+{
+  "idType": "national_id OR iqama OR passport OR gcc OR other",
+  "idNumber": "the ID/document number (digits only, no spaces)",
+  "fullName": "full name in Arabic if available, otherwise in English",
+  "nationality": "nationality in Arabic (e.g. سعودي، مصري، هندي، باكستاني...)",
+  "dateOfBirth": "YYYY-MM-DD or null",
+  "expiryDate": "YYYY-MM-DD or null",
+  "gender": "male OR female OR null",
+  "issuePlace": "place of issue in Arabic or null"
+}
+
+Rules:
+- Saudi national ID (هوية وطنية): 10-digit number starting with 1 (Saudi) or 2 (resident)
+- Iqama (إقامة): 10-digit number starting with 2
+- Passport: alphanumeric, e.g. A1234567
+- For Arabic names on Saudi IDs, extract the full Arabic name
+- Hijri dates on Saudi IDs: convert to Gregorian if possible, otherwise return null
+- If a field is not visible or unclear, return null for that field
+- idNumber must contain ONLY digits or letters, no dashes or spaces` }
+        ]}],
+      }),
+    });
+    if (!apiRes.ok) return res.status(500).json({ error: 'Claude API error' });
+    const data = await apiRes.json();
+    const raw = data.content?.[0]?.text || '{}';
+    let parsed = {};
+    try { const m = raw.match(/\{[\s\S]*\}/); if (m) parsed = JSON.parse(m[0]); } catch(_) {}
+
+    const today = new Date(); today.setHours(0,0,0,0);
+    const expiry = parsed.expiryDate ? new Date(parsed.expiryDate) : null;
+    const isExpired = expiry ? expiry < today : null;
+
+    res.json({
+      idType:      ['national_id','iqama','passport','gcc','other'].includes(parsed.idType) ? parsed.idType : 'other',
+      idNumber:    parsed.idNumber   || null,
+      fullName:    parsed.fullName   || null,
+      nationality: parsed.nationality|| null,
+      dateOfBirth: parsed.dateOfBirth|| null,
+      expiryDate:  parsed.expiryDate || null,
+      gender:      parsed.gender     || null,
+      issuePlace:  parsed.issuePlace || null,
+      isExpired,
+    });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 // ── Maintenance Requests ──────────────────────────────────────────────────────
 
 // POST /staff/api/maintenance/analyze — AI تحليل صورة العطل
@@ -2962,6 +3027,93 @@ router.put('/api/maintenance/:id', reqStaff, async (req, res) => {
     await MR.findByIdAndUpdate(req.params.id, upd);
     res.json({ success: true });
   } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ══════════════════════════════════════════════════════════
+// CRON: Auto-sync all channel listings every hour
+// GET /staff/api/cron/channel-sync  (called by Vercel cron)
+// ══════════════════════════════════════════════════════════
+router.get('/api/cron/channel-sync', async (req, res) => {
+  const expected = process.env.CRON_SECRET;
+  if (expected && req.headers.authorization !== `Bearer ${expected}`) {
+    return res.status(401).json({ error: 'unauthorized' });
+  }
+  try {
+    const ChannelListing = require('../models/ChannelListing');
+    const ChannelConfig  = require('../models/ChannelConfig');
+    const Booking        = require('../models/Booking');
+    const { sendEmail }  = require('../utils/mailer');
+
+    const listings = await ChannelListing.find({
+      enabled: true,
+      icalImport: { $exists: true, $ne: '' },
+    });
+
+    let totalNew = 0, totalErr = 0, synced = 0;
+
+    for (const lst of listings) {
+      let icalText;
+      try { icalText = await fetchUrl(lst.icalImport); }
+      catch(e) {
+        lst.lastSync = new Date(); lst.lastSyncStatus = 'error'; lst.lastSyncMsg = e.message;
+        await lst.save(); totalErr++; continue;
+      }
+
+      const events = parseICal(icalText);
+      let newCount = 0;
+
+      for (const ev of events) {
+        if (ev.status === 'CANCELLED') {
+          await Booking.updateMany({ source: `ch-${lst.platform}-${ev.uid}` }, { status: 'cancelled' });
+          continue;
+        }
+        const exists = await Booking.findOne({ source: `ch-${lst.platform}-${ev.uid}` }).lean();
+        if (exists) continue;
+
+        const nights = ev.dtEnd && ev.dtStart ? Math.round((ev.dtEnd - ev.dtStart) / 86400000) : undefined;
+        await new Booking({
+          building: lst.building, apt: lst.apt,
+          propertyId: lst.propertyId || null,
+          name: ev.summary.replace(/BLOCKED\s*[-—]?\s*/i, '').trim() || 'حجز خارجي',
+          phone: `ch-${lst.platform}-${Date.now()}`,
+          bookingType: 'daily',
+          checkIn: ev.dtStart, checkOut: ev.dtEnd, nights,
+          status: 'awaiting_checkin',
+          source: `ch-${lst.platform}-${ev.uid}`,
+          notes: `مستورد تلقائياً من ${PLATFORM_LABELS[lst.platform]}`,
+        }).save();
+        newCount++; totalNew++;
+
+        const cfgFilter = lst.propertyId
+          ? { propertyId: lst.propertyId, platform: lst.platform }
+          : { building: lst.building, propertyId: null, platform: lst.platform };
+        const cfg = await ChannelConfig.findOne(cfgFilter).lean();
+        const notifyTo = (cfg && cfg.notifyEmail) || process.env.NOTIFY_EMAIL || '';
+        if (notifyTo) {
+          sendEmail({
+            to: notifyTo,
+            subject: `حجز جديد من ${PLATFORM_LABELS[lst.platform]} — ${lst.building} شقة ${lst.apt}`,
+            html: channelBookingEmail({
+              platform: lst.platform, apt: lst.apt, building: lst.building,
+              name: ev.summary.replace(/BLOCKED/i, '').trim() || 'حجز خارجي',
+              checkIn: ev.dtStart, checkOut: ev.dtEnd, nights,
+            }),
+          }).catch(() => {});
+        }
+      }
+
+      lst.lastSync = new Date(); lst.lastSyncStatus = 'ok';
+      lst.lastSyncMsg = `${events.length} حدث، ${newCount} جديد`;
+      lst.lastEventCount = events.length;
+      await lst.save(); synced++;
+    }
+
+    console.log(`[channel-sync] synced=${synced} err=${totalErr} new=${totalNew}`);
+    res.json({ success: true, synced, totalNew, totalErr });
+  } catch(e) {
+    console.error('[channel-sync] error:', e.message);
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // ── Staff router error handler — shows real error instead of generic message ──
