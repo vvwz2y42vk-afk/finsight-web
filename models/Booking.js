@@ -44,6 +44,7 @@ const bookingSchema = new mongoose.Schema({
     uploadedBy: { type: String, default: '' },
     uploadedAt: { type: Date },
     pages:      { type: Number, default: 1 },
+    ocrText:    { type: String, default: '' },
   },
   inventoryDoc: {
     url:        { type: String, default: '' },
@@ -52,6 +53,7 @@ const bookingSchema = new mongoose.Schema({
     uploadedBy: { type: String, default: '' },
     uploadedAt: { type: Date },
     pages:      { type: Number, default: 1 },
+    ocrText:    { type: String, default: '' },
   },
 }, { timestamps: true });
 

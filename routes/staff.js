@@ -588,73 +588,121 @@ router.delete('/api/bookings/:id/payments/:pid', reqStaff, async (req, res) => {
 // ── API: Booking Documents (contract / inventory) ─────────
 router.post('/api/bookings/:id/documents', reqStaff, async (req, res) => {
   try {
-    const B   = require('../models/Booking');
+    const B           = require('../models/Booking');
     const PDFDocument = require('pdfkit');
-    const crypto = require('crypto');
+    const crypto      = require('crypto');
+
     const { type, pages } = req.body; // pages: [{data: base64, mime: 'image/jpeg'}]
     if (!['contract','inventory'].includes(type)) return res.status(400).json({ error: 'نوع غير صحيح' });
-    if (!pages?.length) return res.status(400).json({ error: 'لم يتم اختيار صور' });
+    if (!pages?.length)  return res.status(400).json({ error: 'لم يتم اختيار صور' });
+    if (pages.length > 10) return res.status(400).json({ error: 'الحد الأقصى 10 صفحات' });
+
     const bk = await B.findById(req.params.id);
     if (!bk) return res.status(404).json({ error: 'الحجز غير موجود' });
 
-    // ── Build PDF with pdfkit ──────────────────────────────
+    const cloudName    = process.env.CLOUDINARY_CLOUD_NAME;
+    const apiKey       = process.env.CLOUDINARY_API_KEY;
+    const apiSecret    = process.env.CLOUDINARY_API_SECRET;
+    const anthropicKey = process.env.ANTHROPIC_API_KEY;
+    if (!cloudName || !apiKey || !apiSecret)
+      return res.status(500).json({ error: 'Cloudinary غير مُهيَّأ في متغيرات البيئة' });
+
+    // ── Step 1: OCR via Claude API (parallel per page) ────────────────────────
+    const ocrResults = await Promise.all(pages.map(async (p) => {
+      if (!anthropicKey) return '';
+      try {
+        const resp = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'x-api-key':         anthropicKey,
+            'anthropic-version': '2023-06-01',
+            'content-type':      'application/json',
+          },
+          body: JSON.stringify({
+            model:      'claude-haiku-4-5-20251001',
+            max_tokens: 2048,
+            messages: [{
+              role: 'user',
+              content: [
+                {
+                  type: 'image',
+                  source: { type: 'base64', media_type: p.mime || 'image/jpeg', data: p.data },
+                },
+                {
+                  type: 'text',
+                  text: 'استخرج كل النص الموجود في هذه الوثيقة بدقة كاملة. رتّب النص من الأعلى إلى الأسفل ومن اليمين إلى اليسار كما يظهر في الصفحة. أعد النص فقط بدون أي تعليقات إضافية.',
+                },
+              ],
+            }],
+          }),
+        });
+        if (!resp.ok) return '';
+        const d = await resp.json();
+        return d.content?.[0]?.text || '';
+      } catch { return ''; }
+    }));
+
+    // ── Step 2: Build PDF — original images at full A4 (preserves stamps/signatures) ──
     const pdfBuf = await new Promise((resolve, reject) => {
-      const doc    = new PDFDocument({ size: 'A4', margin: 20, autoFirstPage: true });
+      const doc    = new PDFDocument({ size: 'A4', margin: 0, autoFirstPage: true });
       const chunks = [];
-      doc.on('data', c => chunks.push(c));
-      doc.on('end',  () => resolve(Buffer.concat(chunks)));
+      doc.on('data', chunk => chunks.push(chunk));
+      doc.on('end',  ()    => resolve(Buffer.concat(chunks)));
       doc.on('error', reject);
       pages.forEach((p, i) => {
-        if (i > 0) doc.addPage();
+        if (i > 0) doc.addPage({ size: 'A4', margin: 0 });
         try {
           const buf = Buffer.from(p.data, 'base64');
-          doc.image(buf, 20, 20, { fit: [555, 800], align: 'center', valign: 'center' });
-        } catch { doc.fontSize(10).text(`فشل تحميل الصورة ${i + 1}`, 20, 20); }
+          doc.image(buf, 0, 0, { fit: [595, 842], align: 'center', valign: 'center' });
+        } catch { doc.fontSize(10).fillColor('#dc2626').text('فشل تحميل الصفحة ' + (i + 1), 20, 20); }
       });
       doc.end();
     });
 
-    // ── Upload PDF to Cloudinary ───────────────────────────
-    const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
-    const apiKey    = process.env.CLOUDINARY_API_KEY;
-    const apiSecret = process.env.CLOUDINARY_API_SECRET;
-    if (!cloudName || !apiKey || !apiSecret)
-      return res.status(500).json({ error: 'Cloudinary غير مُهيَّأ في متغيرات البيئة' });
-
+    // ── Step 3: Upload PDF to Cloudinary ──────────────────────────────────────
     const bkId      = bk._id.toString().slice(-8).toUpperCase();
     const safeName  = (bk.name || 'client').replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '').slice(0, 15) || 'client';
     const suffix    = type === 'contract' ? 'ctr' : 'inv';
     const folder    = 'barez/contracts';
-    const pubId     = `BK${bkId}_${safeName}_${suffix}`;
+    const pubId     = 'BK' + bkId + '_' + safeName + '_' + suffix;
     const timestamp = Math.floor(Date.now() / 1000);
-    const toSign    = `folder=${folder}&public_id=${pubId}&timestamp=${timestamp}${apiSecret}`;
+    const toSign    = 'folder=' + folder + '&public_id=' + pubId + '&timestamp=' + timestamp + apiSecret;
     const signature = crypto.createHash('sha1').update(toSign).digest('hex');
 
-    const upRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/raw/upload`, {
+    const upRes = await fetch('https://api.cloudinary.com/v1_1/' + cloudName + '/raw/upload', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        file: `data:application/pdf;base64,${pdfBuf.toString('base64')}`,
-        api_key: apiKey, timestamp, signature, folder, public_id: pubId,
+        file:       'data:application/pdf;base64,' + pdfBuf.toString('base64'),
+        api_key:    apiKey, timestamp, signature, folder, public_id: pubId, overwrite: true,
       }),
     });
     if (!upRes.ok) {
       const e = await upRes.json().catch(() => ({}));
-      return res.status(500).json({ error: `فشل رفع PDF: ${e.error?.message || upRes.status}` });
+      return res.status(500).json({ error: 'فشل رفع PDF: ' + (e.error?.message || upRes.status) });
     }
     const upData   = await upRes.json();
     const pdfUrl   = upData.secure_url;
     const arSuffix = type === 'contract' ? 'عقد_موثق' : 'استلام_محتويات';
-    const filename = `${bk.name || 'عميل'}_${bkId}_${arSuffix}.pdf`;
+    const filename = (bk.name || 'عميل') + '_' + bkId + '_' + arSuffix + '.pdf';
+    const ocrText  = ocrResults.filter(Boolean).join('\n\n--- صفحة جديدة ---\n\n');
 
+    // ── Step 4: Save to DB ────────────────────────────────────────────────────
     const field = type === 'contract' ? 'contractDoc' : 'inventoryDoc';
     await B.findByIdAndUpdate(req.params.id, {
-      [field]: { url: pdfUrl, urls: [pdfUrl], filename, uploadedBy: req.staff.name, uploadedAt: new Date(), pages: pages.length },
+      [field]: {
+        url: pdfUrl, urls: [pdfUrl], filename,
+        uploadedBy: req.staff.name, uploadedAt: new Date(),
+        pages: pages.length, ocrText,
+      },
     });
-    res.json({ success: true, url: pdfUrl, filename, pages: pages.length });
-  } catch (e) { res.status(500).json({ error: e.message }); }
-});
 
+    res.json({ success: true, url: pdfUrl, filename, pages: pages.length, hasOcr: !!ocrText });
+  } catch (e) {
+    console.error('[docs-upload]', e);
+    res.status(500).json({ error: e.message || 'خطأ في معالجة المستند' });
+  }
+});
 router.get('/api/bookings/:id/documents', reqStaff, async (req, res) => {
   try {
     const B = require('../models/Booking');
