@@ -666,7 +666,7 @@ router.post('/api/bookings/:id/documents', reqStaff, async (req, res) => {
     const folder    = 'barez/contracts';
     const pubId     = 'BK' + bkId + '_' + safeName + '_' + suffix;
     const timestamp = Math.floor(Date.now() / 1000);
-    const toSign    = 'folder=' + folder + '&public_id=' + pubId + '&timestamp=' + timestamp + apiSecret;
+    const toSign    = 'folder=' + folder + '&overwrite=true&public_id=' + pubId + '&timestamp=' + timestamp + apiSecret;
     const signature = crypto.createHash('sha1').update(toSign).digest('hex');
 
     const upRes = await fetch('https://api.cloudinary.com/v1_1/' + cloudName + '/raw/upload', {
