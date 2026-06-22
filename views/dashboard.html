@@ -231,6 +231,17 @@ tbody td{padding:11px 12px;font-size:12px;vertical-align:middle;}
 .toast{position:fixed;bottom:14px;right:50%;transform:translateX(50%) translateY(100px);background:var(--gold);color:#fff;padding:8px 16px;border-radius:10px;font-size:12px;font-weight:600;z-index:9999;transition:transform .3s;pointer-events:none;}
 .toast.show{transform:translateX(50%) translateY(0);}
 .charts-row-admin{display:grid;grid-template-columns:1fr 230px;gap:12px;margin-bottom:10px;}
+.chart-card{background:#fff;border-radius:14px;padding:18px;border:1.5px solid #EEF2F8;box-shadow:0 2px 12px rgba(26,61,143,.05);margin-bottom:0;}
+.chart-title{font-size:13px;font-weight:700;margin-bottom:14px;color:var(--t);display:flex;align-items:center;gap:8px;padding-bottom:10px;border-bottom:2px solid var(--gold);}
+.chart-title::before{content:'';display:block;width:3px;height:14px;background:var(--gold);border-radius:3px;flex-shrink:0;}
+.bld-tab{padding:5px 14px;border-radius:20px;border:1.5px solid var(--b2);background:var(--s);font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;color:var(--t2);transition:.15s;}
+.bld-tab.active{background:var(--gold);border-color:var(--gold);color:#fff;}
+.bld-mini-card{background:#fff;border:1.5px solid var(--b2);border-radius:14px;padding:14px 16px;position:relative;overflow:hidden;}
+.bld-mini-card::before{content:'';position:absolute;top:0;right:0;width:4px;height:100%;border-radius:0 14px 14px 0;}
+.bld-mini-card.c-mna::before{background:#1a3d8f;}
+.bld-mini-card.c-joa::before{background:#7c3aed;}
+.bld-mini-card.c-mas::before{background:#047857;}
+.bld-mini-card.c-wah::before{background:#c2410c;}
 /* ── Mobile hamburger ── */
 .mob-ham{display:none;flex-direction:column;gap:5px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;cursor:pointer;padding:7px 8px;margin-left:8px;}
 .mob-ham span{display:block;width:18px;height:2px;background:rgba(255,255,255,.8);border-radius:2px;transition:all .25s;}
@@ -632,30 +643,153 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
   </div>
   
   <div class="tc" id="tab-reports">
-    <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap;">
-      <div style="font-size:13px;font-weight:600;">اختر الشهر:</div>
-      <select class="si" id="rep-month" onchange="renderReports()" style="max-width:120px;">
-        <option value="1">يناير</option>
-        <option value="2">فبراير</option>
-        <option value="3">مارس</option>
-        <option value="4" selected>أبريل</option>
-        <option value="5">مايو</option>
-        <option value="6">يونيو</option>
-        <option value="7">يوليو</option>
-        <option value="8">أغسطس</option>
-        <option value="9">سبتمبر</option>
-        <option value="10">أكتوبر</option>
-        <option value="11">نوفمبر</option>
-        <option value="12">ديسمبر</option>
-      </select>
-      <select class="si" id="rep-year" onchange="renderReports()" style="max-width:100px;">
-        <option value="2025">2025</option>
-        <option value="2026" selected>2026</option>
-      </select>
-      <button class="btn btn-gold" onclick="printReport()" style="margin-right:auto;">🖨️ طباعة</button>
-      <button class="btn" onclick="exportReportCSV()" style="background:#166534;color:#fff;border-color:#166534;">⬇️ تصدير CSV</button>
+    <!-- Header -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+      <div>
+        <div style="font-size:16px;font-weight:800;color:var(--t);letter-spacing:-.02em;">التقارير والإحصاءات</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:8px;">
+          <button onclick="rptPrevMonth()" style="width:28px;height:28px;border-radius:8px;border:1.5px solid var(--b2);background:var(--s);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;color:var(--gold);font-family:inherit;">‹</button>
+          <span id="rpt-month-nav" style="font-size:13px;font-weight:700;color:var(--gold);min-width:120px;text-align:center;"></span>
+          <button onclick="rptNextMonth()" id="rpt-next-btn" style="width:28px;height:28px;border-radius:8px;border:1.5px solid var(--b2);background:var(--s);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;color:var(--gold);font-family:inherit;">›</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-gold" onclick="exportReportCSV()">⬇️ تصدير Excel</button>
+        <button class="btn" onclick="printReport()">🖨️ طباعة</button>
+      </div>
     </div>
-    <div id="report-wrap"></div>
+
+    <!-- اليوم -->
+    <div style="font-size:10px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">اليوم</div>
+    <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px;">
+      <div class="kpi c2"><div class="kpi-lbl">وصولات اليوم</div><div class="kpi-val" id="rpt-arrivals">—</div></div>
+      <div class="kpi c4"><div class="kpi-lbl">مغادرات اليوم</div><div class="kpi-val" id="rpt-departures">—</div></div>
+      <div class="kpi c1"><div class="kpi-lbl">نسبة الإشغال</div><div class="kpi-val" id="rpt-occ">—</div></div>
+      <div class="kpi c5"><div class="kpi-lbl">شقق مشغولة الآن</div><div class="kpi-val" id="rpt-active">—</div></div>
+    </div>
+
+    <!-- الشهر المحدد -->
+    <div style="font-size:10px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;" id="rpt-month-section-lbl">الشهر الحالي</div>
+    <div class="kpi-grid" style="margin-bottom:20px;">
+      <div class="kpi c1"><div class="kpi-lbl">إجمالي الحجوزات</div><div class="kpi-val" id="rpt-month-bk">—</div></div>
+      <div class="kpi c2"><div class="kpi-lbl">إجمالي الإيرادات</div><div class="kpi-val" id="rpt-month-rev">—</div></div>
+      <div class="kpi c2"><div class="kpi-lbl">المحصّل</div><div class="kpi-val" id="rpt-month-paid">—</div></div>
+      <div class="kpi c3"><div class="kpi-lbl">المتبقي</div><div class="kpi-val" id="rpt-month-rem">—</div></div>
+      <div class="kpi c5"><div class="kpi-lbl">يومي</div><div class="kpi-val" id="rpt-month-daily-rev">—</div></div>
+    </div>
+
+    <!-- مخطط الإيرادات الشهرية -->
+    <div class="chart-card" style="margin-bottom:14px;">
+      <div class="chart-title" id="rpt-chart-title">الإيرادات اليومية</div>
+      <canvas id="revenueChart" style="width:100%;height:200px;"></canvas>
+    </div>
+
+    <!-- مخطط السنة -->
+    <div class="chart-card" style="margin-bottom:14px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div class="chart-title" style="margin-bottom:0;">مقارنة الإيرادات — آخر 12 شهر</div>
+        <div id="yearly-total" style="font-size:12px;font-weight:700;color:var(--green);"></div>
+      </div>
+      <canvas id="yearlyChart" style="width:100%;height:220px;"></canvas>
+      <div id="yearly-summary" style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;"></div>
+    </div>
+
+    <!-- ── مقارنة المباني ── -->
+    <div style="margin-bottom:28px;border-bottom:2px solid var(--b2);padding-bottom:24px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+        <div style="font-size:10px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.08em;">إحصاءات المباني</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;" id="bld-tabs">
+          <button class="bld-tab active" data-bld="" onclick="switchBldTab(this,'')">الكل</button>
+          <button class="bld-tab" data-bld="المنارا" onclick="switchBldTab(this,'المنارا')">المنارا</button>
+          <button class="bld-tab" data-bld="جوان ان" onclick="switchBldTab(this,'جوان ان')">جوان ان</button>
+          <button class="bld-tab" data-bld="الماسة" onclick="switchBldTab(this,'الماسة')">الماسة</button>
+          <button class="bld-tab" data-bld="الواحة" onclick="switchBldTab(this,'الواحة')">الواحة</button>
+        </div>
+      </div>
+      <!-- KPIs للمبنى المحدد -->
+      <div id="bld-kpis" class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr));margin-bottom:16px;"></div>
+      <!-- مخطط الإيرادات الشهرية للمبنى المحدد -->
+      <div class="chart-card" style="margin-bottom:14px;">
+        <div class="chart-title" id="bld-chart-title">الإيرادات الشهرية</div>
+        <canvas id="bldMonthlyChart" style="width:100%;height:220px;"></canvas>
+      </div>
+      <!-- إذا الكل: مخطط المقارنة بين المباني -->
+      <div id="bld-compare-wrap" class="chart-card" style="margin-bottom:14px;">
+        <div class="chart-title">مقارنة المباني — آخر 12 شهر</div>
+        <canvas id="bldCompareChart" style="width:100%;height:240px;"></canvas>
+      </div>
+      <!-- بطاقات ملخص المباني (الكل فقط) -->
+      <div id="bld-summary-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;"></div>
+    </div>
+
+    <!-- ── التقرير الشهري ── -->
+    <div style="margin-bottom:28px;border-bottom:2px solid var(--b2);padding-bottom:24px;">
+      <div style="font-size:10px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;">التقرير الشهري</div>
+      <div style="background:var(--s);border:1.5px solid var(--b2);border-radius:14px;padding:16px;margin-bottom:14px;">
+        <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+          <div>
+            <label style="font-size:11px;font-weight:600;color:var(--t2);display:block;margin-bottom:4px;">السنة</label>
+            <select id="adm-mr-year" style="padding:8px 10px;border:1.5px solid var(--b2);border-radius:9px;font-family:inherit;font-size:12px;background:#fff;outline:none;"></select>
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;color:var(--t2);display:block;margin-bottom:4px;">الشهر</label>
+            <select id="adm-mr-month" style="padding:8px 10px;border:1.5px solid var(--b2);border-radius:9px;font-family:inherit;font-size:12px;background:#fff;outline:none;">
+              <option value="1">يناير</option><option value="2">فبراير</option><option value="3">مارس</option>
+              <option value="4">أبريل</option><option value="5">مايو</option><option value="6">يونيو</option>
+              <option value="7">يوليو</option><option value="8">أغسطس</option><option value="9">سبتمبر</option>
+              <option value="10">أكتوبر</option><option value="11">نوفمبر</option><option value="12">ديسمبر</option>
+            </select>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <button onclick="adminMonthlyReport()" style="padding:8px 20px;background:var(--gold);border:none;border-radius:9px;color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">عرض</button>
+            <button onclick="printAdminMonthlyReport()" style="padding:8px 14px;background:var(--s);border:1.5px solid var(--b2);border-radius:9px;font-family:inherit;font-size:12px;cursor:pointer;" title="طباعة">🖨️</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:20px;margin-top:12px;flex-wrap:wrap;">
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t2);cursor:pointer;"><input type="radio" name="adm-mr-type" value="detail" checked style="cursor:pointer;accent-color:var(--gold);"> تفصيلي</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t2);cursor:pointer;"><input type="radio" name="adm-mr-type" value="summary" style="cursor:pointer;accent-color:var(--gold);"> تجميعي للشقق</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t2);cursor:pointer;"><input type="radio" name="adm-mr-type" value="total" style="cursor:pointer;accent-color:var(--gold);"> تجميعي كلي</label>
+        </div>
+      </div>
+      <div id="adm-mr-body"></div>
+    </div>
+
+    <!-- ── تقرير نسب الإشغال ── -->
+    <div style="margin-bottom:28px;border-bottom:2px solid var(--b2);padding-bottom:24px;">
+      <div style="font-size:10px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;">تقرير نسب الإشغال</div>
+      <div style="background:var(--s);border:1.5px solid var(--b2);border-radius:14px;padding:16px;margin-bottom:14px;">
+        <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+          <div>
+            <label style="font-size:11px;font-weight:600;color:var(--t2);display:block;margin-bottom:4px;">من</label>
+            <input type="date" id="adm-occ-from" style="padding:8px 10px;border:1.5px solid var(--b2);border-radius:9px;font-family:inherit;font-size:12px;background:#fff;outline:none;">
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;color:var(--t2);display:block;margin-bottom:4px;">إلى</label>
+            <input type="date" id="adm-occ-to" style="padding:8px 10px;border:1.5px solid var(--b2);border-radius:9px;font-family:inherit;font-size:12px;background:#fff;outline:none;">
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;color:var(--t2);display:block;margin-bottom:4px;">المبنى</label>
+            <select id="adm-occ-bld" style="padding:8px 10px;border:1.5px solid var(--b2);border-radius:9px;font-family:inherit;font-size:12px;background:#fff;outline:none;">
+              <option value="">الجميع</option>
+              <option>المنارا</option><option>جوان ان</option><option>الماسة</option><option>الواحة</option>
+            </select>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <button onclick="adminOccReport()" style="padding:8px 20px;background:var(--gold);border:none;border-radius:9px;color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">عرض</button>
+            <button onclick="printAdminOccReport()" style="padding:8px 14px;background:var(--s);border:1.5px solid var(--b2);border-radius:9px;font-family:inherit;font-size:12px;cursor:pointer;" title="طباعة">🖨️</button>
+          </div>
+        </div>
+      </div>
+      <div id="adm-occ-body"></div>
+    </div>
+
+    <!-- ── تفاصيل حجوزات الشهر (يتحكم بها شهر التنقل) ── -->
+    <div style="font-size:10px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;" id="rpt-detail-lbl">حجوزات الشهر</div>
+    <div id="rpt-monthly-table" style="margin-bottom:20px;"></div>
+
+    <!-- المديونيات -->
+    <div style="font-size:10px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">المديونيات — المبالغ المتبقية</div>
+    <div id="rpt-debts-wrap"></div>
   </div>
 
   <div class="tc" id="tab-sources">
@@ -1184,6 +1318,11 @@ function renderAll(){
   set('exp-count',toAr(exps.length)+' حجز');
   set('top-expiry',exps.map(b=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--b);"><div><div style="font-size:11px;font-weight:600;">${b.name}</div><div style="font-size:9px;color:var(--t3);">شقة ${b.apt} · ${fmtDate(b.checkOut)}</div></div><div style="font-size:12px;font-weight:700;color:${b.d<=7?'var(--red)':b.d<=15?'var(--gold)':'var(--green)'};">${toAr(b.d)} يوم</div></div>`).join(''));
   renderContracts();renderCommissions();renderCollection();renderExpiry();renderMap();renderPerformance();renderSources();renderReports();
+  initAdminMrSelects();renderBldStats();
+  // init occupancy date defaults
+  (function(){const n=new Date(),y=n.getFullYear(),m=String(n.getMonth()+1).padStart(2,'0');
+    const f=document.getElementById('adm-occ-from'),t=document.getElementById('adm-occ-to');
+    if(f)f.value=`${y}-${m}-01`;if(t)t.value=n.toISOString().split('T')[0];})();
 }
 
 function renderPager(id,page,pages,onPage){
@@ -1477,6 +1616,7 @@ function go(id,el){
   if(id==='listings')loadListings();if(id==='bookings')loadBookings();if(id==='customers')loadCustomers();if(id==='hosts')loadHosts();if(id==='msgs')loadMessages();if(id==='apts')loadApts();if(id==='staff')loadStaff();
   if(id==='users')loadAdminUsers();if(id==='audit')loadAuditLogs(1);
   if(id==='contracts')loadStaffBookings();
+  if(id==='reports')setTimeout(renderReports,60);
   closeMobNav();
 }
 function st(id,el){
@@ -1486,6 +1626,7 @@ function st(id,el){
   if(id==='listings')loadListings();if(id==='bookings')loadBookings();if(id==='customers')loadCustomers();if(id==='hosts')loadHosts();if(id==='msgs')loadMessages();if(id==='apts')loadApts();if(id==='staff')loadStaff();
   if(id==='users')loadAdminUsers();if(id==='audit')loadAuditLogs(1);
   if(id==='contracts')loadStaffBookings();
+  if(id==='reports')setTimeout(renderReports,60);
 }
 function showTabById(id){document.querySelectorAll('.tc').forEach(t=>t.classList.remove('active'));document.getElementById('tab-'+id)?.classList.add('active');}
 
@@ -1897,142 +2038,520 @@ async function deleteBooking(id){
 }
 
 
+// ── Reports State ──────────────────────────────────────────
+const MONTHS_AR=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+let rptMonth=new Date().getMonth();
+let rptYear=new Date().getFullYear();
+let adminRevenueChartInst=null;
+let adminYearlyChartInst=null;
+let bldMonthlyChartInst=null;
+let bldCompareChartInst=null;
+let activeBldFilter='';
+
+const BLD_CFG={
+  '':       {label:'الكل',    color:'rgba(26,61,143,.75)',  cls:'',      apts:89},
+  'المنارا': {label:'المنارا',color:'rgba(26,61,143,.8)',   cls:'c-mna', apts:30},
+  'جوان ان': {label:'جوان ان',color:'rgba(124,58,237,.8)',  cls:'c-joa', apts:21},
+  'الماسة':  {label:'الماسة', color:'rgba(4,120,87,.8)',    cls:'c-mas', apts:18},
+  'الواحة':  {label:'الواحة', color:'rgba(194,65,12,.8)',   cls:'c-wah', apts:20},
+};
+const BLD_LIST=['المنارا','جوان ان','الماسة','الواحة'];
+
+function switchBldTab(btn, bld){
+  activeBldFilter=bld;
+  document.querySelectorAll('.bld-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderBldStats();
+}
+
+function getYearMonths(){
+  const now=new Date();
+  return Array.from({length:12},(_,i)=>{
+    const t=new Date(now.getFullYear(),now.getMonth(),1);
+    t.setMonth(t.getMonth()-(11-i));
+    return{label:MONTHS_AR[t.getMonth()].slice(0,3)+' '+String(t.getFullYear()).slice(2),month:t.getMonth(),year:t.getFullYear()};
+  });
+}
+
+function bkForBld(bld){
+  return (allStaffBookings||[]).filter(b=>b.status!=='cancelled'&&(!bld||b.building===bld));
+}
+
+function renderBldStats(){
+  const bld=activeBldFilter;
+  const cfg=BLD_CFG[bld]||BLD_CFG[''];
+  const ym=getYearMonths();
+  const allBk=bkForBld(bld);
+  const now=new Date(); now.setHours(0,0,0,0);
+
+  // ── KPIs ──
+  const activeNow=bkForBld(bld).filter(b=>['active','awaiting_checkin'].includes(b.status)).length;
+  const totalApts=cfg.apts;
+  const occ=Math.round(activeNow/totalApts*100);
+  const curMonthBk=allBk.filter(b=>{if(!b.checkIn)return false;const d=new Date(b.checkIn);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();});
+  const mRev=curMonthBk.reduce((s,b)=>s+Number(b.totalPrice||0),0);
+  const mPaid=curMonthBk.reduce((s,b)=>s+Number(b.paidAmount||0),0);
+  const yearBk=allBk.filter(b=>{if(!b.checkIn)return false;const d=new Date(b.checkIn);return d.getFullYear()===now.getFullYear();});
+  const yRev=yearBk.reduce((s,b)=>s+Number(b.totalPrice||0),0);
+  const debts=allBk.filter(b=>{const r=Number(b.totalPrice||0)-Number(b.paidAmount||0);return r>0&&['active','awaiting_checkin','awaiting_payment'].includes(b.status);});
+  const totalDebt=debts.reduce((s,b)=>s+Math.max(0,Number(b.totalPrice||0)-Number(b.paidAmount||0)),0);
+
+  const kpiEl=document.getElementById('bld-kpis');
+  if(kpiEl)kpiEl.innerHTML=[
+    {l:'الإشغال الآن',v:`${toAr(activeNow)} / ${toAr(totalApts)}`,s:`${toAr(occ)}٪`,c:'c1'},
+    {l:'إيراد هذا الشهر',v:fmt(mRev)+' ﷼',s:'محصّل: '+fmt(mPaid)+' ﷼',c:'c2'},
+    {l:'إيراد هذا العام',v:fmt(yRev)+' ﷼',s:toAr(yearBk.length)+' حجز',c:'c2'},
+    {l:'المديونيات',v:fmt(totalDebt)+' ﷼',s:toAr(debts.length)+' حجز',c:'c3'},
+    {l:'حجوزات هذا الشهر',v:toAr(curMonthBk.length),s:`إجمالي: ${toAr(allBk.length)}`,c:'c5'},
+  ].map(x=>`<div class="kpi ${x.c}"><div class="kpi-lbl">${x.l}</div><div class="kpi-val">${x.v}</div><div style="font-size:10px;color:var(--t3);margin-top:2px;">${x.s}</div></div>`).join('');
+
+  // ── مخطط الشهري للمبنى ──
+  const titleEl=document.getElementById('bld-chart-title');
+  if(titleEl)titleEl.textContent=(bld||'الكل')+' — إيرادات آخر 12 شهر';
+  const monthData=ym.map(m=>{
+    const bks=allBk.filter(b=>{if(!b.checkIn)return false;const d=new Date(b.checkIn);return d.getMonth()===m.month&&d.getFullYear()===m.year;});
+    return{label:m.label,rev:bks.reduce((s,b)=>s+Number(b.totalPrice||0),0),daily:bks.filter(b=>b.bookingType==='daily').reduce((s,b)=>s+Number(b.totalPrice||0),0),annual:bks.filter(b=>b.bookingType!=='daily').reduce((s,b)=>s+Number(b.totalPrice||0),0)};
+  });
+
+  const mCanvas=document.getElementById('bldMonthlyChart');
+  if(mCanvas){
+    mCanvas.width=mCanvas.parentElement.clientWidth||700; mCanvas.height=220;
+    if(bldMonthlyChartInst)bldMonthlyChartInst.destroy();
+    const c=cfg.color.replace('.8','');
+    bldMonthlyChartInst=new Chart(mCanvas.getContext('2d'),{
+      type:'bar',
+      data:{labels:monthData.map(m=>m.label),datasets:[
+        {label:'يومي',data:monthData.map(m=>m.daily),backgroundColor:cfg.color,borderRadius:4,stack:'r'},
+        {label:'شهري',data:monthData.map(m=>m.annual),backgroundColor:cfg.color.replace(/[\d.]+\)$/,'0.4)'),borderRadius:4,stack:'r'},
+      ]},
+      options:{responsive:false,plugins:{legend:{display:true,position:'top',align:'end',labels:{font:{family:'Cairo',size:11},boxWidth:12}},tooltip:{rtl:true,bodyFont:{family:'Cairo'},callbacks:{label:ctx=>ctx.dataset.label+': '+fmt(ctx.parsed.y)+' ﷼'}}},scales:{x:{stacked:true,ticks:{font:{family:'Cairo',size:10}},grid:{display:false}},y:{stacked:true,beginAtZero:true,ticks:{font:{family:'Cairo',size:10},callback:v=>fmt(v)},grid:{color:'rgba(0,0,0,.04)'}}}}
+    });
+  }
+
+  // ── مخطط المقارنة (الكل فقط) ──
+  const cmpWrap=document.getElementById('bld-compare-wrap');
+  const summCards=document.getElementById('bld-summary-cards');
+  if(!bld){
+    if(cmpWrap)cmpWrap.style.display='';
+    if(summCards)summCards.style.display='';
+    // مخطط مقارنة المباني
+    const colors=['rgba(26,61,143,.75)','rgba(124,58,237,.75)','rgba(4,120,87,.75)','rgba(194,65,12,.75)'];
+    const cmpCanvas=document.getElementById('bldCompareChart');
+    if(cmpCanvas){
+      cmpCanvas.width=cmpCanvas.parentElement.clientWidth||700; cmpCanvas.height=240;
+      if(bldCompareChartInst)bldCompareChartInst.destroy();
+      bldCompareChartInst=new Chart(cmpCanvas.getContext('2d'),{
+        type:'bar',
+        data:{
+          labels:ym.map(m=>m.label),
+          datasets:BLD_LIST.map((bl,i)=>({
+            label:bl,
+            data:ym.map(m=>{
+              const bks=bkForBld(bl).filter(b=>{if(!b.checkIn)return false;const d=new Date(b.checkIn);return d.getMonth()===m.month&&d.getFullYear()===m.year;});
+              return bks.reduce((s,b)=>s+Number(b.totalPrice||0),0);
+            }),
+            backgroundColor:colors[i],borderRadius:3,
+          }))
+        },
+        options:{responsive:false,plugins:{legend:{display:true,position:'top',align:'end',labels:{font:{family:'Cairo',size:11},boxWidth:12,padding:12}},tooltip:{rtl:true,bodyFont:{family:'Cairo'},callbacks:{label:ctx=>ctx.dataset.label+': '+fmt(ctx.parsed.y)+' ﷼'}}},scales:{x:{ticks:{font:{family:'Cairo',size:10}},grid:{display:false}},y:{beginAtZero:true,ticks:{font:{family:'Cairo',size:10},callback:v=>fmt(v)},grid:{color:'rgba(0,0,0,.04)'}}}}
+      });
+    }
+    // بطاقات ملخص لكل مبنى
+    if(summCards){
+      const clsMap={'المنارا':'c-mna','جوان ان':'c-joa','الماسة':'c-mas','الواحة':'c-wah'};
+      summCards.innerHTML=BLD_LIST.map(bl=>{
+        const bks=bkForBld(bl);
+        const acv=bks.filter(b=>['active','awaiting_checkin'].includes(b.status)).length;
+        const cfg2=BLD_CFG[bl];
+        const occ2=Math.round(acv/cfg2.apts*100);
+        const mBk=bks.filter(b=>{if(!b.checkIn)return false;const d=new Date(b.checkIn);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();});
+        const mR=mBk.reduce((s,b)=>s+Number(b.totalPrice||0),0);
+        const mP=mBk.reduce((s,b)=>s+Number(b.paidAmount||0),0);
+        const debt=bks.filter(b=>{const r=Number(b.totalPrice||0)-Number(b.paidAmount||0);return r>0&&['active','awaiting_checkin','awaiting_payment'].includes(b.status);}).reduce((s,b)=>s+Math.max(0,Number(b.totalPrice||0)-Number(b.paidAmount||0)),0);
+        return`<div class="bld-mini-card ${clsMap[bl]||''}">
+          <div style="font-size:13px;font-weight:800;color:var(--t);margin-bottom:10px;">${bl}</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div style="background:var(--s);border-radius:9px;padding:8px 10px;">
+              <div style="font-size:9px;color:var(--t3);">الإشغال الآن</div>
+              <div style="font-size:16px;font-weight:800;color:var(--gold);">${toAr(occ2)}٪</div>
+              <div style="font-size:9px;color:var(--t3);">${toAr(acv)} / ${toAr(cfg2.apts)} شقة</div>
+            </div>
+            <div style="background:var(--s);border-radius:9px;padding:8px 10px;">
+              <div style="font-size:9px;color:var(--t3);">حجوزات الشهر</div>
+              <div style="font-size:16px;font-weight:800;color:#1a3d8f;">${toAr(mBk.length)}</div>
+              <div style="font-size:9px;color:var(--t3);">إجمالي: ${toAr(bks.length)}</div>
+            </div>
+            <div style="background:var(--s);border-radius:9px;padding:8px 10px;">
+              <div style="font-size:9px;color:var(--t3);">إيراد الشهر</div>
+              <div style="font-size:13px;font-weight:800;color:#047857;">${fmt(mR)} ﷼</div>
+              <div style="font-size:9px;color:var(--t3);">محصّل: ${fmt(mP)} ﷼</div>
+            </div>
+            <div style="background:var(--s);border-radius:9px;padding:8px 10px;">
+              <div style="font-size:9px;color:var(--t3);">المديونيات</div>
+              <div style="font-size:13px;font-weight:800;color:#dc2626;">${fmt(debt)} ﷼</div>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+  } else {
+    if(cmpWrap)cmpWrap.style.display='none';
+    if(summCards)summCards.style.display='none';
+  }
+}
+
+function rptPrevMonth(){
+  rptMonth--; if(rptMonth<0){rptMonth=11;rptYear--;}
+  renderReports();
+}
+function rptNextMonth(){
+  const n=new Date();
+  if(rptYear>n.getFullYear()||(rptYear===n.getFullYear()&&rptMonth>=n.getMonth()))return;
+  rptMonth++; if(rptMonth>11){rptMonth=0;rptYear++;}
+  renderReports();
+}
+function updateRptNav(){
+  const el=document.getElementById('rpt-month-nav'); if(el)el.textContent=MONTHS_AR[rptMonth]+' '+rptYear;
+  const nb=document.getElementById('rpt-next-btn'); if(nb){const n=new Date();nb.style.opacity=(rptYear>=n.getFullYear()&&rptMonth>=n.getMonth())?'0.3':'1';}
+  const sl=document.getElementById('rpt-month-section-lbl'); if(sl)sl.textContent=MONTHS_AR[rptMonth]+' '+rptYear;
+  const dl=document.getElementById('rpt-detail-lbl'); if(dl)dl.textContent='حجوزات '+MONTHS_AR[rptMonth]+' '+rptYear;
+}
+
 function renderReports(){
-  const month=parseInt(document.getElementById('rep-month')?.value||4);
-  const year=parseInt(document.getElementById('rep-year')?.value||2026);
-  const ms=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
-  const monthName=ms[month-1];
+  updateRptNav();
+  const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+  const today=new Date(); today.setHours(0,0,0,0);
+  const tomorrow=new Date(today); tomorrow.setDate(today.getDate()+1);
+  const TOTAL_APTS=89;
 
-  const monthContracts=allStaffBookings.filter(b=>{
-    if(!b.checkIn||!b.name)return false;
+  // ── اليوم ──
+  const arrivals=allStaffBookings.filter(b=>{if(!b.checkIn)return false;const d=new Date(b.checkIn);d.setHours(0,0,0,0);return d.getTime()===today.getTime()&&['awaiting_checkin','active'].includes(b.status);}).length;
+  const departures=allStaffBookings.filter(b=>{if(!b.checkOut)return false;const d=new Date(b.checkOut);d.setHours(0,0,0,0);return d.getTime()===today.getTime()&&b.status==='active';}).length;
+  const activeNow=allStaffBookings.filter(b=>['active','awaiting_checkin'].includes(b.status)).length;
+  const occRate=Math.round(activeNow/TOTAL_APTS*100);
+  set('rpt-arrivals',toAr(arrivals));
+  set('rpt-departures',toAr(departures));
+  set('rpt-occ',toAr(occRate)+'٪');
+  set('rpt-active',toAr(activeNow)+' / '+toAr(TOTAL_APTS));
+
+  // ── الشهر ──
+  const monthBk=allStaffBookings.filter(b=>{
+    if(!b.checkIn)return false;
     const d=new Date(b.checkIn);
-    return d.getMonth()+1===month && d.getFullYear()===year;
+    return d.getMonth()===rptMonth && d.getFullYear()===rptYear && b.status!=='cancelled';
   });
+  const mRev=monthBk.reduce((s,b)=>s+Number(b.totalPrice||0),0);
+  const mPaid=monthBk.reduce((s,b)=>s+Number(b.paidAmount||0),0);
+  const mDailyRev=monthBk.filter(b=>b.bookingType==='daily').reduce((s,b)=>s+Number(b.totalPrice||0),0);
+  set('rpt-month-bk',toAr(monthBk.length));
+  set('rpt-month-rev',fmt(mRev)+' ﷼');
+  set('rpt-month-paid',fmt(mPaid)+' ﷼');
+  set('rpt-month-rem',fmt(Math.max(0,mRev-mPaid))+' ﷼');
+  set('rpt-month-daily-rev',fmt(mDailyRev)+' ﷼');
 
-  const totalNew=monthContracts.length;
-  const totalCollected=monthContracts.reduce((a,b)=>a+(b.paidAmount||0),0);
-  const totalRevenue=monthContracts.reduce((a,b)=>a+(b.totalPrice||0),0);
-  const totalRemaining=monthContracts.reduce((a,b)=>a+Math.max(0,(b.totalPrice||0)-(b.paidAmount||0)),0);
+  // ── مخطط الإيرادات اليومية للشهر ──
+  const ct=document.getElementById('rpt-chart-title');
+  if(ct)ct.textContent='الإيرادات — '+MONTHS_AR[rptMonth]+' '+rptYear;
+  const daysInMonth=new Date(rptYear,rptMonth+1,0).getDate();
+  const dailyRev=Array.from({length:daysInMonth},(_,i)=>{
+    return monthBk.filter(b=>new Date(b.checkIn).getDate()===i+1).reduce((s,b)=>s+Number(b.totalPrice||0),0);
+  });
+  const rCanvas=document.getElementById('revenueChart');
+  if(rCanvas){
+    rCanvas.width=rCanvas.parentElement.clientWidth||600; rCanvas.height=200;
+    if(adminRevenueChartInst)adminRevenueChartInst.destroy();
+    adminRevenueChartInst=new Chart(rCanvas.getContext('2d'),{
+      type:'bar',
+      data:{labels:Array.from({length:daysInMonth},(_,i)=>String(i+1)),datasets:[{label:'الإيراد',data:dailyRev,backgroundColor:'rgba(26,61,143,.18)',borderColor:'rgba(26,61,143,.7)',borderWidth:1.5,borderRadius:6,hoverBackgroundColor:'rgba(26,61,143,.35)'}]},
+      options:{responsive:false,plugins:{legend:{display:false},tooltip:{rtl:true,bodyFont:{family:'Cairo'},callbacks:{label:ctx=>fmt(ctx.parsed.y)+' ﷼'}}},scales:{x:{ticks:{font:{family:'Cairo',size:10}},grid:{display:false}},y:{beginAtZero:true,ticks:{font:{family:'Cairo',size:10},callback:v=>fmt(v)},grid:{color:'rgba(0,0,0,.04)'}}}}
+    });
+  }
 
-  // أداء الفروع
-  let branchRows='';
-  SHEETS.forEach(sh=>{
-    const bc=monthContracts.filter(b=>b.building===sh);
-    const bp=bc.reduce((a,b)=>a+(b.paidAmount||0),0);
-    branchRows+=`
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--b);">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <span class="pill ${SP[sh]}">${sh}</span>
-          <span style="font-size:13px;font-weight:600;">${toAr(bc.length)} شقة مؤجرة</span>
-        </div>
-        <span style="font-size:14px;font-weight:700;color:var(--green);">${fmt(bp)} ﷼</span>
+  // ── مخطط السنة ──
+  const now=new Date();
+  const yearMonths=Array.from({length:12},(_,i)=>{
+    const base=new Date(now.getFullYear(),now.getMonth(),1);
+    const target=new Date(base);target.setMonth(base.getMonth()-(11-i));
+    return{label:MONTHS_AR[target.getMonth()]+' '+target.getFullYear(),month:target.getMonth(),year:target.getFullYear()};
+  });
+  const yearData=yearMonths.map(m=>{
+    const bks=allStaffBookings.filter(b=>{if(!b.checkIn||b.status==='cancelled')return false;const d=new Date(b.checkIn);return d.getMonth()===m.month&&d.getFullYear()===m.year;});
+    return{label:m.label,revenue:bks.reduce((s,b)=>s+Number(b.totalPrice||0),0),count:bks.length,daily:bks.filter(b=>b.bookingType==='daily').reduce((s,b)=>s+Number(b.totalPrice||0),0),annual:bks.filter(b=>b.bookingType!=='daily').reduce((s,b)=>s+Number(b.totalPrice||0),0)};
+  });
+  const totalYearRev=yearData.reduce((s,m)=>s+m.revenue,0);
+  const bestM=yearData.reduce((a,b)=>b.revenue>a.revenue?b:a,yearData[0]);
+  const ytEl=document.getElementById('yearly-total');
+  if(ytEl)ytEl.textContent='إجمالي السنة: '+fmt(totalYearRev)+' ﷼';
+  const ySumEl=document.getElementById('yearly-summary');
+  if(ySumEl)ySumEl.innerHTML=`
+    <div style="flex:1;min-width:130px;background:var(--gg);border-radius:10px;padding:10px 14px;"><div style="font-size:11px;color:var(--t3);margin-bottom:2px;">أعلى شهر</div><div style="font-size:13px;font-weight:700;color:var(--green);">${bestM.label} — ${fmt(bestM.revenue)} ﷼</div></div>
+    <div style="flex:1;min-width:130px;background:var(--gl);border-radius:10px;padding:10px 14px;"><div style="font-size:11px;color:var(--t3);margin-bottom:2px;">متوسط شهري</div><div style="font-size:13px;font-weight:700;color:var(--gold);">${fmt(Math.round(totalYearRev/12))} ﷼</div></div>
+    <div style="flex:1;min-width:130px;background:#F3E8FF;border-radius:10px;padding:10px 14px;"><div style="font-size:11px;color:var(--t3);margin-bottom:2px;">إجمالي الحجوزات</div><div style="font-size:13px;font-weight:700;color:#7C3AED;">${toAr(yearData.reduce((s,m)=>s+m.count,0))} حجز</div></div>`;
+  const yCanvas=document.getElementById('yearlyChart');
+  if(yCanvas){
+    yCanvas.width=yCanvas.parentElement.clientWidth||700; yCanvas.height=220;
+    if(adminYearlyChartInst)adminYearlyChartInst.destroy();
+    adminYearlyChartInst=new Chart(yCanvas.getContext('2d'),{
+      type:'bar',
+      data:{labels:yearData.map(m=>m.label),datasets:[
+        {label:'يومي',data:yearData.map(m=>m.daily),backgroundColor:'rgba(26,61,143,.75)',borderRadius:5,stack:'rev'},
+        {label:'شهري',data:yearData.map(m=>m.annual),backgroundColor:'rgba(139,92,246,.75)',borderRadius:5,stack:'rev'},
+      ]},
+      options:{responsive:false,plugins:{legend:{display:true,position:'top',align:'end',labels:{font:{family:'Cairo',size:11},boxWidth:12,padding:12}},tooltip:{rtl:true,bodyFont:{family:'Cairo'},callbacks:{label:ctx=>ctx.dataset.label+': '+fmt(ctx.parsed.y)+' ﷼'}}},scales:{x:{stacked:true,ticks:{font:{family:'Cairo',size:10},maxRotation:45},grid:{display:false}},y:{stacked:true,beginAtZero:true,ticks:{font:{family:'Cairo',size:10},callback:v=>fmt(v)},grid:{color:'rgba(0,0,0,.04)'}}}}
+    });
+  }
+
+  // ── جدول الحجوزات التفصيلي ──
+  const SL={pending:'جديد',awaiting_payment:'انتظار دفع',awaiting_checkin:'انتظار دخول',active:'نشط',checkout:'خروج',cancelled:'ملغي'};
+  const SC={pending:'pup',awaiting_payment:'pw',awaiting_checkin:'pa',active:'pop',checkout:'pcl',cancelled:'pup'};
+  const fD=d=>d?new Date(d).toLocaleDateString('ar-SA'):'—';
+  const mtWrap=document.getElementById('rpt-monthly-table');
+  if(mtWrap){
+    if(!monthBk.length){
+      mtWrap.innerHTML='<div style="text-align:center;padding:32px;color:var(--t3);font-size:13px;background:var(--s);border-radius:14px;border:1.5px solid var(--b2);">لا توجد حجوزات في هذا الشهر</div>';
+    } else {
+      mtWrap.innerHTML=`<div class="tbl-wrap"><table>
+        <thead><tr><th>العميل</th><th>المبنى</th><th>الشقة</th><th>الدخول</th><th>الخروج</th><th>النوع</th><th>الإجمالي</th><th>المحصّل</th><th>المتبقي</th><th>الحالة</th></tr></thead>
+        <tbody>${monthBk.map(b=>{const rem=Math.max(0,Number(b.totalPrice||0)-Number(b.paidAmount||0));return`<tr>
+          <td style="font-weight:600;">${b.name||'—'}</td>
+          <td><span class="pill ${SP[b.building]||'pm'}">${b.building||'—'}</span></td>
+          <td style="font-weight:700;font-family:monospace;">${b.apt||'—'}</td>
+          <td style="font-size:11px;">${fD(b.checkIn)}</td>
+          <td style="font-size:11px;">${fD(b.checkOut)}</td>
+          <td style="font-size:10px;color:var(--t3);">${b.bookingType==='daily'?'يومي':'شهري'}</td>
+          <td style="font-weight:700;">${fmt(Number(b.totalPrice||0))} ﷼</td>
+          <td style="color:var(--green);font-weight:600;">${fmt(Number(b.paidAmount||0))} ﷼</td>
+          <td style="color:${rem>0?'var(--red)':'var(--green)'};font-weight:700;">${fmt(rem)} ﷼</td>
+          <td><span class="pill ${SC[b.status]||'pm'}">${SL[b.status]||b.status||'—'}</span></td>
+        </tr>`;}).join('')}</tbody>
+      </table></div>
+      <div style="margin-top:10px;display:flex;gap:12px;flex-wrap:wrap;">
+        ${SHEETS.map(sh=>{const n=monthBk.filter(b=>b.building===sh).length;const p=monthBk.filter(b=>b.building===sh).reduce((s,b)=>s+Number(b.paidAmount||0),0);return n?`<div style="background:var(--s);border:1.5px solid var(--b2);border-radius:10px;padding:8px 14px;font-size:11px;"><span class="pill ${SP[sh]||'pm'}">${sh}</span> <b>${toAr(n)}</b> حجز · <span style="color:var(--green);">${fmt(p)} ﷼</span></div>`:''}).join('')}
       </div>`;
+    }
+  }
+
+  // ── المديونيات ──
+  const debts=allStaffBookings.filter(b=>{
+    const rem=Number(b.totalPrice||0)-Number(b.paidAmount||0);
+    return rem>0 && ['active','awaiting_checkin','awaiting_payment'].includes(b.status);
+  }).sort((a,b)=>(Number(b.totalPrice||0)-Number(b.paidAmount||0))-(Number(a.totalPrice||0)-Number(a.paidAmount||0)));
+  const dWrap=document.getElementById('rpt-debts-wrap');
+  if(dWrap){
+    if(!debts.length){
+      dWrap.innerHTML='<div style="background:var(--gg);border:1px solid var(--gb2);border-radius:12px;padding:16px;text-align:center;font-size:13px;font-weight:600;color:var(--green);">✅ لا توجد مديونيات</div>';
+    } else {
+      const totalDebt=debts.reduce((s,b)=>s+Math.max(0,Number(b.totalPrice||0)-Number(b.paidAmount||0)),0);
+      dWrap.innerHTML=`
+        <div style="background:var(--s);border:1.5px solid var(--rb);border-radius:14px;overflow:hidden;">
+          <div style="padding:12px 16px;background:var(--rg);display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:12px;font-weight:700;color:var(--red);">${toAr(debts.length)} حجز لديهم مبالغ متبقية</span>
+            <span style="font-size:14px;font-weight:800;color:var(--red);">إجمالي: ${fmt(totalDebt)} ﷼</span>
+          </div>
+          <div class="tbl-wrap"><table>
+            <thead><tr><th>العميل</th><th>الجوال</th><th>المبنى</th><th>الشقة</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th><th>الحالة</th></tr></thead>
+            <tbody>${debts.slice(0,50).map(b=>{const rem=Math.max(0,Number(b.totalPrice||0)-Number(b.paidAmount||0));const wa=(''+b.phone).replace(/\D/g,'').replace(/^0/,'966');return`<tr>
+              <td style="font-weight:600;">${b.name||'—'}</td>
+              <td><a href="https://wa.me/${wa}" target="_blank" class="wa-btn">📱 ${b.phone||'—'}</a></td>
+              <td><span class="pill ${SP[b.building]||'pm'}">${b.building||'—'}</span></td>
+              <td style="font-weight:700;font-family:monospace;">${b.apt||'—'}</td>
+              <td>${fmt(Number(b.totalPrice||0))} ﷼</td>
+              <td style="color:var(--green);">${fmt(Number(b.paidAmount||0))} ﷼</td>
+              <td style="color:var(--red);font-weight:700;">${fmt(rem)} ﷼</td>
+              <td><span class="pill ${SC[b.status]||'pm'}">${SL[b.status]||b.status||'—'}</span></td>
+            </tr>`;}).join('')}</tbody>
+          </table></div>
+        </div>`;
+    }
+  }
+}
+
+// ── Admin Monthly Report ────────────────────────────────────
+function initAdminMrSelects(){
+  const yEl=document.getElementById('adm-mr-year');
+  const mEl=document.getElementById('adm-mr-month');
+  if(!yEl||!mEl)return;
+  const now=new Date();
+  const curY=now.getFullYear(), curM=now.getMonth()+1;
+  for(let y=curY;y>=curY-5;y--){const o=document.createElement('option');o.value=y;o.textContent=y;yEl.appendChild(o);}
+  yEl.value=curY; mEl.value=curM;
+}
+function adminMonthlyReport(){
+  const year=parseInt(document.getElementById('adm-mr-year')?.value||0);
+  const month=parseInt(document.getElementById('adm-mr-month')?.value||0);
+  const type=document.querySelector('input[name="adm-mr-type"]:checked')?.value||'detail';
+  const body=document.getElementById('adm-mr-body');
+  if(!body)return;
+  const bks=(allStaffBookings||[]).filter(b=>{
+    if(b.status==='cancelled')return false;
+    const ci=new Date(b.checkIn||b.checkOut);
+    return ci.getFullYear()===year && ci.getMonth()+1===month;
   });
+  const mName=MONTHS_AR[month-1]||'';
+  const totRev=bks.reduce((s,b)=>s+(b.totalPrice||0),0);
+  const totPaid=bks.reduce((s,b)=>s+(b.paidAmount||0),0);
+  const totRem=Math.max(0,totRev-totPaid);
+  const totNights=bks.reduce((s,b)=>s+(b.nights||0),0);
+  const cardStyle='background:#fff;border:1.5px solid var(--b2);border-radius:12px;overflow:hidden;';
+  const hdStyle='background:var(--gold);color:#fff;padding:12px 18px;font-weight:700;font-size:13px;display:flex;justify-content:space-between;align-items:center;';
+  const ST_L={awaiting_checkin:'انتظار دخول',active:'مسكّن',checkout:'خروج',cancelled:'ملغي',pending:'قيد الانتظار',awaiting_payment:'انتظار دفع'};
+  if(type==='total'){
+    body.innerHTML=`<div style="${cardStyle}" id="adm-mr-printable">
+      <div style="${hdStyle}"><span>التقرير الشهري الكلي — ${mName} ${year}</span></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:0;">
+        ${[{lbl:'إجمالي الحجوزات',val:bks.length,c:'#1a3d8f'},{lbl:'إجمالي الليالي',val:totNights,c:'#7c3aed'},
+           {lbl:'إجمالي الإيرادات',val:fmt(totRev)+' ﷼',c:'#047857'},{lbl:'المحصّل',val:fmt(totPaid)+' ﷼',c:'#0369a1'},
+           {lbl:'المتبقي',val:fmt(totRem)+' ﷼',c:'#dc2626'}
+          ].map(x=>`<div style="padding:16px 18px;border-left:1px solid var(--b2);border-bottom:1px solid var(--b2);">
+            <div style="font-size:11px;color:var(--t2);margin-bottom:4px;">${x.lbl}</div>
+            <div style="font-size:22px;font-weight:900;color:${x.c};">${x.val}</div>
+          </div>`).join('')}
+      </div></div>`;
+    return;
+  }
+  if(type==='summary'){
+    const byApt={};
+    bks.forEach(b=>{const k=b.apt||'—';if(!byApt[k])byApt[k]={apt:k,count:0,nights:0,revenue:0,paid:0};
+      byApt[k].count++;byApt[k].nights+=(b.nights||0);byApt[k].revenue+=(b.totalPrice||0);byApt[k].paid+=(b.paidAmount||0);});
+    const rows=Object.values(byApt).sort((a,b)=>b.revenue-a.revenue);
+    body.innerHTML=`<div style="${cardStyle}" id="adm-mr-printable">
+      <div style="${hdStyle}"><span>التقرير التجميعي — ${mName} ${year}</span><span style="font-size:11px;opacity:.8;">${bks.length} حجز</span></div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>الشقة</th><th>عدد الحجوزات</th><th>الليالي</th><th>الإيرادات</th><th>المحصّل</th><th>المتبقي</th></tr></thead>
+      <tbody>${rows.length?rows.map(r=>`<tr><td style="font-weight:700;">${r.apt}</td><td style="text-align:center;">${r.count}</td><td style="text-align:center;">${r.nights}</td>
+        <td style="font-weight:700;">${fmt(r.revenue)} ﷼</td><td style="color:#047857;">${fmt(r.paid)} ﷼</td>
+        <td style="color:#dc2626;">${fmt(Math.max(0,r.revenue-r.paid))} ﷼</td></tr>`).join('')
+        :'<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--t2);">لا توجد بيانات</td></tr>'}
+      </tbody>
+      <tfoot><tr style="background:var(--s);font-weight:700;"><td>الإجمالي</td><td style="text-align:center;">${bks.length}</td><td style="text-align:center;">${totNights}</td>
+        <td>${fmt(totRev)} ﷼</td><td style="color:#047857;">${fmt(totPaid)} ﷼</td><td style="color:#dc2626;">${fmt(totRem)} ﷼</td></tr></tfoot>
+      </table></div></div>`;
+    return;
+  }
+  // detail
+  body.innerHTML=`<div style="${cardStyle}" id="adm-mr-printable">
+    <div style="${hdStyle}"><span>التقرير التفصيلي — ${mName} ${year}</span><span style="font-size:11px;opacity:.8;">${bks.length} حجز</span></div>
+    <div class="tbl-wrap"><table class="tbl"><thead><tr><th>رقم</th><th>الشقة</th><th>المبنى</th><th>العميل</th><th>الدخول</th><th>الخروج</th><th>الليالي</th><th>الإجمالي</th><th>المحصّل</th><th>المتبقي</th><th>الحالة</th></tr></thead>
+    <tbody>${bks.length?bks.map((b,i)=>{
+      const rem=Math.max(0,(b.totalPrice||0)-(b.paidAmount||0));
+      return`<tr><td style="font-size:10px;color:var(--t2);">${i+1}</td><td style="font-weight:700;">${b.apt||'—'}</td><td>${b.building||'—'}</td><td>${b.name||'—'}</td>
+        <td style="font-size:11px;">${b.checkIn?new Date(b.checkIn).toLocaleDateString('ar-SA'):'—'}</td>
+        <td style="font-size:11px;">${b.checkOut?new Date(b.checkOut).toLocaleDateString('ar-SA'):'—'}</td>
+        <td style="text-align:center;">${b.nights||0}</td>
+        <td style="font-weight:700;">${fmt(b.totalPrice)} ﷼</td>
+        <td style="color:#047857;">${fmt(b.paidAmount)} ﷼</td>
+        <td style="color:#dc2626;">${fmt(rem)} ﷼</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;background:var(--s);color:var(--gold);">${ST_L[b.status]||b.status}</span></td>
+      </tr>`;}).join(''):'<tr><td colspan="11" style="text-align:center;padding:20px;color:var(--t2);">لا توجد حجوزات</td></tr>'}
+    </tbody>
+    <tfoot><tr style="background:var(--s);font-weight:700;"><td colspan="7">الإجمالي (${bks.length} حجز — ${totNights} ليلة)</td>
+      <td>${fmt(totRev)} ﷼</td><td style="color:#047857;">${fmt(totPaid)} ﷼</td><td style="color:#dc2626;">${fmt(totRem)} ﷼</td><td></td></tr></tfoot>
+    </table></div></div>`;
+}
+function printAdminMonthlyReport(){
+  const c=document.getElementById('adm-mr-printable');
+  if(!c){alert('اضغط عرض أولاً');return;}
+  const year=document.getElementById('adm-mr-year')?.value;
+  const month=MONTHS_AR[(parseInt(document.getElementById('adm-mr-month')?.value)||1)-1];
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="utf-8"><title>التقرير الشهري — ${month} ${year}</title><style>
+    *{box-sizing:border-box;}body{font-family:Tahoma,Arial,sans-serif;direction:rtl;padding:20px;font-size:12px;}
+    table{width:100%;border-collapse:collapse;}th{background:#c8a870;color:#fff;padding:7px 10px;font-size:11px;text-align:right;}
+    td{padding:6px 10px;border:1px solid #e2e8f0;font-size:11px;}tfoot td{background:#f8fafc;font-weight:700;}
+    @media print{@page{size:A4 landscape;margin:10mm;}}
+  </style></head><body>${c.innerHTML}</body></html>`);
+  w.document.close();setTimeout(()=>w.print(),400);
+}
 
-  // أداء المسوقين من العمولات
-  const amContracts=monthContracts.filter(b=>b.source==='عبدالملك').length;
-  const jContracts=monthContracts.filter(b=>b.source==='جود').length;
-  const amComm=currComm.filter(c=>c.m==='عبدالملك').reduce((a,c)=>a+c.a,0);
-  const jComm=currComm.filter(c=>c.m==='جود').reduce((a,c)=>a+c.a,0);
-
-  const wrap=document.getElementById('report-wrap');
-  if(!wrap)return;
-
-  wrap.innerHTML=`
-  <div id="printable-report">
-    <!-- هيدر التقرير -->
-    <div style="background:var(--t);border-radius:14px;padding:20px 24px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;">
-      <div>
-        <div style="font-size:20px;font-weight:700;color:#FFD700;letter-spacing:.5px;">BAREZ</div>
-        <div style="font-size:11px;color:rgba(255,255,255,.5);letter-spacing:1px;text-transform:uppercase;margin-top:2px;">Pro</div>
-      </div>
-      <div style="text-align:left;">
-        <div style="font-size:16px;font-weight:700;color:#fff;">تقرير ${monthName} ${year}</div>
-        <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:2px;">${new Date().toLocaleDateString('ar-SA')}</div>
-      </div>
+// ── Admin Occupancy Report ──────────────────────────────────
+function adminOccReport(){
+  const from=document.getElementById('adm-occ-from')?.value;
+  const to=document.getElementById('adm-occ-to')?.value;
+  const bldFilter=document.getElementById('adm-occ-bld')?.value||'';
+  const body=document.getElementById('adm-occ-body');
+  if(!body)return;
+  if(!from||!to){body.innerHTML='<div style="color:#dc2626;padding:12px;">اختر الفترة الزمنية</div>';return;}
+  const fromD=new Date(from),toD=new Date(to);toD.setHours(23,59,59,999);
+  const totalDays=Math.max(1,Math.round((toD-fromD)/86400000));
+  const bks=(allStaffBookings||[]).filter(b=>{
+    if(['cancelled'].includes(b.status))return false;
+    if(bldFilter&&b.building!==bldFilter)return false;
+    const ci=new Date(b.checkIn),co=new Date(b.checkOut);
+    return ci<toD && co>fromD;
+  });
+  // per-apt occupancy
+  const aptMap={};
+  bks.forEach(b=>{
+    const key=`${b.building||''}|${b.apt||''}`;
+    if(!aptMap[key])aptMap[key]={building:b.building||'—',apt:b.apt||'—',days:0,bks:0,rev:0};
+    const ci=new Date(b.checkIn),co=new Date(b.checkOut);
+    const overlapStart=ci<fromD?fromD:ci, overlapEnd=co>toD?toD:co;
+    const days=Math.max(0,Math.round((overlapEnd-overlapStart)/86400000));
+    aptMap[key].days+=days;aptMap[key].bks++;aptMap[key].rev+=(b.totalPrice||0);
+  });
+  const rows=Object.values(aptMap).sort((a,b)=>b.days-a.days);
+  const totalOccDays=rows.reduce((s,r)=>s+r.days,0);
+  const allAptCount=(bldFilter?BUILDINGS.find(b=>b.n===bldFilter)?.apts?.flat()?.length||1:89);
+  const overallOcc=Math.round(totalOccDays/allAptCount/totalDays*100);
+  const cardStyle='background:#fff;border:1.5px solid var(--b2);border-radius:12px;overflow:hidden;';
+  const hdStyle='background:var(--gold);color:#fff;padding:12px 18px;font-weight:700;font-size:13px;display:flex;justify-content:space-between;align-items:center;';
+  body.innerHTML=`<div style="${cardStyle}" id="adm-occ-printable">
+    <div style="${hdStyle}">
+      <span>نسب الإشغال — ${from} إلى ${to}</span>
+      <span style="font-size:12px;opacity:.85;">الإشغال الكلي: ${overallOcc}%</span>
     </div>
-
-    <!-- الأرقام الكبيرة -->
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px;">
-      <div style="background:var(--s);border:1px solid var(--b);border-radius:12px;padding:20px;text-align:center;">
-        <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;">حجوزات هذا الشهر</div>
-        <div style="font-size:40px;font-weight:700;color:var(--gold);line-height:1;">${toAr(totalNew)}</div>
-        <div style="font-size:11px;color:var(--t3);margin-top:4px;">حجز</div>
-      </div>
-      <div style="background:var(--s);border:1px solid var(--b);border-radius:12px;padding:20px;text-align:center;">
-        <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;">إجمالي المحصّل</div>
-        <div style="font-size:28px;font-weight:700;color:var(--green);line-height:1;">${fmt(totalCollected)}</div>
-        <div style="font-size:11px;color:var(--t3);margin-top:4px;">من ${fmt(totalRevenue)} ﷼ (${totalRevenue?Math.round(totalCollected/totalRevenue*100):0}٪)</div>
-      </div>
-      <div style="background:var(--s);border:1px solid var(--b);border-radius:12px;padding:20px;text-align:center;">
-        <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;">المتبقي للتحصيل</div>
-        <div style="font-size:28px;font-weight:700;color:var(--red);line-height:1;">${fmt(totalRemaining)}</div>
-        <div style="font-size:11px;color:var(--t3);margin-top:4px;">ريال سعودي</div>
-      </div>
-    </div>
-
-    <!-- أداء الفروع -->
-    <div style="background:var(--s);border:1px solid var(--b);border-radius:12px;overflow:hidden;margin-bottom:12px;">
-      <div style="padding:14px 16px;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;">
-        <div style="font-size:13px;font-weight:700;">🏢 أداء الفروع</div>
-        <div style="font-size:10px;color:var(--t3);">عدد الشقق المؤجرة والمحصّل</div>
-      </div>
-      ${branchRows||'<div style="padding:16px;text-align:center;color:var(--t3);">لا توجد بيانات</div>'}
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--gl);">
-        <span style="font-size:12px;font-weight:700;color:var(--gold);">الإجمالي</span>
-        <span style="font-size:15px;font-weight:700;color:var(--gold);">${fmt(totalCollected)} ﷼</span>
-      </div>
-    </div>
-
-    <!-- إجمالي الشقق المؤجرة -->
-    <div style="background:var(--s);border:1px solid var(--b);border-radius:12px;overflow:hidden;">
-      <div style="padding:14px 16px;border-bottom:1px solid var(--b);">
-        <div style="font-size:13px;font-weight:700;">🏠 إجمالي الشقق المؤجرة</div>
-      </div>
-      <div style="padding:28px;text-align:center;">
-        <div style="font-size:56px;font-weight:700;color:var(--gold);line-height:1;">${toAr(totalNew)}</div>
-        <div style="font-size:13px;color:var(--t3);margin-top:8px;">شقة مؤجرة هذا الشهر</div>
-        <div style="margin-top:16px;display:flex;justify-content:center;gap:8px;flex-wrap:wrap;">
-          ${SHEETS.map(sh=>{const n=monthContracts.filter(b=>b.building===sh).length;return n>0?`<span style="background:var(--gl);border:1px solid var(--gb);border-radius:8px;padding:6px 12px;font-size:11px;font-weight:600;color:var(--gold);">${sh}: ${toAr(n)}</span>`:''}).join('')}
-        </div>
-      </div>
-    </div>
-  </div>
-  ${totalNew===0?'<div style="text-align:center;padding:40px;color:var(--t3);font-size:13px;margin-top:10px;">لا توجد عقود دخلت في هذا الشهر</div>':''}
-  `;
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>المبنى</th><th>الشقة</th><th>أيام الإشغال</th><th>نسبة الإشغال</th><th>عدد الحجوزات</th><th>الإيرادات</th></tr></thead>
+      <tbody>${rows.length?rows.map(r=>{
+        const pct=Math.min(100,Math.round(r.days/totalDays*100));
+        const bar=`<div style="background:#f0f4ff;border-radius:4px;height:6px;margin-top:3px;overflow:hidden;"><div style="background:var(--gold);height:100%;width:${pct}%;border-radius:4px;"></div></div>`;
+        return`<tr><td>${r.building}</td><td style="font-weight:700;">${r.apt}</td><td style="text-align:center;">${r.days} من ${totalDays}</td>
+          <td><span style="font-weight:700;color:${pct>=80?'#047857':pct>=50?'#c8a870':'#dc2626'};">${pct}%</span>${bar}</td>
+          <td style="text-align:center;">${r.bks}</td><td>${fmt(r.rev)} ﷼</td></tr>`;}).join('')
+        :'<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--t2);">لا توجد بيانات</td></tr>'}
+      </tbody>
+      <tfoot><tr style="background:var(--s);font-weight:700;"><td colspan="2">الإجمالي</td><td style="text-align:center;">${totalOccDays}</td>
+        <td>${overallOcc}%</td><td style="text-align:center;">${rows.reduce((s,r)=>s+r.bks,0)}</td>
+        <td>${fmt(rows.reduce((s,r)=>s+r.rev,0))} ﷼</td></tr></tfoot>
+    </table></div></div>`;
+}
+function printAdminOccReport(){
+  const c=document.getElementById('adm-occ-printable');
+  if(!c){alert('اضغط عرض أولاً');return;}
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="utf-8"><title>تقرير الإشغال</title><style>
+    *{box-sizing:border-box;}body{font-family:Tahoma,Arial,sans-serif;direction:rtl;padding:20px;font-size:12px;}
+    table{width:100%;border-collapse:collapse;}th{background:#c8a870;color:#fff;padding:7px 10px;font-size:11px;text-align:right;}
+    td{padding:6px 10px;border:1px solid #e2e8f0;font-size:11px;}tfoot td{background:#f8fafc;font-weight:700;}
+    @media print{@page{size:A4 landscape;margin:10mm;}}
+  </style></head><body>${c.innerHTML}</body></html>`);
+  w.document.close();setTimeout(()=>w.print(),400);
 }
 
 function printReport(){
-  const month=document.getElementById('rep-month')?.value||4;
-  const year=document.getElementById('rep-year')?.value||2026;
-  const ms=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
-  const body=document.getElementById('printable-report')?.innerHTML||'';
+  const monthName=MONTHS_AR[rptMonth];
+  const year=rptYear;
+  const rpt=document.getElementById('tab-reports');
   const w=window.open('','_blank');
-  w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>تقرير ${ms[month-1]} ${year} — BAREZ</title>
-  <style>
-  *{box-sizing:border-box;margin:0;padding:0;}
-  body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;direction:rtl;background:#F8F6F0;color:#1A1A1A;padding:24px;}
-  .pill{font-size:9px;padding:2px 8px;border-radius:20px;font-weight:600;}
-  .pm{background:rgba(26,61,143,.15);color:#1a3d8f;}
-  .pj{background:rgba(26,115,64,.1);color:#1A7340;}
-  .pa{background:rgba(26,82,118,.08);color:#1A5276;}
-  .pw{background:rgba(160,64,0,.08);color:#A04000;}
-  @media print{body{padding:0;background:#fff;}}
-  </style>
-  </head><body>${body}</body></html>`);
+  w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>تقرير ${monthName} ${year} — BAREZ</title>
+  <style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;direction:rtl;background:#fff;color:#1A1A1A;padding:24px;}table{width:100%;border-collapse:collapse;}th,td{padding:7px 10px;border:1px solid #ddd;font-size:11px;text-align:right;}th{background:#f5f5f5;font-weight:700;}.pill{font-size:9px;padding:2px 7px;border-radius:20px;font-weight:600;border:1px solid #ddd;}.pop{background:#dcfce7;color:#166534;}.pa{background:#dbeafe;color:#1d4ed8;}.pw{background:#fef3c7;color:#92400e;}.pup{background:#fee2e2;color:#991b1b;}.pcl{background:#f1f5f9;color:#64748b;}.pm{background:#f0f4ff;color:#1a3d8f;}@media print{button{display:none!important;}}</style>
+  </head><body>
+  <h2 style="margin-bottom:16px;color:#1a3d8f;">تقرير ${monthName} ${year} — BAREZ</h2>
+  ${document.getElementById('rpt-monthly-table')?.innerHTML||''}
+  </body></html>`);
   w.document.close();
   setTimeout(()=>w.print(),500);
 }
+
 function exportReportCSV(){
-  const month=parseInt(document.getElementById('rep-month')?.value||new Date().getMonth()+1);
-  const year=parseInt(document.getElementById('rep-year')?.value||new Date().getFullYear());
-  const ms=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
-  const data=allStaffBookings.filter(b=>{if(!b.checkIn||!b.name)return false;const d=new Date(b.checkIn);return d.getMonth()+1===month&&d.getFullYear()===year;});
-  const rows=[['الاسم','المبنى','الشقة','الدخول','الخروج','الإجمالي','المدفوع','المتبقي','الحالة']];
-  const SL={pending:'جديد',awaiting_checkin:'انتظار دخول',active:'نشط',checkout:'خروج',cancelled:'ملغي'};
-  data.forEach(b=>{const fD=d=>d?new Date(d).toLocaleDateString('ar-SA'):'';const rem=Math.max(0,(b.totalPrice||0)-(b.paidAmount||0));rows.push([b.name||'',b.building||'',b.apt||'',fD(b.checkIn),fD(b.checkOut),b.totalPrice||0,b.paidAmount||0,rem,SL[b.status]||b.status||'']);});
+  const ms=MONTHS_AR;
+  const month=rptMonth+1;
+  const year=rptYear;
+  const data=allStaffBookings.filter(b=>{if(!b.checkIn||b.status==='cancelled')return false;const d=new Date(b.checkIn);return d.getMonth()===rptMonth&&d.getFullYear()===rptYear;});
+  const rows=[['الاسم','المبنى','الشقة','الدخول','الخروج','النوع','الإجمالي','المدفوع','المتبقي','الحالة']];
+  const SL={pending:'جديد',awaiting_payment:'انتظار دفع',awaiting_checkin:'انتظار دخول',active:'نشط',checkout:'خروج',cancelled:'ملغي'};
+  data.forEach(b=>{const fD=d=>d?new Date(d).toLocaleDateString('ar-SA'):'';const rem=Math.max(0,Number(b.totalPrice||0)-Number(b.paidAmount||0));rows.push([b.name||'',b.building||'',b.apt||'',fD(b.checkIn),fD(b.checkOut),b.bookingType==='daily'?'يومي':'شهري',Number(b.totalPrice||0),Number(b.paidAmount||0),rem,SL[b.status]||b.status||'']);});
   const csv='﻿'+rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
-  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download=`تقرير-${ms[month-1]}-${year}.csv`;a.click();
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download=`تقرير-${ms[rptMonth]}-${year}.csv`;a.click();
 }
 
 

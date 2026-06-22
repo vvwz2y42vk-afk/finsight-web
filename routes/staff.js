@@ -2774,19 +2774,33 @@ transfer = تحويل بنكي إلكتروني.`;
 router.post('/api/receipts', reqStaff, async (req, res) => {
   try {
     const Receipt = require('../models/Receipt');
+    const Notification = require('../models/Notification');
     const { bookingId, building, apt, guestName, imageData, imageMimeType, analysis } = req.body;
+    const bld = building || req.staff.building;
     const rec = await Receipt.create({
       bookingId:     bookingId || null,
-      building:      building || req.staff.building,
+      building:      bld,
       apt:           apt || '',
       guestName:     guestName || '',
       imageData:     imageData || '',
       imageMimeType: imageMimeType || 'image/jpeg',
       analysis:      analysis || {},
       analysisStatus:'success',
+      status:        bookingId ? 'linked' : 'pending',
       propertyId:    req.staff.propertyId || null,
       createdBy:     req.staff.name,
     });
+    // إشعار فوري عند عدم تطابق الجهة
+    if (analysis?.matchesBuilding === false) {
+      await Notification.create({
+        building:   bld,
+        propertyId: req.staff.propertyId || null,
+        type:       'receipt_mismatch',
+        title:      '⚠️ إيصال — جهة غير مطابقة',
+        message:    `رفع ${req.staff.name} إيصالاً للشقة ${apt||'—'} بمبلغ ${analysis?.amount||'—'} ريال، الجهة المدوّنة (${analysis?.entityName||'غير معروفة'}) لا تطابق ${bld}`,
+        data:       { receiptId: rec._id, apt, amount: analysis?.amount, staffName: req.staff.name, entityName: analysis?.entityName },
+      });
+    }
     res.json({ success: true, receiptId: rec._id });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -2797,13 +2811,70 @@ router.get('/api/receipts', reqStaff, async (req, res) => {
   try {
     const Receipt = require('../models/Receipt');
     const filter = { propertyId: req.staff.propertyId || null };
-    if (req.query.building) filter.building = req.query.building;
-    else                    filter.building = req.staff.building;
-    const recs = await Receipt.find(filter).sort({ createdAt: -1 }).limit(120).lean();
+    filter.building = req.query.building || req.staff.building;
+    if (req.query.type       && req.query.type       !== 'all') filter['analysis.paymentType'] = req.query.type;
+    if (req.query.recStatus  && req.query.recStatus  !== 'all') filter.status = req.query.recStatus;
+    if (req.query.matchStatus === 'matched') filter['analysis.matchesBuilding'] = true;
+    if (req.query.matchStatus === 'warned')  filter['analysis.matchesBuilding'] = false;
+    if (req.query.dateFrom || req.query.dateTo) {
+      filter.createdAt = {};
+      if (req.query.dateFrom) filter.createdAt.$gte = new Date(req.query.dateFrom);
+      if (req.query.dateTo)   filter.createdAt.$lte = new Date(req.query.dateTo + 'T23:59:59');
+    }
+    const recs = await Receipt.find(filter).sort({ createdAt: -1 }).limit(200).lean();
     res.json(recs);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
+});
+
+// PUT /staff/api/receipts/:id/link — ربط إيصال بحجز
+router.put('/api/receipts/:id/link', reqStaff, async (req, res) => {
+  try {
+    if (req.staff.role !== 'manager') return res.status(403).json({ error: 'للمديرين فقط' });
+    const Receipt = require('../models/Receipt');
+    const { bookingId } = req.body;
+    if (!bookingId) return res.status(400).json({ error: 'bookingId مطلوب' });
+    await Receipt.findByIdAndUpdate(req.params.id, { bookingId, status: 'linked' });
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// PUT /staff/api/receipts/:id/reject — رفض إيصال
+router.put('/api/receipts/:id/reject', reqStaff, async (req, res) => {
+  try {
+    if (req.staff.role !== 'manager') return res.status(403).json({ error: 'للمديرين فقط' });
+    const Receipt = require('../models/Receipt');
+    await Receipt.findByIdAndUpdate(req.params.id, { status: 'rejected', rejectionReason: req.body.reason || '' });
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// GET /staff/api/notifications — جلب الإشعارات
+router.get('/api/notifications', reqStaff, async (req, res) => {
+  try {
+    const Notification = require('../models/Notification');
+    const filter = req.staff.propertyId
+      ? { propertyId: req.staff.propertyId }
+      : { building: req.staff.building, propertyId: null };
+    const [items, unread] = await Promise.all([
+      Notification.find(filter).sort({ createdAt: -1 }).limit(30).lean(),
+      Notification.countDocuments({ ...filter, isRead: false }),
+    ]);
+    res.json({ items, unread });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// PUT /staff/api/notifications/read — تحديد الكل كمقروء
+router.put('/api/notifications/read', reqStaff, async (req, res) => {
+  try {
+    const Notification = require('../models/Notification');
+    const filter = req.staff.propertyId
+      ? { propertyId: req.staff.propertyId }
+      : { building: req.staff.building, propertyId: null };
+    await Notification.updateMany({ ...filter, isRead: false }, { isRead: true });
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // ── ID Card Scan ─────────────────────────────────────────────────────────────

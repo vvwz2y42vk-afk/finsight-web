@@ -747,7 +747,24 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
       </div>
       <div class="tb-bld-sub"><%= staff.role==='manager'?'مدير':'موظف استقبال' %></div>
     </div>
-    <div class="tb-clock" id="tb-clock-val"></div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="tb-clock" id="tb-clock-val"></div>
+      <% if(staff.role==='manager'){ %>
+      <div style="position:relative;" id="bell-wrap">
+        <button onclick="toggleNotifPanel()" style="background:none;border:none;cursor:pointer;padding:6px;border-radius:50%;position:relative;color:var(--t2);display:flex;align-items:center;justify-content:center;" title="الإشعارات">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span id="bell-badge" style="display:none;position:absolute;top:2px;right:2px;background:#dc2626;color:#fff;font-size:9px;font-weight:800;min-width:16px;height:16px;border-radius:8px;padding:0 3px;line-height:16px;text-align:center;"></span>
+        </button>
+        <div id="notif-panel" style="display:none;position:absolute;top:calc(100% + 8px);left:0;width:320px;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.15);z-index:9999;overflow:hidden;">
+          <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:13px;font-weight:700;color:var(--t1);">الإشعارات</span>
+            <button onclick="markNotifsRead()" style="font-size:11px;color:var(--brand);background:none;border:none;cursor:pointer;font-family:inherit;font-weight:600;">تحديد كمقروء</button>
+          </div>
+          <div id="notif-list" style="max-height:320px;overflow-y:auto;"></div>
+        </div>
+      </div>
+      <% } %>
+    </div>
   </div>
 
   <!-- صف ٢: شريط التنقل والمستخدم -->
@@ -1220,18 +1237,38 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
 
     <!-- ── Receipts ── -->
     <div class="tab-section" id="tab-receipts">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:18px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
         <div style="font-size:15px;font-weight:700;color:var(--t1);">إيصالات الدفع</div>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <select id="rec-bld-filter" onchange="loadReceipts()" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:12px;outline:none;background:#fff;color:var(--t1);">
-            <option value="">جميع المباني</option>
-            <option value="المنارا">المنارا</option>
-            <option value="جوان ان">جوان ان</option>
-            <option value="الماسة">الماسة</option>
-            <option value="الواحة">الواحة</option>
-          </select>
-          <button onclick="loadReceipts()" style="padding:7px 14px;background:var(--brand);color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">تحديث</button>
-        </div>
+        <button onclick="loadReceipts()" style="padding:7px 14px;background:var(--brand);color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">↺ تحديث</button>
+      </div>
+      <!-- Filters -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center;">
+        <select id="rec-bld-filter" onchange="loadReceipts()" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:12px;outline:none;background:var(--surface);color:var(--t1);">
+          <option value="">جميع المباني</option>
+          <option value="المنارا">المنارا</option>
+          <option value="جوان ان">جوان ان</option>
+          <option value="الماسة">الماسة</option>
+          <option value="الواحة">الواحة</option>
+        </select>
+        <select id="rec-type-filter" onchange="loadReceipts()" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:12px;outline:none;background:var(--surface);color:var(--t1);">
+          <option value="all">كل الأنواع</option>
+          <option value="network">شبكة</option>
+          <option value="transfer">تحويل</option>
+          <option value="cash">نقداً</option>
+        </select>
+        <select id="rec-match-filter" onchange="loadReceipts()" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:12px;outline:none;background:var(--surface);color:var(--t1);">
+          <option value="all">كل الحالات</option>
+          <option value="matched">✓ مطابق</option>
+          <option value="warned">⚠️ تحذير</option>
+        </select>
+        <select id="rec-status-filter" onchange="loadReceipts()" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:12px;outline:none;background:var(--surface);color:var(--t1);">
+          <option value="all">كل الإيصالات</option>
+          <option value="pending">غير مربوط</option>
+          <option value="linked">مربوط بحجز</option>
+          <option value="rejected">مرفوض</option>
+        </select>
+        <input type="date" id="rec-date-from" onchange="loadReceipts()" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:12px;outline:none;background:var(--surface);color:var(--t1);" title="من تاريخ">
+        <input type="date" id="rec-date-to" onchange="loadReceipts()" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:12px;outline:none;background:var(--surface);color:var(--t1);" title="إلى تاريخ">
       </div>
       <div id="rec-stats-row" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;"></div>
       <div id="rec-grid"></div>
@@ -2166,23 +2203,64 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
         </div>
         <!-- ── نهاية إيصال الدفع ── -->
 
-        <div>
-          <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">نوع الإثبات</label>
-          <select id="nb-idtype" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;">
-            <option value="">— اختر —</option>
-            <option value="national_id">هوية وطنية</option>
-            <option value="passport">جواز سفر</option>
-            <option value="iqama">إقامة</option>
-            <option value="family_card">كرت عائلة</option>
-          </select>
-        </div>
-        <div>
-          <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">رقم الإثبات</label>
-          <div style="position:relative;">
-            <input id="nb-idnum" type="text" placeholder="رقم الوثيقة" oninput="onIdNumInput(this.value)" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;">
-            <span id="nb-idnum-badge" style="display:none;position:absolute;left:8px;top:50%;transform:translateY(-50%);background:#047857;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;">ضيف سابق ✓</span>
+        <!-- ── مسح الهوية ── -->
+        <div style="grid-column:1/-1;">
+          <div id="nb-id-scan-box" style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;padding:14px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:6px;">
+              <label style="font-size:12px;font-weight:700;color:#475569;">🪪 بيانات الهوية</label>
+              <span style="font-size:10px;color:#94a3b8;">مسح تلقائي أو إدخال يدوي</span>
+            </div>
+            <!-- زر المسح -->
+            <input type="file" id="nb-id-file" accept="image/*" style="display:none;" onchange="onIdScan(this,'nb')">
+            <button type="button" onclick="document.getElementById('nb-id-file').click()" id="nb-id-scan-btn" style="width:100%;padding:9px;border:2px dashed #93c5fd;border-radius:9px;background:#eff6ff;color:#1d4ed8;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;margin-bottom:10px;">
+              <span style="font-size:16px;">🪪</span> مسح الهوية تلقائياً (اختياري)
+            </button>
+            <!-- معاينة + نتيجة -->
+            <div id="nb-id-preview-row" style="display:none;gap:10px;align-items:flex-start;margin-bottom:10px;">
+              <div style="position:relative;flex-shrink:0;">
+                <img id="nb-id-preview-img" src="" style="width:80px;height:55px;object-fit:cover;border-radius:7px;border:2px solid #bae6fd;cursor:pointer;display:block;" onclick="showIdFullscreen('nb-id-preview-img')" title="تكبير">
+                <div onclick="resetIdScan('nb')" style="position:absolute;top:-5px;left:-5px;width:16px;height:16px;background:#dc2626;border-radius:50%;color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;">×</div>
+              </div>
+              <div style="flex:1;font-size:11px;">
+                <div id="nb-id-scanning" style="color:#0369a1;font-weight:600;">⏳ جاري قراءة الهوية...</div>
+                <div id="nb-id-result" style="display:none;color:#065f46;font-weight:600;">✓ تم ملء الحقول تلقائياً — راجع وعدّل إن لزم</div>
+                <div id="nb-id-error" style="display:none;color:#dc2626;font-weight:600;"></div>
+              </div>
+            </div>
+            <!-- تحذير الانتهاء -->
+            <div id="nb-id-expired-warn" style="display:none;background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:700;color:#dc2626;margin-bottom:10px;">⚠️ تحذير: الهوية منتهية الصلاحية!</div>
+            <!-- الحقول -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+              <div>
+                <label style="font-size:11px;color:#64748b;display:block;margin-bottom:3px;">نوع الإثبات</label>
+                <select id="nb-idtype" style="width:100%;padding:8px;border:1.5px solid #e2e8f0;border-radius:9px;font-family:inherit;font-size:12px;outline:none;background:#fff;">
+                  <option value="">— اختر —</option>
+                  <option value="national_id">هوية وطنية</option>
+                  <option value="passport">جواز سفر</option>
+                  <option value="iqama">إقامة</option>
+                  <option value="gcc">هوية خليجي</option>
+                  <option value="family_card">كرت عائلة</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size:11px;color:#64748b;display:block;margin-bottom:3px;">رقم الإثبات</label>
+                <div style="position:relative;">
+                  <input id="nb-idnum" type="text" placeholder="رقم الوثيقة" oninput="onIdNumInput(this.value)" style="width:100%;box-sizing:border-box;padding:8px;border:1.5px solid #e2e8f0;border-radius:9px;font-family:inherit;font-size:12px;outline:none;">
+                  <span id="nb-idnum-badge" style="display:none;position:absolute;left:8px;top:50%;transform:translateY(-50%);background:#047857;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;">ضيف سابق ✓</span>
+                </div>
+              </div>
+              <div>
+                <label style="font-size:11px;color:#64748b;display:block;margin-bottom:3px;">الجنسية</label>
+                <input id="nb-nationality" type="text" placeholder="مثال: سعودي، مصري..." style="width:100%;box-sizing:border-box;padding:8px;border:1.5px solid #e2e8f0;border-radius:9px;font-family:inherit;font-size:12px;outline:none;">
+              </div>
+              <div>
+                <label style="font-size:11px;color:#64748b;display:block;margin-bottom:3px;">تاريخ انتهاء الهوية</label>
+                <input id="nb-idexpiry" type="date" style="width:100%;box-sizing:border-box;padding:8px;border:1.5px solid #e2e8f0;border-radius:9px;font-family:inherit;font-size:12px;outline:none;" onchange="checkNbIdExpiry()">
+              </div>
+            </div>
           </div>
         </div>
+        <!-- ── نهاية مسح الهوية ── -->
         <div style="grid-column:1/-1;">
           <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">الحالة</label>
           <select id="nb-status" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;">
@@ -2315,6 +2393,12 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
   </div>
 </div>
 
+<!-- ID image fullscreen -->
+<div id="id-fullscreen" onclick="this.style.display='none'" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9997;align-items:center;justify-content:center;flex-direction:column;">
+  <img id="id-fullscreen-img" src="" style="max-width:92vw;max-height:88vh;object-fit:contain;border-radius:10px;">
+  <div style="color:rgba(255,255,255,.5);font-size:12px;margin-top:10px;">اضغط في أي مكان للإغلاق</div>
+</div>
+
 <!-- Maintenance image fullscreen -->
 <div id="maint-fullscreen" onclick="this.style.display='none'" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9998;align-items:center;justify-content:center;flex-direction:column;">
   <img id="maint-fullscreen-img" src="" style="max-width:92vw;max-height:88vh;object-fit:contain;border-radius:10px;">
@@ -2327,6 +2411,39 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
   <div style="color:rgba(255,255,255,.5);font-size:12px;margin-top:10px;">اضغط في أي مكان للإغلاق</div>
 </div>
 <div id="successOverlay"><div class="success-burst" id="successBurst"></div></div>
+
+<!-- مودال ربط إيصال بحجز -->
+<div id="link-receipt-panel" onclick="if(event.target===this)closeLinkReceipt()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9000;align-items:center;justify-content:center;">
+  <div style="background:var(--surface);border-radius:16px;width:90%;max-width:480px;max-height:80vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3);">
+    <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-size:15px;font-weight:800;color:var(--t1);">🔗 ربط إيصال بحجز</span>
+      <button onclick="closeLinkReceipt()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--t3);">✕</button>
+    </div>
+    <div style="font-size:12px;color:var(--t2);padding:10px 20px;border-bottom:1px solid var(--border);">اختر الحجز المناسب لربط هذا الإيصال به:</div>
+    <div id="link-bk-list" style="overflow-y:auto;flex:1;"></div>
+    <div style="padding:12px 20px;border-top:1px solid var(--border);">
+      <button onclick="closeLinkReceipt()" style="width:100%;padding:10px;background:#f1f5f9;color:var(--t1);border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<!-- مودال رفض إيصال -->
+<div id="reject-receipt-panel" onclick="if(event.target===this)closeRejectReceipt()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9000;align-items:center;justify-content:center;">
+  <div style="background:var(--surface);border-radius:16px;width:90%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden;">
+    <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-size:15px;font-weight:800;color:#dc2626;">✕ رفض الإيصال</span>
+      <button onclick="closeRejectReceipt()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--t3);">✕</button>
+    </div>
+    <div style="padding:20px;">
+      <label style="font-size:12px;font-weight:700;color:var(--t1);display:block;margin-bottom:8px;">سبب الرفض (اختياري)</label>
+      <textarea id="reject-reason-input" rows="3" placeholder="اكتب سبب الرفض..." style="width:100%;box-sizing:border-box;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;resize:none;background:var(--surface);color:var(--t1);outline:none;"></textarea>
+      <div style="display:flex;gap:8px;margin-top:14px;">
+        <button onclick="submitRejectReceipt()" style="flex:1;padding:10px;background:#dc2626;color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:700;">تأكيد الرفض</button>
+        <button onclick="closeRejectReceipt()" style="flex:1;padding:10px;background:#f1f5f9;color:var(--t1);border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;">إلغاء</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- مودال تعديل بيانات الشقة -->
 <div id="roomInfoModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:900;align-items:center;justify-content:center;">
@@ -4389,6 +4506,92 @@ function calcNbRemain(){
   document.getElementById('nb-remain').style.color=remain>0?'#dc2626':'#16a34a';
 }
 
+// ── ID Card Scan ─────────────────────────────────────────────────────────────
+let _idBase64 = {nb: null, gc: null};
+let _idDataUrl = {nb: null, gc: null};
+
+const ID_TYPE_MAP = {national_id:'national_id', iqama:'iqama', passport:'passport', gcc:'gcc', other:'other'};
+
+function showIdFullscreen(imgId){
+  const src = document.getElementById(imgId)?.src;
+  if(!src) return;
+  document.getElementById('id-fullscreen-img').src = src;
+  document.getElementById('id-fullscreen').style.display = 'flex';
+}
+
+function resetIdScan(prefix){
+  _idBase64[prefix] = null; _idDataUrl[prefix] = null;
+  const fi = document.getElementById(`${prefix}-id-file`); if(fi) fi.value='';
+  document.getElementById(`${prefix}-id-preview-row`).style.display = 'none';
+  document.getElementById(`${prefix}-id-expired-warn`).style.display = 'none';
+  document.getElementById(`${prefix}-id-scanning`).style.display = 'block';
+  document.getElementById(`${prefix}-id-result`).style.display = 'none';
+  document.getElementById(`${prefix}-id-error`).style.display = 'none';
+}
+
+async function onIdScan(input, prefix){
+  const file = input.files[0]; if(!file) return;
+  const dataUrl = await compressImg(file, 1600, 0.88);
+  _idBase64[prefix] = dataUrl.split(',')[1];
+  _idDataUrl[prefix] = dataUrl;
+
+  document.getElementById(`${prefix}-id-preview-img`).src = dataUrl;
+  const row = document.getElementById(`${prefix}-id-preview-row`);
+  row.style.display = 'flex';
+  document.getElementById(`${prefix}-id-scanning`).style.display = 'block';
+  document.getElementById(`${prefix}-id-result`).style.display = 'none';
+  document.getElementById(`${prefix}-id-error`).style.display = 'none';
+  document.getElementById(`${prefix}-id-expired-warn`).style.display = 'none';
+
+  try {
+    const r = await fetch('/staff/api/id/analyze', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ imageBase64: _idBase64[prefix], mimeType: 'image/jpeg' }),
+    });
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.error || 'فشل القراءة');
+
+    // تحذير انتهاء الصلاحية
+    if(d.isExpired === true){
+      document.getElementById(`${prefix}-id-expired-warn`).style.display = 'block';
+    }
+
+    // ملء الحقول
+    if(prefix === 'nb'){
+      if(d.fullName)    document.getElementById('nb-name').value    = d.fullName;
+      if(d.idType)      document.getElementById('nb-idtype').value  = d.idType;
+      if(d.idNumber)    document.getElementById('nb-idnum').value   = d.idNumber;
+      if(d.nationality) document.getElementById('nb-nationality').value = d.nationality;
+      if(d.expiryDate)  document.getElementById('nb-idexpiry').value = d.expiryDate;
+      if(d.idNumber)    onIdNumInput(d.idNumber);
+    } else if(prefix === 'gc'){
+      if(d.fullName)    document.getElementById('gcName').value        = d.fullName;
+      if(d.idType)      document.getElementById('gcIdType').value      = d.idType;
+      if(d.idNumber)    document.getElementById('gcIdNumber').value    = d.idNumber;
+      if(d.nationality) document.getElementById('gcNationality').value = d.nationality;
+      if(d.expiryDate)  document.getElementById('gcIdExpiry').value    = d.expiryDate;
+      if(d.issuePlace)  document.getElementById('gcIdIssuePlace').value= d.issuePlace;
+    }
+
+    // نتيجة ناجحة
+    document.getElementById(`${prefix}-id-result`).style.display = 'block';
+    document.getElementById(`${prefix}-id-result`).style.color = '#065f46';
+    document.getElementById(`${prefix}-id-result`).textContent = '✓ تم ملء الحقول تلقائياً — راجع وعدّل إن لزم';
+
+  } catch(e){
+    document.getElementById(`${prefix}-id-error`).style.display = 'block';
+    document.getElementById(`${prefix}-id-error`).textContent = '⚠️ تعذّر قراءة الهوية — أعد التصوير أو أدخل البيانات يدوياً';
+  }
+  document.getElementById(`${prefix}-id-scanning`).style.display = 'none';
+}
+
+function checkNbIdExpiry(){
+  const v = document.getElementById('nb-idexpiry')?.value;
+  const warn = document.getElementById('nb-id-expired-warn');
+  if(!v || !warn) return;
+  warn.style.display = new Date(v) < new Date() ? 'block' : 'none';
+}
+
 // ── Maintenance ──────────────────────────────────────────────────────────────
 let _maintBase64=null, _maintMime=null;
 
@@ -4764,61 +4967,210 @@ async function loadReceipts(){
   if(!el) return;
   el.innerHTML='<div style="padding:40px;text-align:center;color:#94a3b8;font-size:13px;">⏳ جاري التحميل...</div>';
   const bld=document.getElementById('rec-bld-filter')?.value||'';
-  const r=await fetch(`/staff/api/receipts${bld?'?building='+encodeURIComponent(bld):''}`).catch(()=>null);
+  const recType=document.getElementById('rec-type-filter')?.value||'';
+  const recMatch=document.getElementById('rec-match-filter')?.value||'';
+  const recStatus=document.getElementById('rec-status-filter')?.value||'';
+  const dateFrom=document.getElementById('rec-date-from')?.value||'';
+  const dateTo=document.getElementById('rec-date-to')?.value||'';
+  const params=new URLSearchParams();
+  if(bld) params.set('building',bld);
+  if(recType) params.set('type',recType);
+  if(recMatch) params.set('matchStatus',recMatch);
+  if(recStatus) params.set('recStatus',recStatus);
+  if(dateFrom) params.set('dateFrom',dateFrom);
+  if(dateTo) params.set('dateTo',dateTo);
+  const qs=params.toString();
+  const r=await fetch(`/staff/api/receipts${qs?'?'+qs:''}`).catch(()=>null);
   if(!r||!r.ok){ el.innerHTML='<div style="padding:40px;text-align:center;color:#dc2626;">خطأ في تحميل الإيصالات</div>'; return; }
   const recs=await r.json();
   // Stats
   const total=recs.length;
   const matched=recs.filter(r=>r.analysis?.matchesBuilding===true).length;
   const warned=recs.filter(r=>r.analysis?.matchesBuilding===false).length;
-  const sumAmt=recs.reduce((s,r)=>s+(r.analysis?.amount||r.analysis?.cashTotal||0),0);
+  const unlinked=recs.filter(r=>!r.bookingId && r.status!=='rejected').length;
+  const rejected=recs.filter(r=>r.status==='rejected').length;
+  const sumAmt=recs.reduce((s,r)=>s+(r.analysis?.cashTotal??r.analysis?.amount??0),0);
   if(statsEl) statsEl.innerHTML=`
-    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:10px 16px;flex:1;min-width:100px;text-align:center;">
-      <div style="font-size:20px;font-weight:800;color:#0f172a;">${total}</div><div style="font-size:11px;color:#64748b;">إجمالي الإيصالات</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 16px;flex:1;min-width:90px;text-align:center;">
+      <div style="font-size:20px;font-weight:800;color:var(--t1);">${total}</div><div style="font-size:11px;color:var(--t3);">إجمالي الإيصالات</div>
     </div>
-    <div style="background:#d1fae5;border:1px solid #6ee7b7;border-radius:10px;padding:10px 16px;flex:1;min-width:100px;text-align:center;">
+    <div style="background:#d1fae5;border:1px solid #6ee7b7;border-radius:10px;padding:10px 16px;flex:1;min-width:90px;text-align:center;">
       <div style="font-size:20px;font-weight:800;color:#065f46;">${matched}</div><div style="font-size:11px;color:#065f46;">مطابق للجهة</div>
     </div>
-    <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:10px;padding:10px 16px;flex:1;min-width:100px;text-align:center;">
+    <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:10px;padding:10px 16px;flex:1;min-width:90px;text-align:center;">
       <div style="font-size:20px;font-weight:800;color:#92400e;">${warned}</div><div style="font-size:11px;color:#92400e;">تحذير جهة</div>
     </div>
-    <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:10px 16px;flex:1;min-width:100px;text-align:center;">
-      <div style="font-size:20px;font-weight:800;color:#1a3d8f;">${sumAmt.toLocaleString('ar-SA')}</div><div style="font-size:11px;color:#1a3d8f;">إجمالي المبالغ (ريال)</div>
+    <div style="background:#fee2e2;border:1px solid #fca5a5;border-radius:10px;padding:10px 16px;flex:1;min-width:90px;text-align:center;">
+      <div style="font-size:20px;font-weight:800;color:#dc2626;">${unlinked}</div><div style="font-size:11px;color:#dc2626;">غير مربوطة</div>
+    </div>
+    <div style="background:#f1f5f9;border:1px solid #cbd5e1;border-radius:10px;padding:10px 16px;flex:1;min-width:90px;text-align:center;">
+      <div style="font-size:20px;font-weight:800;color:#64748b;">${rejected}</div><div style="font-size:11px;color:#64748b;">مرفوضة</div>
+    </div>
+    <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:10px 16px;flex:1;min-width:90px;text-align:center;">
+      <div style="font-size:20px;font-weight:800;color:#1a3d8f;">${sumAmt.toLocaleString('ar-SA')}</div><div style="font-size:11px;color:#1a3d8f;">المبالغ (ريال)</div>
     </div>`;
-  if(!recs.length){ el.innerHTML='<div style="padding:60px;text-align:center;color:#94a3b8;font-size:13px;">لا توجد إيصالات مسجلة</div>'; return; }
+  if(!recs.length){ el.innerHTML='<div style="padding:60px;text-align:center;color:#94a3b8;font-size:13px;">لا توجد إيصالات</div>'; return; }
   const typeMap={network:'شبكة',transfer:'تحويل',cash:'نقداً',other:'أخرى'};
+  const statusMap={pending:'قيد المراجعة',linked:'مربوط',rejected:'مرفوض'};
+  const statusColor={pending:'#f59e0b',linked:'#059669',rejected:'#64748b'};
   el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;">${
     recs.map(rec=>{
       const a=rec.analysis||{};
       const date=new Date(rec.createdAt).toLocaleDateString('ar-SA',{year:'numeric',month:'short',day:'numeric'});
       const isMismatch=a.matchesBuilding===false;
       const isMatch=a.matchesBuilding===true;
-      const borderColor=isMismatch?'#fcd34d':isMatch?'#6ee7b7':'#e2e8f0';
+      const borderColor=rec.status==='rejected'?'#cbd5e1':rec.status==='linked'?'#6ee7b7':isMismatch?'#fcd34d':isMatch?'#a7f3d0':'var(--border)';
       const amtVal=a.cashTotal!=null?a.cashTotal:a.amount;
       const imgSrc=rec.imageData?`data:${rec.imageMimeType||'image/jpeg'};base64,${rec.imageData}`:null;
-      return `<div style="background:#fff;border:1.5px solid ${borderColor};border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.06);">
-        ${imgSrc?`<img src="${imgSrc}" style="width:100%;height:150px;object-fit:cover;cursor:pointer;display:block;" onclick="document.getElementById('receipt-fullscreen-img').src=this.src;document.getElementById('receipt-fullscreen').style.display='flex'" onerror="this.parentNode.removeChild(this)">`:
-        '<div style="height:70px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:28px;">🧾</div>'}
+      const rid=rec._id;
+      const isPending=rec.status==='pending';
+      const isManager='<%= staff.role %>'==='manager';
+      return `<div style="background:var(--surface);border:1.5px solid ${borderColor};border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.06);" id="rec-card-${rid}">
+        ${imgSrc?`<img src="${imgSrc}" style="width:100%;height:150px;object-fit:cover;cursor:pointer;display:block;" onclick="document.getElementById('receipt-fullscreen-img').src=this.src;document.getElementById('receipt-fullscreen').style.display='flex'" onerror="this.style.display='none'">`:
+        '<div style="height:60px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:24px;">🧾</div>'}
         <div style="padding:12px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-            <span style="font-size:14px;font-weight:700;color:#0f172a;">${esc(rec.apt||'—')}</span>
-            <span style="font-size:10px;color:#64748b;">${date}</span>
+            <span style="font-size:14px;font-weight:700;color:var(--t1);">${esc(rec.apt||'—')}</span>
+            <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:${statusColor[rec.status]||'#f1f5f9'};color:#fff;">${statusMap[rec.status]||rec.status}</span>
           </div>
-          <div style="font-size:11px;color:#475569;margin-bottom:2px;">${esc(rec.guestName||'—')}</div>
-          <div style="font-size:11px;color:#64748b;margin-bottom:8px;">${esc(rec.building||'')}</div>
-          <div style="background:#f8fafc;border-radius:8px;padding:8px;font-size:11px;display:grid;grid-template-columns:auto 1fr;gap:3px 8px;">
-            <span style="color:#64748b;">النوع:</span><span style="font-weight:700;">${typeMap[a.paymentType]||a.paymentType||'—'}</span>
-            <span style="color:#64748b;">المبلغ:</span><span style="font-weight:700;color:#059669;">${amtVal!=null?Number(amtVal).toLocaleString('ar-SA')+' ريال':'—'}</span>
-            ${a.transactionNumber?`<span style="color:#64748b;">العملية:</span><span style="font-weight:700;word-break:break-all;">${esc(a.transactionNumber)}</span>`:''}
-            ${a.entityName?`<span style="color:#64748b;">الجهة:</span><span style="font-weight:700;">${esc(a.entityName)} ${isMismatch?'⚠️':isMatch?'✓':''}</span>`:''}
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-size:11px;color:var(--t2);">${esc(rec.guestName||'—')}</span>
+            <span style="font-size:10px;color:var(--t3);">${date}</span>
           </div>
-          ${isMismatch?`<div style="margin-top:6px;font-size:10px;color:#92400e;font-weight:600;">⚠️ الجهة لا تطابق المبنى</div>`:''}
-          ${rec.bookingId?`<div style="margin-top:6px;font-size:10px;color:#64748b;">الحجز: ${String(rec.bookingId).slice(-8)}</div>`:''}
+          <div style="background:#f8fafc;border-radius:8px;padding:8px;font-size:11px;display:grid;grid-template-columns:auto 1fr;gap:3px 8px;margin-bottom:8px;">
+            <span style="color:var(--t3);">النوع:</span><span style="font-weight:700;">${typeMap[a.paymentType]||a.paymentType||'—'}</span>
+            <span style="color:var(--t3);">المبلغ:</span><span style="font-weight:700;color:#059669;">${amtVal!=null?Number(amtVal).toLocaleString('ar-SA')+' ريال':'—'}</span>
+            ${a.transactionNumber?`<span style="color:var(--t3);">رقم العملية:</span><span style="font-weight:600;word-break:break-all;">${esc(a.transactionNumber)}</span>`:''}
+            ${a.entityName?`<span style="color:var(--t3);">الجهة:</span><span style="font-weight:700;">${esc(a.entityName)} ${isMismatch?'⚠️':isMatch?'✅':''}</span>`:''}
+            ${rec.bookingId?`<span style="color:var(--t3);">الحجز:</span><span style="font-weight:600;">#${String(rec.bookingId).slice(-6)}</span>`:''}
+            ${rec.rejectionReason?`<span style="color:var(--t3);">سبب الرفض:</span><span style="color:#dc2626;">${esc(rec.rejectionReason)}</span>`:''}
+          </div>
+          ${isMismatch?`<div style="margin-bottom:8px;font-size:10px;color:#92400e;font-weight:600;">⚠️ الجهة لا تطابق المبنى</div>`:''}
+          ${isPending && isManager ? `<div style="display:flex;gap:6px;">
+            <button onclick="openLinkReceipt('${rid}')" style="flex:1;padding:6px;font-size:11px;font-weight:700;background:#0f172a;color:#fff;border:none;border-radius:7px;cursor:pointer;font-family:inherit;">🔗 ربط بحجز</button>
+            <button onclick="openRejectReceipt('${rid}')" style="flex:1;padding:6px;font-size:11px;font-weight:700;background:#f1f5f9;color:#dc2626;border:1px solid #fca5a5;border-radius:7px;cursor:pointer;font-family:inherit;">✕ رفض</button>
+          </div>` : ''}
         </div>
       </div>`;
     }).join('')
   }</div>`;
 }
+
+// ── Link Receipt to Booking ──────────────────────────────────────────────────
+let _linkReceiptId=null;
+async function openLinkReceipt(rid){
+  _linkReceiptId=rid;
+  const panel=document.getElementById('link-receipt-panel');
+  const list=document.getElementById('link-bk-list');
+  if(!panel) return;
+  panel.style.display='flex';
+  list.innerHTML='<div style="padding:20px;text-align:center;color:#94a3b8;">⏳ جاري التحميل...</div>';
+  const r=await fetch('/staff/api/bookings?sf=awaiting_checkin,active&limit=50').catch(()=>null);
+  if(!r||!r.ok){ list.innerHTML='<div style="padding:20px;text-align:center;color:#dc2626;">تعذر تحميل الحجوزات</div>'; return; }
+  const data=await r.json();
+  const bks=Array.isArray(data)?data:(data.bookings||[]);
+  if(!bks.length){ list.innerHTML='<div style="padding:20px;text-align:center;color:#94a3b8;">لا توجد حجوزات نشطة</div>'; return; }
+  list.innerHTML=bks.map(b=>`
+    <div onclick="selectLinkBk('${b._id}')" style="padding:12px 14px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px;" onmouseover="this.style.background='var(--hover)'" onmouseout="this.style.background=''">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--t1);">${esc(b.name||'—')}</div>
+        <div style="font-size:11px;color:var(--t2);">${esc(b.apt||'—')} • ${esc(b.building||'—')} • ${esc(b.phone||'')}</div>
+      </div>
+      <div style="text-align:left;font-size:11px;color:var(--t3);">
+        <div>${b.totalPrice?Number(b.totalPrice).toLocaleString('ar-SA')+' ريال':''}</div>
+        <div style="font-size:10px;">${b.checkIn?new Date(b.checkIn).toLocaleDateString('ar-SA',{month:'short',day:'numeric'}):''}</div>
+      </div>
+    </div>
+  `).join('');
+}
+function closeLinkReceipt(){
+  _linkReceiptId=null;
+  const p=document.getElementById('link-receipt-panel');
+  if(p) p.style.display='none';
+}
+async function selectLinkBk(bookingId){
+  if(!_linkReceiptId) return;
+  const r=await fetch(`/staff/api/receipts/${_linkReceiptId}/link`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({bookingId})}).catch(()=>null);
+  if(r&&r.ok){ closeLinkReceipt(); loadReceipts(); }
+  else { alert('فشل الربط، حاول مرة أخرى'); }
+}
+
+// ── Reject Receipt ────────────────────────────────────────────────────────────
+let _rejectReceiptId=null;
+function openRejectReceipt(rid){
+  _rejectReceiptId=rid;
+  const p=document.getElementById('reject-receipt-panel');
+  if(p){ document.getElementById('reject-reason-input').value=''; p.style.display='flex'; }
+}
+function closeRejectReceipt(){
+  _rejectReceiptId=null;
+  const p=document.getElementById('reject-receipt-panel');
+  if(p) p.style.display='none';
+}
+async function submitRejectReceipt(){
+  if(!_rejectReceiptId) return;
+  const reason=document.getElementById('reject-reason-input').value.trim();
+  const r=await fetch(`/staff/api/receipts/${_rejectReceiptId}/reject`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({reason})}).catch(()=>null);
+  if(r&&r.ok){ closeRejectReceipt(); loadReceipts(); }
+  else { alert('فشل الرفض، حاول مرة أخرى'); }
+}
+
+// ── Notifications ─────────────────────────────────────────────────────────────
+let _notifPanelOpen=false;
+function toggleNotifPanel(){
+  _notifPanelOpen=!_notifPanelOpen;
+  const p=document.getElementById('notif-panel');
+  if(p) p.style.display=_notifPanelOpen?'block':'none';
+  if(_notifPanelOpen) loadNotifications();
+}
+async function loadNotifications(){
+  const list=document.getElementById('notif-list');
+  const badge=document.getElementById('bell-badge');
+  if(!list) return;
+  const r=await fetch('/staff/api/notifications').catch(()=>null);
+  if(!r||!r.ok) return;
+  const {items,unread}=await r.json();
+  if(badge){ if(unread>0){badge.textContent=unread>99?'99+':unread;badge.style.display='block';}else{badge.style.display='none';} }
+  if(!items||!items.length){ list.innerHTML='<div style="padding:24px;text-align:center;color:var(--t3);font-size:12px;">لا توجد إشعارات</div>'; return; }
+  const typeIcon={receipt_mismatch:'⚠️',urgent_maintenance:'🔧',info:'ℹ️'};
+  list.innerHTML=items.map(n=>`
+    <div style="padding:12px 16px;border-bottom:1px solid var(--border);${!n.isRead?'background:#fffbeb;':''}">
+      <div style="display:flex;gap:8px;align-items:flex-start;">
+        <span style="font-size:16px;">${typeIcon[n.type]||'🔔'}</span>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--t1);">${esc(n.title)}</div>
+          <div style="font-size:11px;color:var(--t2);margin-top:2px;line-height:1.4;">${esc(n.message)}</div>
+          <div style="font-size:10px;color:var(--t3);margin-top:4px;">${new Date(n.createdAt).toLocaleDateString('ar-SA',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+async function markNotifsRead(){
+  await fetch('/staff/api/notifications/read',{method:'PUT'}).catch(()=>null);
+  loadNotifications();
+}
+// Poll notifications every 60s (manager only)
+<% if(staff.role==='manager'){ %>
+setInterval(async()=>{
+  const badge=document.getElementById('bell-badge');
+  if(!badge) return;
+  const r=await fetch('/staff/api/notifications').catch(()=>null);
+  if(!r||!r.ok) return;
+  const {unread}=await r.json();
+  if(unread>0){badge.textContent=unread>99?'99+':unread;badge.style.display='block';}
+  else{badge.style.display='none';}
+},60000);
+<% } %>
+// Close notif panel on outside click
+document.addEventListener('click',e=>{
+  const wrap=document.getElementById('bell-wrap');
+  if(wrap&&!wrap.contains(e.target)&&_notifPanelOpen){
+    _notifPanelOpen=false;
+    const p=document.getElementById('notif-panel');
+    if(p) p.style.display='none';
+  }
+});
 
 function updateNbPrice(){
   const apt=document.getElementById('nb-apt').value;
@@ -6669,6 +7021,7 @@ window.addEventListener('load',()=>{
   updateClock();
   setTimeout(initFP,300);
   _startIntervals();
+  <% if(staff.role==='manager'){ %>loadNotifications();<% } %>
   // إلغاء تسجيل أي Service Worker قديم لمنع تقديم نسخ قديمة من الصفحة
   if('serviceWorker' in navigator)
     navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
@@ -7082,6 +7435,25 @@ ${terms.length ? `
       <!-- Row helper -->
       <!-- Section: الهوية -->
       <div style="font-size:11px;font-weight:700;color:#64748b;letter-spacing:.5px;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid #e2e8f0;">بيانات الهوية</div>
+      <!-- مسح الهوية -->
+      <div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;padding:12px;margin-bottom:14px;">
+        <input type="file" id="gc-id-file" accept="image/*" style="display:none;" onchange="onIdScan(this,'gc')">
+        <button type="button" onclick="document.getElementById('gc-id-file').click()" id="gc-id-scan-btn" style="width:100%;padding:9px;border:2px dashed #93c5fd;border-radius:9px;background:#eff6ff;color:#1d4ed8;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;margin-bottom:10px;">
+          <span style="font-size:16px;">🪪</span> مسح الهوية تلقائياً (اختياري)
+        </button>
+        <div id="gc-id-preview-row" style="display:none;gap:10px;align-items:flex-start;margin-bottom:8px;">
+          <div style="position:relative;flex-shrink:0;">
+            <img id="gc-id-preview-img" src="" style="width:80px;height:55px;object-fit:cover;border-radius:7px;border:2px solid #bae6fd;cursor:pointer;display:block;" onclick="showIdFullscreen('gc-id-preview-img')" title="تكبير">
+            <div onclick="resetIdScan('gc')" style="position:absolute;top:-5px;left:-5px;width:16px;height:16px;background:#dc2626;border-radius:50%;color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;">×</div>
+          </div>
+          <div style="flex:1;font-size:11px;">
+            <div id="gc-id-scanning" style="color:#0369a1;font-weight:600;">⏳ جاري قراءة الهوية...</div>
+            <div id="gc-id-result" style="display:none;color:#065f46;font-weight:600;">✓ تم ملء الحقول تلقائياً — راجع وعدّل إن لزم</div>
+            <div id="gc-id-error" style="display:none;color:#dc2626;font-weight:600;"></div>
+          </div>
+        </div>
+        <div id="gc-id-expired-warn" style="display:none;background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:700;color:#dc2626;">⚠️ تحذير: الهوية منتهية الصلاحية!</div>
+      </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
         <div>
           <label style="font-size:11px;color:#64748b;display:block;margin-bottom:4px;">الاسم</label>

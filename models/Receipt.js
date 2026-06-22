@@ -17,10 +17,12 @@ const s = new mongoose.Schema({
     cashMatchesPaid:   Boolean,
     rawSummary:        String,
   },
-  analysisStatus: { type: String, default: 'pending' },
-  propertyId:   { type: mongoose.Schema.Types.ObjectId, default: null },
-  createdAt:    { type: Date, default: Date.now },
-  createdBy:    { type: String, default: '' },
+  analysisStatus:  { type: String, default: 'pending' },
+  status:          { type: String, enum: ['pending','linked','rejected'], default: 'pending' },
+  rejectionReason: { type: String, default: '' },
+  propertyId:      { type: mongoose.Schema.Types.ObjectId, default: null },
+  createdAt:       { type: Date, default: Date.now },
+  createdBy:       { type: String, default: '' },
 });
 s.index({ building: 1, createdAt: -1 });
 s.index({ bookingId: 1 });
