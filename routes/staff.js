@@ -589,38 +589,41 @@ router.delete('/api/bookings/:id/payments/:pid', reqStaff, async (req, res) => {
 router.post('/api/bookings/:id/documents', reqStaff, async (req, res) => {
   try {
     const B = require('../models/Booking');
-    const { type, fileData, pageCount } = req.body;
+    const { type, pages } = req.body; // pages: [{data: base64, mime: 'image/jpeg'}]
     if (!['contract', 'inventory'].includes(type)) return res.status(400).json({ error: 'نوع غير صحيح' });
-    if (!fileData) return res.status(400).json({ error: 'الملف مطلوب' });
+    if (!pages?.length) return res.status(400).json({ error: 'لم يتم اختيار صور' });
     const bk = await B.findById(req.params.id);
     if (!bk) return res.status(404).json({ error: 'الحجز غير موجود' });
 
-    let url = '', publicId = '';
+    const uploadedUrls = [];
     if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
-      const crypto = require('crypto');
+      const crypto     = require('crypto');
       const cloudName  = process.env.CLOUDINARY_CLOUD_NAME;
       const apiKey     = process.env.CLOUDINARY_API_KEY;
       const apiSecret  = process.env.CLOUDINARY_API_SECRET;
       const folder     = 'barez/contracts';
       const bkId       = bk._id.toString().slice(-6).toUpperCase();
-      const cName      = (bk.name || 'client').replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_؀-ۿ]/g, '').slice(0, 20);
-      const suffix     = type === 'contract' ? 'contract' : 'inventory';
-      const pubId      = `${bkId}_${cName}_${suffix}`;
-      const timestamp  = Math.floor(Date.now() / 1000);
-      const toSign     = `folder=${folder}&public_id=${pubId}&timestamp=${timestamp}${apiSecret}`;
-      const signature  = require('crypto').createHash('sha1').update(toSign).digest('hex');
-      const upRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/raw/upload`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ file: `data:application/pdf;base64,${fileData}`, api_key: apiKey, timestamp, signature, folder, public_id: pubId }),
-      });
-      if (upRes.ok) { const d = await upRes.json(); url = d.secure_url || ''; publicId = d.public_id || ''; }
+      const cName      = (bk.name || 'client').replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '').slice(0, 15);
+      const suffix     = type === 'contract' ? 'ctr' : 'inv';
+      for (let i = 0; i < pages.length; i++) {
+        const { data, mime } = pages[i];
+        const pubId      = `${bkId}_${cName}_${suffix}_p${i + 1}`;
+        const timestamp  = Math.floor(Date.now() / 1000);
+        const toSign     = `folder=${folder}&public_id=${pubId}&timestamp=${timestamp}${apiSecret}`;
+        const signature  = crypto.createHash('sha1').update(toSign).digest('hex');
+        const upRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ file: `data:${mime};base64,${data}`, api_key: apiKey, timestamp, signature, folder, public_id: pubId }),
+        });
+        if (upRes.ok) { const d = await upRes.json(); if (d.secure_url) uploadedUrls.push(d.secure_url); }
+      }
     }
-    if (!url) return res.status(500).json({ error: 'Cloudinary غير مُهيَّأ أو فشل الرفع' });
+    if (!uploadedUrls.length) return res.status(500).json({ error: 'فشل الرفع — تأكد من إعداد Cloudinary في متغيرات البيئة' });
 
     const field = type === 'contract' ? 'contractDoc' : 'inventoryDoc';
-    await B.findByIdAndUpdate(req.params.id, { [field]: { url, publicId, uploadedBy: req.staff.name, uploadedAt: new Date(), pages: pageCount || 1 } });
-    res.json({ success: true, url });
+    await B.findByIdAndUpdate(req.params.id, { [field]: { url: uploadedUrls[0], urls: uploadedUrls, uploadedBy: req.staff.name, uploadedAt: new Date(), pages: uploadedUrls.length } });
+    res.json({ success: true, url: uploadedUrls[0], urls: uploadedUrls });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 

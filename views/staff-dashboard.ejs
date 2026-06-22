@@ -2280,7 +2280,7 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
               </div>
               <div id="doc-contract-thumbs" style="display:none;flex-wrap:wrap;gap:6px;margin-top:8px;"></div>
               <div id="doc-contract-status" style="margin-top:6px;"></div>
-              <button id="doc-contract-btn" onclick="generateAndUploadDoc('contract')" style="display:none;width:100%;margin-top:8px;padding:7px;background:#1a3d8f;color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">⬆ إنشاء PDF ورفعه</button>
+              <button id="doc-contract-btn" onclick="uploadDocNow('contract')" style="display:none;width:100%;margin-top:8px;padding:7px;background:#1a3d8f;color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">⬆ رفع الصور</button>
             </div>
             <!-- ورقة الاستلام -->
             <div>
@@ -2292,7 +2292,7 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
               </div>
               <div id="doc-inventory-thumbs" style="display:none;flex-wrap:wrap;gap:6px;margin-top:8px;"></div>
               <div id="doc-inventory-status" style="margin-top:6px;"></div>
-              <button id="doc-inventory-btn" onclick="generateAndUploadDoc('inventory')" style="display:none;width:100%;margin-top:8px;padding:7px;background:#1a3d8f;color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">⬆ إنشاء PDF ورفعه</button>
+              <button id="doc-inventory-btn" onclick="uploadDocNow('inventory')" style="display:none;width:100%;margin-top:8px;padding:7px;background:#1a3d8f;color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">⬆ رفع الصور</button>
             </div>
           </div>
         </div>
@@ -5443,18 +5443,9 @@ document.addEventListener('click',e=>{
 
 // ── Documents (Contract / Inventory) ─────────────────────────────────────────
 let _docPages = { contract: [], inventory: [] };
-let _docPdfs  = { contract: null, inventory: null };
+// _docPdfs removed — images upload directly
 
-async function _loadJsPDF() {
-  if (window.jspdf) return;
-  await new Promise((res, rej) => {
-    const s = document.createElement('script');
-    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-    s.onload = res;
-    s.onerror = () => rej(new Error('فشل تحميل مكتبة PDF — تحقق من الاتصال بالإنترنت'));
-    document.head.appendChild(s);
-  });
-}
+// (jsPDF removed — images upload directly to Cloudinary)
 
 async function _enhanceImg(file) {
   return new Promise((resolve, reject) => {
@@ -5483,7 +5474,6 @@ async function _enhanceImg(file) {
 
 async function onDocFiles(input, type) {
   const files = Array.from(input.files); if (!files.length) return;
-  _docPdfs[type] = null;
   const st = document.getElementById(`doc-${type}-status`);
   if (st) st.innerHTML = '<div style="color:#0369a1;font-size:11px;">⏳ جاري معالجة الصور...</div>';
   try {
@@ -5510,69 +5500,70 @@ function _renderDocThumbs(type) {
   el.innerHTML = pages.map((src, i) => `
     <div style="position:relative;">
       <img src="${src}" style="width:56px;height:72px;object-fit:cover;border-radius:6px;border:1.5px solid #e2e8f0;">
-      <div onclick="_docPages['${type}'].splice(${i},1);_docPdfs['${type}']=null;_renderDocThumbs('${type}')" style="position:absolute;top:-5px;right:-5px;width:16px;height:16px;background:#dc2626;border-radius:50%;color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;line-height:1;font-weight:700;">×</div>
+      <div onclick="_docPages['${type}'].splice(${i},1);_renderDocThumbs('${type}')" style="position:absolute;top:-5px;right:-5px;width:16px;height:16px;background:#dc2626;border-radius:50%;color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;line-height:1;font-weight:700;">×</div>
     </div>`).join('');
   if (btn) btn.style.display = pages.length ? 'block' : 'none';
-  if (st && _docPdfs[type]) st.innerHTML = ''; // reset if pages changed
+  if (st && pages.length) st.innerHTML = '';
 }
 
-async function generateAndUploadDoc(type) {
+async function uploadDocNow(type) {
   const pages = _docPages[type];
   if (!pages.length) return;
   const btn = document.getElementById(`doc-${type}-btn`);
   const st  = document.getElementById(`doc-${type}-status`);
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ جاري إنشاء PDF...'; }
-  try {
-    await _loadJsPDF();
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
-    for (let i = 0; i < pages.length; i++) {
-      if (i > 0) pdf.addPage();
-      const imgEl = new Image(); imgEl.src = pages[i];
-      await new Promise(r => { if (imgEl.complete) r(); else imgEl.onload = r; });
-      const a4W = 210, a4H = 297, margin = 8;
-      const maxW = a4W - margin*2, maxH = a4H - margin*2;
-      const ratio = Math.min(maxW / imgEl.naturalWidth, maxH / imgEl.naturalHeight);
-      const w = imgEl.naturalWidth * ratio, h = imgEl.naturalHeight * ratio;
-      pdf.addImage(pages[i], 'JPEG', (a4W - w) / 2, (a4H - h) / 2, w, h);
-    }
-    _docPdfs[type] = pdf.output('datauristring').split(',')[1];
-    if (st) st.innerHTML = `<div style="color:#059669;font-size:11px;font-weight:700;">✅ PDF جاهز (${pages.length} صفحة) — سيُرفع بعد حفظ الحجز</div>`;
-    if (btn) { btn.textContent = '✅ جاهز للرفع'; btn.style.background = '#059669'; btn.disabled = false; }
-  } catch(e) {
-    if (st) st.innerHTML = `<div style="color:#dc2626;font-size:11px;">❌ ${e?.message || 'فشل إنشاء PDF'}</div>`;
-    if (btn) { btn.disabled = false; btn.textContent = '⬆ إنشاء PDF ورفعه'; }
+  if (editBkId) {
+    // في وضع التعديل — ارفع مباشرة
+    await _uploadDocToServer(type, editBkId);
+  } else {
+    // في الحجز الجديد — انتظر الحفظ
+    if (st) st.innerHTML = `<div style="color:#059669;font-size:11px;font-weight:700;">✅ ${pages.length} صورة جاهزة — ستُرفع عند حفظ الحجز</div>`;
+    if (btn) { btn.textContent = '✅ جاهز'; btn.style.background = '#059669'; }
   }
 }
 
 async function _uploadDocToServer(type, bookingId) {
-  const pdfB64 = _docPdfs[type];
-  if (!pdfB64 || !bookingId) return;
-  const st = document.getElementById(`doc-${type}-status`);
-  if (st) st.innerHTML = `<div style="color:#0369a1;font-size:11px;">⏳ جاري الرفع على الخادم...</div>`;
+  const imgs = _docPages[type];
+  if (!imgs.length || !bookingId) return;
+  const btn = document.getElementById(`doc-${type}-btn`);
+  const st  = document.getElementById(`doc-${type}-status`);
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ جاري الرفع...'; }
+  if (st)  st.innerHTML = '<div style="color:#0369a1;font-size:11px;">⏳ جاري رفع الصور...</div>';
   try {
+    const pages = imgs.map(dataUrl => {
+      const comma = dataUrl.indexOf(',');
+      const header = dataUrl.substring(0, comma);
+      const mime = header.match(/data:([^;]+)/)?.[1] || 'image/jpeg';
+      return { data: dataUrl.substring(comma + 1), mime };
+    });
     const r = await fetch(`/staff/api/bookings/${bookingId}/documents`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type, fileData: pdfB64, pageCount: _docPages[type].length }),
+      body: JSON.stringify({ type, pages }),
     });
     const d = await r.json();
     if (r.ok && d.success) {
-      if (st) st.innerHTML = `<div style="color:#059669;font-size:11px;font-weight:700;">✅ تم الرفع بنجاح — <a href="${d.url}" target="_blank" style="color:#059669;">عرض PDF</a></div>`;
+      const thumbs = d.urls.map((u, i) =>
+        `<a href="${u}" target="_blank" style="display:inline-block;margin-left:4px;"><img src="${u}" style="width:40px;height:40px;object-fit:cover;border-radius:5px;border:1.5px solid #86efac;"></a>`
+      ).join('');
+      if (st) st.innerHTML = `<div style="color:#059669;font-size:11px;font-weight:700;">✅ تم رفع ${d.urls.length} صورة<br>${thumbs}</div>`;
+      if (btn) { btn.textContent = '↺ استبدال'; btn.style.background = '#059669'; btn.disabled = false; }
+      _docPages[type] = [];
+      _renderDocThumbs(type);
     } else {
-      if (st) st.innerHTML = `<div style="color:#dc2626;font-size:11px;">❌ ${d.error||'فشل الرفع'}</div>`;
+      if (st) st.innerHTML = `<div style="color:#dc2626;font-size:11px;">❌ ${d.error || 'فشل الرفع'}</div>`;
+      if (btn) { btn.disabled = false; btn.textContent = '⬆ رفع الصور'; }
     }
   } catch(e) {
     if (st) st.innerHTML = `<div style="color:#dc2626;font-size:11px;">❌ ${e?.message || 'فشل الرفع'}</div>`;
+    if (btn) { btn.disabled = false; btn.textContent = '⬆ رفع الصور'; }
   }
 }
 
 function _resetDocs() {
   _docPages = { contract: [], inventory: [] };
-  _docPdfs  = { contract: null, inventory: null };
   ['contract','inventory'].forEach(t => {
     const el = document.getElementById(`doc-${t}-thumbs`); if (el) { el.innerHTML=''; el.style.display='none'; }
     const st = document.getElementById(`doc-${t}-status`); if (st) st.innerHTML='';
-    const btn = document.getElementById(`doc-${t}-btn`); if (btn) { btn.style.display='none'; btn.textContent='⬆ إنشاء PDF ورفعه'; btn.style.background='#1a3d8f'; btn.disabled=false; }
+    const btn = document.getElementById(`doc-${t}-btn`); if (btn) { btn.style.display='none'; btn.textContent='⬆ رفع الصور'; btn.style.background='#1a3d8f'; btn.disabled=false; }
     const fi = document.getElementById(`doc-${t}-file`); if (fi) fi.value='';
   });
 }
@@ -5586,8 +5577,10 @@ async function _loadExistingDocs(bookingId) {
     const doc = t==='contract' ? contractDoc : inventoryDoc;
     const st = document.getElementById(`doc-${t}-status`);
     if (doc?.url && st) {
-      st.innerHTML = `<div style="color:#059669;font-size:11px;font-weight:700;">✅ مرفوع — <a href="${doc.url}" target="_blank" style="color:#059669;">عرض PDF</a> <span style="color:#94a3b8;font-size:10px;">(${doc.uploadedBy||''})</span></div>`;
-      const btn = document.getElementById(`doc-${t}-btn`); if (btn) { btn.style.display='block'; btn.textContent='↺ استبدال PDF'; }
+      const allUrls = doc.urls?.length ? doc.urls : [doc.url];
+      const thumbs = allUrls.map((u,i)=>`<a href="${u}" target="_blank"><img src="${u}" style="width:32px;height:32px;object-fit:cover;border-radius:4px;border:1px solid #86efac;display:inline-block;margin-left:3px;"></a>`).join('');
+      st.innerHTML = `<div style="color:#059669;font-size:11px;font-weight:700;">✅ ${allUrls.length} صورة مرفوعة — ${thumbs}</div>`;
+      const btn = document.getElementById(`doc-${t}-btn`); if (btn) { btn.style.display='block'; btn.textContent='↺ استبدال'; }
     }
   });
 }
@@ -5600,19 +5593,19 @@ async function loadBkDocs(bookingId) {
   const { contractDoc, inventoryDoc } = await r.json();
   const hasAny = contractDoc?.url || inventoryDoc?.url;
   if (!hasAny) { sec.innerHTML=''; return; }
-  const docRow = (label, doc) => doc?.url
-    ? `<div style="display:flex;align-items:center;gap:10px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:9px 12px;margin-bottom:6px;">
-        <span style="font-size:22px;">📄</span>
-        <div style="flex:1;">
-          <div style="font-size:12px;font-weight:700;color:#065f46;">${label}</div>
-          <div style="font-size:10px;color:#64748b;">${doc.pages||1} صفحة • ${doc.uploadedBy||''} • ${doc.uploadedAt?new Date(doc.uploadedAt).toLocaleDateString('ar-SA',{day:'2-digit',month:'2-digit',year:'numeric'}):''}</div>
-        </div>
-        <a href="${doc.url}" target="_blank" style="padding:5px 12px;background:#059669;color:#fff;border-radius:8px;font-size:11px;font-weight:700;text-decoration:none;">تحميل ↗</a>
-      </div>`
-    : `<div style="display:flex;align-items:center;gap:10px;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:9px 12px;margin-bottom:6px;">
-        <span style="font-size:22px;">📋</span>
-        <div style="flex:1;font-size:12px;color:#dc2626;font-weight:600;">${label} — غير مرفق</div>
-      </div>`;
+  const docRow = (label, doc) => {
+    if (!doc?.url) return `<div style="display:flex;align-items:center;gap:10px;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:9px 12px;margin-bottom:6px;"><span style="font-size:18px;">📋</span><div style="flex:1;font-size:12px;color:#dc2626;font-weight:600;">${label} — غير مرفق</div></div>`;
+    const allUrls = doc.urls?.length ? doc.urls : [doc.url];
+    const thumbs = allUrls.map((u, i) => `<a href="${u}" target="_blank" title="صفحة ${i+1}"><img src="${u}" style="width:44px;height:56px;object-fit:cover;border-radius:5px;border:1.5px solid #86efac;display:block;"></a>`).join('');
+    return `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:9px 12px;margin-bottom:6px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <span style="font-size:18px;">📄</span>
+        <div style="flex:1;font-size:12px;font-weight:700;color:#065f46;">${label}</div>
+        <span style="font-size:10px;color:#64748b;">${allUrls.length} صورة • ${doc.uploadedBy||''}</span>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">${thumbs}</div>
+    </div>`;
+  };
   sec.innerHTML = `<div style="font-size:10px;font-weight:800;color:var(--t4);letter-spacing:.07em;margin:14px 0 8px;padding-top:10px;border-top:1px solid var(--border);">📋 المستندات</div>`
     + docRow('عقد الإيجار', contractDoc) + docRow('ورقة استلام المحتويات', inventoryDoc);
 }
@@ -5630,8 +5623,8 @@ async function loadCustomerContracts(phone) {
     return `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;margin-bottom:6px;">
       <div style="font-size:12px;font-weight:700;color:var(--t1);">شقة ${b.apt||'—'} — ${date}</div>
       <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;">
-        ${b.contractDoc?.url?`<a href="${b.contractDoc.url}" target="_blank" style="font-size:11px;padding:3px 10px;background:#eff6ff;color:#1d4ed8;border-radius:6px;text-decoration:none;font-weight:700;">📄 العقد</a>`:'<span style="font-size:11px;color:#94a3b8;">العقد: غير مرفق</span>'}
-        ${b.inventoryDoc?.url?`<a href="${b.inventoryDoc.url}" target="_blank" style="font-size:11px;padding:3px 10px;background:#f0fdf4;color:#065f46;border-radius:6px;text-decoration:none;font-weight:700;">📋 الاستلام</a>`:'<span style="font-size:11px;color:#94a3b8;">الاستلام: غير مرفق</span>'}
+        ${b.contractDoc?.url?`<a href="${b.contractDoc.url}" target="_blank" style="font-size:11px;padding:3px 10px;background:#eff6ff;color:#1d4ed8;border-radius:6px;text-decoration:none;font-weight:700;">📄 العقد (${(b.contractDoc.urls||[b.contractDoc.url]).length} صورة)</a>`:'<span style="font-size:11px;color:#94a3b8;">العقد: غير مرفق</span>'}
+        ${b.inventoryDoc?.url?`<a href="${b.inventoryDoc.url}" target="_blank" style="font-size:11px;padding:3px 10px;background:#f0fdf4;color:#065f46;border-radius:6px;text-decoration:none;font-weight:700;">📋 الاستلام (${(b.inventoryDoc.urls||[b.inventoryDoc.url]).length} صورة)</a>`:'<span style="font-size:11px;color:#94a3b8;">الاستلام: غير مرفق</span>'}
       </div>
     </div>`;
   }).join('');
@@ -5701,11 +5694,11 @@ async function submitNewBk(){
         body:JSON.stringify({bookingId:bkId,building:BUILDING,apt,guestName:name,imageData:rec.base64,imageMimeType:rec.mime||'image/jpeg',analysis:rec.analysis}),
       }).catch(()=>{});
     }
-    // رفع المستندات (PDF) إذا كانت جاهزة
+    // رفع المستندات (صور) إذا كانت جاهزة
     const savedBkId = d._id || d.id || editBkId;
     if (savedBkId) {
-      if (_docPdfs.contract)  _uploadDocToServer('contract',  savedBkId);
-      if (_docPdfs.inventory) _uploadDocToServer('inventory', savedBkId);
+      if (_docPages.contract.length)  _uploadDocToServer('contract',  savedBkId);
+      if (_docPages.inventory.length) _uploadDocToServer('inventory', savedBkId);
     }
     _clearDraft();
     closeNewBkModal();
