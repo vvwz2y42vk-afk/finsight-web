@@ -2290,37 +2290,56 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
         </div>
         <!-- ── نهاية مسح الهوية ── -->
 
-        <!-- ── المستندات ── -->
+        <!-- ── الأرشيف الرقمي ── -->
         <div style="grid-column:1/-1;">
-          <div style="font-size:12px;font-weight:700;color:#475569;margin-bottom:10px;padding-top:4px;border-top:1px solid #e2e8f0;padding-top:12px;">📋 أرشفة المستندات <span style="font-size:10px;font-weight:400;color:#94a3b8;">(اختياري — يمكن الرفع لاحقاً)</span></div>
+          <div style="font-size:12px;font-weight:700;color:#475569;border-top:1px solid #e2e8f0;padding-top:12px;margin-bottom:10px;display:flex;align-items:center;gap:8px;">
+            <span style="font-size:15px;">🗂</span> الأرشيف الرقمي
+            <span style="font-size:10px;font-weight:400;color:#94a3b8;margin-right:4px;">— يتحول تلقائياً إلى PDF محكم</span>
+          </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
             <!-- عقد الإيجار -->
             <div>
-              <div style="font-size:11px;font-weight:700;color:#0f172a;margin-bottom:6px;">📄 عقد الإيجار الموقع</div>
-              <input type="file" id="doc-contract-file" accept="image/*" multiple style="display:none;" onchange="onDocFiles(this,'contract')">
-              <div id="doc-contract-area" onclick="document.getElementById('doc-contract-file').click()" style="border:2px dashed #cbd5e1;border-radius:9px;padding:14px;text-align:center;cursor:pointer;background:#f8fafc;transition:border-color .2s;" onmouseover="this.style.borderColor='#64748b'" onmouseout="this.style.borderColor='#cbd5e1'">
-                <div style="font-size:20px;margin-bottom:3px;">📷</div>
-                <div style="font-size:11px;color:#64748b;">رفع صور العقد (أكثر من صفحة مدعومة)</div>
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:7px;">
+                <span style="background:#dbeafe;color:#1d4ed8;font-size:10px;font-weight:800;padding:3px 10px;border-radius:20px;letter-spacing:.3px;">📄 عقد ورقي موثق</span>
               </div>
-              <div id="doc-contract-thumbs" style="display:none;flex-wrap:wrap;gap:6px;margin-top:8px;"></div>
-              <div id="doc-contract-status" style="margin-top:6px;"></div>
-              <button id="doc-contract-btn" onclick="uploadDocNow('contract')" style="display:none;width:100%;margin-top:8px;padding:7px;background:#1a3d8f;color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">⬆ رفع الصور</button>
+              <input type="file" id="doc-contract-file" accept="image/*" multiple capture="environment" style="display:none;" onchange="onDocFiles(this,'contract')">
+              <div id="doc-contract-area"
+                onclick="document.getElementById('doc-contract-file').click()"
+                ondragover="onDocDragOver(event,'contract')"
+                ondragleave="onDocDragLeave(event,'contract')"
+                ondrop="onDocDrop(event,'contract')"
+                style="border:2px dashed #bfdbfe;border-radius:10px;padding:16px 10px;text-align:center;cursor:pointer;background:#f0f7ff;transition:all .15s;user-select:none;">
+                <div style="font-size:24px;margin-bottom:4px;">📸</div>
+                <div style="font-size:11px;font-weight:700;color:#1d4ed8;margin-bottom:2px;">اسحب الصور هنا أو اضغط للتصوير</div>
+                <div style="font-size:10px;color:#64748b;">يدعم أكثر من صفحة — سيُحوَّل لـ PDF تلقائياً</div>
+              </div>
+              <div id="doc-contract-thumbs" style="display:none;flex-wrap:wrap;gap:5px;margin-top:7px;"></div>
+              <div id="doc-contract-status" style="margin-top:5px;"></div>
+              <button id="doc-contract-btn" onclick="uploadDocNow('contract')" style="display:none;width:100%;margin-top:7px;padding:8px;background:#1d4ed8;color:#fff;border:none;border-radius:9px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.3px;">⬆ رفع وأرشفة PDF</button>
             </div>
             <!-- ورقة الاستلام -->
             <div>
-              <div style="font-size:11px;font-weight:700;color:#0f172a;margin-bottom:6px;">📋 ورقة استلام المحتويات</div>
-              <input type="file" id="doc-inventory-file" accept="image/*" multiple style="display:none;" onchange="onDocFiles(this,'inventory')">
-              <div id="doc-inventory-area" onclick="document.getElementById('doc-inventory-file').click()" style="border:2px dashed #cbd5e1;border-radius:9px;padding:14px;text-align:center;cursor:pointer;background:#f8fafc;transition:border-color .2s;" onmouseover="this.style.borderColor='#64748b'" onmouseout="this.style.borderColor='#cbd5e1'">
-                <div style="font-size:20px;margin-bottom:3px;">📷</div>
-                <div style="font-size:11px;color:#64748b;">رفع صور الورقة (أكثر من صفحة مدعومة)</div>
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:7px;">
+                <span style="background:#d1fae5;color:#065f46;font-size:10px;font-weight:800;padding:3px 10px;border-radius:20px;letter-spacing:.3px;">📋 محضر استلام المحتويات</span>
               </div>
-              <div id="doc-inventory-thumbs" style="display:none;flex-wrap:wrap;gap:6px;margin-top:8px;"></div>
-              <div id="doc-inventory-status" style="margin-top:6px;"></div>
-              <button id="doc-inventory-btn" onclick="uploadDocNow('inventory')" style="display:none;width:100%;margin-top:8px;padding:7px;background:#1a3d8f;color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">⬆ رفع الصور</button>
+              <input type="file" id="doc-inventory-file" accept="image/*" multiple capture="environment" style="display:none;" onchange="onDocFiles(this,'inventory')">
+              <div id="doc-inventory-area"
+                onclick="document.getElementById('doc-inventory-file').click()"
+                ondragover="onDocDragOver(event,'inventory')"
+                ondragleave="onDocDragLeave(event,'inventory')"
+                ondrop="onDocDrop(event,'inventory')"
+                style="border:2px dashed #6ee7b7;border-radius:10px;padding:16px 10px;text-align:center;cursor:pointer;background:#f0fdf8;transition:all .15s;user-select:none;">
+                <div style="font-size:24px;margin-bottom:4px;">📸</div>
+                <div style="font-size:11px;font-weight:700;color:#065f46;margin-bottom:2px;">اسحب الصور هنا أو اضغط للتصوير</div>
+                <div style="font-size:10px;color:#64748b;">يدعم أكثر من صفحة — سيُحوَّل لـ PDF تلقائياً</div>
+              </div>
+              <div id="doc-inventory-thumbs" style="display:none;flex-wrap:wrap;gap:5px;margin-top:7px;"></div>
+              <div id="doc-inventory-status" style="margin-top:5px;"></div>
+              <button id="doc-inventory-btn" onclick="uploadDocNow('inventory')" style="display:none;width:100%;margin-top:7px;padding:8px;background:#059669;color:#fff;border:none;border-radius:9px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.3px;">⬆ رفع وأرشفة PDF</button>
             </div>
           </div>
         </div>
-        <!-- ── نهاية المستندات ── -->
+        <!-- ── نهاية الأرشيف الرقمي ── -->
 
         <div style="grid-column:1/-1;">
           <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">الحالة</label>
@@ -5410,22 +5429,24 @@ async function loadArchive(){
     if(!list.length){ el.innerHTML='<div style="padding:40px;text-align:center;color:#94a3b8;font-size:13px;">لا توجد مستندات مرفوعة</div>'; return; }
     el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;">`
       +list.map(b=>{
-        const cUrls=(b.contractDoc?.urls?.length?b.contractDoc.urls:[b.contractDoc?.url]).filter(Boolean);
-        const iUrls=(b.inventoryDoc?.urls?.length?b.inventoryDoc.urls:[b.inventoryDoc?.url]).filter(Boolean);
         const ci=b.checkIn?new Date(b.checkIn).toLocaleDateString('ar-SA',{day:'2-digit',month:'2-digit',year:'2-digit'}):'-';
         const co=b.checkOut?new Date(b.checkOut).toLocaleDateString('ar-SA',{day:'2-digit',month:'2-digit',year:'2-digit'}):'-';
-        const cThumbs=cUrls.map(u=>`<a href="${u}" target="_blank"><img src="${u}" style="width:40px;height:52px;object-fit:cover;border-radius:5px;border:1.5px solid #bfdbfe;"></a>`).join('');
-        const iThumbs=iUrls.map(u=>`<a href="${u}" target="_blank"><img src="${u}" style="width:40px;height:52px;object-fit:cover;border-radius:5px;border:1.5px solid #bbf7d0;"></a>`).join('');
-        return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;cursor:pointer;" onclick="openBkModal('${b._id}')">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-            <div style="width:34px;height:34px;background:#eff6ff;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;">📋</div>
+        const cDoc=b.contractDoc; const iDoc=b.inventoryDoc;
+        const pdfBtn=(doc,label,color)=>doc?.url
+          ?`<a href="${doc.url}" target="_blank" onclick="event.stopPropagation()" style="display:flex;align-items:center;gap:5px;padding:5px 10px;background:${color}1a;border:1px solid ${color}40;border-radius:8px;font-size:10px;font-weight:700;color:${color};text-decoration:none;white-space:nowrap;">📄 ${label}<span style="opacity:.7;">(${doc.pages||1}ص)</span></a>`
+          :`<span style="font-size:10px;color:#94a3b8;padding:5px 8px;">${label}: غير مرفق</span>`;
+        return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;cursor:pointer;transition:box-shadow .15s;" onmouseenter="this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)'" onmouseleave="this.style.boxShadow=''" onclick="openBkModal('${b._id}')">
+          <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;">
+            <div style="width:36px;height:36px;background:linear-gradient(135deg,#eff6ff,#dbeafe);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">🗂</div>
             <div style="flex:1;min-width:0;">
               <div style="font-size:13px;font-weight:700;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(b.name||'—')}</div>
-              <div style="font-size:11px;color:var(--t3);">شقة ${esc(b.apt||'—')} · ${ci} ← ${co}</div>
+              <div style="font-size:10px;color:var(--t3);margin-top:2px;">شقة ${esc(b.apt||'—')} · ${ci} ← ${co}</div>
             </div>
           </div>
-          ${cUrls.length?`<div style="margin-bottom:8px;"><div style="font-size:10px;font-weight:700;color:#1d4ed8;margin-bottom:4px;">📄 عقد الإيجار (${cUrls.length})</div><div style="display:flex;gap:4px;flex-wrap:wrap;">${cThumbs}</div></div>`:'<div style="font-size:11px;color:#94a3b8;margin-bottom:6px;">📄 العقد: غير مرفق</div>'}
-          ${iUrls.length?`<div><div style="font-size:10px;font-weight:700;color:#059669;margin-bottom:4px;">📋 ورقة الاستلام (${iUrls.length})</div><div style="display:flex;gap:4px;flex-wrap:wrap;">${iThumbs}</div></div>`:'<div style="font-size:11px;color:#94a3b8;">📋 الاستلام: غير مرفق</div>'}
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            ${pdfBtn(cDoc,'عقد الإيجار','#1d4ed8')}
+            ${pdfBtn(iDoc,'ورقة الاستلام','#059669')}
+          </div>
         </div>`;
       }).join('')+'</div>';
   }catch(e){ el.innerHTML=`<div style="padding:40px;text-align:center;color:#dc2626;font-size:13px;">❌ خطأ في التحميل</div>`; }
@@ -5512,7 +5533,31 @@ document.addEventListener('click',e=>{
 let _docPages = { contract: [], inventory: [] };
 // _docPdfs removed — images upload directly
 
-// (jsPDF removed — images upload directly to Cloudinary)
+// (jsPDF removed — PDF generated server-side with pdfkit)
+
+// ── Drag & Drop handlers ──────────────────────────────────
+function onDocDragOver(e, type) {
+  e.preventDefault();
+  const a = document.getElementById(`doc-${type}-area`);
+  if (!a) return;
+  a.style.borderColor = type==='contract' ? '#2563eb' : '#059669';
+  a.style.background  = type==='contract' ? '#dbeafe' : '#d1fae5';
+  a.style.transform   = 'scale(1.01)';
+}
+function onDocDragLeave(e, type) {
+  const a = document.getElementById(`doc-${type}-area`);
+  if (!a) return;
+  a.style.borderColor = type==='contract' ? '#bfdbfe' : '#6ee7b7';
+  a.style.background  = type==='contract' ? '#f0f7ff' : '#f0fdf8';
+  a.style.transform   = '';
+}
+async function onDocDrop(e, type) {
+  e.preventDefault();
+  onDocDragLeave(e, type);
+  const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+  if (!files.length) { toast('يُقبل صور فقط (JPG, PNG, HEIC...)', 'error'); return; }
+  await onDocFiles({ files }, type);
+}
 
 async function _enhanceImg(file) {
   return new Promise((resolve, reject) => {
@@ -5523,14 +5568,17 @@ async function _enhanceImg(file) {
       img.onerror = () => reject(new Error('صيغة الصورة غير مدعومة'));
       img.onload = () => {
         try {
-          const MAX = 2000;
+          // Max 1400px — keeps PDF < 1.5MB
+          const MAX = 1400;
           let w = img.width, h = img.height;
           if (w > MAX || h > MAX) { if (w > h) { h = Math.round(h * MAX / w); w = MAX; } else { w = Math.round(w * MAX / h); h = MAX; } }
           const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
           const ctx = cv.getContext('2d');
-          ctx.filter = 'brightness(1.15) contrast(1.25) saturate(0.8)';
+          // Scanner effect: grayscale → high contrast → slight brightness boost
+          ctx.filter = 'grayscale(1) contrast(2.4) brightness(1.08)';
           ctx.drawImage(img, 0, 0, w, h);
-          resolve(cv.toDataURL('image/jpeg', 0.92));
+          // JPEG 0.82 → ~200-400KB per A4 page
+          resolve(cv.toDataURL('image/jpeg', 0.82));
         } catch(err) { reject(err); }
       };
       img.src = e.target.result;
@@ -5565,12 +5613,17 @@ function _renderDocThumbs(type) {
   if (!el) return;
   el.style.display = pages.length ? 'flex' : 'none';
   el.innerHTML = pages.map((src, i) => `
-    <div style="position:relative;">
-      <img src="${src}" style="width:56px;height:72px;object-fit:cover;border-radius:6px;border:1.5px solid #e2e8f0;">
+    <div style="position:relative;" title="صفحة ${i+1}">
+      <img src="${src}" style="width:52px;height:68px;object-fit:cover;border-radius:7px;border:2px solid ${type==='contract'?'#bfdbfe':'#6ee7b7'};filter:grayscale(1) contrast(1.1);">
+      <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.45);color:#fff;font-size:8px;text-align:center;border-radius:0 0 5px 5px;padding:1px 0;">${i+1}</div>
       <div onclick="_docPages['${type}'].splice(${i},1);_renderDocThumbs('${type}')" style="position:absolute;top:-5px;right:-5px;width:16px;height:16px;background:#dc2626;border-radius:50%;color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;line-height:1;font-weight:700;">×</div>
     </div>`).join('');
+  if (pages.length) {
+    const area = document.getElementById(`doc-${type}-area`);
+    if (area) area.style.padding = '8px 10px';
+  }
   if (btn) btn.style.display = pages.length ? 'block' : 'none';
-  if (st && pages.length) st.innerHTML = '';
+  if (st && pages.length) st.innerHTML = `<div style="font-size:10px;color:#64748b;">✓ ${pages.length} صورة جاهزة — تأثير سكانر مُطبَّق</div>`;
 }
 
 async function uploadDocNow(type) {
@@ -5608,10 +5661,10 @@ async function _uploadDocToServer(type, bookingId) {
     });
     const d = await r.json();
     if (r.ok && d.success) {
-      const thumbs = d.urls.map((u, i) =>
-        `<a href="${u}" target="_blank" style="display:inline-block;margin-left:4px;"><img src="${u}" style="width:40px;height:40px;object-fit:cover;border-radius:5px;border:1.5px solid #86efac;"></a>`
-      ).join('');
-      if (st) st.innerHTML = `<div style="color:#059669;font-size:11px;font-weight:700;">✅ تم رفع ${d.urls.length} صورة<br>${thumbs}</div>`;
+      if (st) st.innerHTML = `<div style="color:#059669;font-size:11px;font-weight:700;">
+        ✅ PDF محفوظ (${d.pages} صفحة) —
+        <a href="${d.url}" target="_blank" style="color:#059669;text-decoration:underline;">📄 ${d.filename || 'فتح PDF'}</a>
+      </div>`;
       if (btn) { btn.textContent = '↺ استبدال'; btn.style.background = '#059669'; btn.disabled = false; }
       _docPages[type] = [];
       _renderDocThumbs(type);
@@ -5644,10 +5697,9 @@ async function _loadExistingDocs(bookingId) {
     const doc = t==='contract' ? contractDoc : inventoryDoc;
     const st = document.getElementById(`doc-${t}-status`);
     if (doc?.url && st) {
-      const allUrls = doc.urls?.length ? doc.urls : [doc.url];
-      const thumbs = allUrls.map((u,i)=>`<a href="${u}" target="_blank"><img src="${u}" style="width:32px;height:32px;object-fit:cover;border-radius:4px;border:1px solid #86efac;display:inline-block;margin-left:3px;"></a>`).join('');
-      st.innerHTML = `<div style="color:#059669;font-size:11px;font-weight:700;">✅ ${allUrls.length} صورة مرفوعة — ${thumbs}</div>`;
-      const btn = document.getElementById(`doc-${t}-btn`); if (btn) { btn.style.display='block'; btn.textContent='↺ استبدال'; }
+      const fname = doc.filename || (t==='contract' ? 'عقد_موثق.pdf' : 'استلام_محتويات.pdf');
+      st.innerHTML = `<div style="color:#059669;font-size:11px;font-weight:700;">✅ PDF مرفوع (${doc.pages||1} صفحة) — <a href="${doc.url}" target="_blank" style="color:#059669;text-decoration:underline;">📄 ${esc(fname)}</a></div>`;
+      const btn = document.getElementById(`doc-${t}-btn`); if (btn) { btn.style.display='block'; btn.textContent='↺ استبدال'; btn.style.background='#059669'; }
     }
   });
 }
@@ -5662,17 +5714,17 @@ async function loadBkDocs(bookingId) {
   if (!hasAny) { sec.innerHTML=''; return; }
   const docRow = (label, doc) => {
     if (!doc?.url) return `<div style="display:flex;align-items:center;gap:10px;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:9px 12px;margin-bottom:6px;"><span style="font-size:18px;">📋</span><div style="flex:1;font-size:12px;color:#dc2626;font-weight:600;">${label} — غير مرفق</div></div>`;
-    const allUrls = doc.urls?.length ? doc.urls : [doc.url];
-    const thumbs = allUrls.map((u, i) => `<a href="${u}" target="_blank" title="صفحة ${i+1}"><img src="${u}" style="width:44px;height:56px;object-fit:cover;border-radius:5px;border:1.5px solid #86efac;display:block;"></a>`).join('');
-    return `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:9px 12px;margin-bottom:6px;">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-        <span style="font-size:18px;">📄</span>
-        <div style="flex:1;font-size:12px;font-weight:700;color:#065f46;">${label}</div>
-        <span style="font-size:10px;color:#64748b;">${allUrls.length} صورة • ${doc.uploadedBy||''}</span>
+    const upDate = doc.uploadedAt ? new Date(doc.uploadedAt).toLocaleDateString('ar-SA',{day:'2-digit',month:'2-digit',year:'2-digit'}) : '';
+    const fname  = doc.filename || label;
+    return `<div style="display:flex;align-items:center;gap:12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:10px 14px;margin-bottom:8px;">
+      <div style="width:38px;height:46px;background:#dcfce7;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">📄</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:12px;font-weight:700;color:#065f46;">${label}</div>
+        <div style="font-size:10px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${esc(fname)}">${esc(fname)}</div>
+        <div style="font-size:10px;color:#94a3b8;">${doc.pages||1} صفحة • ${doc.uploadedBy||''} • ${upDate}</div>
       </div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;">${thumbs}</div>
+      <a href="${doc.url}" target="_blank" style="flex-shrink:0;padding:6px 14px;background:#059669;color:#fff;border-radius:8px;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap;">📥 تحميل PDF</a>
     </div>`;
-  };
   sec.innerHTML = `<div style="font-size:10px;font-weight:800;color:var(--t4);letter-spacing:.07em;margin:14px 0 8px;padding-top:10px;border-top:1px solid var(--border);">📋 المستندات</div>`
     + docRow('عقد الإيجار', contractDoc) + docRow('ورقة استلام المحتويات', inventoryDoc);
 }

@@ -588,42 +588,70 @@ router.delete('/api/bookings/:id/payments/:pid', reqStaff, async (req, res) => {
 // ── API: Booking Documents (contract / inventory) ─────────
 router.post('/api/bookings/:id/documents', reqStaff, async (req, res) => {
   try {
-    const B = require('../models/Booking');
+    const B   = require('../models/Booking');
+    const PDFDocument = require('pdfkit');
+    const crypto = require('crypto');
     const { type, pages } = req.body; // pages: [{data: base64, mime: 'image/jpeg'}]
-    if (!['contract', 'inventory'].includes(type)) return res.status(400).json({ error: 'نوع غير صحيح' });
+    if (!['contract','inventory'].includes(type)) return res.status(400).json({ error: 'نوع غير صحيح' });
     if (!pages?.length) return res.status(400).json({ error: 'لم يتم اختيار صور' });
     const bk = await B.findById(req.params.id);
     if (!bk) return res.status(404).json({ error: 'الحجز غير موجود' });
 
-    const uploadedUrls = [];
-    if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
-      const crypto     = require('crypto');
-      const cloudName  = process.env.CLOUDINARY_CLOUD_NAME;
-      const apiKey     = process.env.CLOUDINARY_API_KEY;
-      const apiSecret  = process.env.CLOUDINARY_API_SECRET;
-      const folder     = 'barez/contracts';
-      const bkId       = bk._id.toString().slice(-6).toUpperCase();
-      const cName      = (bk.name || 'client').replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '').slice(0, 15);
-      const suffix     = type === 'contract' ? 'ctr' : 'inv';
-      for (let i = 0; i < pages.length; i++) {
-        const { data, mime } = pages[i];
-        const pubId      = `${bkId}_${cName}_${suffix}_p${i + 1}`;
-        const timestamp  = Math.floor(Date.now() / 1000);
-        const toSign     = `folder=${folder}&public_id=${pubId}&timestamp=${timestamp}${apiSecret}`;
-        const signature  = crypto.createHash('sha1').update(toSign).digest('hex');
-        const upRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ file: `data:${mime};base64,${data}`, api_key: apiKey, timestamp, signature, folder, public_id: pubId }),
-        });
-        if (upRes.ok) { const d = await upRes.json(); if (d.secure_url) uploadedUrls.push(d.secure_url); }
-      }
+    // ── Build PDF with pdfkit ──────────────────────────────
+    const pdfBuf = await new Promise((resolve, reject) => {
+      const doc    = new PDFDocument({ size: 'A4', margin: 20, autoFirstPage: true });
+      const chunks = [];
+      doc.on('data', c => chunks.push(c));
+      doc.on('end',  () => resolve(Buffer.concat(chunks)));
+      doc.on('error', reject);
+      pages.forEach((p, i) => {
+        if (i > 0) doc.addPage();
+        try {
+          const buf = Buffer.from(p.data, 'base64');
+          doc.image(buf, 20, 20, { fit: [555, 800], align: 'center', valign: 'center' });
+        } catch { doc.fontSize(10).text(`فشل تحميل الصورة ${i + 1}`, 20, 20); }
+      });
+      doc.end();
+    });
+
+    // ── Upload PDF to Cloudinary ───────────────────────────
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+    const apiKey    = process.env.CLOUDINARY_API_KEY;
+    const apiSecret = process.env.CLOUDINARY_API_SECRET;
+    if (!cloudName || !apiKey || !apiSecret)
+      return res.status(500).json({ error: 'Cloudinary غير مُهيَّأ في متغيرات البيئة' });
+
+    const bkId      = bk._id.toString().slice(-8).toUpperCase();
+    const safeName  = (bk.name || 'client').replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '').slice(0, 15) || 'client';
+    const suffix    = type === 'contract' ? 'ctr' : 'inv';
+    const folder    = 'barez/contracts';
+    const pubId     = `BK${bkId}_${safeName}_${suffix}`;
+    const timestamp = Math.floor(Date.now() / 1000);
+    const toSign    = `folder=${folder}&public_id=${pubId}&timestamp=${timestamp}${apiSecret}`;
+    const signature = crypto.createHash('sha1').update(toSign).digest('hex');
+
+    const upRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/raw/upload`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        file: `data:application/pdf;base64,${pdfBuf.toString('base64')}`,
+        api_key: apiKey, timestamp, signature, folder, public_id: pubId,
+      }),
+    });
+    if (!upRes.ok) {
+      const e = await upRes.json().catch(() => ({}));
+      return res.status(500).json({ error: `فشل رفع PDF: ${e.error?.message || upRes.status}` });
     }
-    if (!uploadedUrls.length) return res.status(500).json({ error: 'فشل الرفع — تأكد من إعداد Cloudinary في متغيرات البيئة' });
+    const upData   = await upRes.json();
+    const pdfUrl   = upData.secure_url;
+    const arSuffix = type === 'contract' ? 'عقد_موثق' : 'استلام_محتويات';
+    const filename = `${bk.name || 'عميل'}_${bkId}_${arSuffix}.pdf`;
 
     const field = type === 'contract' ? 'contractDoc' : 'inventoryDoc';
-    await B.findByIdAndUpdate(req.params.id, { [field]: { url: uploadedUrls[0], urls: uploadedUrls, uploadedBy: req.staff.name, uploadedAt: new Date(), pages: uploadedUrls.length } });
-    res.json({ success: true, url: uploadedUrls[0], urls: uploadedUrls });
+    await B.findByIdAndUpdate(req.params.id, {
+      [field]: { url: pdfUrl, urls: [pdfUrl], filename, uploadedBy: req.staff.name, uploadedAt: new Date(), pages: pages.length },
+    });
+    res.json({ success: true, url: pdfUrl, filename, pages: pages.length });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 

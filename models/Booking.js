@@ -40,6 +40,7 @@ const bookingSchema = new mongoose.Schema({
   contractDoc: {
     url:        { type: String, default: '' },
     urls:       [{ type: String }],
+    filename:   { type: String, default: '' },
     uploadedBy: { type: String, default: '' },
     uploadedAt: { type: Date },
     pages:      { type: Number, default: 1 },
@@ -47,6 +48,7 @@ const bookingSchema = new mongoose.Schema({
   inventoryDoc: {
     url:        { type: String, default: '' },
     urls:       [{ type: String }],
+    filename:   { type: String, default: '' },
     uploadedBy: { type: String, default: '' },
     uploadedAt: { type: Date },
     pages:      { type: Number, default: 1 },
