@@ -2315,7 +2315,7 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
               </div>
               <div id="doc-contract-thumbs" style="display:none;flex-wrap:wrap;gap:5px;margin-top:7px;"></div>
               <div id="doc-contract-status" style="margin-top:5px;"></div>
-              <button id="doc-contract-btn" onclick="uploadDocNow('contract')" style="display:none;width:100%;margin-top:7px;padding:8px;background:#1d4ed8;color:#fff;border:none;border-radius:9px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.3px;">⬆ رفع وأرشفة PDF</button>
+              <button id="doc-contract-btn" onclick="uploadDocNow('contract')" style="display:none;width:100%;margin-top:7px;padding:8px;background:linear-gradient(135deg,#1d4ed8,#1e40af);color:#fff;border:none;border-radius:9px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.3px;">🤖 قراءة ذكية + مراجعة</button>
             </div>
             <!-- ورقة الاستلام -->
             <div>
@@ -2335,7 +2335,7 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
               </div>
               <div id="doc-inventory-thumbs" style="display:none;flex-wrap:wrap;gap:5px;margin-top:7px;"></div>
               <div id="doc-inventory-status" style="margin-top:5px;"></div>
-              <button id="doc-inventory-btn" onclick="uploadDocNow('inventory')" style="display:none;width:100%;margin-top:7px;padding:8px;background:#059669;color:#fff;border:none;border-radius:9px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.3px;">⬆ رفع وأرشفة PDF</button>
+              <button id="doc-inventory-btn" onclick="uploadDocNow('inventory')" style="display:none;width:100%;margin-top:7px;padding:8px;background:linear-gradient(135deg,#059669,#047857);color:#fff;border:none;border-radius:9px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.3px;">🤖 قراءة ذكية + مراجعة</button>
             </div>
           </div>
         </div>
@@ -5669,42 +5669,53 @@ async function _uploadDocToServer(type, bookingId) {
   if (!imgs.length || !bookingId) return;
   const btn = document.getElementById(`doc-${type}-btn`);
   const st  = document.getElementById(`doc-${type}-status`);
-  if (btn) { btn.disabled = true; btn.textContent = '🤖 جاري المعالجة...'; }
-  if (st)  st.innerHTML = `<div style="display:flex;align-items:center;gap:7px;color:#0369a1;font-size:11px;font-weight:600;padding:6px 0;">
-    <span style="display:inline-block;width:13px;height:13px;border:2px solid #0369a1;border-top-color:transparent;border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0;"></span>
-    🤖 الذكاء الاصطناعي يقرأ الوثيقة ويستخرج النص...
+
+  const pages = imgs.map(dataUrl => {
+    const comma  = dataUrl.indexOf(',');
+    const header = dataUrl.substring(0, comma);
+    const mime   = header.match(/data:([^;]+)/)?.[1] || 'image/jpeg';
+    return { data: dataUrl.substring(comma + 1), mime };
+  });
+
+  // ── Phase 1: AI Parse ────────────────────────────────────────────────────
+  if (btn) { btn.disabled = true; btn.textContent = '🤖 جاري القراءة الذكية...'; }
+  if (st) st.innerHTML = `<div style="display:flex;align-items:center;gap:7px;color:#7c3aed;font-size:11px;font-weight:600;padding:6px 0;">
+    <span style="display:inline-block;width:13px;height:13px;border:2px solid #7c3aed;border-top-color:transparent;border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0;"></span>
+    🤖 الذكاء الاصطناعي يحلل الوثيقة...
   </div>`;
+
   try {
-    const pages = imgs.map(dataUrl => {
-      const comma  = dataUrl.indexOf(',');
-      const header = dataUrl.substring(0, comma);
-      const mime   = header.match(/data:([^;]+)/)?.[1] || 'image/jpeg';
-      return { data: dataUrl.substring(comma + 1), mime };
-    });
-    const r = await fetch(`/staff/api/bookings/${bookingId}/documents`, {
+    const parseR = await fetch(`/staff/api/bookings/${bookingId}/documents/parse`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ type, pages }),
     });
-    const d = await r.json();
-    if (r.ok && d.success) {
-      const ocrBadge = d.hasOcr
-        ? `<span style="background:#ede9fe;color:#5b21b6;font-size:9px;padding:2px 6px;border-radius:12px;font-weight:700;">🤖 OCR ✓</span>`
-        : '';
-      if (st) st.innerHTML = `<div style="font-size:11px;font-weight:700;color:#059669;">
-        ✅ PDF محفوظ (${d.pages} صفحة) ${ocrBadge}<br>
-        <a href="${d.url}" target="_blank" style="color:#059669;text-decoration:underline;font-size:10px;font-weight:400;">📄 ${d.filename || 'فتح PDF'}</a>
-      </div>`;
-      if (btn) { btn.textContent = '↺ استبدال'; btn.style.background = '#059669'; btn.disabled = false; }
-      _docPages[type] = [];
-      _renderDocThumbs(type);
-    } else {
-      if (st) st.innerHTML = `<div style="color:#dc2626;font-size:11px;">❌ ${d.error || 'فشل الرفع'}</div>`;
-      if (btn) { btn.disabled = false; btn.textContent = '⬆ رفع وأرشفة PDF'; }
-    }
+    const parseD = await parseR.json();
+
+    if (!parseR.ok) throw new Error(parseD.error || 'فشل التحليل');
+
+    if (btn) { btn.disabled = false; btn.textContent = '🤖 قراءة ذكية + مراجعة'; }
+    if (st) st.innerHTML = `<div style="font-size:11px;color:#059669;font-weight:700;">✅ تم التحليل — راجع البيانات في النافذة</div>`;
+
+    // ── Phase 2: Open review modal ─────────────────────────────────────────
+    openDocReview(bookingId, type, pages, parseD.parsed || {});
+
   } catch(e) {
-    if (st) st.innerHTML = `<div style="color:#dc2626;font-size:11px;">❌ ${e?.message || 'فشل الرفع'}</div>`;
-    if (btn) { btn.disabled = false; btn.textContent = '⬆ رفع وأرشفة PDF'; }
+    if (st) st.innerHTML = `<div style="color:#dc2626;font-size:11px;">❌ ${e?.message || 'فشل التحليل'}</div>`;
+    if (btn) { btn.disabled = false; btn.textContent = '🤖 قراءة ذكية + مراجعة'; }
   }
+}
+
+// Called after modal confirm + generate succeeds — update the doc status UI
+function _onDocGenerated(type, bookingId, url, filename, pages) {
+  const btn = document.getElementById(`doc-${type}-btn`);
+  const st  = document.getElementById(`doc-${type}-status`);
+  if (st) st.innerHTML = `<div style="font-size:11px;font-weight:700;color:#059669;">
+    ✅ عقد رقمي احترافي (${pages} صفحة) <span style="background:#ede9fe;color:#5b21b6;font-size:9px;padding:2px 6px;border-radius:12px;font-weight:700;">✨ AI</span><br>
+    <a href="${url}" target="_blank" style="color:#059669;text-decoration:underline;font-size:10px;font-weight:400;">📄 ${filename || 'فتح PDF'}</a>
+  </div>`;
+  if (btn) { btn.textContent = '↺ استبدال'; btn.style.background = '#059669'; btn.disabled = false; }
+  _docPages[type] = [];
+  _renderDocThumbs(type);
 }
 
 function _resetDocs() {
@@ -5712,7 +5723,7 @@ function _resetDocs() {
   ['contract','inventory'].forEach(t => {
     const el = document.getElementById(`doc-${t}-thumbs`); if (el) { el.innerHTML=''; el.style.display='none'; }
     const st = document.getElementById(`doc-${t}-status`); if (st) st.innerHTML='';
-    const btn = document.getElementById(`doc-${t}-btn`); if (btn) { btn.style.display='none'; btn.textContent='⬆ رفع الصور'; btn.style.background='#1a3d8f'; btn.disabled=false; }
+    const btn = document.getElementById(`doc-${t}-btn`); if (btn) { btn.style.display='none'; btn.textContent='🤖 قراءة ذكية + مراجعة'; btn.style.background='#1a3d8f'; btn.disabled=false; }
     const fi = document.getElementById(`doc-${t}-file`); if (fi) fi.value='';
   });
 }
@@ -8542,6 +8553,233 @@ function showToast(msg) {
   requestAnimationFrame(() => { t.style.transform='translateX(-50%) translateY(0)'; t.style.opacity='1'; });
   setTimeout(() => { t.style.transform='translateX(-50%) translateY(60px)'; t.style.opacity='0'; }, 3000);
 }
+
+// ── AI Document Parser state ─────────────────────────────────────────────────
+let _drmBkId   = null;   // current booking id
+let _drmType   = null;   // 'contract' | 'inventory'
+let _drmPages  = [];     // base64 pages array
+
+function drmCalcRemaining() {
+  const tot  = parseFloat(document.getElementById('drm-totalAmount').value) || 0;
+  const paid = parseFloat(document.getElementById('drm-paidAmount').value)  || 0;
+  document.getElementById('drm-remaining').value = Math.max(0, tot - paid);
+}
+
+function openDocReview(bkId, type, pages, parsed) {
+  _drmBkId  = bkId;
+  _drmType  = type;
+  _drmPages = pages;
+
+  // title
+  document.getElementById('drm-title').textContent =
+    type === 'inventory' ? 'مراجعة بيانات ورقة الاستلام' : 'مراجعة بيانات العقد';
+
+  // show furniture section for inventory
+  document.getElementById('drm-furniture-wrap').style.display =
+    type === 'inventory' ? 'block' : 'none';
+
+  // fill fields
+  document.getElementById('drm-name').value      = parsed.name      || '';
+  document.getElementById('drm-phone').value     = parsed.phone     || '';
+  document.getElementById('drm-idNumber').value  = parsed.idNumber  || '';
+  document.getElementById('drm-apt').value       = parsed.apt       || '';
+  document.getElementById('drm-building').value  = parsed.building  || '';
+  document.getElementById('drm-notes').value     = parsed.notes     || '';
+  document.getElementById('drm-totalAmount').value  = parsed.totalAmount  || '';
+  document.getElementById('drm-paidAmount').value   = parsed.paidAmount   || '';
+  document.getElementById('drm-remaining').value    = parsed.remaining    || '';
+
+  // idType
+  const idSel = document.getElementById('drm-idType');
+  const idMap = { national_id: 0, passport: 1, iqama: 2, family_card: 3 };
+  idSel.selectedIndex = idMap[parsed.idType] ?? 0;
+
+  // dates (parse to YYYY-MM-DD)
+  const toInputDate = s => {
+    if (!s) return '';
+    const d = new Date(s);
+    if (isNaN(d)) return s.slice(0,10) || '';
+    return d.toISOString().slice(0,10);
+  };
+  document.getElementById('drm-checkIn').value  = toInputDate(parsed.checkIn);
+  document.getElementById('drm-checkOut').value = toInputDate(parsed.checkOut);
+
+  // furniture
+  if (type === 'inventory' && Array.isArray(parsed.furniture)) {
+    document.getElementById('drm-furniture').value = parsed.furniture.join('\n');
+  }
+
+  document.getElementById('drm-status').textContent = '';
+  document.getElementById('drm-generate-btn').disabled = false;
+  document.getElementById('drm-generate-btn').textContent = '';
+  document.getElementById('drm-generate-btn').innerHTML = '<span>✨</span> إصدار العقد الرقمي الاحترافي';
+
+  const modal = document.getElementById('docReviewModal');
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeDocReview() {
+  document.getElementById('docReviewModal').style.display = 'none';
+  document.body.style.overflow = '';
+  _drmBkId = _drmType = null;
+  _drmPages = [];
+}
+
+async function generatePremiumPDF() {
+  if (!_drmBkId) return;
+  const btn    = document.getElementById('drm-generate-btn');
+  const status = document.getElementById('drm-status');
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin" style="display:inline-block;animation:spin .8s linear infinite;">⟳</span> جارٍ إنشاء العقد...';
+  status.textContent = '';
+
+  const confirmed = {
+    name:        document.getElementById('drm-name').value.trim(),
+    phone:       document.getElementById('drm-phone').value.trim(),
+    idType:      document.getElementById('drm-idType').value,
+    idNumber:    document.getElementById('drm-idNumber').value.trim(),
+    apt:         document.getElementById('drm-apt').value.trim(),
+    building:    document.getElementById('drm-building').value.trim(),
+    checkIn:     document.getElementById('drm-checkIn').value,
+    checkOut:    document.getElementById('drm-checkOut').value,
+    totalAmount: parseFloat(document.getElementById('drm-totalAmount').value) || 0,
+    paidAmount:  parseFloat(document.getElementById('drm-paidAmount').value)  || 0,
+    remaining:   parseFloat(document.getElementById('drm-remaining').value)   || 0,
+    notes:       document.getElementById('drm-notes').value.trim(),
+    furniture:   _drmType === 'inventory'
+      ? document.getElementById('drm-furniture').value.split('\n').map(s=>s.trim()).filter(Boolean)
+      : [],
+  };
+
+  try {
+    const resp = await fetch('/staff/api/bookings/' + _drmBkId + '/documents/generate', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ type: _drmType, confirmed, pages: _drmPages }),
+    });
+    const data = await resp.json();
+    if (!resp.ok || !data.success) throw new Error(data.error || 'فشل الإنشاء');
+
+    status.style.color = '#059669';
+    status.textContent = '✅ تم إنشاء العقد بنجاح!';
+    btn.innerHTML = '✓ تم';
+
+    // update the document card in booking form
+    if (typeof _onDocGenerated === 'function') {
+      _onDocGenerated(_drmType, _drmBkId, data.url, data.filename, data.pages || 1);
+    }
+
+    // open PDF
+    if (data.url) window.open(data.url, '_blank');
+
+    const capturedBkId = _drmBkId;
+    const capturedType = _drmType;
+    setTimeout(() => {
+      closeDocReview();
+      // reload archive if open
+      if (typeof loadArchive === 'function') loadArchive(capturedBkId);
+    }, 1800);
+
+  } catch(err) {
+    status.style.color = '#dc2626';
+    status.textContent = '⚠ ' + err.message;
+    btn.disabled = false;
+    btn.innerHTML = '<span>✨</span> إصدار العقد الرقمي الاحترافي';
+  }
+}
+// ── End AI Document Parser ────────────────────────────────────────────────────
+
 </script>
+
+<!-- ── AI Document Review Modal ─────────────────────────────────────── -->
+<div id="docReviewModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);align-items:center;justify-content:center;">
+  <div style="background:var(--surface);border-radius:20px;width:min(700px,96vw);max-height:90vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.35);">
+    <div style="background:linear-gradient(135deg,#111827,#1e3a8a);padding:16px 20px;display:flex;align-items:center;gap:12px;flex-shrink:0;">
+      <div style="width:38px;height:38px;background:#1d4ed8;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">🤖</div>
+      <div style="flex:1;">
+        <div style="font-size:14px;font-weight:800;color:#fff;" id="drm-title">مراجعة بيانات العقد</div>
+        <div style="font-size:11px;color:#93c5fd;margin-top:1px;">استعرض البيانات المستخرجة وعدّل أي خطأ قبل إصدار العقد</div>
+      </div>
+      <button onclick="closeDocReview()" style="background:rgba(255,255,255,.1);border:none;color:#fff;width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;">✕</button>
+    </div>
+    <div style="overflow-y:auto;padding:20px;flex:1;" id="drm-body">
+      <div id="drm-banner" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:10px 14px;margin-bottom:16px;display:flex;align-items:center;gap:8px;font-size:11px;color:#1d4ed8;font-weight:600;">
+        <span>✅</span> قرأ الذكاء الاصطناعي الوثيقة — راجع البيانات أدناه وعدّل أي خطأ
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div style="grid-column:1/-1;font-size:11px;font-weight:800;color:#1d4ed8;letter-spacing:.04em;margin-bottom:-4px;padding-right:2px;">👤 بيانات المستأجر</div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--t3);display:block;margin-bottom:3px;">الاسم الكامل</label>
+          <input id="drm-name" type="text" style="width:100%;box-sizing:border-box;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit;background:var(--surface);color:var(--t1);" placeholder="الاسم الكامل">
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--t3);display:block;margin-bottom:3px;">رقم الجوال</label>
+          <input id="drm-phone" type="text" style="width:100%;box-sizing:border-box;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit;background:var(--surface);color:var(--t1);" placeholder="05xxxxxxxx">
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--t3);display:block;margin-bottom:3px;">نوع الهوية</label>
+          <select id="drm-idType" style="width:100%;box-sizing:border-box;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit;background:var(--surface);color:var(--t1);">
+            <option value="national_id">هوية وطنية</option>
+            <option value="passport">جواز سفر</option>
+            <option value="iqama">إقامة</option>
+            <option value="family_card">وثيقة عائلة</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--t3);display:block;margin-bottom:3px;">رقم الهوية</label>
+          <input id="drm-idNumber" type="text" style="width:100%;box-sizing:border-box;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit;background:var(--surface);color:var(--t1);" placeholder="رقم الهوية">
+        </div>
+        <div style="grid-column:1/-1;font-size:11px;font-weight:800;color:#059669;letter-spacing:.04em;margin-top:8px;margin-bottom:-4px;padding-right:2px;">🏠 بيانات الوحدة</div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--t3);display:block;margin-bottom:3px;">رقم الوحدة</label>
+          <input id="drm-apt" type="text" style="width:100%;box-sizing:border-box;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit;background:var(--surface);color:var(--t1);" placeholder="201">
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--t3);display:block;margin-bottom:3px;">المجمع</label>
+          <input id="drm-building" type="text" style="width:100%;box-sizing:border-box;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit;background:var(--surface);color:var(--t1);" placeholder="المنارة">
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--t3);display:block;margin-bottom:3px;">تاريخ الدخول</label>
+          <input id="drm-checkIn" type="date" style="width:100%;box-sizing:border-box;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit;background:var(--surface);color:var(--t1);">
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--t3);display:block;margin-bottom:3px;">تاريخ الخروج</label>
+          <input id="drm-checkOut" type="date" style="width:100%;box-sizing:border-box;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit;background:var(--surface);color:var(--t1);">
+        </div>
+        <div style="grid-column:1/-1;font-size:11px;font-weight:800;color:#7c3aed;letter-spacing:.04em;margin-top:8px;margin-bottom:-4px;padding-right:2px;">💰 البيانات المالية</div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--t3);display:block;margin-bottom:3px;">الإجمالي (ر.س)</label>
+          <input id="drm-totalAmount" type="number" style="width:100%;box-sizing:border-box;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit;background:var(--surface);color:var(--t1);" placeholder="0" oninput="drmCalcRemaining()">
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--t3);display:block;margin-bottom:3px;">المدفوع (ر.س)</label>
+          <input id="drm-paidAmount" type="number" style="width:100%;box-sizing:border-box;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit;background:var(--surface);color:var(--t1);" placeholder="0" oninput="drmCalcRemaining()">
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--t3);display:block;margin-bottom:3px;">المتبقي (ر.س)</label>
+          <input id="drm-remaining" type="number" style="width:100%;box-sizing:border-box;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit;background:var(--surface);color:var(--t1);background:#f9fafb;" placeholder="0" readonly>
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--t3);display:block;margin-bottom:3px;">ملاحظات</label>
+          <input id="drm-notes" type="text" style="width:100%;box-sizing:border-box;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit;background:var(--surface);color:var(--t1);" placeholder="أي ملاحظات">
+        </div>
+        <div id="drm-furniture-wrap" style="grid-column:1/-1;display:none;">
+          <div style="font-size:11px;font-weight:800;color:#b45309;letter-spacing:.04em;margin-top:8px;margin-bottom:6px;padding-right:2px;">📦 قائمة المحتويات</div>
+          <textarea id="drm-furniture" rows="4" style="width:100%;box-sizing:border-box;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:11px;font-family:inherit;background:var(--surface);color:var(--t1);resize:vertical;" placeholder="كل بند في سطر منفصل..."></textarea>
+        </div>
+      </div>
+    </div>
+    <div style="padding:14px 20px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;background:var(--surface);">
+      <button onclick="closeDocReview()" style="padding:9px 18px;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:12px;font-weight:700;color:var(--t2);cursor:pointer;">إلغاء</button>
+      <div id="drm-status" style="flex:1;font-size:11px;color:var(--t3);text-align:center;"></div>
+      <button id="drm-generate-btn" onclick="generatePremiumPDF()" style="padding:9px 22px;background:linear-gradient(135deg,#1d4ed8,#1e40af);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:6px;">
+        <span>✨</span> إصدار العقد الرقمي الاحترافي
+      </button>
+    </div>
+  </div>
+</div>
+<!-- ── End AI Document Review Modal ─────────────────────────────── -->
 </body>
 </html>

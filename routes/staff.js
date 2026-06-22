@@ -585,6 +585,353 @@ router.delete('/api/bookings/:id/payments/:pid', reqStaff, async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+
+// ── AI Document Parse (Step 1 of 2) ───────────────────────────
+router.post('/api/bookings/:id/documents/parse', reqStaff, async (req, res) => {
+  try {
+    const { pages } = req.body; // [{data: base64, mime}]
+    if (!pages?.length) return res.status(400).json({ error: 'لا توجد صور' });
+
+    const anthropicKey = process.env.ANTHROPIC_API_KEY;
+    if (!anthropicKey) return res.status(500).json({ error: 'ANTHROPIC_API_KEY غير مُهيَّأ' });
+
+    const B  = require('../models/Booking');
+    const bk = await B.findById(req.params.id).lean();
+    if (!bk) return res.status(404).json({ error: 'الحجز غير موجود' });
+
+    // Send ALL pages to Claude in one call for context
+    const content = pages.map((p, i) => ({
+      type: 'image',
+      source: { type: 'base64', media_type: p.mime || 'image/jpeg', data: p.data },
+    }));
+    content.push({
+      type: 'text',
+      text: `أنت خبير في قراءة عقود الإيجار العقارية السعودية. هذه صور لوثيقة (عقد أو محضر استلام).
+
+استخرج البيانات التالية وأعدها كـ JSON فقط بدون أي نص آخر:
+{
+  "name": "الاسم الكامل للمستأجر",
+  "idType": "national_id أو passport أو iqama أو family_card",
+  "idNumber": "رقم الهوية",
+  "phone": "رقم الجوال",
+  "apt": "رقم الوحدة/الشقة",
+  "building": "اسم المجمع أو المبنى",
+  "checkIn": "YYYY-MM-DD",
+  "checkOut": "YYYY-MM-DD",
+  "nights": عدد_الليالي,
+  "totalAmount": المبلغ_الإجمالي_رقم,
+  "paidAmount": المبلغ_المدفوع_رقم,
+  "remaining": المتبقي_رقم,
+  "notes": "أي ملاحظات مهمة",
+  "furniture": ["قائمة المحتويات المستلمة إن وجدت"]
+}
+
+استخدم null لأي حقل غير موجود في الوثيقة. أعد JSON فقط.`,
+    });
+
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': anthropicKey,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1024,
+        messages: [{ role: 'user', content }],
+      }),
+    });
+
+    if (!resp.ok) {
+      const e = await resp.text();
+      return res.status(502).json({ error: 'فشل Claude API: ' + e.slice(0, 200) });
+    }
+
+    const data = await resp.json();
+    let raw = data.content?.[0]?.text || '{}';
+
+    // Extract JSON from response (Claude sometimes wraps in markdown)
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return res.status(422).json({ error: 'لم يتمكن الذكاء الاصطناعي من قراءة الوثيقة' });
+
+    let parsed;
+    try { parsed = JSON.parse(jsonMatch[0]); }
+    catch { return res.status(422).json({ error: 'خطأ في تحليل نتيجة الذكاء الاصطناعي' }); }
+
+    // Merge with booking data for any missing fields
+    if (!parsed.name)     parsed.name     = bk.name;
+    if (!parsed.phone)    parsed.phone    = bk.phone;
+    if (!parsed.apt)      parsed.apt      = bk.apt;
+    if (!parsed.building) parsed.building = bk.building;
+    if (!parsed.checkIn && bk.checkIn)  parsed.checkIn  = new Date(bk.checkIn).toISOString().split('T')[0];
+    if (!parsed.checkOut && bk.checkOut) parsed.checkOut = new Date(bk.checkOut).toISOString().split('T')[0];
+
+    res.json({ success: true, parsed });
+  } catch (e) {
+    console.error('[doc-parse]', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ── AI Document Generate — Premium PDF (Step 2 of 2) ──────────
+router.post('/api/bookings/:id/documents/generate', reqStaff, async (req, res) => {
+  try {
+    const PDFDocument = require('pdfkit');
+    const crypto      = require('crypto');
+    const path        = require('path');
+
+    const { type, confirmed, pages } = req.body;
+    // confirmed: { name, idType, idNumber, phone, apt, building, checkIn, checkOut, nights, totalAmount, paidAmount, remaining, notes, furniture[] }
+    // pages: [{data, mime}] — original images (appended as last pages)
+
+    if (!['contract','inventory'].includes(type)) return res.status(400).json({ error: 'نوع غير صحيح' });
+    if (!confirmed) return res.status(400).json({ error: 'البيانات المؤكدة غير موجودة' });
+
+    const B  = require('../models/Booking');
+    const bk = await B.findById(req.params.id);
+    if (!bk) return res.status(404).json({ error: 'الحجز غير موجود' });
+
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+    const apiKey    = process.env.CLOUDINARY_API_KEY;
+    const apiSecret = process.env.CLOUDINARY_API_SECRET;
+    if (!cloudName || !apiKey || !apiSecret)
+      return res.status(500).json({ error: 'Cloudinary غير مُهيَّأ' });
+
+    // ── Font paths ───────────────────────────────────────────────
+    const FONT_REG  = path.join(__dirname, '../fonts/Cairo-Regular.ttf');
+    const FONT_BOLD = path.join(__dirname, '../fonts/Cairo-Bold.ttf');
+    const LOGO_PATH = path.join(__dirname, '../public/images/logo-dark.png');
+    const fs2 = require('fs');
+    const hasFont = fs2.existsSync(FONT_REG) && fs2.existsSync(FONT_BOLD);
+    const hasLogo = fs2.existsSync(LOGO_PATH);
+
+    // ── Colors ───────────────────────────────────────────────────
+    const NAVY   = '#111827';
+    const ACCENT = '#1d4ed8';
+    const GOLD   = '#d97706';
+    const LGRAY  = '#f9fafb';
+    const BORDER = '#e5e7eb';
+    const TEXT1  = '#111827';
+    const TEXT2  = '#4b5563';
+
+    // ── Build Premium PDF ────────────────────────────────────────
+    const W = 595.28, H = 841.89;
+    const MX = 36, MY = 0;
+
+    const pdfBuf = await new Promise((resolve, reject) => {
+      const doc = new PDFDocument({ size: 'A4', margin: 0, autoFirstPage: true, info: {
+        Title: type === 'contract' ? 'عقد إيجار' : 'محضر استلام المحتويات',
+        Author: 'BAREZ',
+        Creator: 'BAREZ Smart Archive',
+      }});
+
+      if (hasFont) {
+        doc.registerFont('Cairo',      FONT_REG);
+        doc.registerFont('Cairo-Bold', FONT_BOLD);
+      }
+      const F  = hasFont ? 'Cairo'      : 'Helvetica';
+      const FB = hasFont ? 'Cairo-Bold' : 'Helvetica-Bold';
+
+      const chunks = [];
+      doc.on('data', ch => chunks.push(ch));
+      doc.on('end',  ()  => resolve(Buffer.concat(chunks)));
+      doc.on('error', reject);
+
+      // ── HEADER BAR ────────────────────────────────────────────
+      doc.rect(0, 0, W, 80).fill(NAVY);
+
+      // Logo
+      if (hasLogo) {
+        try { doc.image(LOGO_PATH, MX, 15, { height: 50, fit: [50, 50] }); } catch {}
+      }
+
+      // Title
+      const docTitle = type === 'contract' ? 'عقد إيجار وحدة سكنية' : 'محضر استلام المحتويات';
+      doc.font(FB).fontSize(16).fillColor('#ffffff')
+         .text(docTitle, 0, 22, { width: W, align: 'center' });
+      doc.font(F).fontSize(9).fillColor('#93c5fd')
+         .text('BAREZ | المنارة للخدمات الفندقية', 0, 44, { width: W, align: 'center' });
+
+      // Contract ref + date on header right
+      const bkId   = bk._id.toString().slice(-8).toUpperCase();
+      const nowStr = new Date().toLocaleDateString('ar-SA', { year:'numeric', month:'2-digit', day:'2-digit' });
+      doc.font(F).fontSize(8).fillColor('#d1d5db')
+         .text('رقم المرجع: BK-' + bkId, W - MX - 120, 20, { width: 120, align: 'right' });
+      doc.font(F).fontSize(8).fillColor('#d1d5db')
+         .text('التاريخ: ' + nowStr, W - MX - 120, 34, { width: 120, align: 'right' });
+
+      // ── HELPER: draw section header ───────────────────────────
+      const section = (title, y) => {
+        doc.rect(MX, y, W - 2*MX, 26).fill(ACCENT).fillOpacity(1);
+        doc.font(FB).fontSize(11).fillColor('#ffffff')
+           .text(title, MX, y + 7, { width: W - 2*MX - 8, align: 'right' });
+        return y + 34;
+      };
+
+      // ── HELPER: draw table rows ───────────────────────────────
+      const tableRows = (rows, startY) => {
+        const ROW_H    = 24;
+        const TW       = W - 2*MX;
+        const LABEL_W  = 150;
+        rows.forEach(([label, value], i) => {
+          const y = startY + i * ROW_H;
+          const bg = i % 2 === 0 ? LGRAY : '#ffffff';
+          doc.rect(MX, y, TW, ROW_H).fill(bg).fillOpacity(1);
+          doc.moveTo(MX, y + ROW_H).lineTo(MX + TW, y + ROW_H).stroke(BORDER).strokeColor(BORDER).strokeOpacity(1);
+          // Label (right side)
+          doc.font(FB).fontSize(9.5).fillColor(TEXT1)
+             .text(label, MX + TW - LABEL_W, y + 6, { width: LABEL_W, align: 'right', lineBreak: false });
+          // Divider
+          doc.moveTo(MX + TW - LABEL_W - 4, y + 4).lineTo(MX + TW - LABEL_W - 4, y + ROW_H - 4)
+             .stroke('#d1d5db').strokeColor('#d1d5db').strokeOpacity(0.6);
+          // Value (rest)
+          const val = String(value == null ? '—' : value);
+          doc.font(F).fontSize(9.5).fillColor(TEXT2)
+             .text(val, MX + 4, y + 6, { width: TW - LABEL_W - 16, align: 'right', lineBreak: false });
+        });
+        doc.rect(MX, startY, TW, rows.length * ROW_H).stroke(BORDER).strokeColor(BORDER).strokeOpacity(1);
+        return startY + rows.length * ROW_H;
+      };
+
+      const fmt = (n) => n != null ? Number(n).toLocaleString('ar-SA') + ' ر.س' : '—';
+      const fmtDate = (d) => d || '—';
+      const idLabel = { national_id:'هوية وطنية', passport:'جواز سفر', iqama:'إقامة', family_card:'وثيقة عائلة' };
+
+      let y = 96;
+
+      // ── SECTION 1: Guest ─────────────────────────────────────
+      y = section('بيانات المستأجر', y) - 8;
+      y = tableRows([
+        ['الاسم الكامل',    confirmed.name],
+        ['نوع الهوية',      idLabel[confirmed.idType] || confirmed.idType],
+        ['رقم الهوية',      confirmed.idNumber],
+        ['رقم الجوال',      confirmed.phone],
+      ], y) + 10;
+
+      // ── SECTION 2: Unit ──────────────────────────────────────
+      y = section('بيانات الوحدة', y) - 8;
+      y = tableRows([
+        ['رقم الوحدة',      confirmed.apt],
+        ['المجمع السكني',   confirmed.building],
+        ['تاريخ الدخول',    fmtDate(confirmed.checkIn)],
+        ['تاريخ الخروج',    fmtDate(confirmed.checkOut)],
+        ['مدة الإقامة',     confirmed.nights != null ? confirmed.nights + ' ليلة' : null],
+      ], y) + 10;
+
+      // ── SECTION 3: Finance ───────────────────────────────────
+      y = section('البيانات المالية', y) - 8;
+      y = tableRows([
+        ['إجمالي الإيجار',  fmt(confirmed.totalAmount)],
+        ['المبلغ المدفوع',  fmt(confirmed.paidAmount)],
+        ['المبلغ المتبقي',  fmt(confirmed.remaining)],
+      ], y) + 10;
+
+      // ── SECTION 4: Furniture (if inventory type) ─────────────
+      if (type === 'inventory' && confirmed.furniture?.length) {
+        y = section('قائمة المحتويات المستلمة', y) - 8;
+        const furRows = confirmed.furniture.map((item, i) => ['✓ بند ' + (i+1), item]);
+        y = tableRows(furRows, y) + 10;
+      }
+
+      // ── Notes ────────────────────────────────────────────────
+      if (confirmed.notes) {
+        y = section('ملاحظات', y) - 8;
+        doc.rect(MX, y, W - 2*MX, 40).fill(LGRAY).fillOpacity(1);
+        doc.font(F).fontSize(9.5).fillColor(TEXT2)
+           .text(confirmed.notes, MX + 8, y + 8, { width: W - 2*MX - 16, align: 'right' });
+        y += 48;
+      }
+
+      // ── SIGNATURES ───────────────────────────────────────────
+      y = Math.max(y, H - 180);
+      const SIG_W = (W - 2*MX - 30) / 2;
+
+      // Left signature
+      doc.rect(MX, y, SIG_W, 70).stroke('#d1d5db').strokeColor('#d1d5db');
+      doc.font(FB).fontSize(9).fillColor(TEXT1)
+         .text('توقيع المستأجر', MX, y + 52, { width: SIG_W, align: 'center' });
+
+      // Right signature
+      doc.rect(MX + SIG_W + 30, y, SIG_W, 70).stroke('#d1d5db').strokeColor('#d1d5db');
+      doc.font(FB).fontSize(9).fillColor(TEXT1)
+         .text('توقيع الإدارة', MX + SIG_W + 30, y + 52, { width: SIG_W, align: 'center' });
+
+      doc.font(F).fontSize(8).fillColor('#9ca3af')
+         .text('(يُعدّ هذا العقد ساري المفعول بعد التوقيع من الطرفين)', MX, y + 64, { width: W - 2*MX, align: 'center' });
+
+      // ── FOOTER ───────────────────────────────────────────────
+      doc.rect(0, H - 28, W, 28).fill(NAVY);
+      doc.font(F).fontSize(7.5).fillColor('#9ca3af')
+         .text('BAREZ Smart Archive • وثيقة رقمية معتمدة • ' + new Date().toISOString().slice(0,19).replace('T',' '),
+               0, H - 18, { width: W, align: 'center' });
+
+      // ── ORIGINAL SCAN PAGES (legal proof) ───────────────────
+      if (pages?.length) {
+        pages.forEach((p, i) => {
+          doc.addPage({ size: 'A4', margin: 0 });
+          // Page header
+          doc.rect(0, 0, W, 30).fill(NAVY);
+          doc.font(FB).fontSize(10).fillColor('#fff')
+             .text('المستند الأصلي الموقّع — صفحة ' + (i+1), 0, 9, { width: W, align: 'center' });
+          // Image
+          try {
+            const buf = Buffer.from(p.data, 'base64');
+            doc.image(buf, 0, 30, { width: W, height: H - 30, fit: [W, H - 30], align: 'center', valign: 'center' });
+          } catch { doc.font(F).fontSize(10).fillColor('#dc2626').text('فشل تحميل الصفحة ' + (i+1), 20, 50); }
+        });
+      }
+
+      doc.end();
+    });
+
+    // ── Upload to Cloudinary ─────────────────────────────────────
+    const bkId      = bk._id.toString().slice(-8).toUpperCase();
+    const safeName  = (bk.name || 'client').replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_]/g,'').slice(0,15)||'client';
+    const suffix    = type === 'contract' ? 'ctr' : 'inv';
+    const folder    = 'barez/contracts';
+    const pubId     = 'BK' + bkId + '_' + safeName + '_' + suffix + '_premium.pdf';
+    const timestamp = Math.floor(Date.now() / 1000);
+    const toSign    = 'folder=' + folder + '&overwrite=true&public_id=' + pubId + '&timestamp=' + timestamp + apiSecret;
+    const signature = require('crypto').createHash('sha1').update(toSign).digest('hex');
+
+    const upRes = await fetch('https://api.cloudinary.com/v1_1/' + cloudName + '/raw/upload', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        file: 'data:application/pdf;base64,' + pdfBuf.toString('base64'),
+        api_key: apiKey, timestamp, signature, folder, public_id: pubId, overwrite: true,
+      }),
+    });
+
+    if (!upRes.ok) {
+      const e = await upRes.json().catch(() => ({}));
+      return res.status(500).json({ error: 'فشل رفع PDF: ' + (e.error?.message || upRes.status) });
+    }
+
+    const upData   = await upRes.json();
+    const pdfUrl   = upData.secure_url;
+    const arLabel  = type === 'contract' ? 'عقد_موثق' : 'استلام_محتويات';
+    const filename = (bk.name||'عميل') + '_BK' + bkId + '_' + arLabel + '.pdf';
+    const field    = type === 'contract' ? 'contractDoc' : 'inventoryDoc';
+
+    await B.findByIdAndUpdate(req.params.id, {
+      [field]: {
+        url: pdfUrl, urls: [pdfUrl], filename,
+        uploadedBy: req.staff.name, uploadedAt: new Date(),
+        pages: (pages?.length || 0) + 1,
+        ocrText: '',
+        parsedData: confirmed,
+      },
+    });
+
+    res.json({ success: true, url: pdfUrl, filename, pages: (pages?.length||0)+1 });
+  } catch (e) {
+    console.error('[doc-generate]', e);
+    res.status(500).json({ error: e.message || 'خطأ في توليد PDF' });
+  }
+});
+
 // ── API: Booking Documents (contract / inventory) ─────────
 router.post('/api/bookings/:id/documents', reqStaff, async (req, res) => {
   try {

@@ -45,6 +45,13 @@ const bookingSchema = new mongoose.Schema({
     uploadedAt: { type: Date },
     pages:      { type: Number, default: 1 },
     ocrText:    { type: String, default: '' },
+    parsedData: {
+      name:        String, idType:    String, idNumber:  String,
+      phone:       String, apt:       String, building:  String,
+      checkIn:     String, checkOut:  String, nights:    Number,
+      totalAmount: Number, paidAmount:Number, remaining: Number,
+      notes:       String, furniture: [String],
+    },
   },
   inventoryDoc: {
     url:        { type: String, default: '' },
@@ -54,6 +61,13 @@ const bookingSchema = new mongoose.Schema({
     uploadedAt: { type: Date },
     pages:      { type: Number, default: 1 },
     ocrText:    { type: String, default: '' },
+    parsedData: {
+      name:        String, idType:    String, idNumber:  String,
+      phone:       String, apt:       String, building:  String,
+      checkIn:     String, checkOut:  String, nights:    Number,
+      totalAmount: Number, paidAmount:Number, remaining: Number,
+      notes:       String, furniture: [String],
+    },
   },
 }, { timestamps: true });
 

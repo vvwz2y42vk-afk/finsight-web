@@ -1,16 +1,34 @@
 {
   "version": 2,
   "buildCommand": "node scripts/verify-views.js",
-  "builds": [{
-    "src": "server.js",
-    "use": "@vercel/node",
-    "config": {
-      "maxDuration": 30,
-      "regions": ["iad1"],
-      "includeFiles": ["views/**", "public/**", "middleware/**", "utils/**", "models/**", "routes/**", "scripts/**"]
+  "builds": [
+    {
+      "src": "server.js",
+      "use": "@vercel/node",
+      "config": {
+        "maxDuration": 30,
+        "regions": [
+          "iad1"
+        ],
+        "includeFiles": [
+          "views/**",
+          "public/**",
+          "middleware/**",
+          "utils/**",
+          "models/**",
+          "routes/**",
+          "scripts/**",
+          "fonts/**"
+        ]
+      }
     }
-  }],
-  "routes": [{ "src": "/(.*)", "dest": "server.js" }],
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "server.js"
+    }
+  ],
   "crons": [
     {
       "path": "/api/cron/checkout-reminders",
