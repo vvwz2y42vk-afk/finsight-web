@@ -37,6 +37,20 @@ const bookingSchema = new mongoose.Schema({
   pricePerNight: Number,
   pricePerMonth: Number,
   propertyId:   { type: mongoose.Schema.Types.ObjectId, ref: 'Property', index: true, default: null },
+  contractDoc: {
+    url:        { type: String, default: '' },
+    publicId:   { type: String, default: '' },
+    uploadedBy: { type: String, default: '' },
+    uploadedAt: { type: Date },
+    pages:      { type: Number, default: 1 },
+  },
+  inventoryDoc: {
+    url:        { type: String, default: '' },
+    publicId:   { type: String, default: '' },
+    uploadedBy: { type: String, default: '' },
+    uploadedAt: { type: Date },
+    pages:      { type: Number, default: 1 },
+  },
 }, { timestamps: true });
 
 bookingSchema.index({ status: 1 });
