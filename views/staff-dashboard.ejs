@@ -5555,9 +5555,9 @@ async function loadArchive(){
       return '<div style="border:1px solid '+color+'25;border-radius:10px;padding:10px 12px;margin-top:8px;">'
         +'<div style="display:flex;align-items:center;justify-content:space-between;">'
           +'<span style="font-size:10px;font-weight:800;color:'+color+';">'+label+'</span>'
-          +'<a href="'+docObj.url+'" target="_blank" onclick="event.stopPropagation()"'
+          +'<a href="https://docs.google.com/viewer?url="+encodeURIComponent(docObj.url)+'" target="_blank" onclick="event.stopPropagation()"'
              +' style="font-size:9px;font-weight:700;color:'+color+';text-decoration:none;padding:3px 8px;border:1px solid '+color+'40;border-radius:6px;background:'+accentBg+';white-space:nowrap;">'
-            +'📥 تحميل PDF'
+            +'📄 عرض PDF'
           +'</a>'
         +'</div>'
         +ocrSection
@@ -5890,9 +5890,14 @@ async function confirmAndGeneratePDF() {
     if (r.ok && d.success) {
       if (result) result.innerHTML = `<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:12px 14px;text-align:center;">
         <div style="font-size:15px;font-weight:800;color:#065f46;margin-bottom:6px;">✅ تم إصدار العقد الرقمي</div>
-        <a href="${d.url}" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;background:#059669;color:#fff;border-radius:8px;text-decoration:none;font-size:12px;font-weight:700;">
-          📄 فتح PDF الاحترافي
-        </a>
+        <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+          <a href="https://docs.google.com/viewer?url=${encodeURIComponent(d.url)}" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:#1d4ed8;color:#fff;border-radius:8px;text-decoration:none;font-size:12px;font-weight:700;">
+            📄 عرض PDF
+          </a>
+          <a href="${d.url}" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:#059669;color:#fff;border-radius:8px;text-decoration:none;font-size:12px;font-weight:700;">
+            ⬇ تحميل مباشر
+          </a>
+        </div>
       </div>`;
       if (btn) { btn.textContent='✅ تم'; btn.style.background='#059669'; btn.disabled=false; }
       // Update docs section in booking modal
@@ -5964,7 +5969,7 @@ function _onDocGenerated(type, bookingId, url, filename, pages) {
   const st  = document.getElementById(`doc-${type}-status`);
   if (st) st.innerHTML = `<div style="font-size:11px;font-weight:700;color:#059669;">
     ✅ عقد رقمي احترافي (${pages} صفحة) <span style="background:#ede9fe;color:#5b21b6;font-size:9px;padding:2px 6px;border-radius:12px;font-weight:700;">✨ AI</span><br>
-    <a href="${url}" target="_blank" style="color:#059669;text-decoration:underline;font-size:10px;font-weight:400;">📄 ${filename || 'فتح PDF'}</a>
+    <a href="https://docs.google.com/viewer?url=${encodeURIComponent(url)}" target="_blank" style="color:#059669;text-decoration:underline;font-size:10px;font-weight:400;">📄 ${filename || 'عرض PDF'}</a>
   </div>`;
   if (btn) { btn.textContent = '↺ استبدال'; btn.style.background = '#059669'; btn.disabled = false; }
   _docPages[type] = [];
@@ -6016,7 +6021,8 @@ async function loadBkDocs(bookingId) {
         <div style="font-size:10px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${esc(fname)}">${esc(fname)}</div>
         <div style="font-size:10px;color:#94a3b8;">${doc.pages||1} صفحة • ${doc.uploadedBy||''} • ${upDate}</div>
       </div>
-      <a href="${doc.url}" target="_blank" style="flex-shrink:0;padding:6px 14px;background:#059669;color:#fff;border-radius:8px;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap;">📥 تحميل PDF</a>
+      <a href="https://docs.google.com/viewer?url=${encodeURIComponent(doc.url)}" target="_blank" style="flex-shrink:0;padding:6px 12px;background:#1d4ed8;color:#fff;border-radius:8px;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap;">📄 عرض</a>
+      <a href="${doc.url}" target="_blank" style="flex-shrink:0;padding:6px 12px;background:#059669;color:#fff;border-radius:8px;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap;">⬇ تحميل</a>
     </div>`;
   };
   sec.innerHTML = `<div style="font-size:10px;font-weight:800;color:var(--t4);letter-spacing:.07em;margin:14px 0 8px;padding-top:10px;border-top:1px solid var(--border);">📋 المستندات</div>`

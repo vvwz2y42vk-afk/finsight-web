@@ -910,7 +910,10 @@ router.post('/api/bookings/:id/documents/generate', reqStaff, async (req, res) =
     }
 
     const upData   = await upRes.json();
-    const pdfUrl   = upData.secure_url;
+    console.log('[docs] Cloudinary response:', upData.public_id, upData.secure_url);
+    let pdfUrl = upData.secure_url || '';
+    // Cloudinary raw: ensure .pdf in URL so browsers serve correct Content-Type
+    if (pdfUrl && !pdfUrl.endsWith('.pdf')) pdfUrl = pdfUrl + '.pdf';
     const arLabel  = type === 'contract' ? 'عقد_موثق' : 'استلام_محتويات';
     const filename = (bk.name||'عميل') + '_BK' + bkId + '_' + arLabel + '.pdf';
     const field    = type === 'contract' ? 'contractDoc' : 'inventoryDoc';
