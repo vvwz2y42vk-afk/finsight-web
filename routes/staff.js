@@ -2643,10 +2643,10 @@ router.post('/api/receipts/analyze', reqStaff, async (req, res) => {
     const expectedPaid = parseFloat(ep) || null;
 
     const BUILDING_ENTITIES = {
-      'المنارا':  ['بارز برايم', 'barez prime', 'جهد وأمان', 'jahd', 'waman', 'جهد'],
-      'جوان ان': ['بارز برايم', 'barez prime', 'جهد وأمان', 'jahd', 'waman', 'جهد'],
-      'الماسة':  ['الزاحم', 'alzahim', 'إبراهيم', 'ibrahim'],
-      'الواحة':  ['الزاحم', 'alzahim', 'أحمد', 'ahmed'],
+      'المنارا':  { names: ['بارز برايم', 'barez prime', 'جهد وأمان', 'jahd', 'waman', 'جهد'], accounts: ['33700001155701'], ibans: ['SA3710000033700001155701','SA37 1000 0033 7000 0115 5701'] },
+      'جوان ان': { names: ['بارز برايم', 'barez prime', 'جهد وأمان', 'jahd', 'waman', 'جهد'], accounts: ['33700001155701'], ibans: ['SA3710000033700001155701','SA37 1000 0033 7000 0115 5701'] },
+      'الماسة':  { names: ['الزاحم', 'alzahim', 'إبراهيم', 'ibrahim'], accounts: [], ibans: [] },
+      'الواحة':  { names: ['الزاحم', 'alzahim', 'أحمد', 'ahmed'], accounts: [], ibans: [] },
     };
 
     const isCash = payMethod === 'cash';
@@ -2687,6 +2687,8 @@ If you cannot clearly identify any bills (blurry image, no cash visible), set to
   "date": "YYYY-MM-DD أو null",
   "transactionNumber": "رقم العملية أو المرجع أو null",
   "entityName": "اسم المستفيد أو الجهة المستلمة أو null",
+  "accountNumber": "رقم الحساب المستفيد (أرقام فقط بدون مسافات) أو null",
+  "iban": "الآيبان IBAN للمستفيد (مثل SA37...) أو null",
   "bankName": "اسم البنك أو null"
 }
 network = مدفوعات عبر نقاط البيع أو الشبكة السعودية (SPAN/POS).
@@ -2747,10 +2749,26 @@ transfer = تحويل بنكي إلكتروني.`;
     } else {
       const amount = typeof parsed.amount === 'number' ? parsed.amount : (parseFloat(parsed.amount) || null);
       const entityName = parsed.entityName || null;
-      const expectedEntities = BUILDING_ENTITIES[building] || [];
+      const accountNumber = (parsed.accountNumber || '').replace(/\s/g, '') || null;
+      const iban = (parsed.iban || '').replace(/\s/g, '').toUpperCase() || null;
+      const bldConfig = BUILDING_ENTITIES[building] || { names: [], accounts: [], ibans: [] };
+
+      // Match by name
       const entityLower = (entityName || '').toLowerCase();
-      const matchesBuilding = entityName
-        ? expectedEntities.some(e => entityLower.includes(e.toLowerCase()) || (entityName).includes(e))
+      const nameMatch = entityName
+        ? bldConfig.names.some(e => entityLower.includes(e.toLowerCase()) || entityName.includes(e))
+        : false;
+      // Match by account number
+      const acctMatch = accountNumber
+        ? bldConfig.accounts.some(a => accountNumber.includes(a) || a.includes(accountNumber))
+        : false;
+      // Match by IBAN (normalize spaces)
+      const ibanMatch = iban
+        ? bldConfig.ibans.some(i => i.replace(/\s/g,'').toUpperCase() === iban)
+        : false;
+
+      const matchesBuilding = (nameMatch || acctMatch || ibanMatch) ? true
+        : (entityName || accountNumber || iban) ? false
         : null;
 
       analysis = {
@@ -2759,6 +2777,8 @@ transfer = تحويل بنكي إلكتروني.`;
         date:              parsed.date || null,
         transactionNumber: parsed.transactionNumber || null,
         entityName,
+        accountNumber,
+        iban,
         bankName:          parsed.bankName || null,
         matchesBuilding,
         rawSummary:        rawText.slice(0, 300),
