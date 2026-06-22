@@ -2406,10 +2406,86 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
 </div>
 
 <!-- Receipt fullscreen overlay -->
-<div id="receipt-fullscreen" onclick="this.style.display='none'" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;align-items:center;justify-content:center;flex-direction:column;">
-  <img id="receipt-fullscreen-img" src="" style="max-width:92vw;max-height:88vh;object-fit:contain;border-radius:10px;">
-  <div style="color:rgba(255,255,255,.5);font-size:12px;margin-top:10px;">اضغط في أي مكان للإغلاق</div>
+<div id="receipt-fullscreen" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;align-items:center;justify-content:center;flex-direction:column;touch-action:none;">
+  <button onclick="closeReceiptFS()" style="position:absolute;top:14px;right:16px;background:rgba(255,255,255,.15);border:none;color:#fff;font-size:20px;width:36px;height:36px;border-radius:50%;cursor:pointer;line-height:1;z-index:10;">✕</button>
+  <div style="position:absolute;bottom:18px;left:50%;transform:translateX(-50%);display:flex;gap:10px;z-index:10;">
+    <button onclick="fsZoom(-0.3)" style="background:rgba(255,255,255,.15);border:none;color:#fff;font-size:20px;width:40px;height:40px;border-radius:50%;cursor:pointer;">−</button>
+    <button onclick="fsZoom(0.3)"  style="background:rgba(255,255,255,.15);border:none;color:#fff;font-size:20px;width:40px;height:40px;border-radius:50%;cursor:pointer;">+</button>
+    <button onclick="fsReset()"    style="background:rgba(255,255,255,.15);border:none;color:#fff;font-size:11px;width:40px;height:40px;border-radius:50%;cursor:pointer;font-family:inherit;">١:١</button>
+  </div>
+  <div id="receipt-fs-wrap" style="overflow:hidden;width:100vw;height:100vh;display:flex;align-items:center;justify-content:center;cursor:grab;">
+    <img id="receipt-fullscreen-img" src="" style="max-width:92vw;max-height:88vh;object-fit:contain;border-radius:8px;transform-origin:center;transition:transform .15s;user-select:none;" draggable="false">
+  </div>
 </div>
+<script>
+(function(){
+  let _scale=1, _tx=0, _ty=0, _dragging=false, _sx=0, _sy=0, _ptx=0, _pty=0;
+  let _pinch=false, _pinchD0=0, _pinchS0=1;
+
+  function _applyT(){
+    const img=document.getElementById('receipt-fullscreen-img');
+    if(img) img.style.transform=`translate(${_tx}px,${_ty}px) scale(${_scale})`;
+  }
+  window.fsZoom=function(d){ _scale=Math.max(0.5,Math.min(5,_scale+d)); _applyT(); };
+  window.fsReset=function(){ _scale=1;_tx=0;_ty=0; _applyT(); };
+  window.closeReceiptFS=function(){
+    document.getElementById('receipt-fullscreen').style.display='none';
+    fsReset();
+  };
+
+  document.addEventListener('click',function(e){
+    const fs=document.getElementById('receipt-fullscreen');
+    const wrap=document.getElementById('receipt-fs-wrap');
+    if(fs&&fs.style.display!=='none'&&wrap&&e.target===wrap) closeReceiptFS();
+  });
+
+  // Mouse drag
+  document.addEventListener('mousedown',function(e){
+    if(document.getElementById('receipt-fullscreen')?.style.display==='none') return;
+    const img=document.getElementById('receipt-fullscreen-img');
+    if(e.target!==img) return;
+    _dragging=true; _sx=e.clientX-_tx; _sy=e.clientY-_ty;
+    img.style.cursor='grabbing'; img.style.transition='none';
+  });
+  document.addEventListener('mousemove',function(e){
+    if(!_dragging) return;
+    _tx=e.clientX-_sx; _ty=e.clientY-_sy; _applyT();
+  });
+  document.addEventListener('mouseup',function(){
+    _dragging=false;
+    const img=document.getElementById('receipt-fullscreen-img');
+    if(img){ img.style.cursor='grab'; img.style.transition='transform .15s'; }
+  });
+
+  // Mouse wheel zoom
+  document.addEventListener('wheel',function(e){
+    if(document.getElementById('receipt-fullscreen')?.style.display==='none') return;
+    const img=document.getElementById('receipt-fullscreen-img');
+    if(!img) return;
+    e.preventDefault();
+    fsZoom(e.deltaY<0?0.2:-0.2);
+  },{passive:false});
+
+  // Pinch-to-zoom (touch)
+  function _pinchDist(t){ return Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY); }
+  document.addEventListener('touchstart',function(e){
+    if(document.getElementById('receipt-fullscreen')?.style.display==='none') return;
+    if(e.touches.length===2){ _pinch=true; _pinchD0=_pinchDist(e.touches); _pinchS0=_scale; e.preventDefault(); }
+    else if(e.touches.length===1){ _dragging=true; _sx=e.touches[0].clientX-_tx; _sy=e.touches[0].clientY-_ty; }
+  },{passive:false});
+  document.addEventListener('touchmove',function(e){
+    if(document.getElementById('receipt-fullscreen')?.style.display==='none') return;
+    if(_pinch&&e.touches.length===2){
+      const d=_pinchDist(e.touches);
+      _scale=Math.max(0.5,Math.min(5,_pinchS0*(d/_pinchD0)));
+      _applyT(); e.preventDefault();
+    } else if(_dragging&&e.touches.length===1){
+      _tx=e.touches[0].clientX-_sx; _ty=e.touches[0].clientY-_sy; _applyT(); e.preventDefault();
+    }
+  },{passive:false});
+  document.addEventListener('touchend',function(){ _pinch=false; _dragging=false; });
+})();
+</script>
 <div id="successOverlay"><div class="success-burst" id="successBurst"></div></div>
 
 <!-- مودال ربط إيصال بحجز -->
