@@ -5409,7 +5409,7 @@ async function selectLinkBk(bookingId){
 }
 
 // ── Archive ───────────────────────────────────────────────────────────────────
-async function loadArchive(){
+async async function loadArchive(){
   const el=document.getElementById('arch-list'); if(!el) return;
   el.innerHTML='<div style="padding:40px;text-align:center;color:#94a3b8;font-size:13px;">⏳ جاري التحميل...</div>';
   const q=document.getElementById('arch-q')?.value.trim()||'';
