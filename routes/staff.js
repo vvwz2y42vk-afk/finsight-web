@@ -636,6 +636,36 @@ router.get('/api/bookings/:id/documents', reqStaff, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── Archive: all bookings with documents ──────────────────────────────────────
+router.get('/api/documents', reqStaff, async (req, res) => {
+  try {
+    const B = require('../models/Booking');
+    const { q, apt, type, from, to } = req.query;
+    const filter = { propertyId: req.staff.propertyId || null };
+    if (req.staff.building) filter.building = req.staff.building;
+    // has at least one doc
+    if (type === 'contract') {
+      filter['contractDoc.url'] = { $exists: true, $ne: '' };
+    } else if (type === 'inventory') {
+      filter['inventoryDoc.url'] = { $exists: true, $ne: '' };
+    } else {
+      filter.$or = [{ 'contractDoc.url': { $exists: true, $ne: '' } }, { 'inventoryDoc.url': { $exists: true, $ne: '' } }];
+    }
+    if (q) { const re = new RegExp(q, 'i'); filter.$and = [{ $or: [{ name: re }, { phone: re }] }]; }
+    if (apt) filter.apt = apt;
+    if (from || to) {
+      filter['contractDoc.uploadedAt'] = {};
+      if (from) filter['contractDoc.uploadedAt'].$gte = new Date(from);
+      if (to)   filter['contractDoc.uploadedAt'].$lte = new Date(to + 'T23:59:59');
+    }
+    const bks = await B.find(filter)
+      .select('_id name phone apt checkIn checkOut contractDoc inventoryDoc')
+      .sort({ 'contractDoc.uploadedAt': -1 })
+      .limit(200).lean();
+    res.json(bks);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 router.get('/api/bookings/docs-by-phone', reqStaff, async (req, res) => {
   try {
     const B = require('../models/Booking');

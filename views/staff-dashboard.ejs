@@ -722,6 +722,7 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
     <div class="sn" onclick="goTab('analytics',this)" id="sn-analytics" style="display:<%= staff.role==='manager'?'flex':'none' %>"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="18" y="3" width="4" height="18"/><rect x="10" y="8" width="4" height="13"/><rect x="2" y="13" width="4" height="8"/></svg></span><span class="sn-lbl">التحليلات</span></div>
     <div class="sn" onclick="goTab('maintenance',this)" id="sn-maintenance" style="display:<%= (staff.role==='manager'||(staff.permissions||[]).includes('maintenance'))?'flex':'none' %>"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></span><span class="sn-lbl">طلبات الصيانة</span></div>
     <div class="sn" onclick="goTab('receipts',this)" id="sn-receipts" style="display:<%= staff.role==='manager'?'flex':'none' %>"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span><span class="sn-lbl">إيصالات الدفع</span></div>
+    <div class="sn" onclick="goTab('archive',this)" id="sn-archive" style="display:<%= staff.role==='manager'?'flex':'none' %>"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5" rx="1"/><line x1="10" y1="12" x2="14" y2="12"/></svg></span><span class="sn-lbl">أرشيف العقود</span></div>
     <div class="sn" onclick="goTab('reports',this)" id="sn-reports"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></span><span class="sn-lbl">التقارير</span></div>
     <div class="sn" onclick="goTab('calendar',this)" id="sn-calendar" style="display:<%= P.includes('reports')?'flex':'none' %>"><span class="sn-ico"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/></svg></span><span class="sn-lbl">التقويم</span></div>
     <% if(staff.role==='manager'){ %>
@@ -1311,6 +1312,29 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
     </div>
 
     <!-- ── Reports ── -->
+    <!-- ═══ أرشيف العقود ═══ -->
+    <div class="tab-section" id="tab-archive">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
+        <div style="font-size:15px;font-weight:700;color:var(--t1);">أرشيف العقود والمستندات</div>
+        <button onclick="loadArchive()" style="padding:7px 14px;background:var(--brand);color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">↺ تحديث</button>
+      </div>
+      <!-- فلاتر -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center;">
+        <input id="arch-q" type="text" placeholder="اسم النزيل أو الهاتف..." onkeyup="if(event.key==='Enter')loadArchive()" style="flex:1;min-width:160px;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:12px;outline:none;background:var(--surface);color:var(--t1);">
+        <input id="arch-apt" type="text" placeholder="رقم الشقة" oninput="loadArchive()" style="width:90px;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:12px;outline:none;background:var(--surface);color:var(--t1);">
+        <select id="arch-type" onchange="loadArchive()" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:12px;outline:none;background:var(--surface);color:var(--t1);">
+          <option value="">الكل</option>
+          <option value="contract">عقد فقط</option>
+          <option value="inventory">استلام فقط</option>
+        </select>
+        <input id="arch-from" type="date" onchange="loadArchive()" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:12px;outline:none;background:var(--surface);color:var(--t1);">
+        <input id="arch-to" type="date" onchange="loadArchive()" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:12px;outline:none;background:var(--surface);color:var(--t1);">
+      </div>
+      <!-- قائمة -->
+      <div id="arch-list"></div>
+    </div>
+    <!-- ═══ نهاية أرشيف العقود ═══ -->
+
     <div class="tab-section" id="tab-reports">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
         <div>
@@ -2672,7 +2696,7 @@ function goTab(id, el){
   tab.classList.add('active');
   el.classList.add('active');
   if(window.innerWidth < 768) closeSidebar();
-  const labels={dashboard:'لوحة المعلومات',apartments:'الشقق والتسكين',bookings:'الحجوزات',customers:'العملاء',housekeeping:'خدمة الغرف',activity:'سجل الحركات',vouchers:'السندات والفواتير',reports:'التقارير والإحصاءات',calendar:'التقويم الشهري',channels:'إدارة قنوات الحجز',analytics:'التحليلات',settings:'إعدادات المبنى',receipts:'إيصالات الدفع',maintenance:'طلبات الصيانة'};
+  const labels={dashboard:'لوحة المعلومات',apartments:'الشقق والتسكين',bookings:'الحجوزات',customers:'العملاء',housekeeping:'خدمة الغرف',activity:'سجل الحركات',vouchers:'السندات والفواتير',reports:'التقارير والإحصاءات',calendar:'التقويم الشهري',channels:'إدارة قنوات الحجز',analytics:'التحليلات',settings:'إعدادات المبنى',receipts:'إيصالات الدفع',maintenance:'طلبات الصيانة',archive:'أرشيف العقود'};
   document.getElementById('tbTitle').innerHTML=`${esc(BUILDING)} — <span>${labels[id]||id}</span>`;
   if(id==='apartments') loadApartments();
   if(id==='bookings')   loadBookings();
@@ -2692,6 +2716,7 @@ function goTab(id, el){
   }
   if(id==='analytics')  loadAnalytics();
   if(id==='receipts')     loadReceipts();
+  if(id==='archive')      loadArchive();
   if(id==='maintenance')  loadMaintenance();
   if(id==='calendar')     loadCalendar();
   if(id==='settings')   loadSettings();
@@ -5362,6 +5387,48 @@ async function selectLinkBk(bookingId){
   const r=await fetch(`/staff/api/receipts/${_linkReceiptId}/link`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({bookingId})}).catch(()=>null);
   if(r&&r.ok){ closeLinkReceipt(); loadReceipts(); }
   else { alert('فشل الربط، حاول مرة أخرى'); }
+}
+
+// ── Archive ───────────────────────────────────────────────────────────────────
+async function loadArchive(){
+  const el=document.getElementById('arch-list'); if(!el) return;
+  el.innerHTML='<div style="padding:40px;text-align:center;color:#94a3b8;font-size:13px;">⏳ جاري التحميل...</div>';
+  const q=document.getElementById('arch-q')?.value.trim()||'';
+  const apt=document.getElementById('arch-apt')?.value.trim()||'';
+  const type=document.getElementById('arch-type')?.value||'';
+  const from=document.getElementById('arch-from')?.value||'';
+  const to=document.getElementById('arch-to')?.value||'';
+  const params=new URLSearchParams();
+  if(q)    params.set('q',q);
+  if(apt)  params.set('apt',apt);
+  if(type) params.set('type',type);
+  if(from) params.set('from',from);
+  if(to)   params.set('to',to);
+  try{
+    const r=await fetch('/staff/api/documents?'+params);
+    const list=await r.json();
+    if(!list.length){ el.innerHTML='<div style="padding:40px;text-align:center;color:#94a3b8;font-size:13px;">لا توجد مستندات مرفوعة</div>'; return; }
+    el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;">`
+      +list.map(b=>{
+        const cUrls=(b.contractDoc?.urls?.length?b.contractDoc.urls:[b.contractDoc?.url]).filter(Boolean);
+        const iUrls=(b.inventoryDoc?.urls?.length?b.inventoryDoc.urls:[b.inventoryDoc?.url]).filter(Boolean);
+        const ci=b.checkIn?new Date(b.checkIn).toLocaleDateString('ar-SA',{day:'2-digit',month:'2-digit',year:'2-digit'}):'-';
+        const co=b.checkOut?new Date(b.checkOut).toLocaleDateString('ar-SA',{day:'2-digit',month:'2-digit',year:'2-digit'}):'-';
+        const cThumbs=cUrls.map(u=>`<a href="${u}" target="_blank"><img src="${u}" style="width:40px;height:52px;object-fit:cover;border-radius:5px;border:1.5px solid #bfdbfe;"></a>`).join('');
+        const iThumbs=iUrls.map(u=>`<a href="${u}" target="_blank"><img src="${u}" style="width:40px;height:52px;object-fit:cover;border-radius:5px;border:1.5px solid #bbf7d0;"></a>`).join('');
+        return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;cursor:pointer;" onclick="openBkModal('${b._id}')">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+            <div style="width:34px;height:34px;background:#eff6ff;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;">📋</div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:13px;font-weight:700;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(b.name||'—')}</div>
+              <div style="font-size:11px;color:var(--t3);">شقة ${esc(b.apt||'—')} · ${ci} ← ${co}</div>
+            </div>
+          </div>
+          ${cUrls.length?`<div style="margin-bottom:8px;"><div style="font-size:10px;font-weight:700;color:#1d4ed8;margin-bottom:4px;">📄 عقد الإيجار (${cUrls.length})</div><div style="display:flex;gap:4px;flex-wrap:wrap;">${cThumbs}</div></div>`:'<div style="font-size:11px;color:#94a3b8;margin-bottom:6px;">📄 العقد: غير مرفق</div>'}
+          ${iUrls.length?`<div><div style="font-size:10px;font-weight:700;color:#059669;margin-bottom:4px;">📋 ورقة الاستلام (${iUrls.length})</div><div style="display:flex;gap:4px;flex-wrap:wrap;">${iThumbs}</div></div>`:'<div style="font-size:11px;color:#94a3b8;">📋 الاستلام: غير مرفق</div>'}
+        </div>`;
+      }).join('')+'</div>';
+  }catch(e){ el.innerHTML=`<div style="padding:40px;text-align:center;color:#dc2626;font-size:13px;">❌ خطأ في التحميل</div>`; }
 }
 
 // ── Reject Receipt ────────────────────────────────────────────────────────────
