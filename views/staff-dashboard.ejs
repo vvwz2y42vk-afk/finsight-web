@@ -4976,10 +4976,10 @@ let _receipts=[];
 
 function toggleReceiptSection(){
   const pm=document.getElementById('nb-paymethod')?.value||'';
-  const show=['network','transfer','check'].includes(pm);
+  const hide=['cash'].includes(pm);
   const sec=document.getElementById('receipt-section');
-  if(sec) sec.style.display=show?'block':'none';
-  if(!show){ _receipts=[]; renderReceiptsList(); resetReceiptStage(); }
+  if(sec) sec.style.display=hide?'none':'block';
+  if(hide){ _receipts=[]; renderReceiptsList(); resetReceiptStage(); }
 }
 
 function resetReceiptStage(){
@@ -5428,8 +5428,8 @@ async function submitNewBk(){
   if(!checkin){ shakeField('nb-checkin','fw-checkin','fh-checkin','اختر تاريخ الدخول'); valid=false; }
   if(type==='daily'&&!checkout){ shakeField('nb-checkout','nb-checkout-grp','fh-checkout','اختر تاريخ الخروج'); valid=false; }
   if(!price){ shakeField('nb-price','fw-price','fh-price','أدخل سعر الإيجار'); valid=false; }
-  // إيصال إلزامي فقط للشبكة والتحويل والشيك
-  const needsReceipt = ['network','transfer','check'].includes(paymentMethod);
+  // إيصال إلزامي لكل طرق الدفع ما عدا الكاش
+  const needsReceipt = paymentMethod && paymentMethod !== 'cash';
   if(needsReceipt && !_receipts.length){
     errEl.textContent='يجب رفع إيصال دفع وقبوله قبل إتمام الحجز';
     errEl.style.display='block';
