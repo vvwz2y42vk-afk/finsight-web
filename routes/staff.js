@@ -935,119 +935,251 @@ router.post('/api/bookings/:id/documents/generate', reqStaff, async (req, res) =
 // ── API: Booking Documents (contract / inventory) ─────────
 router.post('/api/bookings/:id/documents', reqStaff, async (req, res) => {
   try {
-    const B           = require('../models/Booking');
-    const PDFDocument = require('pdfkit');
-    const crypto      = require('crypto');
+    const B      = require('../models/Booking');
+    const crypto = require('crypto');
+    const PDFDoc = require('pdfkit');
+    const path_  = require('path');
 
-    const { type, pages } = req.body; // pages: [{data: base64, mime: 'image/jpeg'}]
-    if (!['contract','inventory'].includes(type)) return res.status(400).json({ error: 'نوع غير صحيح' });
-    if (!pages?.length)  return res.status(400).json({ error: 'لم يتم اختيار صور' });
-    if (pages.length > 10) return res.status(400).json({ error: 'الحد الأقصى 10 صفحات' });
+    const { type, pages, confirmed } = req.body;
+    // pages: [{data:base64,mime}], confirmed: parsed+reviewed data from frontend
+    if (!['contract','inventory'].includes(type)) return res.status(400).json({ error:'نوع غير صحيح' });
+    if (!pages?.length) return res.status(400).json({ error:'لم يتم اختيار صور' });
+    if (pages.length > 10) return res.status(400).json({ error:'الحد الأقصى 10 صفحات' });
 
     const bk = await B.findById(req.params.id);
-    if (!bk) return res.status(404).json({ error: 'الحجز غير موجود' });
+    if (!bk) return res.status(404).json({ error:'الحجز غير موجود' });
 
-    const cloudName    = process.env.CLOUDINARY_CLOUD_NAME;
-    const apiKey       = process.env.CLOUDINARY_API_KEY;
-    const apiSecret    = process.env.CLOUDINARY_API_SECRET;
-    const anthropicKey = process.env.ANTHROPIC_API_KEY;
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+    const apiKey    = process.env.CLOUDINARY_API_KEY;
+    const apiSecret = process.env.CLOUDINARY_API_SECRET;
     if (!cloudName || !apiKey || !apiSecret)
-      return res.status(500).json({ error: 'Cloudinary غير مُهيَّأ في متغيرات البيئة' });
+      return res.status(500).json({ error:'Cloudinary غير مُهيَّأ' });
 
-    // ── Step 1: OCR via Claude API (parallel per page) ────────────────────────
-    const ocrResults = await Promise.all(pages.map(async (p) => {
-      if (!anthropicKey) return '';
-      try {
-        const resp = await fetch('https://api.anthropic.com/v1/messages', {
-          method: 'POST',
-          headers: {
-            'x-api-key':         anthropicKey,
-            'anthropic-version': '2023-06-01',
-            'content-type':      'application/json',
-          },
-          body: JSON.stringify({
-            model:      'claude-haiku-4-5-20251001',
-            max_tokens: 2048,
-            messages: [{
-              role: 'user',
-              content: [
-                {
-                  type: 'image',
-                  source: { type: 'base64', media_type: p.mime || 'image/jpeg', data: p.data },
-                },
-                {
-                  type: 'text',
-                  text: 'استخرج كل النص الموجود في هذه الوثيقة بدقة كاملة. رتّب النص من الأعلى إلى الأسفل ومن اليمين إلى اليسار كما يظهر في الصفحة. أعد النص فقط بدون أي تعليقات إضافية.',
-                },
-              ],
-            }],
-          }),
-        });
-        if (!resp.ok) return '';
-        const d = await resp.json();
-        return d.content?.[0]?.text || '';
-      } catch { return ''; }
-    }));
+    const isContract = type === 'contract';
+    const d = confirmed || {};
+    const bkId     = bk._id.toString().slice(-8).toUpperCase();
+    const guestName = d.name || bk.name || 'عميل';
+    const safeName  = guestName.replace(/\s+/g,'_').replace(/[^\w]/g,'').slice(0,15) || 'client';
 
-    // ── Step 2: Build PDF — original images at full A4 (preserves stamps/signatures) ──
+    // ── Build premium PDF ──────────────────────────────────────────────────
+    const fontDir   = path_.join(__dirname,'..','fonts');
+    const fontReg   = path_.join(fontDir,'Cairo-Regular.ttf');
+    const fontBold  = path_.join(fontDir,'Cairo-Bold.ttf');
+
+    // Colors
+    const DARK   = '#0f1923';
+    const BLUE   = '#1a3d8f';
+    const GOLD   = '#c9a84c';
+    const LIGHT  = '#f8fafc';
+    const BORDER = '#dde3ef';
+    const GRAY   = '#64748b';
+
     const pdfBuf = await new Promise((resolve, reject) => {
-      const doc    = new PDFDocument({ size: 'A4', margin: 0, autoFirstPage: true });
+      const doc = new PDFDoc({ size:'A4', margin:0, autoFirstPage:true });
       const chunks = [];
-      doc.on('data', chunk => chunks.push(chunk));
-      doc.on('end',  ()    => resolve(Buffer.concat(chunks)));
+      doc.on('data', c => chunks.push(c));
+      doc.on('end',  () => resolve(Buffer.concat(chunks)));
       doc.on('error', reject);
-      pages.forEach((p, i) => {
-        if (i > 0) doc.addPage({ size: 'A4', margin: 0 });
+
+      // Register fonts
+      doc.registerFont('Cairo',      fontReg);
+      doc.registerFont('Cairo-Bold', fontBold);
+
+      const W = 595, H = 842; // A4 points
+      const ML = 40, MR = 40, MT = 0;
+
+      // ── HEADER BANNER ──────────────────────────────────────────────────
+      doc.rect(0, 0, W, 90).fill(DARK);
+      // Gold accent line
+      doc.rect(0, 90, W, 3).fill(GOLD);
+      // Logo text
+      doc.font('Cairo-Bold').fontSize(22).fillColor('#ffffff')
+         .text('BAREZ', ML, 22, { align:'left', width: W-ML-ML });
+      doc.font('Cairo').fontSize(11).fillColor(GOLD)
+         .text('بارز للشقق الفندقية المفروشة', ML, 50, { align:'left', width: W-ML-ML });
+      // Contract title (right side)
+      const title = isContract ? 'عقد إيجار رقمي' : 'محضر استلام المحتويات';
+      doc.font('Cairo-Bold').fontSize(16).fillColor('#ffffff')
+         .text(title, ML, 28, { align:'right', width: W-ML-ML });
+      const contractNo = 'رقم: BK-' + bkId;
+      doc.font('Cairo').fontSize(9).fillColor(GOLD)
+         .text(contractNo, ML, 52, { align:'right', width: W-ML-ML });
+
+      // ── DATE BAR ───────────────────────────────────────────────────────
+      const today = new Date().toLocaleDateString('ar-SA',{year:'numeric',month:'long',day:'numeric'});
+      doc.rect(0, 93, W, 26).fill('#1e2d45');
+      doc.font('Cairo').fontSize(9).fillColor('#94a3b8')
+         .text('تاريخ الإصدار: ' + today + '  •  الموظف المسؤول: ' + (req.staff?.name||'—'),
+               ML, 101, { align:'center', width: W-ML-ML });
+
+      let y = 130;
+
+      // Helper: draw a section card
+      const sectionCard = (titleAr, rows, startY) => {
+        const rowH = 26, headerH = 30;
+        const totalH = headerH + rows.length * rowH + 8;
+        // Card background
+        doc.rect(ML, startY, W-ML-MR, totalH).fill(LIGHT).stroke(BORDER);
+        // Section header
+        doc.rect(ML, startY, W-ML-MR, headerH).fill(BLUE);
+        doc.font('Cairo-Bold').fontSize(11).fillColor('#ffffff')
+           .text(titleAr, ML+10, startY+9, { align:'right', width: W-ML-MR-20 });
+        // Rows
+        rows.forEach((row, i) => {
+          const ry = startY + headerH + i*rowH;
+          if (i%2===0) doc.rect(ML, ry, W-ML-MR, rowH).fill('#f0f4f8');
+          else         doc.rect(ML, ry, W-ML-MR, rowH).fill(LIGHT);
+          // Label (right)
+          doc.font('Cairo-Bold').fontSize(9).fillColor(GRAY)
+             .text(row[0], W/2+10, ry+8, { align:'right', width: W/2-MR-10 });
+          // Value (left)
+          doc.font('Cairo').fontSize(10).fillColor(DARK)
+             .text(row[1]||'—', ML+8, ry+8, { align:'right', width: W/2-ML });
+        });
+        doc.rect(ML, startY, W-ML-MR, totalH).stroke(BORDER);
+        return startY + totalH + 12;
+      };
+
+      // Format date helper
+      const fmtD = s => {
+        if (!s) return '—';
+        try { return new Date(s).toLocaleDateString('ar-SA',{year:'numeric',month:'long',day:'numeric'}); }
+        catch { return s; }
+      };
+      const fmtN = n => n ? Number(n).toLocaleString('ar-SA') + ' ر.س' : '—';
+
+      // ── SECTION 1: Guest Info ──────────────────────────────────────────
+      const idTypeMap = { national_id:'هوية وطنية', passport:'جواز سفر', iqama:'إقامة', family_card:'بطاقة عائلية' };
+      y = sectionCard('بيانات المستأجر / النزيل', [
+        ['الاسم الكامل',       d.name    || bk.name  || '—'],
+        ['نوع الهوية',         idTypeMap[d.idType] || d.idType || '—'],
+        ['رقم الهوية',         d.idNumber || bk.idNumber || '—'],
+        ['رقم الجوال',         d.phone    || bk.phone    || '—'],
+      ], y);
+
+      // ── SECTION 2: Unit Info ───────────────────────────────────────────
+      y = sectionCard('بيانات الوحدة السكنية', [
+        ['المجمع / المبنى',   d.building || bk.building || '—'],
+        ['رقم الوحدة',         d.apt      || bk.apt      || '—'],
+        ['تاريخ الدخول',       fmtD(d.checkIn  || bk.checkIn)],
+        ['تاريخ الخروج',       fmtD(d.checkOut || bk.checkOut)],
+        ['عدد الليالي',        (d.nights || bk.nights || '—').toString()],
+      ], y);
+
+      // ── SECTION 3: Financial Info (contract only) ───────────────────────
+      if (isContract) {
+        const total     = Number(d.totalAmount || d.totalPrice || bk.totalPrice  || 0);
+        const paid      = Number(d.paidAmount  || bk.paidAmount  || 0);
+        const remaining = Number(d.remaining   || (total - paid) || 0);
+        y = sectionCard('التفاصيل المالية', [
+          ['إجمالي الإيجار',   fmtN(total)],
+          ['المبلغ المدفوع',    fmtN(paid)],
+          ['المتبقي',           fmtN(remaining)],
+          ['طريقة الدفع',       bk.paymentMethod || '—'],
+        ], y);
+      }
+
+      // ── SECTION 4: Furniture (inventory only) ──────────────────────────
+      if (!isContract && d.furniture?.length) {
+        const items = d.furniture.slice(0,20);
+        y = sectionCard('قائمة المحتويات المستلمة', items.map((it,i) => [
+          (i+1).toString(), it
+        ]), y);
+      }
+
+      // ── NOTES ─────────────────────────────────────────────────────────
+      if (d.notes || bk.notes) {
+        const noteText = d.notes || bk.notes;
+        doc.rect(ML, y, W-ML-MR, 50).fill('#fffbeb').stroke('#fbbf24');
+        doc.font('Cairo-Bold').fontSize(9).fillColor('#92400e')
+           .text('ملاحظات:', W-MR-10, y+8, { align:'right', width:W-ML-MR-20 });
+        doc.font('Cairo').fontSize(9).fillColor('#78350f')
+           .text(noteText, ML+8, y+22, { align:'right', width:W-ML-MR-16 });
+        y += 60;
+      }
+
+      // ── SIGNATURE BLOCK ────────────────────────────────────────────────
+      if (y > H - 140) { doc.addPage({ size:'A4', margin:0 }); y = 40; }
+      doc.rect(ML, y, W-ML-MR, 90).fill(LIGHT).stroke(BORDER);
+      // Two columns
+      const colW = (W-ML-MR)/2 - 10;
+      // Right: tenant signature
+      doc.rect(W/2+5, y, colW, 90).fill('#f8faff').stroke(BORDER);
+      doc.font('Cairo-Bold').fontSize(9).fillColor(BLUE)
+         .text('توقيع المستأجر', W/2+15, y+10, { align:'center', width:colW-20 });
+      doc.moveTo(W/2+20, y+65).lineTo(W-MR-10, y+65).stroke(BORDER);
+      // Left: staff signature
+      doc.rect(ML, y, colW, 90).fill('#f8fff8').stroke(BORDER);
+      doc.font('Cairo-Bold').fontSize(9).fillColor('#065f46')
+         .text('توقيع الموظف المسؤول', ML+10, y+10, { align:'center', width:colW-20 });
+      doc.moveTo(ML+10, y+65).lineTo(ML+colW-10, y+65).stroke(BORDER);
+      y += 100;
+
+      // ── FOOTER ────────────────────────────────────────────────────────
+      doc.rect(0, H-35, W, 35).fill(DARK);
+      doc.font('Cairo').fontSize(8).fillColor('#94a3b8')
+         .text('هذا العقد صادر إلكترونياً من منصة BAREZ — جميع الحقوق محفوظة',
+               ML, H-22, { align:'center', width:W-ML-ML });
+
+      // ── ORIGINAL DOCUMENT PAGES ────────────────────────────────────────
+      pages.forEach((p) => {
+        doc.addPage({ size:'A4', margin:0 });
+        // Subtle header strip
+        doc.rect(0,0,W,24).fill('#1e2d45');
+        doc.font('Cairo').fontSize(8).fillColor('#94a3b8')
+           .text('الوثيقة الأصلية الموقعة — للحجز BK-'+bkId, ML, 7, { align:'center', width:W-ML-ML });
         try {
-          const buf = Buffer.from(p.data, 'base64');
-          doc.image(buf, 0, 0, { fit: [595, 842], align: 'center', valign: 'center' });
-        } catch { doc.fontSize(10).fillColor('#dc2626').text('فشل تحميل الصفحة ' + (i + 1), 20, 20); }
+          const buf = Buffer.from(p.data,'base64');
+          doc.image(buf, 0, 24, { fit:[W, H-24], align:'center', valign:'top' });
+        } catch { doc.font('Cairo').fontSize(10).fillColor('#dc2626').text('فشل تحميل الصفحة', 20, 50); }
       });
+
       doc.end();
     });
 
-    // ── Step 3: Upload PDF to Cloudinary ──────────────────────────────────────
-    const bkId      = bk._id.toString().slice(-8).toUpperCase();
-    const safeName  = (bk.name || 'client').replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '').slice(0, 15) || 'client';
-    const suffix    = type === 'contract' ? 'ctr' : 'inv';
-    const folder    = 'barez/contracts';
-    const pubId     = 'BK' + bkId + '_' + safeName + '_' + suffix + '.pdf';
-    const timestamp = Math.floor(Date.now() / 1000);
-    const toSign    = 'folder=' + folder + '&overwrite=true&public_id=' + pubId + '&timestamp=' + timestamp + apiSecret;
-    const signature = crypto.createHash('sha1').update(toSign).digest('hex');
+    // ── Upload to Cloudinary ──────────────────────────────────────────────
+    const suffix   = isContract ? 'ctr' : 'inv';
+    const folder   = 'barez/contracts';
+    const pubId    = 'BK'+bkId+'_'+safeName+'_'+suffix+'.pdf';
+    const ts       = Math.floor(Date.now()/1000);
+    const toSign   = 'folder='+folder+'&overwrite=true&public_id='+pubId+'&timestamp='+ts+apiSecret;
+    const sig      = crypto.createHash('sha1').update(toSign).digest('hex');
 
-    const upRes = await fetch('https://api.cloudinary.com/v1_1/' + cloudName + '/raw/upload', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        file:       'data:application/pdf;base64,' + pdfBuf.toString('base64'),
-        api_key:    apiKey, timestamp, signature, folder, public_id: pubId, overwrite: true,
-      }),
+    const upRes = await fetch('https://api.cloudinary.com/v1_1/'+cloudName+'/raw/upload', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ file:'data:application/pdf;base64,'+pdfBuf.toString('base64'),
+        api_key:apiKey, timestamp:ts, signature:sig, folder, public_id:pubId, overwrite:true }),
     });
     if (!upRes.ok) {
-      const e = await upRes.json().catch(() => ({}));
-      return res.status(500).json({ error: 'فشل رفع PDF: ' + (e.error?.message || upRes.status) });
+      const e = await upRes.json().catch(()=>({}));
+      return res.status(500).json({ error:'فشل رفع PDF: '+(e.error?.message||upRes.status) });
     }
+
     const upData   = await upRes.json();
     const pdfUrl   = upData.secure_url;
-    const arSuffix = type === 'contract' ? 'عقد_موثق' : 'استلام_محتويات';
-    const filename = (bk.name || 'عميل') + '_' + bkId + '_' + arSuffix + '.pdf';
-    const ocrText  = ocrResults.filter(Boolean).join('\n\n--- صفحة جديدة ---\n\n');
+    const arSuffix = isContract ? 'عقد_موثق' : 'استلام_محتويات';
+    const filename = guestName+'_'+bkId+'_'+arSuffix+'.pdf';
+    const field    = isContract ? 'contractDoc' : 'inventoryDoc';
 
-    // ── Step 4: Save to DB ────────────────────────────────────────────────────
-    const field = type === 'contract' ? 'contractDoc' : 'inventoryDoc';
-    await B.findByIdAndUpdate(req.params.id, {
-      [field]: {
-        url: pdfUrl, urls: [pdfUrl], filename,
-        uploadedBy: req.staff.name, uploadedAt: new Date(),
-        pages: pages.length, ocrText,
+    await B.findByIdAndUpdate(req.params.id, { [field]: {
+      url:pdfUrl, urls:[pdfUrl], filename,
+      uploadedBy: req.staff.name, uploadedAt: new Date(),
+      pages: pages.length + 1, // +1 for summary page
+      ocrText: d.rawOcr || '',
+      parsedData: {
+        name:d.name, idType:d.idType, idNumber:d.idNumber,
+        phone:d.phone, apt:d.apt, building:d.building,
+        checkIn:d.checkIn, checkOut:d.checkOut, nights:Number(d.nights)||0,
+        totalAmount:Number(d.totalAmount||d.totalPrice||0),
+        paidAmount:Number(d.paidAmount||0), remaining:Number(d.remaining||0),
+        notes:d.notes, furniture:d.furniture||[],
       },
-    });
+    }});
 
-    res.json({ success: true, url: pdfUrl, filename, pages: pages.length, hasOcr: !!ocrText });
-  } catch (e) {
-    console.error('[docs-upload]', e);
-    res.status(500).json({ error: e.message || 'خطأ في معالجة المستند' });
+    res.json({ success:true, url:pdfUrl, filename, pages:pages.length });
+  } catch(e) {
+    console.error('[docs-generate]',e);
+    res.status(500).json({ error: e.message||'خطأ في توليد PDF' });
   }
 });
 router.get('/api/bookings/:id/documents', reqStaff, async (req, res) => {

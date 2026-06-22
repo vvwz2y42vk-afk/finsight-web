@@ -4164,6 +4164,116 @@ function openBkContract(id){
   </div>
 
 </div>
+
+<!-- ══ AI Document Review Modal ═══════════════════════════════════════════ -->
+<div id="doc-review-modal" style="display:none;position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.72);backdrop-filter:blur(6px);">
+  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+              background:var(--surface);border-radius:20px;width:min(660px,96vw);
+              max-height:92vh;overflow-y:auto;padding:28px 28px 24px;
+              box-shadow:0 28px 100px rgba(0,0,0,.5);">
+    <!-- Header -->
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border);">
+      <div style="width:44px;height:44px;background:linear-gradient(135deg,#1a3d8f,#2563eb);border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🤖</div>
+      <div style="flex:1;">
+        <div style="font-size:15px;font-weight:800;color:var(--t1);">مراجعة البيانات المستخرجة</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:2px;">تحقق من الحقول وعدّل أي خطأ — ثم اضغط إصدار</div>
+      </div>
+      <button onclick="closeDocReviewModal()" style="background:none;border:none;font-size:24px;color:var(--t3);cursor:pointer;padding:0 4px;line-height:1;">×</button>
+    </div>
+
+    <!-- Section: Guest -->
+    <div style="margin-bottom:14px;">
+      <div style="font-size:10px;font-weight:800;color:#1a3d8f;background:#eff6ff;padding:4px 10px;border-radius:6px;display:inline-block;margin-bottom:8px;">👤 بيانات المستأجر</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <label style="display:flex;flex-direction:column;gap:4px;">
+          <span style="font-size:10px;font-weight:700;color:var(--t3);">الاسم الكامل</span>
+          <input id="drv-name" placeholder="الاسم الكامل" style="padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit;text-align:right;background:var(--surface);color:var(--t1);direction:rtl;">
+        </label>
+        <label style="display:flex;flex-direction:column;gap:4px;">
+          <span style="font-size:10px;font-weight:700;color:var(--t3);">رقم الجوال</span>
+          <input id="drv-phone" placeholder="05xxxxxxxx" style="padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit;text-align:right;background:var(--surface);color:var(--t1);">
+        </label>
+        <label style="display:flex;flex-direction:column;gap:4px;">
+          <span style="font-size:10px;font-weight:700;color:var(--t3);">نوع الهوية</span>
+          <select id="drv-idType" style="padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit;background:var(--surface);color:var(--t1);">
+            <option value="">— اختر —</option>
+            <option value="national_id">هوية وطنية</option>
+            <option value="iqama">إقامة</option>
+            <option value="passport">جواز سفر</option>
+            <option value="family_card">بطاقة عائلية</option>
+          </select>
+        </label>
+        <label style="display:flex;flex-direction:column;gap:4px;">
+          <span style="font-size:10px;font-weight:700;color:var(--t3);">رقم الهوية</span>
+          <input id="drv-idNumber" placeholder="0000000000" style="padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit;text-align:right;background:var(--surface);color:var(--t1);">
+        </label>
+      </div>
+    </div>
+
+    <!-- Section: Unit -->
+    <div style="margin-bottom:14px;">
+      <div style="font-size:10px;font-weight:800;color:#065f46;background:#f0fdf4;padding:4px 10px;border-radius:6px;display:inline-block;margin-bottom:8px;">🏢 بيانات الوحدة</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <label style="display:flex;flex-direction:column;gap:4px;">
+          <span style="font-size:10px;font-weight:700;color:var(--t3);">المجمع / المبنى</span>
+          <input id="drv-building" style="padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit;text-align:right;background:var(--surface);color:var(--t1);">
+        </label>
+        <label style="display:flex;flex-direction:column;gap:4px;">
+          <span style="font-size:10px;font-weight:700;color:var(--t3);">رقم الوحدة</span>
+          <input id="drv-apt" style="padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit;text-align:right;background:var(--surface);color:var(--t1);">
+        </label>
+        <label style="display:flex;flex-direction:column;gap:4px;">
+          <span style="font-size:10px;font-weight:700;color:var(--t3);">تاريخ الدخول</span>
+          <input id="drv-checkIn" type="date" style="padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit;background:var(--surface);color:var(--t1);">
+        </label>
+        <label style="display:flex;flex-direction:column;gap:4px;">
+          <span style="font-size:10px;font-weight:700;color:var(--t3);">تاريخ الخروج</span>
+          <input id="drv-checkOut" type="date" style="padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit;background:var(--surface);color:var(--t1);">
+        </label>
+      </div>
+    </div>
+
+    <!-- Section: Financial (hidden for inventory) -->
+    <div id="drv-financial-section" style="margin-bottom:14px;">
+      <div style="font-size:10px;font-weight:800;color:#92400e;background:#fffbeb;padding:4px 10px;border-radius:6px;display:inline-block;margin-bottom:8px;">💰 التفاصيل المالية</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+        <label style="display:flex;flex-direction:column;gap:4px;">
+          <span style="font-size:10px;font-weight:700;color:var(--t3);">الإجمالي</span>
+          <input id="drv-totalAmount" type="number" placeholder="0" oninput="calcRemaining()" style="padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit;background:var(--surface);color:var(--t1);">
+        </label>
+        <label style="display:flex;flex-direction:column;gap:4px;">
+          <span style="font-size:10px;font-weight:700;color:var(--t3);">المدفوع</span>
+          <input id="drv-paidAmount" type="number" placeholder="0" oninput="calcRemaining()" style="padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit;background:var(--surface);color:var(--t1);">
+        </label>
+        <label style="display:flex;flex-direction:column;gap:4px;">
+          <span style="font-size:10px;font-weight:700;color:#dc2626;">المتبقي</span>
+          <input id="drv-remaining" type="number" readonly style="padding:7px 10px;border:1px solid #fecaca;border-radius:8px;font-size:12px;font-family:inherit;background:#fef2f2;color:#dc2626;font-weight:700;">
+        </label>
+      </div>
+    </div>
+
+    <!-- Section: Notes -->
+    <div style="margin-bottom:18px;">
+      <div style="font-size:10px;font-weight:800;color:var(--t3);margin-bottom:5px;">ملاحظات</div>
+      <textarea id="drv-notes" rows="2" placeholder="أي ملاحظات إضافية..." style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit;resize:vertical;box-sizing:border-box;text-align:right;direction:rtl;background:var(--surface);color:var(--t1);"></textarea>
+    </div>
+
+    <!-- Footer -->
+    <div style="display:flex;gap:10px;">
+      <button id="drv-confirm-btn" onclick="confirmAndGeneratePDF()"
+        style="flex:1;padding:13px;background:linear-gradient(135deg,#0f1923,#1a3d8f);color:#fff;border:none;border-radius:11px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:.3px;transition:opacity .15s;">
+        ✨ إصدار العقد الرقمي الاحترافي
+      </button>
+      <button onclick="closeDocReviewModal()"
+        style="padding:13px 18px;background:var(--surface);border:1px solid var(--border);border-radius:11px;font-size:12px;cursor:pointer;font-family:inherit;color:var(--t2);">
+        إلغاء
+      </button>
+    </div>
+    <div id="drv-result" style="margin-top:12px;"></div>
+  </div>
+</div>
+<!-- ══ End AI Document Review Modal ═══════════════════════════════════════ -->
+
 </body></html>`);
   w.document.close();
 }
@@ -5651,16 +5761,159 @@ function _renderDocThumbs(type) {
 
 async function uploadDocNow(type) {
   const pages = _docPages[type];
-  if (!pages.length) return;
+  if (!pages.length) { toast('اختر صورة أولاً','error'); return; }
   const btn = document.getElementById(`doc-${type}-btn`);
   const st  = document.getElementById(`doc-${type}-status`);
-  if (editBkId) {
-    // في وضع التعديل — ارفع مباشرة
-    await _uploadDocToServer(type, editBkId);
-  } else {
-    // في الحجز الجديد — انتظر الحفظ
+
+  if (!editBkId) {
     if (st) st.innerHTML = `<div style="color:#059669;font-size:11px;font-weight:700;">✅ ${pages.length} صورة جاهزة — ستُرفع عند حفظ الحجز</div>`;
     if (btn) { btn.textContent = '✅ جاهز'; btn.style.background = '#059669'; }
+    return;
+  }
+
+  // ── Parse with AI ──────────────────────────────────────────────────────
+  if (btn) { btn.disabled=true; btn.textContent='🤖 جاري القراءة...'; }
+  if (st)  st.innerHTML = `<div style="display:flex;align-items:center;gap:7px;color:#1d4ed8;font-size:11px;font-weight:600;padding:6px 0;">
+    <span style="display:inline-block;width:13px;height:13px;border:2px solid #1d4ed8;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;"></span>
+    🤖 Claude يقرأ الوثيقة ويستخرج البيانات...
+  </div>`;
+
+  try {
+    const pageData = pages.map(dataUrl => {
+      const comma = dataUrl.indexOf(',');
+      const mime  = dataUrl.substring(5, comma).split(';')[0] || 'image/jpeg';
+      return { data: dataUrl.substring(comma+1), mime };
+    });
+
+    const r = await fetch(`/staff/api/bookings/${editBkId}/documents/parse`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ pages: pageData, type }),
+    });
+    const d = await r.json();
+
+    if (!r.ok || !d.success) {
+      if (st) st.innerHTML = `<div style="font-size:11px;color:#dc2626;">❌ ${d.error||'فشل القراءة'} — <button onclick="directUploadDoc('${type}')" style="background:#dc2626;color:#fff;border:none;border-radius:6px;padding:3px 8px;font-size:10px;cursor:pointer;margin-right:6px;">رفع مباشر بدون قراءة</button></div>`;
+      if (btn) { btn.disabled=false; btn.textContent='↺ إعادة محاولة'; }
+      return;
+    }
+
+    // Store pageData for use in confirm step
+    window._drvPageData = pageData;
+    window._drvType     = type;
+    window._drvBookingId = editBkId;
+
+    showDocReviewModal(d.parsed, type);
+    if (st) st.innerHTML = `<div style="color:#059669;font-size:11px;font-weight:600;">✅ تمت القراءة الذكية — راجع البيانات في النافذة</div>`;
+    if (btn) { btn.disabled=false; btn.textContent='↺ إعادة القراءة'; btn.style.background='#1d4ed8'; }
+  } catch(e) {
+    if (st) st.innerHTML = `<div style="color:#dc2626;font-size:11px;">❌ ${e?.message||'خطأ في الاتصال'}</div>`;
+    if (btn) { btn.disabled=false; btn.textContent='⬆ رفع وأرشفة PDF'; }
+  }
+}
+
+async function directUploadDoc(type) {
+  await _uploadDocToServer(type, editBkId);
+}
+
+function showDocReviewModal(parsed, type) {
+  const p = parsed || {};
+  const set = (id, val) => { const el=document.getElementById(id); if(el) el.value=val||''; };
+  set('drv-name',        p.name||'');
+  set('drv-phone',       p.phone||'');
+  set('drv-idType',      p.idType||'');
+  set('drv-idNumber',    p.idNumber||'');
+  set('drv-building',    p.building||'');
+  set('drv-apt',         p.apt||'');
+  set('drv-checkIn',     p.checkIn||'');
+  set('drv-checkOut',    p.checkOut||'');
+  set('drv-totalAmount', p.totalAmount||p.totalPrice||'');
+  set('drv-paidAmount',  p.paidAmount||'');
+  set('drv-remaining',   p.remaining||'');
+  set('drv-notes',       p.notes||'');
+  // Show/hide financial section
+  const fin = document.getElementById('drv-financial-section');
+  if (fin) fin.style.display = type==='inventory' ? 'none' : 'block';
+  calcRemaining();
+  const modal = document.getElementById('doc-review-modal');
+  if (modal) modal.style.display = 'block';
+}
+
+function closeDocReviewModal() {
+  const modal = document.getElementById('doc-review-modal');
+  if (modal) modal.style.display = 'none';
+  const btn = document.getElementById(`doc-review-modal`);
+}
+
+function calcRemaining() {
+  const total = Number(document.getElementById('drv-totalAmount')?.value||0);
+  const paid  = Number(document.getElementById('drv-paidAmount')?.value||0);
+  const remEl = document.getElementById('drv-remaining');
+  if (remEl) remEl.value = Math.max(0, total-paid);
+}
+
+async function confirmAndGeneratePDF() {
+  const btn    = document.getElementById('drv-confirm-btn');
+  const result = document.getElementById('drv-result');
+  const pages  = window._drvPageData;
+  const type   = window._drvType;
+  const bkId   = window._drvBookingId;
+  if (!pages||!type||!bkId) { toast('خطأ — أعد رفع الصور','error'); return; }
+
+  if (btn) { btn.disabled=true; btn.textContent='⏳ جاري توليد العقد الرقمي...'; }
+  if (result) result.innerHTML = `<div style="display:flex;align-items:center;gap:7px;color:#1d4ed8;font-size:11px;padding:6px 0;">
+    <span style="display:inline-block;width:12px;height:12px;border:2px solid #1d4ed8;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;"></span>
+    جاري بناء PDF احترافي بخط Cairo العربي...
+  </div>`;
+
+  const confirmed = {
+    name:        document.getElementById('drv-name')?.value||'',
+    phone:       document.getElementById('drv-phone')?.value||'',
+    idType:      document.getElementById('drv-idType')?.value||'',
+    idNumber:    document.getElementById('drv-idNumber')?.value||'',
+    building:    document.getElementById('drv-building')?.value||'',
+    apt:         document.getElementById('drv-apt')?.value||'',
+    checkIn:     document.getElementById('drv-checkIn')?.value||'',
+    checkOut:    document.getElementById('drv-checkOut')?.value||'',
+    totalAmount: Number(document.getElementById('drv-totalAmount')?.value||0),
+    paidAmount:  Number(document.getElementById('drv-paidAmount')?.value||0),
+    remaining:   Number(document.getElementById('drv-remaining')?.value||0),
+    notes:       document.getElementById('drv-notes')?.value||'',
+  };
+
+  try {
+    const r = await fetch(`/staff/api/bookings/${bkId}/documents`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ type, pages, confirmed }),
+    });
+    const d = await r.json();
+
+    if (r.ok && d.success) {
+      if (result) result.innerHTML = `<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:12px 14px;text-align:center;">
+        <div style="font-size:15px;font-weight:800;color:#065f46;margin-bottom:6px;">✅ تم إصدار العقد الرقمي</div>
+        <a href="${d.url}" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;background:#059669;color:#fff;border-radius:8px;text-decoration:none;font-size:12px;font-weight:700;">
+          📄 فتح PDF الاحترافي
+        </a>
+      </div>`;
+      if (btn) { btn.textContent='✅ تم'; btn.style.background='#059669'; btn.disabled=false; }
+      // Update docs section in booking modal
+      const docType = window._drvType;
+      const st = document.getElementById(`doc-${docType}-status`);
+      if (st) st.innerHTML = `<div style="color:#059669;font-size:11px;font-weight:700;">✅ PDF محفوظ — <a href="${d.url}" target="_blank" style="color:#059669;text-decoration:underline;">📄 ${d.filename||'فتح'}</a></div>`;
+      const docBtn = document.getElementById(`doc-${docType}-btn`);
+      if (docBtn) { docBtn.textContent='↺ استبدال'; docBtn.style.background='#059669'; }
+      _docPages[docType] = [];
+      _renderDocThumbs(docType);
+      // Reload docs section
+      if (typeof loadBkDocs === 'function') loadBkDocs(bkId);
+      // Close modal after 2s
+      setTimeout(() => closeDocReviewModal(), 2000);
+    } else {
+      if (result) result.innerHTML = `<div style="color:#dc2626;font-size:11px;padding:8px;background:#fef2f2;border-radius:8px;">❌ ${d.error||'فشل توليد PDF'}</div>`;
+      if (btn) { btn.disabled=false; btn.textContent='↺ إعادة المحاولة'; }
+    }
+  } catch(e) {
+    if (result) result.innerHTML = `<div style="color:#dc2626;font-size:11px;padding:8px;background:#fef2f2;border-radius:8px;">❌ ${e?.message||'خطأ في الاتصال'}</div>`;
+    if (btn) { btn.disabled=false; btn.textContent='↺ إعادة المحاولة'; }
   }
 }
 
