@@ -2831,7 +2831,11 @@ router.get('/api/receipts', reqStaff, async (req, res) => {
   try {
     const Receipt = require('../models/Receipt');
     const filter = { propertyId: req.staff.propertyId || null };
-    filter.building = req.query.building || req.staff.building;
+    if (req.query.bookingId) {
+      filter.bookingId = req.query.bookingId;
+    } else {
+      filter.building = req.query.building || req.staff.building;
+    }
     if (req.query.type       && req.query.type       !== 'all') filter['analysis.paymentType'] = req.query.type;
     if (req.query.recStatus  && req.query.recStatus  !== 'all') filter.status = req.query.recStatus;
     if (req.query.matchStatus === 'matched') filter['analysis.matchesBuilding'] = true;

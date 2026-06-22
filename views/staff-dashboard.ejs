@@ -2145,7 +2145,7 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
         </div>
         <div style="grid-column:1/-1;">
           <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">طريقة الدفع</label>
-          <select id="nb-paymethod" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;">
+          <select id="nb-paymethod" onchange="toggleReceiptSection()" style="width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;outline:none;">
             <option value="">— اختر —</option>
             <option value="cash">نقداً</option>
             <option value="transfer">تحويل بنكي</option>
@@ -2156,27 +2156,31 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
             <option value="other">أخرى</option>
           </select>
         </div>
-        <!-- ── إيصال الدفع ── -->
+        <!-- ── إيصالات الدفع (متعددة) ── -->
         <div style="grid-column:1/-1;" id="receipt-section">
           <div id="receipt-box" style="background:#f0f9ff;border:1.5px solid #bae6fd;border-radius:12px;padding:14px;">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-              <label style="font-size:12px;font-weight:700;color:#0369a1;">إيصال الدفع</label>
-              <div style="display:flex;align-items:center;gap:6px;">
-                <span id="receipt-status-badge" style="display:none;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;"></span>
-                <span id="receipt-optional-lbl" style="font-size:10px;color:#dc2626;font-weight:600;">* إلزامي لجميع طرق الدفع</span>
-              </div>
+              <label style="font-size:12px;font-weight:700;color:#0369a1;">إيصالات الدفع</label>
+              <span id="receipt-status-badge" style="display:none;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;"></span>
             </div>
+            <!-- قائمة الإيصالات المقبولة -->
+            <div id="receipts-list" style="display:none;margin-bottom:10px;display:flex;flex-direction:column;gap:6px;"></div>
+            <!-- إجمالي -->
+            <div id="receipts-total-row" style="display:none;background:#d1fae5;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;color:#065f46;margin-bottom:10px;">
+              إجمالي الإيصالات: <span id="receipts-total-val">0</span> ريال
+            </div>
+            <!-- منطقة رفع إيصال جديد -->
             <input type="file" id="receipt-file-gallery" accept="image/*" style="display:none;" onchange="onReceiptFile(this)">
             <div id="receipt-upload-area" onclick="document.getElementById('receipt-file-gallery').click()" style="border:2px dashed #93c5fd;border-radius:10px;padding:18px;text-align:center;cursor:pointer;transition:border-color .2s;" onmouseenter="this.style.borderColor='#3b82f6'" onmouseleave="this.style.borderColor='#93c5fd'">
               <div style="font-size:26px;margin-bottom:5px;">📷</div>
-              <div style="font-size:12px;font-weight:600;color:#0369a1;">اضغط لتصوير أو رفع صورة الإيصال</div>
+              <div style="font-size:12px;font-weight:600;color:#0369a1;" id="receipt-upload-lbl">اضغط لتصوير أو رفع صورة الإيصال</div>
               <div style="font-size:10px;color:#94a3b8;margin-top:3px;">JPEG • PNG • تصوير مباشر أو من الألبوم</div>
             </div>
             <div id="receipt-preview-wrap" style="display:none;margin-top:10px;">
               <div style="display:flex;gap:10px;align-items:flex-start;">
                 <div style="flex-shrink:0;position:relative;">
                   <img id="receipt-preview-img" src="" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:2px solid #bae6fd;cursor:pointer;display:block;" onclick="openReceiptFullscreen()" title="اضغط للتكبير">
-                  <div onclick="rejectReceipt()" title="حذف الإيصال" style="position:absolute;top:-6px;left:-6px;width:18px;height:18px;background:#dc2626;border-radius:50%;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;line-height:1;">×</div>
+                  <div onclick="cancelStagedReceipt()" title="إلغاء" style="position:absolute;top:-6px;left:-6px;width:18px;height:18px;background:#dc2626;border-radius:50%;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;line-height:1;">×</div>
                 </div>
                 <div id="receipt-analysis-box" style="flex:1;min-width:0;">
                   <div id="receipt-analyzing" style="color:#0369a1;font-size:12px;font-weight:600;padding:6px 0;">⏳ جاري قراءة الإيصال بالذكاء الاصطناعي...</div>
@@ -2192,7 +2196,7 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
                       <tr id="ra-entity-row"><td style="color:#64748b;padding:2px 0;white-space:nowrap;">الجهة:</td><td id="ra-entity" style="font-weight:700;color:#0f172a;padding-right:8px;"></td></tr>
                     </table>
                     <div style="display:flex;gap:6px;margin-top:8px;">
-                      <button type="button" onclick="acceptReceiptData()" id="receipt-accept-btn" style="flex:1;padding:7px;background:#059669;color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">✓ قبول وتطبيق</button>
+                      <button type="button" onclick="acceptReceiptData()" id="receipt-accept-btn" style="flex:1;padding:7px;background:#059669;color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">✓ قبول وإضافة</button>
                     </div>
                   </div>
                   <div id="receipt-error" style="display:none;color:#dc2626;font-size:11px;font-weight:600;padding:6px 0;"></div>
@@ -2201,7 +2205,7 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
             </div>
           </div>
         </div>
-        <!-- ── نهاية إيصال الدفع ── -->
+        <!-- ── نهاية إيصالات الدفع ── -->
 
         <!-- ── مسح الهوية ── -->
         <div style="grid-column:1/-1;">
@@ -3368,6 +3372,8 @@ async function openBkModal(bookingId, apt, status) {
       html+=`<div style="color:var(--t4);font-size:12px;padding:8px 0;">لا توجد دفعات مسجّلة بعد</div>`;
     }
     html+=`<button onclick="togglePayForm()" style="margin-top:6px;padding:7px 16px;background:linear-gradient(135deg,#047857,#059669);border:none;border-radius:9px;color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">+ تسجيل دفعة جديدة</button>
+    <!-- رفع إيصال للحجز الحالي -->
+    <button onclick="toggleBkReceiptUpload()" style="margin-top:6px;margin-right:8px;padding:7px 16px;background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:9px;color:#1d4ed8;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">📷 رفع إيصال</button>
     <div id="payForm" style="display:none;margin-top:10px;background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:12px;padding:14px;">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
         <div>
@@ -3402,7 +3408,28 @@ async function openBkModal(bookingId, apt, status) {
         <button onclick="submitPayment()" style="flex:1;padding:8px;background:linear-gradient(135deg,#047857,#059669);border:none;border-radius:9px;color:#fff;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">✅ حفظ الدفعة وإنشاء السند</button>
         <button onclick="togglePayForm()" style="padding:8px 14px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:9px;font-family:inherit;font-size:12px;cursor:pointer;">إلغاء</button>
       </div>
-    </div>`;
+    </div>
+    <!-- منطقة رفع إيصال جديد للحجز الحالي -->
+    <div id="bk-receipt-upload" style="display:none;margin-top:10px;background:#f0f9ff;border:1.5px solid #bae6fd;border-radius:12px;padding:12px;">
+      <div style="font-size:12px;font-weight:700;color:#0369a1;margin-bottom:8px;">📷 رفع إيصال جديد للحجز</div>
+      <input type="file" id="bk-receipt-file" accept="image/*" style="display:none;" onchange="onBkReceiptFile(this)">
+      <div id="bk-receipt-upload-area" onclick="document.getElementById('bk-receipt-file').click()" style="border:2px dashed #93c5fd;border-radius:9px;padding:14px;text-align:center;cursor:pointer;">
+        <div style="font-size:22px;margin-bottom:4px;">📷</div>
+        <div style="font-size:12px;font-weight:600;color:#0369a1;">اضغط لرفع صورة الإيصال</div>
+      </div>
+      <div id="bk-receipt-preview" style="display:none;margin-top:8px;">
+        <div style="display:flex;gap:8px;align-items:flex-start;">
+          <img id="bk-receipt-img" src="" style="width:70px;height:70px;object-fit:cover;border-radius:8px;flex-shrink:0;cursor:pointer;" onclick="document.getElementById('receipt-fullscreen-img').src=this.src;document.getElementById('receipt-fullscreen').style.display='flex'">
+          <div style="flex:1;font-size:11px;" id="bk-receipt-status">⏳ جاري التحليل...</div>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:8px;">
+          <button onclick="saveBkReceipt()" id="bk-receipt-save-btn" style="flex:1;padding:7px;background:#059669;color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;" disabled>✓ حفظ الإيصال</button>
+          <button onclick="cancelBkReceipt()" style="padding:7px 12px;background:#f1f5f9;border:none;border-radius:8px;font-family:inherit;font-size:11px;cursor:pointer;">إلغاء</button>
+        </div>
+      </div>
+    </div>
+    <!-- قسم إيصالات الحجز المرفوعة -->
+    <div id="bk-receipts-section" style="margin-top:10px;"></div>`;
 
     if(b.companions&&b.companions.length){
       html += sec('👥 المرافقون');
@@ -3434,11 +3461,85 @@ async function openBkModal(bookingId, apt, status) {
     // تعيين التاريخ الحالي لحقل الدفعة
     const now=new Date(), pd=document.getElementById('pay-date');
     if(pd){ const pad=n=>String(n).padStart(2,'0'); pd.value=`${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`; }
+    // تحميل إيصالات هذا الحجز
+    loadBkReceipts(bookingId);
   } catch(e) {
     document.getElementById('bkModalBody').innerHTML = '<div style="color:#dc2626;padding:20px;">❌ حدث خطأ في تحميل البيانات</div>';
   }
 }
 function closeBkModal(){ document.getElementById('bkModal').style.display='none'; }
+
+// ── إيصالات الحجز في bkModal ────────────────────────────────────────────────
+let _bkReceiptBase64=null, _bkReceiptMime=null, _bkReceiptAnalysis=null, _bkReceiptBookingId=null;
+
+function toggleBkReceiptUpload(){
+  const el=document.getElementById('bk-receipt-upload');
+  if(el) el.style.display=el.style.display==='none'?'block':'none';
+}
+function cancelBkReceipt(){
+  _bkReceiptBase64=null; _bkReceiptMime=null; _bkReceiptAnalysis=null;
+  const p=document.getElementById('bk-receipt-preview'); if(p) p.style.display='none';
+  const a=document.getElementById('bk-receipt-upload-area'); if(a) a.style.display='block';
+  const s=document.getElementById('bk-receipt-save-btn'); if(s) s.disabled=true;
+}
+async function onBkReceiptFile(input){
+  const file=input.files[0]; if(!file) return;
+  const dataUrl=await compressImg(file,1400,0.82);
+  _bkReceiptBase64=dataUrl.split(',')[1]; _bkReceiptMime='image/jpeg';
+  document.getElementById('bk-receipt-img').src=dataUrl;
+  document.getElementById('bk-receipt-upload-area').style.display='none';
+  document.getElementById('bk-receipt-preview').style.display='block';
+  document.getElementById('bk-receipt-status').innerHTML='⏳ جاري التحليل...';
+  const saveBtn=document.getElementById('bk-receipt-save-btn'); if(saveBtn) saveBtn.disabled=true;
+  // تحليل AI
+  try{
+    const r=await fetch('/staff/api/receipts/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({imageBase64:_bkReceiptBase64,mimeType:'image/jpeg',building:BUILDING,payMethod:'transfer'})});
+    const d=await r.json();
+    _bkReceiptAnalysis=d.analysis||null;
+    const a=_bkReceiptAnalysis||{};
+    const amt=a.cashTotal??a.amount;
+    const typeMap={network:'شبكة',transfer:'تحويل',cash:'نقداً',other:'أخرى'};
+    const statusEl=document.getElementById('bk-receipt-status');
+    if(statusEl) statusEl.innerHTML=`<div style="color:#065f46;font-weight:700;">${amt!=null?Number(amt).toLocaleString('ar-SA')+' ريال':'—'} • ${typeMap[a.paymentType]||'—'}${a.transactionNumber?' • '+a.transactionNumber:''}</div>${a.matchesBuilding===false?'<div style="color:#92400e;font-size:10px;margin-top:2px;">⚠️ الجهة لا تطابق المبنى</div>':a.matchesBuilding?'<div style="color:#065f46;font-size:10px;margin-top:2px;">✅ الجهة مطابقة</div>':''}`;
+    if(saveBtn) saveBtn.disabled=false;
+  }catch(e){
+    const statusEl=document.getElementById('bk-receipt-status');
+    if(statusEl) statusEl.innerHTML='<span style="color:#64748b;font-size:11px;">تعذر التحليل — يمكنك الحفظ بدون تحليل</span>';
+    if(saveBtn) saveBtn.disabled=false;
+  }
+}
+async function saveBkReceipt(){
+  if(!_bkReceiptBase64) return;
+  const r=await fetch('/staff/api/receipts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({bookingId:_curBkId,building:BUILDING,apt:_curBkApt,imageData:_bkReceiptBase64,imageMimeType:'image/jpeg',analysis:_bkReceiptAnalysis})}).catch(()=>null);
+  if(r&&r.ok){ toast('✅ تم رفع الإيصال','success'); cancelBkReceipt(); toggleBkReceiptUpload(); loadBkReceipts(_curBkId); }
+  else { toast('❌ فشل رفع الإيصال','error'); }
+}
+async function loadBkReceipts(bookingId){
+  const el=document.getElementById('bk-receipts-section'); if(!el) return;
+  const r=await fetch(`/staff/api/receipts?bookingId=${bookingId}`).catch(()=>null);
+  if(!r||!r.ok) return;
+  const recs=await r.json();
+  if(!recs.length){ el.innerHTML=''; return; }
+  const typeMap={network:'شبكة',transfer:'تحويل',cash:'نقداً',other:'أخرى'};
+  el.innerHTML=`<div style="font-size:10px;font-weight:800;color:var(--t4);letter-spacing:.07em;margin:14px 0 8px;padding-top:10px;border-top:1px solid var(--border);">🧾 إيصالات الدفع (${recs.length})</div>`+
+  recs.map(rec=>{
+    const a=rec.analysis||{};
+    const amt=a.cashTotal??a.amount;
+    const date=new Date(rec.createdAt).toLocaleDateString('ar-SA',{day:'2-digit',month:'2-digit',year:'numeric'});
+    const imgSrc=rec.imageData?`data:${rec.imageMimeType||'image/jpeg'};base64,${rec.imageData}`:null;
+    const statusC={pending:'#f59e0b',linked:'#059669',rejected:'#64748b'};
+    const statusL={pending:'قيد المراجعة',linked:'مربوط',rejected:'مرفوض'};
+    return `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:9px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;">
+      ${imgSrc?`<img src="${imgSrc}" style="width:50px;height:50px;object-fit:cover;border-radius:7px;flex-shrink:0;cursor:pointer;" onclick="document.getElementById('receipt-fullscreen-img').src=this.src;document.getElementById('receipt-fullscreen').style.display='flex'">`:'<div style="width:50px;height:50px;background:#e2e8f0;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">🧾</div>'}
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:800;color:#047857;">${amt!=null?Number(amt).toLocaleString('ar-SA')+' ريال':'—'}</div>
+        <div style="font-size:11px;color:var(--t3);">${typeMap[a.paymentType]||'—'} • ${date}${a.transactionNumber?' • '+a.transactionNumber:''}</div>
+        ${a.entityName?`<div style="font-size:10px;color:var(--t4);">${a.entityName} ${a.matchesBuilding===false?'⚠️':a.matchesBuilding?'✅':''}</div>`:''}
+      </div>
+      <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:${statusC[rec.status]||'#f1f5f9'};color:#fff;">${statusL[rec.status]||rec.status}</span>
+    </div>`;
+  }).join('');
+}
 
 function togglePayForm(){
   const f=document.getElementById('payForm');
@@ -3582,6 +3683,7 @@ async function editBk(id){
     document.getElementById('nb-status').value=b.status||'awaiting_checkin';
     document.getElementById('nb-notes').value=b.notes||'';
     document.getElementById('nb-paymethod').value=b.paymentMethod||'';
+    toggleReceiptSection();
     document.getElementById('nb-source').value=b.source||'';
     _companions=(b.companions||[]).map(c=>({name:c.name||'',idType:c.idType||'',idNumber:c.idNumber||''}));
     renderCompanions();
@@ -4867,20 +4969,58 @@ async function updMaint(id, field, value){
 }
 
 // ── Receipt AI ───────────────────────────────────────────────────────────────
+// staging (الإيصال الجاري رفعه حالياً)
 let _receiptBase64=null, _receiptMime=null, _receiptAnalysis=null, _receiptAccepted=false;
+// قائمة الإيصالات المقبولة لهذا الحجز
+let _receipts=[];
 
-function resetReceiptUI(){
+function toggleReceiptSection(){
+  const pm=document.getElementById('nb-paymethod')?.value||'';
+  const show=['network','transfer','check'].includes(pm);
+  const sec=document.getElementById('receipt-section');
+  if(sec) sec.style.display=show?'block':'none';
+  if(!show){ _receipts=[]; renderReceiptsList(); resetReceiptStage(); }
+}
+
+function resetReceiptStage(){
   _receiptBase64=null; _receiptMime=null; _receiptAnalysis=null; _receiptAccepted=false;
   const fi=document.getElementById('receipt-file-gallery'); if(fi) fi.value='';
-  const pw=document.getElementById('receipt-preview-wrap');
-  if(pw) pw.style.display='none';
-  const ua=document.getElementById('receipt-upload-area');
-  if(ua) ua.style.display='block';
-  const sb=document.getElementById('receipt-status-badge');
-  if(sb) sb.style.display='none';
-  const rb=document.getElementById('receipt-box');
-  if(rb) rb.style.border='1.5px solid #bae6fd';
+  const pw=document.getElementById('receipt-preview-wrap'); if(pw) pw.style.display='none';
+  const ua=document.getElementById('receipt-upload-area'); if(ua) ua.style.display='block';
+  const sb=document.getElementById('receipt-status-badge'); if(sb) sb.style.display='none';
+  const rb=document.getElementById('receipt-box'); if(rb) rb.style.border='1.5px solid #bae6fd';
+  const lbl=document.getElementById('receipt-upload-lbl');
+  if(lbl) lbl.textContent=_receipts.length?'+ إضافة إيصال آخر':'اضغط لتصوير أو رفع صورة الإيصال';
 }
+
+function resetReceiptUI(){ resetReceiptStage(); _receipts=[]; renderReceiptsList(); }
+
+function renderReceiptsList(){
+  const el=document.getElementById('receipts-list');
+  const totEl=document.getElementById('receipts-total-row');
+  const totVal=document.getElementById('receipts-total-val');
+  if(!el) return;
+  if(!_receipts.length){ el.style.display='none'; if(totEl) totEl.style.display='none'; return; }
+  el.style.display='flex';
+  const typeMap={network:'شبكة',transfer:'تحويل',cash:'نقداً',other:'أخرى'};
+  el.innerHTML=_receipts.map((rec,i)=>{
+    const a=rec.analysis||{};
+    const amt=a.cashTotal??a.amount;
+    const imgSrc=rec.base64?`data:${rec.mime||'image/jpeg'};base64,${rec.base64}`:null;
+    return `<div style="background:#fff;border:1.5px solid #6ee7b7;border-radius:10px;padding:9px 12px;display:flex;align-items:center;gap:10px;">
+      ${imgSrc?`<img src="${imgSrc}" style="width:48px;height:48px;object-fit:cover;border-radius:7px;flex-shrink:0;cursor:pointer;" onclick="document.getElementById('receipt-fullscreen-img').src=this.src;document.getElementById('receipt-fullscreen').style.display='flex'">`:'<div style="width:48px;height:48px;background:#f0f9ff;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">🧾</div>'}
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:12px;font-weight:700;color:#065f46;">${amt!=null?Number(amt).toLocaleString('ar-SA')+' ريال':'—'}</div>
+        <div style="font-size:10px;color:#64748b;">${typeMap[a.paymentType]||a.paymentType||'—'}${a.transactionNumber?' • '+a.transactionNumber:''}</div>
+      </div>
+      <button onclick="_receipts.splice(${i},1);renderReceiptsList()" style="background:#fee2e2;border:none;color:#dc2626;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:11px;font-weight:700;flex-shrink:0;">×</button>
+    </div>`;
+  }).join('');
+  const total=_receipts.reduce((s,r)=>{ const a=r.analysis||{}; return s+(a.cashTotal??a.amount??0); },0);
+  if(totEl){ totEl.style.display='block'; if(totVal) totVal.textContent=total.toLocaleString('ar-SA'); }
+}
+
+function cancelStagedReceipt(){ resetReceiptStage(); }
 
 async function compressImg(file, maxPx, q){
   return new Promise(resolve=>{
@@ -5008,28 +5148,31 @@ function showReceiptResult(a, payMethod, expectedPaid){
 function acceptReceiptData(){
   if(!_receiptAnalysis) return;
   const a=_receiptAnalysis;
-  // Auto-fill
-  if(a.paymentType==='network') document.getElementById('nb-paymethod').value='network';
-  else if(a.paymentType==='transfer') document.getElementById('nb-paymethod').value='transfer';
-  const amt=a.paymentType==='cash'?a.cashTotal:a.amount;
-  if(amt&&parseFloat(amt)>0){ document.getElementById('nb-paid').value=amt; calcNbRemain(); }
+  // أضف للقائمة
+  _receipts.push({ base64:_receiptBase64, mime:_receiptMime||'image/jpeg', analysis:a });
+  renderReceiptsList();
+  // Auto-fill طريقة الدفع فقط إذا لم تُحدَّد
+  const pmEl=document.getElementById('nb-paymethod');
+  if(pmEl&&!pmEl.value){
+    if(a.paymentType==='network') pmEl.value='network';
+    else if(a.paymentType==='transfer') pmEl.value='transfer';
+  }
+  // Auto-fill المبلغ المدفوع فقط لحجز جديد (ليس تعديل) وإذا لم يُدخَل يدوياً
+  if(!editBkId){
+    const total=_receipts.reduce((s,r)=>{ const ra=r.analysis||{}; return s+(ra.cashTotal??ra.amount??0); },0);
+    if(total>0){ document.getElementById('nb-paid').value=total; calcNbRemain(); }
+  }
+  // Auto-fill تاريخ الدخول إذا فارغ
   if(a.date&&!document.getElementById('nb-checkin').value){
     const d=new Date(a.date);
     if(!isNaN(d)){ document.getElementById('nb-checkin').value=d.toISOString().split('T')[0]; calcNbTotal(); }
   }
   _receiptAccepted=true;
-  const btn=document.getElementById('receipt-accept-btn');
-  btn.textContent='✓ تم القبول'; btn.style.background='#047857'; btn.disabled=true;
-  const badge=document.getElementById('receipt-status-badge');
-  badge.textContent='✓ مقبول'; badge.style.background='#d1fae5'; badge.style.color='#065f46'; badge.style.display='inline-block';
-  document.getElementById('receipt-box').style.border='1.5px solid #6ee7b7';
+  // أعد تهيئة منطقة الرفع لإيصال آخر
+  resetReceiptStage();
 }
 
-function rejectReceipt(){
-  resetReceiptUI();
-  const btn=document.getElementById('receipt-accept-btn');
-  if(btn){ btn.textContent='✓ قبول وتطبيق'; btn.style.background='#059669'; btn.disabled=false; }
-}
+function rejectReceipt(){ resetReceiptStage(); }
 
 function openReceiptFullscreen(){
   const el=document.getElementById('receipt-fullscreen');
@@ -5285,10 +5428,10 @@ async function submitNewBk(){
   if(!checkin){ shakeField('nb-checkin','fw-checkin','fh-checkin','اختر تاريخ الدخول'); valid=false; }
   if(type==='daily'&&!checkout){ shakeField('nb-checkout','nb-checkout-grp','fh-checkout','اختر تاريخ الخروج'); valid=false; }
   if(!price){ shakeField('nb-price','fw-price','fh-price','أدخل سعر الإيجار'); valid=false; }
-  // إيصال إلزامي عند الدفع بالشبكة أو التحويل أو النقد
-  const needsReceipt = ['network','transfer','cash'].includes(paymentMethod);
-  if(needsReceipt && !_receiptAccepted){
-    errEl.textContent='يجب رفع إيصال الدفع وقبوله قبل إتمام الحجز';
+  // إيصال إلزامي فقط للشبكة والتحويل والشيك
+  const needsReceipt = ['network','transfer','check'].includes(paymentMethod);
+  if(needsReceipt && !_receipts.length){
+    errEl.textContent='يجب رفع إيصال دفع وقبوله قبل إتمام الحجز';
     errEl.style.display='block';
     document.getElementById('receipt-box').style.border='1.5px solid #dc2626';
     document.getElementById('receipt-box').scrollIntoView({behavior:'smooth',block:'center'});
@@ -5303,12 +5446,13 @@ async function submitNewBk(){
     const r=await fetch(url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(_bkBody)});
     const d=await r.json();
     if(!r.ok){errEl.textContent=d.error||'حدث خطأ';errEl.style.display='block';return;}
-    // حفظ الإيصال مرتبطاً بالحجز
-    if(_receiptBase64&&_receiptAccepted){
+    // حفظ كل الإيصالات مرتبطةً بالحجز
+    const bkId=d._id||d.id||null;
+    for(const rec of _receipts){
       fetch('/staff/api/receipts',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({bookingId:d._id||d.id||null,building:BUILDING,apt,guestName:name,imageData:_receiptBase64,imageMimeType:_receiptMime||'image/jpeg',analysis:_receiptAnalysis}),
+        body:JSON.stringify({bookingId:bkId,building:BUILDING,apt,guestName:name,imageData:rec.base64,imageMimeType:rec.mime||'image/jpeg',analysis:rec.analysis}),
       }).catch(()=>{});
     }
     _clearDraft();
