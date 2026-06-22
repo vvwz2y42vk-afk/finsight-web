@@ -664,7 +664,7 @@ router.post('/api/bookings/:id/documents', reqStaff, async (req, res) => {
     const safeName  = (bk.name || 'client').replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '').slice(0, 15) || 'client';
     const suffix    = type === 'contract' ? 'ctr' : 'inv';
     const folder    = 'barez/contracts';
-    const pubId     = 'BK' + bkId + '_' + safeName + '_' + suffix;
+    const pubId     = 'BK' + bkId + '_' + safeName + '_' + suffix + '.pdf';
     const timestamp = Math.floor(Date.now() / 1000);
     const toSign    = 'folder=' + folder + '&overwrite=true&public_id=' + pubId + '&timestamp=' + timestamp + apiSecret;
     const signature = crypto.createHash('sha1').update(toSign).digest('hex');

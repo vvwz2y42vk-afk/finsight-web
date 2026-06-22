@@ -5595,17 +5595,13 @@ async function _enhanceImg(file) {
       img.onerror = () => reject(new Error('صيغة الصورة غير مدعومة'));
       img.onload = () => {
         try {
-          // Max 1400px — keeps PDF < 1.5MB
-          const MAX = 1400;
+          const MAX = 1800;
           let w = img.width, h = img.height;
           if (w > MAX || h > MAX) { if (w > h) { h = Math.round(h * MAX / w); w = MAX; } else { w = Math.round(w * MAX / h); h = MAX; } }
           const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
           const ctx = cv.getContext('2d');
-          // Scanner effect: grayscale → high contrast → slight brightness boost
-          ctx.filter = 'grayscale(1) contrast(2.4) brightness(1.08)';
           ctx.drawImage(img, 0, 0, w, h);
-          // JPEG 0.82 → ~200-400KB per A4 page
-          resolve(cv.toDataURL('image/jpeg', 0.82));
+          resolve(cv.toDataURL('image/jpeg', 0.92));
         } catch(err) { reject(err); }
       };
       img.src = e.target.result;
@@ -5641,7 +5637,7 @@ function _renderDocThumbs(type) {
   el.style.display = pages.length ? 'flex' : 'none';
   el.innerHTML = pages.map((src, i) => `
     <div style="position:relative;" title="صفحة ${i+1}">
-      <img src="${src}" style="width:52px;height:68px;object-fit:cover;border-radius:7px;border:2px solid ${type==='contract'?'#bfdbfe':'#6ee7b7'};filter:grayscale(1) contrast(1.1);">
+      <img src="${src}" style="width:52px;height:68px;object-fit:cover;border-radius:7px;border:2px solid ${type==='contract'?'#bfdbfe':'#6ee7b7'};">
       <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.45);color:#fff;font-size:8px;text-align:center;border-radius:0 0 5px 5px;padding:1px 0;">${i+1}</div>
       <div onclick="_docPages['${type}'].splice(${i},1);_renderDocThumbs('${type}')" style="position:absolute;top:-5px;right:-5px;width:16px;height:16px;background:#dc2626;border-radius:50%;color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;line-height:1;font-weight:700;">×</div>
     </div>`).join('');
@@ -5650,7 +5646,7 @@ function _renderDocThumbs(type) {
     if (area) area.style.padding = '8px 10px';
   }
   if (btn) btn.style.display = pages.length ? 'block' : 'none';
-  if (st && pages.length) st.innerHTML = `<div style="font-size:10px;color:#64748b;">✓ ${pages.length} صورة جاهزة — تأثير سكانر مُطبَّق</div>`;
+  if (st && pages.length) st.innerHTML = `<div style="font-size:10px;color:#64748b;">✓ ${pages.length} صورة جاهزة للرفع</div>`;
 }
 
 async function uploadDocNow(type) {
