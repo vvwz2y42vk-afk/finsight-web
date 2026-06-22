@@ -5412,45 +5412,72 @@ async function selectLinkBk(bookingId){
 async function loadArchive(){
   const el=document.getElementById('arch-list'); if(!el) return;
   el.innerHTML='<div style="padding:40px;text-align:center;color:#94a3b8;font-size:13px;">⏳ جاري التحميل...</div>';
-  const q=document.getElementById('arch-q')?.value.trim()||'';
-  const apt=document.getElementById('arch-apt')?.value.trim()||'';
-  const type=document.getElementById('arch-type')?.value||'';
-  const from=document.getElementById('arch-from')?.value||'';
-  const to=document.getElementById('arch-to')?.value||'';
-  const params=new URLSearchParams();
+  const q    = document.getElementById('arch-q')?.value.trim()||'';
+  const apt  = document.getElementById('arch-apt')?.value.trim()||'';
+  const type = document.getElementById('arch-type')?.value||'';
+  const from = document.getElementById('arch-from')?.value||'';
+  const to   = document.getElementById('arch-to')?.value||'';
+  const params = new URLSearchParams();
   if(q)    params.set('q',q);
   if(apt)  params.set('apt',apt);
   if(type) params.set('type',type);
   if(from) params.set('from',from);
   if(to)   params.set('to',to);
   try{
-    const r=await fetch('/staff/api/documents?'+params);
-    const list=await r.json();
-    if(!list.length){ el.innerHTML='<div style="padding:40px;text-align:center;color:#94a3b8;font-size:13px;">لا توجد مستندات مرفوعة</div>'; return; }
-    el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;">`
-      +list.map(b=>{
-        const ci=b.checkIn?new Date(b.checkIn).toLocaleDateString('ar-SA',{day:'2-digit',month:'2-digit',year:'2-digit'}):'-';
-        const co=b.checkOut?new Date(b.checkOut).toLocaleDateString('ar-SA',{day:'2-digit',month:'2-digit',year:'2-digit'}):'-';
-        const cDoc=b.contractDoc; const iDoc=b.inventoryDoc;
-        const pdfBtn=(doc,label,color)=>doc?.url
-          ?`<a href="${doc.url}" target="_blank" onclick="event.stopPropagation()" style="display:flex;align-items:center;gap:5px;padding:5px 10px;background:${color}1a;border:1px solid ${color}40;border-radius:8px;font-size:10px;font-weight:700;color:${color};text-decoration:none;white-space:nowrap;">📄 ${label}<span style="opacity:.7;">(${doc.pages||1}ص)</span></a>`
-          :`<span style="font-size:10px;color:#94a3b8;padding:5px 8px;">${label}: غير مرفق</span>`;
-        return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;cursor:pointer;transition:box-shadow .15s;" onmouseenter="this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)'" onmouseleave="this.style.boxShadow=''" onclick="openBkModal('${b._id}')">
-          <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;">
-            <div style="width:36px;height:36px;background:linear-gradient(135deg,#eff6ff,#dbeafe);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">🗂</div>
-            <div style="flex:1;min-width:0;">
-              <div style="font-size:13px;font-weight:700;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(b.name||'—')}</div>
-              <div style="font-size:10px;color:var(--t3);margin-top:2px;">شقة ${esc(b.apt||'—')} · ${ci} ← ${co}</div>
-            </div>
-          </div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;">
-            ${pdfBtn(cDoc,'عقد الإيجار','#1d4ed8')}
-            ${pdfBtn(iDoc,'ورقة الاستلام','#059669')}
-          </div>
-        </div>`;
-      }).join('')+'</div>';
-  }catch(e){ el.innerHTML=`<div style="padding:40px;text-align:center;color:#dc2626;font-size:13px;">❌ خطأ في التحميل</div>`; }
+    const r    = await fetch('/staff/api/documents?'+params);
+    const list = await r.json();
+    if(!list.length){
+      el.innerHTML='<div style="padding:40px;text-align:center;color:#94a3b8;font-size:13px;">لا توجد مستندات مرفوعة</div>';
+      return;
+    }
+    const docCard = (b, docObj, label, color, accentBg) => {
+      if(!docObj?.url) return '';
+      const ocrRaw = docObj.ocrText || '';
+      const ocrSection = ocrRaw
+        ? '<div style="margin-top:8px;background:'+accentBg+';border-radius:8px;padding:8px 10px;max-height:160px;overflow-y:auto;direction:rtl;text-align:right;">'
+            +'<div style="font-size:9px;font-weight:700;color:'+color+';margin-bottom:5px;display:flex;align-items:center;gap:4px;">'
+              +'<span>🤖 نص مستخرج بالذكاء الاصطناعي</span>'
+              +'<span style="background:'+color+';color:#fff;font-size:8px;padding:1px 5px;border-radius:10px;">'+(docObj.pages||1)+'ص</span>'
+            +'</div>'
+            +'<pre style="font-size:10px;color:#374151;line-height:1.65;white-space:pre-wrap;word-break:break-word;margin:0;font-family:inherit;">'+esc(ocrRaw)+'</pre>'
+          +'</div>'
+        : '<div style="margin-top:6px;font-size:10px;color:#94a3b8;display:flex;align-items:center;gap:4px;"><span>📄</span>'+(docObj.pages||1)+' صفحة — لا يوجد نص مستخرج</div>';
+      return '<div style="border:1px solid '+color+'25;border-radius:10px;padding:10px 12px;margin-top:8px;">'
+        +'<div style="display:flex;align-items:center;justify-content:space-between;">'
+          +'<span style="font-size:10px;font-weight:800;color:'+color+';">'+label+'</span>'
+          +'<a href="'+docObj.url+'" target="_blank" onclick="event.stopPropagation()"'
+             +' style="font-size:9px;font-weight:700;color:'+color+';text-decoration:none;padding:3px 8px;border:1px solid '+color+'40;border-radius:6px;background:'+accentBg+';white-space:nowrap;">'
+            +'📥 تحميل PDF'
+          +'</a>'
+        +'</div>'
+        +ocrSection
+      +'</div>';
+    };
+    el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;">'
+      + list.map(b=>{
+          const ci = b.checkIn  ? new Date(b.checkIn).toLocaleDateString('ar-SA',{day:'2-digit',month:'2-digit',year:'2-digit'}) : '-';
+          const co = b.checkOut ? new Date(b.checkOut).toLocaleDateString('ar-SA',{day:'2-digit',month:'2-digit',year:'2-digit'}) : '-';
+          const cCard = docCard(b, b.contractDoc,  '📄 عقد الإيجار',   '#1d4ed8', '#eff6ff');
+          const iCard = docCard(b, b.inventoryDoc, '📋 ورقة الاستلام', '#059669', '#f0fdf4');
+          return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;cursor:pointer;transition:box-shadow .15s;"'
+            +' onmouseenter="this.style.boxShadow=\'0 4px 20px rgba(0,0,0,.09)\'"'
+            +' onmouseleave="this.style.boxShadow=\'\'"'
+            +' onclick="openBkModal(\''+b._id+'\')">'
+            +'<div style="display:flex;align-items:center;gap:9px;margin-bottom:4px;">'
+              +'<div style="width:34px;height:34px;background:linear-gradient(135deg,#eff6ff,#dbeafe);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;">🗂</div>'
+              +'<div style="flex:1;min-width:0;">'
+                +'<div style="font-size:13px;font-weight:700;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(b.name||'—')+'</div>'
+                +'<div style="font-size:10px;color:var(--t3);">شقة '+esc(b.apt||'—')+' · '+ci+' ← '+co+'</div>'
+              +'</div>'
+            +'</div>'
+            +cCard+iCard
+          +'</div>';
+        }).join('') + '</div>';
+  } catch(e){
+    el.innerHTML='<div style="padding:40px;text-align:center;color:#dc2626;font-size:13px;">❌ خطأ في التحميل</div>';
+  }
 }
+
 
 // ── Reject Receipt ────────────────────────────────────────────────────────────
 let _rejectReceiptId=null;
