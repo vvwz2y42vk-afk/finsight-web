@@ -2293,57 +2293,30 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
         <!-- ── الأرشيف الرقمي ── -->
         <div style="grid-column:1/-1;">
           <div style="font-size:12px;font-weight:700;color:#475569;border-top:1px solid #e2e8f0;padding-top:12px;margin-bottom:10px;display:flex;align-items:center;gap:8px;">
-            <span style="font-size:15px;">🗂</span> الأرشيف الرقمي
-            <span style="font-size:10px;font-weight:400;color:#94a3b8;margin-right:4px;">— يتحول تلقائياً إلى PDF محكم</span>
+            <span style="font-size:15px;">🗂</span> الوثائق الرقمية
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
             <!-- عقد الإيجار -->
-            <div>
-              <div style="display:flex;align-items:center;gap:6px;margin-bottom:7px;">
-                <span style="background:#dbeafe;color:#1d4ed8;font-size:10px;font-weight:800;padding:3px 10px;border-radius:20px;letter-spacing:.3px;">📄 عقد ورقي موثق</span>
-              </div>
-              <input type="file" id="doc-contract-file" accept="image/*" multiple capture="environment" style="display:none;" onchange="onDocFiles(this,'contract')">
-              <div id="doc-contract-area"
-                onclick="document.getElementById('doc-contract-file').click()"
-                ondragover="onDocDragOver(event,'contract')"
-                ondragleave="onDocDragLeave(event,'contract')"
-                ondrop="onDocDrop(event,'contract')"
-                style="border:2px dashed #bfdbfe;border-radius:10px;padding:16px 10px;text-align:center;cursor:pointer;background:#f0f7ff;transition:all .15s;user-select:none;">
-                <div style="font-size:24px;margin-bottom:4px;">📸</div>
-                <div style="font-size:11px;font-weight:700;color:#1d4ed8;margin-bottom:2px;">اسحب الصور هنا أو اضغط للتصوير</div>
-                <div style="font-size:10px;color:#64748b;">يدعم أكثر من صفحة — سيُحوَّل لـ PDF تلقائياً</div>
-              </div>
-              <div id="doc-contract-thumbs" style="display:none;flex-wrap:wrap;gap:5px;margin-top:7px;"></div>
-              <div id="doc-contract-status" style="margin-top:5px;"></div>
-              <button onclick="generateContractDirect('contract')" style="width:100%;margin-top:7px;padding:9px;background:linear-gradient(135deg,#1d4ed8,#1e40af);color:#fff;border:none;border-radius:9px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">📄 إنشاء عقد رقمي من البيانات المدخلة</button>
-              <div id="doc-contract-direct-status" style="margin-top:5px;"></div>
-              <button id="doc-contract-btn" onclick="uploadDocNow('contract')" style="display:none;width:100%;margin-top:7px;padding:8px;background:#64748b;color:#fff;border:none;border-radius:9px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.3px;">🤖 قراءة ذكية من صورة + مراجعة</button>
+            <div style="border:1.5px solid #dbeafe;border-radius:12px;padding:12px;background:#f8faff;">
+              <div style="font-size:10px;font-weight:800;color:#1d4ed8;margin-bottom:10px;">📄 عقد الإيجار</div>
+              <div id="doc-contract-preview" style="margin-bottom:8px;min-height:32px;"></div>
+              <button onclick="generateContractDirect('contract')" style="width:100%;padding:10px;background:linear-gradient(135deg,#1d4ed8,#1e40af);color:#fff;border:none;border-radius:9px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">
+                📄 إنشاء عقد من البيانات المدخلة
+              </button>
+              <div id="doc-contract-direct-status" style="margin-top:6px;"></div>
             </div>
-            <!-- ورقة الاستلام -->
-            <div>
-              <div style="display:flex;align-items:center;gap:6px;margin-bottom:7px;">
-                <span style="background:#d1fae5;color:#065f46;font-size:10px;font-weight:800;padding:3px 10px;border-radius:20px;letter-spacing:.3px;">📋 محضر استلام المحتويات</span>
-              </div>
-              <input type="file" id="doc-inventory-file" accept="image/*" multiple capture="environment" style="display:none;" onchange="onDocFiles(this,'inventory')">
-              <div id="doc-inventory-area"
-                onclick="document.getElementById('doc-inventory-file').click()"
-                ondragover="onDocDragOver(event,'inventory')"
-                ondragleave="onDocDragLeave(event,'inventory')"
-                ondrop="onDocDrop(event,'inventory')"
-                style="border:2px dashed #6ee7b7;border-radius:10px;padding:16px 10px;text-align:center;cursor:pointer;background:#f0fdf8;transition:all .15s;user-select:none;">
-                <div style="font-size:24px;margin-bottom:4px;">📸</div>
-                <div style="font-size:11px;font-weight:700;color:#065f46;margin-bottom:2px;">اسحب الصور هنا أو اضغط للتصوير</div>
-                <div style="font-size:10px;color:#64748b;">يدعم أكثر من صفحة — سيُحوَّل لـ PDF تلقائياً</div>
-              </div>
-              <div id="doc-inventory-thumbs" style="display:none;flex-wrap:wrap;gap:5px;margin-top:7px;"></div>
-              <div id="doc-inventory-status" style="margin-top:5px;"></div>
-              <button onclick="generateContractDirect('inventory')" style="width:100%;margin-top:7px;padding:9px;background:linear-gradient(135deg,#059669,#047857);color:#fff;border:none;border-radius:9px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">📋 إنشاء محضر استلام من البيانات المدخلة</button>
-              <div id="doc-inventory-direct-status" style="margin-top:5px;"></div>
-              <button id="doc-inventory-btn" onclick="uploadDocNow('inventory')" style="display:none;width:100%;margin-top:7px;padding:8px;background:#64748b;color:#fff;border:none;border-radius:9px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.3px;">🤖 قراءة ذكية من صورة + مراجعة</button>
+            <!-- محضر الاستلام -->
+            <div style="border:1.5px solid #d1fae5;border-radius:12px;padding:12px;background:#f0fdf8;">
+              <div style="font-size:10px;font-weight:800;color:#065f46;margin-bottom:10px;">📋 محضر استلام المحتويات</div>
+              <div id="doc-inventory-preview" style="margin-bottom:8px;min-height:32px;"></div>
+              <button onclick="generateContractDirect('inventory')" style="width:100%;padding:10px;background:linear-gradient(135deg,#059669,#047857);color:#fff;border:none;border-radius:9px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">
+                📋 إنشاء محضر من البيانات المدخلة
+              </button>
+              <div id="doc-inventory-direct-status" style="margin-top:6px;"></div>
             </div>
           </div>
         </div>
-        <!-- ── نهاية الأرشيف الرقمي ── -->
+        <!-- ── نهاية الوثائق الرقمية ── -->
 
         <div style="grid-column:1/-1;">
           <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:5px;">الحالة</label>
@@ -5668,11 +5641,12 @@ async function generateContractDirect(type) {
     const d = await r.json();
     if (!r.ok || !d.success) throw new Error(d.error || 'فشل الإنشاء');
 
-    if (statusEl) statusEl.innerHTML = `<div style="font-size:10px;color:#16a34a;text-align:center;padding:6px;">
-      ✅ تم الإنشاء — <a href="${d.url}" target="_blank" style="color:#1d4ed8;font-weight:700;">📄 فتح PDF</a>
-    </div>`;
+    if (statusEl) statusEl.innerHTML = '';
+    const pre = document.getElementById(`doc-${type}-preview`);
+    if (pre) pre.innerHTML = `<a href="${d.url}" target="_blank" style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:#dcfce7;border:1px solid #86efac;border-radius:8px;text-decoration:none;font-size:11px;font-weight:700;color:#065f46;">
+      <span>📄</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.filename||'عقد.pdf'}</span><span style="flex-shrink:0;font-weight:400;color:#16a34a;">عرض</span>
+    </a>`;
     toast('تم إنشاء الملف بنجاح ✅', 'success');
-    // refresh docs list
     if (typeof loadBkDocs === 'function') loadBkDocs(editBkId);
   } catch (e) {
     if (statusEl) statusEl.innerHTML = `<div style="font-size:10px;color:#dc2626;text-align:center;padding:6px;">❌ ${e.message}</div>`;
@@ -5808,11 +5782,15 @@ async function _loadExistingDocs(bookingId) {
   const { contractDoc, inventoryDoc } = await r.json();
   ['contract','inventory'].forEach(t => {
     const doc = t==='contract' ? contractDoc : inventoryDoc;
-    const st = document.getElementById(`doc-${t}-status`);
-    if (doc?.url && st) {
+    const pre = document.getElementById(`doc-${t}-preview`);
+    if (!pre) return;
+    if (doc?.url) {
       const fname = doc.filename || (t==='contract' ? 'عقد_موثق.pdf' : 'استلام_محتويات.pdf');
-      st.innerHTML = `<div style="color:#059669;font-size:11px;font-weight:700;">✅ PDF مرفوع (${doc.pages||1} صفحة) — <a href="${doc.url}" target="_blank" style="color:#059669;text-decoration:underline;">📄 ${esc(fname)}</a></div>`;
-      const btn = document.getElementById(`doc-${t}-btn`); if (btn) { btn.style.display='block'; btn.textContent='↺ استبدال'; btn.style.background='#059669'; }
+      pre.innerHTML = `<a href="${doc.url}" target="_blank" style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:#dcfce7;border:1px solid #86efac;border-radius:8px;text-decoration:none;font-size:11px;font-weight:700;color:#065f46;">
+        <span>📄</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(fname)}</span><span style="flex-shrink:0;font-weight:400;color:#16a34a;">عرض</span>
+      </a>`;
+    } else {
+      pre.innerHTML = '';
     }
   });
 }
