@@ -538,6 +538,9 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
   .rpt-header{flex-direction:column!important;align-items:stretch!important;}
   .rpt-btns{display:grid!important;grid-template-columns:1fr 1fr;width:100%;}
   .rpt-btns .sbtn{width:100%;text-align:center;}
+  .cf-filters-grid{grid-template-columns:1fr 1fr!important;}
+  .cf-filters-grid>div:last-child{display:flex;gap:6px;}
+  .cf-filters-grid>div:last-child button{flex:1;}
 }
 /* ══ Channel Manager ══ */
 .ch-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:28px;}
@@ -1362,7 +1365,7 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
 
         <!-- فلاتر -->
         <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:16px;margin-bottom:16px;">
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:flex-end;">
+          <div class="cf-filters-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:flex-end;">
             <div>
               <label style="font-size:11px;font-weight:600;color:var(--t3);display:block;margin-bottom:4px;">من (تاريخ + وقت)</label>
               <input type="datetime-local" id="cf-from" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:9px;font-family:inherit;font-size:12px;outline:none;background:#fff;">
