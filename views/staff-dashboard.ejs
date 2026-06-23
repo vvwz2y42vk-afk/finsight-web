@@ -5446,7 +5446,7 @@ async function loadArchive(){
       return '<div style="border:1px solid '+color+'25;border-radius:10px;padding:10px 12px;margin-top:8px;">'
         +'<div style="display:flex;align-items:center;justify-content:space-between;">'
           +'<span style="font-size:10px;font-weight:800;color:'+color+';">'+label+'</span>'
-          +'<a href="https://docs.google.com/viewer?url="+encodeURIComponent(docObj.url)+'" target="_blank" onclick="event.stopPropagation()"'
+          +'<a href="https://docs.google.com/viewer?url='+encodeURIComponent(docObj.url)+'" target="_blank" onclick="event.stopPropagation()"'
              +' style="font-size:9px;font-weight:700;color:'+color+';text-decoration:none;padding:3px 8px;border:1px solid '+color+'40;border-radius:6px;background:'+accentBg+';white-space:nowrap;">'
             +'📄 عرض PDF'
           +'</a>'
