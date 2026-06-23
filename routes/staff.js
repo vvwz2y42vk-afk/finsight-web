@@ -629,31 +629,37 @@ router.post('/api/bookings/:id/documents/parse', reqStaff, async (req, res) => {
 استخدم null لأي حقل غير موجود في الوثيقة. أعد JSON فقط.`,
     });
 
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'x-api-key': anthropicKey,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1024,
-        messages: [{ role: 'user', content }],
-      }),
-    });
+    // Try sonnet first, fall back to haiku on overload
+    const MODELS = ['claude-sonnet-4-6', 'claude-haiku-4-5-20251001'];
+    let resp, lastErrMsg = 'فشل الاتصال بالذكاء الاصطناعي';
 
-    if (!resp.ok) {
-      let errMsg = 'فشل الاتصال بالذكاء الاصطناعي';
+    for (const model of MODELS) {
+      resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'x-api-key': anthropicKey,
+          'anthropic-version': '2023-06-01',
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({ model, max_tokens: 1024, messages: [{ role: 'user', content }] }),
+      });
+      if (resp.ok) break;
       try {
         const errBody = await resp.json();
         const errType = errBody?.error?.type || '';
-        if (errType === 'overloaded_error') errMsg = 'الذكاء الاصطناعي مشغول حالياً — حاول مرة أخرى بعد لحظة';
-        else if (errType === 'rate_limit_error') errMsg = 'تم تجاوز حد الطلبات — حاول بعد دقيقة';
-        else if (errType === 'authentication_error') errMsg = 'خطأ في مفتاح API — تواصل مع الدعم';
-        else if (errBody?.error?.message) errMsg = errBody.error.message.slice(0, 100);
-      } catch {}
-      return res.status(502).json({ error: errMsg, retryable: resp.status === 529 || resp.status === 503 });
+        if (errType === 'overloaded_error' || resp.status === 529) {
+          lastErrMsg = 'الذكاء الاصطناعي مشغول — جاري تجربة نموذج أسرع...';
+          continue; // try next model
+        }
+        if (errType === 'rate_limit_error') lastErrMsg = 'تم تجاوز حد الطلبات — حاول بعد دقيقة';
+        else if (errType === 'authentication_error') lastErrMsg = 'خطأ في مفتاح API — تواصل مع الدعم';
+        else if (errBody?.error?.message) lastErrMsg = errBody.error.message.slice(0, 100);
+        break; // non-retryable error
+      } catch { break; }
+    }
+
+    if (!resp.ok) {
+      return res.status(502).json({ error: lastErrMsg, retryable: false });
     }
 
     const data = await resp.json();
