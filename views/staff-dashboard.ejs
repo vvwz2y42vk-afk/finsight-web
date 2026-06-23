@@ -4655,7 +4655,7 @@ async function loadDailyClosing(date){
   const el=document.getElementById('dcBody');
   el.innerHTML='<div style="text-align:center;padding:30px;color:var(--t4);">⏳ جاري التحميل...</div>';
   try{
-    const r=await fetch('/staff/api/daily-closing?date='+encodeURIComponent(date));
+    const r=await fetch(`/staff/api/daily-closing?date=${encodeURIComponent(date)}`);
     const d=await r.json();
     if(!r.ok){el.innerHTML=`<div style="color:#dc2626;padding:20px;">❌ ${d.error||'حدث خطأ'}</div>`;return;}
 
@@ -5446,7 +5446,7 @@ async function loadArchive(){
       return '<div style="border:1px solid '+color+'25;border-radius:10px;padding:10px 12px;margin-top:8px;">'
         +'<div style="display:flex;align-items:center;justify-content:space-between;">'
           +'<span style="font-size:10px;font-weight:800;color:'+color+';">'+label+'</span>'
-          +'<a href="https://docs.google.com/viewer?url='+encodeURIComponent(docObj.url)+'" target="_blank" onclick="event.stopPropagation()"'
+          +`<a href="https://docs.google.com/viewer?url=${encodeURIComponent(docObj.url)}" target="_blank" onclick="event.stopPropagation()"`
              +' style="font-size:9px;font-weight:700;color:'+color+';text-decoration:none;padding:3px 8px;border:1px solid '+color+'40;border-radius:6px;background:'+accentBg+';white-space:nowrap;">'
             +'📄 عرض PDF'
           +'</a>'
@@ -6315,7 +6315,7 @@ async function onIdNumInput(val) {
   if (val.length < 5) return;
   idNumTimer = setTimeout(async () => {
     try {
-      const r = await fetch('/staff/api/guests/by-idnum/' + encodeURIComponent(val));
+      const r = await fetch(`/staff/api/guests/by-idnum/${encodeURIComponent(val)}`);
       if (!r.ok) return;
       const g = await r.json();
       if (g) applyGuestFill(g);
@@ -7755,7 +7755,7 @@ function sendWaMessage() {
   } else {
     msg = WA_TEMPLATES[_waType]?.(name, apt) || '';
   }
-  window.open('https://wa.me/' + waPhone(phone) + '?text=' + encodeURIComponent(msg), '_blank');
+  window.open(`https://wa.me/${waPhone(phone)}?text=${encodeURIComponent(msg)}`, '_blank');
   closeWaSend();
 }
 
@@ -7861,7 +7861,7 @@ async function printContract(bookingId) {
 
     let g = null;
     if (b.phone) {
-      try { const gr=await fetch('/staff/api/guests/by-phone/'+encodeURIComponent(b.phone)); if(gr.ok) g=await gr.json(); } catch(e){}
+      try { const gr=await fetch(`/staff/api/guests/by-phone/${encodeURIComponent(b.phone)}`); if(gr.ok) g=await gr.json(); } catch(e){}
     }
 
     const ID_L = { national_id:'هوية وطنية', passport:'جواز سفر', residence:'إقامة', gcc:'هوية خليجي', other:'أخرى' };
@@ -8222,7 +8222,7 @@ async function openGuestCard(phone) {
   document.getElementById('gcId').value = '';
 
   try {
-    const r = await fetch('/staff/api/guests/by-phone/' + encodeURIComponent(phone));
+    const r = await fetch(`/staff/api/guests/by-phone/${encodeURIComponent(phone)}`);
     const g = r.ok ? await r.json() : null;
     if (!g) {
       document.getElementById('gcHeaderName').textContent = 'نزيل غير مسجل';
