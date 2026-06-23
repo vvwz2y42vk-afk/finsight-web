@@ -5683,7 +5683,11 @@ async function uploadDocNow(type) {
     const d = await r.json();
 
     if (!r.ok || !d.success) {
-      if (st) st.innerHTML = `<div style="font-size:11px;color:#dc2626;">❌ ${d.error||'فشل القراءة'} — <button onclick="_uploadDocToServer('${type}', editBkId)" style="background:#dc2626;color:#fff;border:none;border-radius:6px;padding:3px 8px;font-size:10px;cursor:pointer;margin-right:6px;">رفع مباشر بدون قراءة</button></div>`;
+      const isRetryable = d.retryable || r.status === 529 || r.status === 503;
+      const actionBtn = isRetryable
+        ? `<button onclick="uploadDocNow('${type}')" style="background:#d97706;color:#fff;border:none;border-radius:6px;padding:3px 8px;font-size:10px;cursor:pointer;margin-right:6px;">↺ أعد المحاولة</button>`
+        : `<button onclick="_uploadDocToServer('${type}', editBkId)" style="background:#dc2626;color:#fff;border:none;border-radius:6px;padding:3px 8px;font-size:10px;cursor:pointer;margin-right:6px;">رفع مباشر بدون قراءة</button>`;
+      if (st) st.innerHTML = `<div style="font-size:11px;color:#dc2626;">❌ ${d.error||'فشل القراءة'} — ${actionBtn}</div>`;
       if (btn) { btn.disabled=false; btn.textContent='↺ إعادة محاولة'; }
       return;
     }

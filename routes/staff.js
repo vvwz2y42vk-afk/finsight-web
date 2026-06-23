@@ -644,8 +644,16 @@ router.post('/api/bookings/:id/documents/parse', reqStaff, async (req, res) => {
     });
 
     if (!resp.ok) {
-      const e = await resp.text();
-      return res.status(502).json({ error: 'فشل Claude API: ' + e.slice(0, 200) });
+      let errMsg = 'فشل الاتصال بالذكاء الاصطناعي';
+      try {
+        const errBody = await resp.json();
+        const errType = errBody?.error?.type || '';
+        if (errType === 'overloaded_error') errMsg = 'الذكاء الاصطناعي مشغول حالياً — حاول مرة أخرى بعد لحظة';
+        else if (errType === 'rate_limit_error') errMsg = 'تم تجاوز حد الطلبات — حاول بعد دقيقة';
+        else if (errType === 'authentication_error') errMsg = 'خطأ في مفتاح API — تواصل مع الدعم';
+        else if (errBody?.error?.message) errMsg = errBody.error.message.slice(0, 100);
+      } catch {}
+      return res.status(502).json({ error: errMsg, retryable: resp.status === 529 || resp.status === 503 });
     }
 
     const data = await resp.json();
