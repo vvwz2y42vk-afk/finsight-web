@@ -2315,7 +2315,9 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
               </div>
               <div id="doc-contract-thumbs" style="display:none;flex-wrap:wrap;gap:5px;margin-top:7px;"></div>
               <div id="doc-contract-status" style="margin-top:5px;"></div>
-              <button id="doc-contract-btn" onclick="uploadDocNow('contract')" style="display:none;width:100%;margin-top:7px;padding:8px;background:linear-gradient(135deg,#1d4ed8,#1e40af);color:#fff;border:none;border-radius:9px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.3px;">🤖 قراءة ذكية + مراجعة</button>
+              <button onclick="generateContractDirect('contract')" style="width:100%;margin-top:7px;padding:9px;background:linear-gradient(135deg,#1d4ed8,#1e40af);color:#fff;border:none;border-radius:9px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">📄 إنشاء عقد رقمي من البيانات المدخلة</button>
+              <div id="doc-contract-direct-status" style="margin-top:5px;"></div>
+              <button id="doc-contract-btn" onclick="uploadDocNow('contract')" style="display:none;width:100%;margin-top:7px;padding:8px;background:#64748b;color:#fff;border:none;border-radius:9px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.3px;">🤖 قراءة ذكية من صورة + مراجعة</button>
             </div>
             <!-- ورقة الاستلام -->
             <div>
@@ -2335,7 +2337,9 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
               </div>
               <div id="doc-inventory-thumbs" style="display:none;flex-wrap:wrap;gap:5px;margin-top:7px;"></div>
               <div id="doc-inventory-status" style="margin-top:5px;"></div>
-              <button id="doc-inventory-btn" onclick="uploadDocNow('inventory')" style="display:none;width:100%;margin-top:7px;padding:8px;background:linear-gradient(135deg,#059669,#047857);color:#fff;border:none;border-radius:9px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.3px;">🤖 قراءة ذكية + مراجعة</button>
+              <button onclick="generateContractDirect('inventory')" style="width:100%;margin-top:7px;padding:9px;background:linear-gradient(135deg,#059669,#047857);color:#fff;border:none;border-radius:9px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">📋 إنشاء محضر استلام من البيانات المدخلة</button>
+              <div id="doc-inventory-direct-status" style="margin-top:5px;"></div>
+              <button id="doc-inventory-btn" onclick="uploadDocNow('inventory')" style="display:none;width:100%;margin-top:7px;padding:8px;background:#64748b;color:#fff;border:none;border-radius:9px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.3px;">🤖 قراءة ذكية من صورة + مراجعة</button>
             </div>
           </div>
         </div>
@@ -5648,6 +5652,32 @@ function _renderDocThumbs(type) {
   }
   if (btn) btn.style.display = pages.length ? 'block' : 'none';
   if (st && pages.length) st.innerHTML = `<div style="font-size:10px;color:#64748b;">✓ ${pages.length} صورة جاهزة للرفع</div>`;
+}
+
+async function generateContractDirect(type) {
+  if (!editBkId) { toast('افتح الحجز أولاً', 'error'); return; }
+  const statusEl = document.getElementById(`doc-${type}-direct-status`);
+  if (statusEl) statusEl.innerHTML = '<div style="font-size:10px;color:#64748b;text-align:center;padding:6px;">⏳ جاري الإنشاء...</div>';
+
+  try {
+    const r = await fetch(`/staff/api/bookings/${editBkId}/contract`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type }),
+    });
+    const d = await r.json();
+    if (!r.ok || !d.success) throw new Error(d.error || 'فشل الإنشاء');
+
+    if (statusEl) statusEl.innerHTML = `<div style="font-size:10px;color:#16a34a;text-align:center;padding:6px;">
+      ✅ تم الإنشاء — <a href="${d.url}" target="_blank" style="color:#1d4ed8;font-weight:700;">📄 فتح PDF</a>
+    </div>`;
+    toast('تم إنشاء الملف بنجاح ✅', 'success');
+    // refresh docs list
+    if (typeof loadBkDocs === 'function') loadBkDocs(editBkId);
+  } catch (e) {
+    if (statusEl) statusEl.innerHTML = `<div style="font-size:10px;color:#dc2626;text-align:center;padding:6px;">❌ ${e.message}</div>`;
+    toast(e.message, 'error');
+  }
 }
 
 async function uploadDocNow(type) {

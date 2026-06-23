@@ -776,32 +776,17 @@ router.post('/api/bookings/:id/documents/parse', reqStaff, async (req, res) => {
 });
 
 // ── AI Document Generate — Premium PDF (Step 2 of 2) ──────────
-router.post('/api/bookings/:id/documents/generate', reqStaff, async (req, res) => {
-  try {
-    const PDFDocument = require('pdfkit');
-    const crypto      = require('crypto');
-    const path        = require('path');
+// ── Shared PDF builder (used by both /contract and /documents/generate) ──
+async function buildContractPDF(bk, type, confirmed, pages) {
+  const PDFDocument = require('pdfkit');
+  const path        = require('path');
+  const fs2         = require('fs');
 
-    const { type, confirmed, pages } = req.body;
-    // confirmed: { name, idType, idNumber, phone, apt, building, checkIn, checkOut, nights, totalAmount, paidAmount, remaining, notes, furniture[] }
-    // pages: [{data, mime}] — original images (appended as last pages)
-
-    if (!['contract','inventory'].includes(type)) return res.status(400).json({ error: 'نوع غير صحيح' });
-    if (!confirmed) return res.status(400).json({ error: 'البيانات المؤكدة غير موجودة' });
-
-    const B  = require('../models/Booking');
-    const bk = await B.findById(req.params.id);
-    if (!bk) return res.status(404).json({ error: 'الحجز غير موجود' });
-
-    // Google Drive replaces Cloudinary for PDF storage
-
-    // ── Font paths ───────────────────────────────────────────────
-    const FONT_REG  = path.join(__dirname, '../fonts/Cairo-Regular.ttf');
-    const FONT_BOLD = path.join(__dirname, '../fonts/Cairo-Bold.ttf');
-    const LOGO_PATH = path.join(__dirname, '../public/images/logo-dark.png');
-    const fs2 = require('fs');
-    const hasFont = fs2.existsSync(FONT_REG) && fs2.existsSync(FONT_BOLD);
-    const hasLogo = fs2.existsSync(LOGO_PATH);
+  const FONT_REG  = path.join(__dirname, '../fonts/Cairo-Regular.ttf');
+  const FONT_BOLD = path.join(__dirname, '../fonts/Cairo-Bold.ttf');
+  const LOGO_PATH = path.join(__dirname, '../public/images/logo-dark.png');
+  const hasFont   = fs2.existsSync(FONT_REG) && fs2.existsSync(FONT_BOLD);
+  const hasLogo   = fs2.existsSync(LOGO_PATH);
 
     // ── Colors ───────────────────────────────────────────────────
     const NAVY   = '#111827';
@@ -1063,33 +1048,77 @@ router.post('/api/bookings/:id/documents/generate', reqStaff, async (req, res) =
 
       doc.end();
     });
+  // end of Promise — return pdfBuf
+  return pdfBuf;
+}
 
-    // ── Upload to Google Drive ────────────────────────────────────
-    const bkId    = bk._id.toString().slice(-8).toUpperCase();
-    const arLabel = type === 'contract' ? 'عقد_موثق' : 'استلام_محتويات';
-    const filename = `${bk.name||'عميل'}_BK${bkId}_${arLabel}.pdf`;
+// ── Helper: upload PDF + save to booking ─────────────────────────
+async function uploadAndSave(bk, type, confirmed, pdfBuf, pages, staffName) {
+  const B       = require('../models/Booking');
+  const bkId    = bk._id.toString().slice(-8).toUpperCase();
+  const arLabel = type === 'contract' ? 'عقد_موثق' : 'استلام_محتويات';
+  const filename = `${bk.name||'عميل'}_BK${bkId}_${arLabel}.pdf`;
 
-    let pdfUrl;
-    try {
-      pdfUrl = await uploadToDrive(pdfBuf, filename, bk.building || null, bk.name || null);
-      console.log('[docs] Drive upload OK:', pdfUrl);
-    } catch (driveErr) {
-      console.error('[docs] Drive error:', driveErr.message);
-      return res.status(500).json({ error: driveErr.message });
-    }
-    const field    = type === 'contract' ? 'contractDoc' : 'inventoryDoc';
+  const pdfUrl = await uploadToDrive(pdfBuf, filename, bk.building||null, bk.name||null);
 
-    await B.findByIdAndUpdate(req.params.id, {
-      [field]: {
-        url: pdfUrl, urls: [pdfUrl], filename,
-        uploadedBy: req.staff.name, uploadedAt: new Date(),
-        pages: (pages?.length || 0) + 1,
-        ocrText: '',
-        parsedData: confirmed,
-      },
-    });
+  const field = type === 'contract' ? 'contractDoc' : 'inventoryDoc';
+  await B.findByIdAndUpdate(bk._id, {
+    [field]: { url: pdfUrl, urls:[pdfUrl], filename, uploadedBy: staffName,
+               uploadedAt: new Date(), pages: (pages?.length||0)+1, ocrText:'', parsedData: confirmed },
+  });
+  return { url: pdfUrl, filename };
+}
 
-    res.json({ success: true, url: pdfUrl, filename, pages: (pages?.length||0)+1 });
+// ── Quick Contract — from booking data directly (no AI) ──────────
+router.post('/api/bookings/:id/contract', reqStaff, async (req, res) => {
+  try {
+    const B  = require('../models/Booking');
+    const bk = await B.findById(req.params.id);
+    if (!bk) return res.status(404).json({ error: 'الحجز غير موجود' });
+
+    const type    = req.body.type || 'contract';
+    const nights  = bk.nights ?? (bk.checkIn && bk.checkOut
+      ? Math.round((new Date(bk.checkOut) - new Date(bk.checkIn)) / 86400000) : null);
+
+    const confirmed = {
+      name:        bk.name,
+      idType:      bk.idType,
+      idNumber:    bk.idNumber,
+      phone:       bk.phone,
+      apt:         bk.apt,
+      building:    bk.building,
+      checkIn:     bk.checkIn  ? new Date(bk.checkIn).toLocaleDateString('ar-SA')  : null,
+      checkOut:    bk.checkOut ? new Date(bk.checkOut).toLocaleDateString('ar-SA') : null,
+      nights,
+      totalAmount: bk.totalPrice,
+      paidAmount:  bk.paidAmount,
+      remaining:   (bk.totalPrice ?? 0) - (bk.paidAmount ?? 0),
+      notes:       bk.notes || null,
+    };
+
+    const pdfBuf = await buildContractPDF(bk, type, confirmed, []);
+    const { url, filename } = await uploadAndSave(bk, type, confirmed, pdfBuf, [], req.staff.name);
+    res.json({ success: true, url, filename });
+  } catch (e) {
+    console.error('[contract]', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ── AI Generate — with AI-confirmed data + scanned pages ─────────
+router.post('/api/bookings/:id/documents/generate', reqStaff, async (req, res) => {
+  try {
+    const { type, confirmed, pages } = req.body;
+    if (!['contract','inventory'].includes(type)) return res.status(400).json({ error: 'نوع غير صحيح' });
+    if (!confirmed) return res.status(400).json({ error: 'البيانات المؤكدة غير موجودة' });
+
+    const B  = require('../models/Booking');
+    const bk = await B.findById(req.params.id);
+    if (!bk) return res.status(404).json({ error: 'الحجز غير موجود' });
+
+    const pdfBuf = await buildContractPDF(bk, type, confirmed, pages || []);
+    const { url, filename } = await uploadAndSave(bk, type, confirmed, pdfBuf, pages, req.staff.name);
+    res.json({ success: true, url, filename, pages: (pages?.length||0)+1 });
   } catch (e) {
     console.error('[doc-generate]', e);
     res.status(500).json({ error: e.message || 'خطأ في توليد PDF' });
