@@ -812,15 +812,34 @@ router.post('/api/bookings/:id/documents/generate', reqStaff, async (req, res) =
     const TEXT1  = '#111827';
     const TEXT2  = '#4b5563';
 
-    // ── Build Premium PDF ────────────────────────────────────────
+    // ── Fixed Terms (hardcoded — page 2) ────────────────────────
+    const TERMS = [
+      'بأمر من وزارة الداخلية يمنع رهن أي مستندات رسمية.',
+      'على المستأجر مراعاة السلوك والآداب الإسلامية خلال فترة تواجده في الشقة، وعدم السماح بإقامة أية أشخاص آخرين من غير المرافقين له مع الالتزام بالهدوء وعدم إزعاج الآخرين حرصاً على الراحة العامة.',
+      'يجب المحافظة على الآداب وعدم صدور أصوات تزعج الوحدات المجاورة له.',
+      'في حالة تسجيل شكوى من الوحدات المجاورة أو إساءة استخدام المنافع المشتركة (المصاعد / الممرات) يحق للمؤجر فسخ العقد فوراً.',
+      'يتعهد المستأجر بتسهيل مهام المؤجر (الطرف الأول) في استلام الوحدة السكنية وإخلائها، ويفوض الطرف الأول برمي أي موجودات بها عند انتهاء العقد أو فسخه من الطرف الأول، ويتنازل عن المطالبة بها أو التعويض عنها دون أدنى مسؤولية على الطرف الأول.',
+      'في حالة الخروج خارج الشقة يلزمه التأكد من غلق الغاز ويلزمه الترشيد في استخدام المياه.',
+      'يتم دفع تأمين 200 ريال عند حدوث أي تلف بمحتويات الشقة ويكون الطرف الثاني ملزم بتعويض الطرف الأول بقيمة التلفيات التي يحددها الطرف الأول.',
+      'يمنع دخول الطيور والحيوانات منعاً باتاً.',
+      'لا يحق للطرف الثاني تحويل العقد (تأجير الشقة) إلى شخص آخر.',
+      'في حالة رغبة المستأجر تجديد المدة عليه إشعار الاستقبال بذلك قبل انتهاء المدة بيوم كامل.',
+      'المستأجر ملزم بتسليم الشقة فوراً عند انتهاء مدة العقد وتسليم المفتاح في الحالة التي كانت عليها دون أي تلفيات، وإذا لم يلتزم بالتسليم في موعده فالطرف الأول الحق في فتح الشقة فوراً وله الحق في إزالة أي متعلقات شخصية للمستأجر والتخلص منها فوراً دون أي حق للمستأجر في استردادها.',
+      'يعتبر العقد لاغياً في حالة الإخلال بأحد الشروط المذكورة أو مخالفة الأنظمة وللمسؤول الحق في إلغاء العقد فوراً دون إبداء الأسباب.',
+      'إدراج أسماء وأرقام هويات النزلاء المصاحبين للطرف الثاني بخط يده أسفل التوقيع مع صلة القرابة.',
+      'يكون السعر المدرج في العقد لمدة العقد فقط ويحق للطرف الأول تغيير السعر في حالة رغب الطرف الثاني التمديد.',
+      'لا يحق للمستأجر المطالبة باسترداد أي مبالغ مالية مدفوعة حال المغادرة قبل نهاية المدة المتعاقد عليها.',
+      'اتفق الطرفان إذا خرج الطرف الثاني قبل نهاية المدة فإنه يتم احتساب الأجرة اليومية مبلغ (......ريال).',
+    ];
+
+    // ── Build PDF ────────────────────────────────────────────────
     const W = 595.28, H = 841.89;
-    const MX = 36, MY = 0;
+    const MX = 36;
 
     const pdfBuf = await new Promise((resolve, reject) => {
       const doc = new PDFDocument({ size: 'A4', margin: 0, autoFirstPage: true, info: {
         Title: type === 'contract' ? 'عقد إيجار' : 'محضر استلام المحتويات',
-        Author: 'BAREZ',
-        Creator: 'BAREZ Smart Archive',
+        Author: 'BAREZ', Creator: 'BAREZ Smart Archive',
       }});
 
       if (hasFont) {
@@ -835,147 +854,202 @@ router.post('/api/bookings/:id/documents/generate', reqStaff, async (req, res) =
       doc.on('end',  ()  => resolve(Buffer.concat(chunks)));
       doc.on('error', reject);
 
-      // ── HEADER BAR ────────────────────────────────────────────
-      doc.rect(0, 0, W, 80).fill(NAVY);
-
-      // Logo
-      if (hasLogo) {
-        try { doc.image(LOGO_PATH, MX, 15, { height: 50, fit: [50, 50] }); } catch {}
-      }
-
-      // Title
-      const docTitle = type === 'contract' ? 'عقد إيجار وحدة سكنية' : 'محضر استلام المحتويات';
-      doc.font(FB).fontSize(16).fillColor('#ffffff')
-         .text(docTitle, 0, 22, { width: W, align: 'center' });
-      doc.font(F).fontSize(9).fillColor('#93c5fd')
-         .text('BAREZ | المنارة للخدمات الفندقية', 0, 44, { width: W, align: 'center' });
-
-      // Contract ref + date on header right
       const bkId   = bk._id.toString().slice(-8).toUpperCase();
       const nowStr = new Date().toLocaleDateString('ar-SA', { year:'numeric', month:'2-digit', day:'2-digit' });
-      doc.font(F).fontSize(8).fillColor('#d1d5db')
-         .text('رقم المرجع: BK-' + bkId, W - MX - 120, 20, { width: 120, align: 'right' });
-      doc.font(F).fontSize(8).fillColor('#d1d5db')
-         .text('التاريخ: ' + nowStr, W - MX - 120, 34, { width: 120, align: 'right' });
+      const fmt    = (n) => n != null ? Number(n).toLocaleString('ar-SA') + ' ر.س' : '—';
+      const fmtD   = (d) => d || '—';
+      const idLbl  = { national_id:'هوية وطنية', passport:'جواز سفر', iqama:'إقامة', family_card:'وثيقة عائلة' };
 
-      // ── HELPER: draw section header ───────────────────────────
-      const section = (title, y) => {
-        doc.rect(MX, y, W - 2*MX, 26).fill(ACCENT).fillOpacity(1);
-        doc.font(FB).fontSize(11).fillColor('#ffffff')
-           .text(title, MX, y + 7, { width: W - 2*MX - 8, align: 'right' });
-        return y + 34;
+      // ── Shared helpers ────────────────────────────────────────
+      const drawPageHeader = (title) => {
+        doc.rect(0, 0, W, 78).fill(NAVY);
+        if (hasLogo) try { doc.image(LOGO_PATH, MX, 14, { height: 48, fit: [48, 48] }); } catch {}
+        doc.font(FB).fontSize(15).fillColor('#ffffff')
+           .text(title, 0, 20, { width: W, align: 'center' });
+        doc.font(F).fontSize(8.5).fillColor('#93c5fd')
+           .text('BAREZ | المنارة للخدمات الفندقية', 0, 42, { width: W, align: 'center' });
+        doc.font(F).fontSize(7.5).fillColor('#d1d5db')
+           .text('رقم المرجع: BK-' + bkId, W - MX - 130, 18, { width: 130, align: 'right' })
+           .text('التاريخ: ' + nowStr, W - MX - 130, 32, { width: 130, align: 'right' });
       };
 
-      // ── HELPER: draw table rows ───────────────────────────────
-      const tableRows = (rows, startY) => {
-        const ROW_H    = 24;
-        const TW       = W - 2*MX;
-        const LABEL_W  = 150;
+      const drawPageFooter = (pageNum) => {
+        doc.rect(0, H - 26, W, 26).fill(NAVY);
+        doc.font(F).fontSize(7).fillColor('#9ca3af')
+           .text(
+             `BAREZ Smart Archive  •  صفحة ${pageNum}  •  ${new Date().toISOString().slice(0,10)}`,
+             0, H - 16, { width: W, align: 'center' }
+           );
+      };
+
+      const sectionBar = (title, y) => {
+        doc.rect(MX, y, W - 2*MX, 24).fill(ACCENT);
+        doc.font(FB).fontSize(10.5).fillColor('#ffffff')
+           .text(title, MX + 8, y + 6, { width: W - 2*MX - 16, align: 'right' });
+        return y + 30;
+      };
+
+      const dataTable = (rows, startY) => {
+        const ROW_H   = 25;
+        const TW      = W - 2*MX;
+        const LABEL_W = 155;
         rows.forEach(([label, value], i) => {
-          const y = startY + i * ROW_H;
-          const bg = i % 2 === 0 ? LGRAY : '#ffffff';
-          doc.rect(MX, y, TW, ROW_H).fill(bg).fillOpacity(1);
-          doc.moveTo(MX, y + ROW_H).lineTo(MX + TW, y + ROW_H).stroke(BORDER).strokeColor(BORDER).strokeOpacity(1);
-          // Label (right side)
-          doc.font(FB).fontSize(9.5).fillColor(TEXT1)
-             .text(label, MX + TW - LABEL_W, y + 6, { width: LABEL_W, align: 'right', lineBreak: false });
-          // Divider
-          doc.moveTo(MX + TW - LABEL_W - 4, y + 4).lineTo(MX + TW - LABEL_W - 4, y + ROW_H - 4)
-             .stroke('#d1d5db').strokeColor('#d1d5db').strokeOpacity(0.6);
-          // Value (rest)
-          const val = String(value == null ? '—' : value);
-          doc.font(F).fontSize(9.5).fillColor(TEXT2)
-             .text(val, MX + 4, y + 6, { width: TW - LABEL_W - 16, align: 'right', lineBreak: false });
+          const ry = startY + i * ROW_H;
+          doc.rect(MX, ry, TW, ROW_H).fill(i % 2 === 0 ? LGRAY : '#ffffff');
+          doc.moveTo(MX, ry + ROW_H).lineTo(MX + TW, ry + ROW_H).strokeColor(BORDER).lineWidth(0.5).stroke();
+          // label column (right)
+          doc.font(FB).fontSize(9).fillColor(TEXT1)
+             .text(label, MX + TW - LABEL_W + 4, ry + 7, { width: LABEL_W - 8, align: 'right', lineBreak: false });
+          // vertical divider
+          doc.moveTo(MX + TW - LABEL_W, ry + 3).lineTo(MX + TW - LABEL_W, ry + ROW_H - 3)
+             .strokeColor('#d1d5db').lineWidth(0.5).stroke();
+          // value column (left)
+          doc.font(F).fontSize(9).fillColor(TEXT2)
+             .text(String(value ?? '—'), MX + 6, ry + 7, { width: TW - LABEL_W - 10, align: 'right', lineBreak: false });
         });
-        doc.rect(MX, startY, TW, rows.length * ROW_H).stroke(BORDER).strokeColor(BORDER).strokeOpacity(1);
+        doc.rect(MX, startY, TW, rows.length * ROW_H).strokeColor(BORDER).lineWidth(0.5).stroke();
         return startY + rows.length * ROW_H;
       };
 
-      const fmt = (n) => n != null ? Number(n).toLocaleString('ar-SA') + ' ر.س' : '—';
-      const fmtDate = (d) => d || '—';
-      const idLabel = { national_id:'هوية وطنية', passport:'جواز سفر', iqama:'إقامة', family_card:'وثيقة عائلة' };
+      // ════════════════════════════════════════════════════════
+      // PAGE 1 — Dynamic Data
+      // ════════════════════════════════════════════════════════
+      drawPageHeader(type === 'contract' ? 'عقد إيجار وحدة سكنية' : 'محضر استلام المحتويات');
 
-      let y = 96;
+      let y = 92;
 
-      // ── SECTION 1: Guest ─────────────────────────────────────
-      y = section('بيانات المستأجر', y) - 8;
-      y = tableRows([
-        ['الاسم الكامل',    confirmed.name],
-        ['نوع الهوية',      idLabel[confirmed.idType] || confirmed.idType],
-        ['رقم الهوية',      confirmed.idNumber],
-        ['رقم الجوال',      confirmed.phone],
-      ], y) + 10;
+      y = sectionBar('بيانات المستأجر', y);
+      y = dataTable([
+        ['الاسم الكامل',  confirmed.name],
+        ['نوع الهوية',    idLbl[confirmed.idType] || confirmed.idType || '—'],
+        ['رقم الهوية',    confirmed.idNumber],
+        ['رقم الجوال',    confirmed.phone],
+      ], y) + 14;
 
-      // ── SECTION 2: Unit ──────────────────────────────────────
-      y = section('بيانات الوحدة', y) - 8;
-      y = tableRows([
-        ['رقم الوحدة',      confirmed.apt],
-        ['المجمع السكني',   confirmed.building],
-        ['تاريخ الدخول',    fmtDate(confirmed.checkIn)],
-        ['تاريخ الخروج',    fmtDate(confirmed.checkOut)],
-        ['مدة الإقامة',     confirmed.nights != null ? confirmed.nights + ' ليلة' : null],
-      ], y) + 10;
+      y = sectionBar('بيانات الوحدة السكنية', y);
+      y = dataTable([
+        ['رقم الوحدة',    confirmed.apt],
+        ['المجمع السكني', confirmed.building],
+        ['تاريخ الدخول',  fmtD(confirmed.checkIn)],
+        ['تاريخ الخروج',  fmtD(confirmed.checkOut)],
+        ['مدة الإقامة',   confirmed.nights != null ? confirmed.nights + ' ليلة' : '—'],
+      ], y) + 14;
 
-      // ── SECTION 3: Finance ───────────────────────────────────
-      y = section('البيانات المالية', y) - 8;
-      y = tableRows([
-        ['إجمالي الإيجار',  fmt(confirmed.totalAmount)],
-        ['المبلغ المدفوع',  fmt(confirmed.paidAmount)],
-        ['المبلغ المتبقي',  fmt(confirmed.remaining)],
-      ], y) + 10;
+      y = sectionBar('البيانات المالية', y);
+      y = dataTable([
+        ['إجمالي الإيجار', fmt(confirmed.totalAmount)],
+        ['المبلغ المدفوع', fmt(confirmed.paidAmount)],
+        ['المبلغ المتبقي', fmt(confirmed.remaining)],
+      ], y) + 14;
 
-      // ── SECTION 4: Furniture (if inventory type) ─────────────
       if (type === 'inventory' && confirmed.furniture?.length) {
-        y = section('قائمة المحتويات المستلمة', y) - 8;
-        const furRows = confirmed.furniture.map((item, i) => ['✓ بند ' + (i+1), item]);
-        y = tableRows(furRows, y) + 10;
+        y = sectionBar('قائمة المحتويات المستلمة', y);
+        y = dataTable(confirmed.furniture.map((item, i) => [`البند ${i + 1}`, item]), y) + 14;
       }
 
-      // ── Notes ────────────────────────────────────────────────
       if (confirmed.notes) {
-        y = section('ملاحظات', y) - 8;
-        doc.rect(MX, y, W - 2*MX, 40).fill(LGRAY).fillOpacity(1);
-        doc.font(F).fontSize(9.5).fillColor(TEXT2)
-           .text(confirmed.notes, MX + 8, y + 8, { width: W - 2*MX - 16, align: 'right' });
-        y += 48;
+        y = sectionBar('ملاحظات', y);
+        const notesH = Math.max(44, doc.heightOfString(confirmed.notes, { width: W - 2*MX - 20 }) + 16);
+        doc.rect(MX, y, W - 2*MX, notesH).fill(LGRAY);
+        doc.rect(MX, y, W - 2*MX, notesH).strokeColor(BORDER).lineWidth(0.5).stroke();
+        doc.font(F).fontSize(9).fillColor(TEXT2)
+           .text(confirmed.notes, MX + 10, y + 10, { width: W - 2*MX - 20, align: 'right' });
+        y += notesH + 14;
       }
 
-      // ── SIGNATURES ───────────────────────────────────────────
-      y = Math.max(y, H - 180);
-      const SIG_W = (W - 2*MX - 30) / 2;
+      drawPageFooter(1);
 
-      // Left signature
-      doc.rect(MX, y, SIG_W, 70).stroke('#d1d5db').strokeColor('#d1d5db');
+      // ════════════════════════════════════════════════════════
+      // PAGE 2 — Terms & Conditions + Signatures
+      // ════════════════════════════════════════════════════════
+      doc.addPage({ size: 'A4', margin: 0 });
+      drawPageHeader('الشروط والأحكام');
+
+      y = 92;
+      y = sectionBar('الشروط والأحكام — تُعدّ هذه الشروط جزءاً لا يتجزأ من العقد', y);
+
+      // Render 16 terms with auto page-break before signatures
+      for (let i = 0; i < TERMS.length; i++) {
+        const term   = TERMS[i];
+        const textH  = doc.heightOfString(term, { width: W - 2*MX - 46, align: 'right' });
+        const rowH   = Math.max(22, textH + 10);
+
+        // Page break mid-terms (keep 160px for signatures on last terms page)
+        if (y + rowH > H - (i === TERMS.length - 1 ? 200 : 34)) {
+          drawPageFooter(2);
+          doc.addPage({ size: 'A4', margin: 0 });
+          drawPageHeader('الشروط والأحكام — تابع');
+          y = 92;
+        }
+
+        const bg = i % 2 === 0 ? LGRAY : '#ffffff';
+        doc.rect(MX, y, W - 2*MX, rowH).fill(bg);
+        doc.moveTo(MX, y + rowH).lineTo(MX + (W - 2*MX), y + rowH).strokeColor(BORDER).lineWidth(0.4).stroke();
+
+        // Number badge
+        doc.rect(MX, y, 30, rowH).fill(ACCENT);
+        doc.font(FB).fontSize(8.5).fillColor('#ffffff')
+           .text(String(i + 1), MX, y + (rowH - 10) / 2, { width: 30, align: 'center', lineBreak: false });
+
+        // Term text
+        doc.font(F).fontSize(8.5).fillColor(TEXT1)
+           .text(term, MX + 38, y + 5, { width: W - 2*MX - 46, align: 'right' });
+
+        y += rowH;
+      }
+
+      // Outer border around all terms
+      y += 16;
+
+      // ── Signature boxes ───────────────────────────────────────
+      const SIG_W = (W - 2*MX - 24) / 2;
+
+      // Right box: manager
+      doc.rect(MX + SIG_W + 24, y, SIG_W, 88).strokeColor('#d1d5db').lineWidth(0.8).stroke();
+      doc.font(FB).fontSize(10).fillColor(TEXT1)
+         .text('توقيع المسؤول', MX + SIG_W + 24, y + 8, { width: SIG_W, align: 'center' });
+      doc.font(F).fontSize(8.5).fillColor(TEXT2)
+         .text('الاسم:  ___________________________', MX + SIG_W + 24, y + 30, { width: SIG_W, align: 'center' })
+         .text('التاريخ:  _________________________', MX + SIG_W + 24, y + 50, { width: SIG_W, align: 'center' })
+         .text('التوقيع:  ________________________', MX + SIG_W + 24, y + 68, { width: SIG_W, align: 'center' });
+
+      // Left box: tenant
+      doc.rect(MX, y, SIG_W, 88).strokeColor('#d1d5db').lineWidth(0.8).stroke();
+      doc.font(FB).fontSize(10).fillColor(TEXT1)
+         .text('توقيع المستأجر', MX, y + 8, { width: SIG_W, align: 'center' });
+      doc.font(F).fontSize(8.5).fillColor(TEXT2)
+         .text('الاسم:  ___________________________', MX, y + 30, { width: SIG_W, align: 'center' })
+         .text('التاريخ:  _________________________', MX, y + 50, { width: SIG_W, align: 'center' })
+         .text('التوقيع:  ________________________', MX, y + 68, { width: SIG_W, align: 'center' });
+
+      y += 104;
+
+      // ── Companions box ────────────────────────────────────────
+      doc.rect(MX, y, W - 2*MX, 52).fill(LGRAY);
+      doc.rect(MX, y, W - 2*MX, 52).strokeColor(BORDER).lineWidth(0.5).stroke();
       doc.font(FB).fontSize(9).fillColor(TEXT1)
-         .text('توقيع المستأجر', MX, y + 52, { width: SIG_W, align: 'center' });
+         .text('بيانات المرافقين  (الاسم — رقم الهوية — صلة القرابة)', MX + 10, y + 7, { width: W - 2*MX - 20, align: 'right' });
+      doc.font(F).fontSize(8.5).fillColor('#9ca3af')
+         .text('____________________________________________________________', MX + 10, y + 24, { width: W - 2*MX - 20, align: 'right' })
+         .text('____________________________________________________________', MX + 10, y + 37, { width: W - 2*MX - 20, align: 'right' });
 
-      // Right signature
-      doc.rect(MX + SIG_W + 30, y, SIG_W, 70).stroke('#d1d5db').strokeColor('#d1d5db');
-      doc.font(FB).fontSize(9).fillColor(TEXT1)
-         .text('توقيع الإدارة', MX + SIG_W + 30, y + 52, { width: SIG_W, align: 'center' });
+      drawPageFooter(2);
 
-      doc.font(F).fontSize(8).fillColor('#9ca3af')
-         .text('(يُعدّ هذا العقد ساري المفعول بعد التوقيع من الطرفين)', MX, y + 64, { width: W - 2*MX, align: 'center' });
-
-      // ── FOOTER ───────────────────────────────────────────────
-      doc.rect(0, H - 28, W, 28).fill(NAVY);
-      doc.font(F).fontSize(7.5).fillColor('#9ca3af')
-         .text('BAREZ Smart Archive • وثيقة رقمية معتمدة • ' + new Date().toISOString().slice(0,19).replace('T',' '),
-               0, H - 18, { width: W, align: 'center' });
-
-      // ── ORIGINAL SCAN PAGES (legal proof) ───────────────────
+      // ════════════════════════════════════════════════════════
+      // REMAINING PAGES — Original Scans
+      // ════════════════════════════════════════════════════════
       if (pages?.length) {
         pages.forEach((p, i) => {
           doc.addPage({ size: 'A4', margin: 0 });
-          // Page header
           doc.rect(0, 0, W, 30).fill(NAVY);
           doc.font(FB).fontSize(10).fillColor('#fff')
-             .text('المستند الأصلي الموقّع — صفحة ' + (i+1), 0, 9, { width: W, align: 'center' });
-          // Image
+             .text(`المستند الأصلي الموقّع — صفحة ${i + 1}`, 0, 9, { width: W, align: 'center' });
           try {
             const buf = Buffer.from(p.data, 'base64');
             doc.image(buf, 0, 30, { width: W, height: H - 30, fit: [W, H - 30], align: 'center', valign: 'center' });
-          } catch { doc.font(F).fontSize(10).fillColor('#dc2626').text('فشل تحميل الصفحة ' + (i+1), 20, 50); }
+          } catch {
+            doc.font(F).fontSize(10).fillColor('#dc2626').text(`فشل تحميل الصفحة ${i + 1}`, 20, 50);
+          }
         });
       }
 
