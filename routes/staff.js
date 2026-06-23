@@ -607,7 +607,7 @@ async function driveGetOrCreateFolder(accessToken, name, parentId) {
   return folder.id;
 }
 
-async function uploadToDrive(pdfBuffer, filename, building) {
+async function uploadToDrive(pdfBuffer, filename, building, clientName) {
   const clientId     = process.env.GDRIVE_CLIENT_ID;
   const clientSecret = process.env.GDRIVE_CLIENT_SECRET;
   const refreshToken = process.env.GDRIVE_REFRESH_TOKEN;
@@ -627,10 +627,14 @@ async function uploadToDrive(pdfBuffer, filename, building) {
   const { access_token, error: tokenErr } = await tokenRes.json();
   if (!access_token) throw new Error('Drive token error: ' + tokenErr);
 
-  // 2. Get or create building subfolder
-  const targetFolderId = building
-    ? await driveGetOrCreateFolder(access_token, building, rootFolderId)
-    : rootFolderId;
+  // 2. Get or create building subfolder → client subfolder
+  let targetFolderId = rootFolderId;
+  if (building) {
+    const buildingFolderId = await driveGetOrCreateFolder(access_token, building, rootFolderId);
+    targetFolderId = clientName
+      ? await driveGetOrCreateFolder(access_token, clientName, buildingFolderId)
+      : buildingFolderId;
+  }
 
   // 3. Multipart upload
   const boundary = 'barez_' + Date.now();
@@ -985,7 +989,7 @@ router.post('/api/bookings/:id/documents/generate', reqStaff, async (req, res) =
 
     let pdfUrl;
     try {
-      pdfUrl = await uploadToDrive(pdfBuf, filename, bk.building || null);
+      pdfUrl = await uploadToDrive(pdfBuf, filename, bk.building || null, bk.name || null);
       console.log('[docs] Drive upload OK:', pdfUrl);
     } catch (driveErr) {
       console.error('[docs] Drive error:', driveErr.message);
