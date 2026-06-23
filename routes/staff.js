@@ -586,6 +586,64 @@ router.delete('/api/bookings/:id/payments/:pid', reqStaff, async (req, res) => {
 });
 
 
+// ── Google Drive Upload Helper ─────────────────────────────────
+async function uploadToDrive(pdfBuffer, filename) {
+  const clientId     = process.env.GDRIVE_CLIENT_ID;
+  const clientSecret = process.env.GDRIVE_CLIENT_SECRET;
+  const refreshToken = process.env.GDRIVE_REFRESH_TOKEN;
+  const folderId     = process.env.GDRIVE_FOLDER_ID;
+  if (!clientId || !clientSecret || !refreshToken || !folderId)
+    throw new Error('Google Drive غير مُهيَّأ — أضف GDRIVE_* في Vercel env vars');
+
+  // 1. Get fresh access token
+  const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      client_id: clientId, client_secret: clientSecret,
+      refresh_token: refreshToken, grant_type: 'refresh_token',
+    }),
+  });
+  const { access_token, error: tokenErr } = await tokenRes.json();
+  if (!access_token) throw new Error('Drive token error: ' + tokenErr);
+
+  // 2. Multipart upload
+  const boundary = 'barez_' + Date.now();
+  const meta = JSON.stringify({ name: filename, mimeType: 'application/pdf', parents: [folderId] });
+  const body = Buffer.concat([
+    Buffer.from(`--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${meta}\r\n`),
+    Buffer.from(`--${boundary}\r\nContent-Type: application/pdf\r\n\r\n`),
+    pdfBuffer,
+    Buffer.from(`\r\n--${boundary}--`),
+  ]);
+
+  const upRes = await fetch(
+    'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name',
+    {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${access_token}`,
+        'Content-Type': `multipart/related; boundary="${boundary}"`,
+      },
+      body,
+    }
+  );
+  if (!upRes.ok) {
+    const e = await upRes.json().catch(() => ({}));
+    throw new Error('فشل رفع Drive: ' + (e.error?.message || upRes.status));
+  }
+  const file = await upRes.json();
+
+  // 3. Make file publicly readable (anyone with link)
+  await fetch(`https://www.googleapis.com/drive/v3/files/${file.id}/permissions`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${access_token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ role: 'reader', type: 'anyone' }),
+  });
+
+  return `https://drive.google.com/file/d/${file.id}/view`;
+}
+
 // ── AI Document Parse (Step 1 of 2) ───────────────────────────
 router.post('/api/bookings/:id/documents/parse', reqStaff, async (req, res) => {
   try {
@@ -706,11 +764,7 @@ router.post('/api/bookings/:id/documents/generate', reqStaff, async (req, res) =
     const bk = await B.findById(req.params.id);
     if (!bk) return res.status(404).json({ error: 'الحجز غير موجود' });
 
-    const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
-    const apiKey    = process.env.CLOUDINARY_API_KEY;
-    const apiSecret = process.env.CLOUDINARY_API_SECRET;
-    if (!cloudName || !apiKey || !apiSecret)
-      return res.status(500).json({ error: 'Cloudinary غير مُهيَّأ' });
+    // Google Drive replaces Cloudinary for PDF storage
 
     // ── Font paths ───────────────────────────────────────────────
     const FONT_REG  = path.join(__dirname, '../fonts/Cairo-Regular.ttf');
@@ -899,37 +953,19 @@ router.post('/api/bookings/:id/documents/generate', reqStaff, async (req, res) =
       doc.end();
     });
 
-    // ── Upload to Cloudinary ─────────────────────────────────────
-    const bkId      = bk._id.toString().slice(-8).toUpperCase();
-    const safeName  = (bk.name || 'client').replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_]/g,'').slice(0,15)||'client';
-    const suffix    = type === 'contract' ? 'ctr' : 'inv';
-    const folder    = 'barez/contracts';
-    const pubId     = 'BK' + bkId + '_' + safeName + '_' + suffix + '_premium.pdf';
-    const timestamp = Math.floor(Date.now() / 1000);
-    const toSign    = 'folder=' + folder + '&overwrite=true&public_id=' + pubId + '&timestamp=' + timestamp + apiSecret;
-    const signature = require('crypto').createHash('sha1').update(toSign).digest('hex');
+    // ── Upload to Google Drive ────────────────────────────────────
+    const bkId    = bk._id.toString().slice(-8).toUpperCase();
+    const arLabel = type === 'contract' ? 'عقد_موثق' : 'استلام_محتويات';
+    const filename = `${bk.name||'عميل'}_BK${bkId}_${arLabel}.pdf`;
 
-    const upRes = await fetch('https://api.cloudinary.com/v1_1/' + cloudName + '/raw/upload', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        file: 'data:application/pdf;base64,' + pdfBuf.toString('base64'),
-        api_key: apiKey, timestamp, signature, folder, public_id: pubId, overwrite: true,
-      }),
-    });
-
-    if (!upRes.ok) {
-      const e = await upRes.json().catch(() => ({}));
-      return res.status(500).json({ error: 'فشل رفع PDF: ' + (e.error?.message || upRes.status) });
+    let pdfUrl;
+    try {
+      pdfUrl = await uploadToDrive(pdfBuf, filename);
+      console.log('[docs] Drive upload OK:', pdfUrl);
+    } catch (driveErr) {
+      console.error('[docs] Drive error:', driveErr.message);
+      return res.status(500).json({ error: driveErr.message });
     }
-
-    const upData   = await upRes.json();
-    console.log('[docs] Cloudinary response:', upData.public_id, upData.secure_url);
-    let pdfUrl = upData.secure_url || '';
-    // Cloudinary raw: ensure .pdf in URL so browsers serve correct Content-Type
-    if (pdfUrl && !pdfUrl.endsWith('.pdf')) pdfUrl = pdfUrl + '.pdf';
-    const arLabel  = type === 'contract' ? 'عقد_موثق' : 'استلام_محتويات';
-    const filename = (bk.name||'عميل') + '_BK' + bkId + '_' + arLabel + '.pdf';
     const field    = type === 'contract' ? 'contractDoc' : 'inventoryDoc';
 
     await B.findByIdAndUpdate(req.params.id, {
