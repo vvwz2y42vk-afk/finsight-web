@@ -832,9 +832,9 @@ router.post('/api/bookings/:id/documents/generate', reqStaff, async (req, res) =
       'اتفق الطرفان إذا خرج الطرف الثاني قبل نهاية المدة فإنه يتم احتساب الأجرة اليومية مبلغ (......ريال).',
     ];
 
-    // ── Build PDF ────────────────────────────────────────────────
+    // ── Build Single-Page PDF ────────────────────────────────────
     const W = 595.28, H = 841.89;
-    const MX = 36;
+    const MX = 32;
 
     const pdfBuf = await new Promise((resolve, reject) => {
       const doc = new PDFDocument({ size: 'A4', margin: 0, autoFirstPage: true, info: {
@@ -859,184 +859,192 @@ router.post('/api/bookings/:id/documents/generate', reqStaff, async (req, res) =
       const fmt    = (n) => n != null ? Number(n).toLocaleString('ar-SA') + ' ر.س' : '—';
       const fmtD   = (d) => d || '—';
       const idLbl  = { national_id:'هوية وطنية', passport:'جواز سفر', iqama:'إقامة', family_card:'وثيقة عائلة' };
+      const TW     = W - 2 * MX;
 
-      // ── Shared helpers ────────────────────────────────────────
-      const drawPageHeader = (title) => {
-        doc.rect(0, 0, W, 78).fill(NAVY);
-        if (hasLogo) try { doc.image(LOGO_PATH, MX, 14, { height: 48, fit: [48, 48] }); } catch {}
-        doc.font(FB).fontSize(15).fillColor('#ffffff')
-           .text(title, 0, 20, { width: W, align: 'center' });
-        doc.font(F).fontSize(8.5).fillColor('#93c5fd')
-           .text('BAREZ | المنارة للخدمات الفندقية', 0, 42, { width: W, align: 'center' });
-        doc.font(F).fontSize(7.5).fillColor('#d1d5db')
-           .text('رقم المرجع: BK-' + bkId, W - MX - 130, 18, { width: 130, align: 'right' })
-           .text('التاريخ: ' + nowStr, W - MX - 130, 32, { width: 130, align: 'right' });
+      // ── Section bar ───────────────────────────────────────────
+      const sectionBar = (title, y, h = 20) => {
+        doc.rect(MX, y, TW, h).fill(ACCENT);
+        doc.font(FB).fontSize(9.5).fillColor('#ffffff')
+           .text(title, MX + 6, y + (h - 10) / 2, { width: TW - 12, align: 'right', lineBreak: false });
+        return y + h;
       };
 
-      const drawPageFooter = (pageNum) => {
-        doc.rect(0, H - 26, W, 26).fill(NAVY);
-        doc.font(F).fontSize(7).fillColor('#9ca3af')
-           .text(
-             `BAREZ Smart Archive  •  صفحة ${pageNum}  •  ${new Date().toISOString().slice(0,10)}`,
-             0, H - 16, { width: W, align: 'center' }
-           );
-      };
-
-      const sectionBar = (title, y) => {
-        doc.rect(MX, y, W - 2*MX, 24).fill(ACCENT);
-        doc.font(FB).fontSize(10.5).fillColor('#ffffff')
-           .text(title, MX + 8, y + 6, { width: W - 2*MX - 16, align: 'right' });
-        return y + 30;
-      };
-
-      const dataTable = (rows, startY) => {
-        const ROW_H   = 25;
-        const TW      = W - 2*MX;
-        const LABEL_W = 155;
+      // ── Two-column table ──────────────────────────────────────
+      const twoColTable = (rows, startY, rowH = 21, labelW = 130) => {
         rows.forEach(([label, value], i) => {
-          const ry = startY + i * ROW_H;
-          doc.rect(MX, ry, TW, ROW_H).fill(i % 2 === 0 ? LGRAY : '#ffffff');
-          doc.moveTo(MX, ry + ROW_H).lineTo(MX + TW, ry + ROW_H).strokeColor(BORDER).lineWidth(0.5).stroke();
-          // label column (right)
-          doc.font(FB).fontSize(9).fillColor(TEXT1)
-             .text(label, MX + TW - LABEL_W + 4, ry + 7, { width: LABEL_W - 8, align: 'right', lineBreak: false });
-          // vertical divider
-          doc.moveTo(MX + TW - LABEL_W, ry + 3).lineTo(MX + TW - LABEL_W, ry + ROW_H - 3)
-             .strokeColor('#d1d5db').lineWidth(0.5).stroke();
-          // value column (left)
-          doc.font(F).fontSize(9).fillColor(TEXT2)
-             .text(String(value ?? '—'), MX + 6, ry + 7, { width: TW - LABEL_W - 10, align: 'right', lineBreak: false });
+          const ry = startY + i * rowH;
+          doc.rect(MX, ry, TW, rowH).fill(i % 2 === 0 ? LGRAY : '#ffffff');
+          doc.moveTo(MX, ry + rowH).lineTo(MX + TW, ry + rowH).strokeColor(BORDER).lineWidth(0.4).stroke();
+          doc.font(FB).fontSize(8.5).fillColor(TEXT1)
+             .text(label, MX + TW - labelW + 4, ry + 5, { width: labelW - 8, align: 'right', lineBreak: false });
+          doc.moveTo(MX + TW - labelW, ry + 3).lineTo(MX + TW - labelW, ry + rowH - 3)
+             .strokeColor('#d1d5db').lineWidth(0.4).stroke();
+          doc.font(F).fontSize(8.5).fillColor(TEXT2)
+             .text(String(value ?? '—'), MX + 5, ry + 5, { width: TW - labelW - 8, align: 'right', lineBreak: false });
         });
-        doc.rect(MX, startY, TW, rows.length * ROW_H).strokeColor(BORDER).lineWidth(0.5).stroke();
-        return startY + rows.length * ROW_H;
+        doc.rect(MX, startY, TW, rows.length * rowH).strokeColor(BORDER).lineWidth(0.4).stroke();
+        return startY + rows.length * rowH;
       };
 
       // ════════════════════════════════════════════════════════
-      // PAGE 1 — Dynamic Data
+      // HEADER
       // ════════════════════════════════════════════════════════
-      drawPageHeader(type === 'contract' ? 'عقد إيجار وحدة سكنية' : 'محضر استلام المحتويات');
+      doc.rect(0, 0, W, 62).fill(NAVY);
+      if (hasLogo) try { doc.image(LOGO_PATH, MX, 8, { height: 44, fit: [44, 44] }); } catch {}
 
-      let y = 92;
+      const docTitle = type === 'contract' ? 'عقد إيجار وحدة سكنية' : 'محضر استلام المحتويات';
+      doc.font(FB).fontSize(15).fillColor('#ffffff').text(docTitle, 0, 14, { width: W, align: 'center' });
+      doc.font(F).fontSize(8).fillColor('#93c5fd').text('BAREZ | المنارة للخدمات الفندقية', 0, 34, { width: W, align: 'center' });
+      doc.font(F).fontSize(7).fillColor('#d1d5db')
+         .text('رقم المرجع: BK-' + bkId, W - MX - 115, 12, { width: 115, align: 'right' })
+         .text('التاريخ: ' + nowStr,     W - MX - 115, 24, { width: 115, align: 'right' });
 
-      y = sectionBar('بيانات المستأجر', y);
-      y = dataTable([
-        ['الاسم الكامل',  confirmed.name],
-        ['نوع الهوية',    idLbl[confirmed.idType] || confirmed.idType || '—'],
-        ['رقم الهوية',    confirmed.idNumber],
-        ['رقم الجوال',    confirmed.phone],
-      ], y) + 14;
+      let y = 68;
 
-      y = sectionBar('بيانات الوحدة السكنية', y);
-      y = dataTable([
+      // ════════════════════════════════════════════════════════
+      // TWO-COLUMN LAYOUT: Guest (right) + Unit (left)
+      // ════════════════════════════════════════════════════════
+      const COL_W = (TW - 10) / 2;
+      const COL_R = MX + COL_W + 10; // left column x
+      const COL_L = MX;              // right column x (Arabic RTL: right = اليمين)
+
+      // Section bars
+      doc.rect(COL_R, y, COL_W, 20).fill(ACCENT);
+      doc.font(FB).fontSize(9).fillColor('#fff').text('بيانات المستأجر', COL_R + 4, y + 5, { width: COL_W - 8, align: 'right', lineBreak: false });
+      doc.rect(COL_L, y, COL_W, 20).fill(ACCENT);
+      doc.font(FB).fontSize(9).fillColor('#fff').text('بيانات الوحدة',  COL_L + 4, y + 5, { width: COL_W - 8, align: 'right', lineBreak: false });
+      y += 20;
+
+      const guestRows = [
+        ['الاسم الكامل', confirmed.name],
+        ['نوع الهوية',   idLbl[confirmed.idType] || confirmed.idType || '—'],
+        ['رقم الهوية',   confirmed.idNumber],
+        ['رقم الجوال',   confirmed.phone],
+      ];
+      const unitRows = [
         ['رقم الوحدة',    confirmed.apt],
         ['المجمع السكني', confirmed.building],
         ['تاريخ الدخول',  fmtD(confirmed.checkIn)],
         ['تاريخ الخروج',  fmtD(confirmed.checkOut)],
-        ['مدة الإقامة',   confirmed.nights != null ? confirmed.nights + ' ليلة' : '—'],
-      ], y) + 14;
+      ];
+      const COL_ROW_H = 21;
+      const LBL_W    = 90;
 
-      y = sectionBar('البيانات المالية', y);
-      y = dataTable([
-        ['إجمالي الإيجار', fmt(confirmed.totalAmount)],
-        ['المبلغ المدفوع', fmt(confirmed.paidAmount)],
+      // Draw guest rows (right column)
+      guestRows.forEach(([label, value], i) => {
+        const ry = y + i * COL_ROW_H;
+        doc.rect(COL_R, ry, COL_W, COL_ROW_H).fill(i % 2 === 0 ? LGRAY : '#ffffff');
+        doc.moveTo(COL_R, ry + COL_ROW_H).lineTo(COL_R + COL_W, ry + COL_ROW_H).strokeColor(BORDER).lineWidth(0.4).stroke();
+        doc.font(FB).fontSize(8).fillColor(TEXT1).text(label, COL_R + COL_W - LBL_W + 3, ry + 5, { width: LBL_W - 6, align: 'right', lineBreak: false });
+        doc.moveTo(COL_R + COL_W - LBL_W, ry + 2).lineTo(COL_R + COL_W - LBL_W, ry + COL_ROW_H - 2).strokeColor('#d1d5db').lineWidth(0.4).stroke();
+        doc.font(F).fontSize(8).fillColor(TEXT2).text(String(value ?? '—'), COL_R + 3, ry + 5, { width: COL_W - LBL_W - 6, align: 'right', lineBreak: false });
+      });
+      doc.rect(COL_R, y, COL_W, guestRows.length * COL_ROW_H).strokeColor(BORDER).lineWidth(0.4).stroke();
+
+      // Draw unit rows (left column)
+      unitRows.forEach(([label, value], i) => {
+        const ry = y + i * COL_ROW_H;
+        doc.rect(COL_L, ry, COL_W, COL_ROW_H).fill(i % 2 === 0 ? LGRAY : '#ffffff');
+        doc.moveTo(COL_L, ry + COL_ROW_H).lineTo(COL_L + COL_W, ry + COL_ROW_H).strokeColor(BORDER).lineWidth(0.4).stroke();
+        doc.font(FB).fontSize(8).fillColor(TEXT1).text(label, COL_L + COL_W - LBL_W + 3, ry + 5, { width: LBL_W - 6, align: 'right', lineBreak: false });
+        doc.moveTo(COL_L + COL_W - LBL_W, ry + 2).lineTo(COL_L + COL_W - LBL_W, ry + COL_ROW_H - 2).strokeColor('#d1d5db').lineWidth(0.4).stroke();
+        doc.font(F).fontSize(8).fillColor(TEXT2).text(String(value ?? '—'), COL_L + 3, ry + 5, { width: COL_W - LBL_W - 6, align: 'right', lineBreak: false });
+      });
+      doc.rect(COL_L, y, COL_W, unitRows.length * COL_ROW_H).strokeColor(BORDER).lineWidth(0.4).stroke();
+
+      y += Math.max(guestRows.length, unitRows.length) * COL_ROW_H + 8;
+
+      // ════════════════════════════════════════════════════════
+      // FINANCIALS — full width, 3 cols (total | paid | remaining)
+      // ════════════════════════════════════════════════════════
+      y = sectionBar('البيانات المالية', y, 20);
+      const F3W = TW / 3;
+      const finCols = [
         ['المبلغ المتبقي', fmt(confirmed.remaining)],
-      ], y) + 14;
+        ['المبلغ المدفوع', fmt(confirmed.paidAmount)],
+        ['إجمالي الإيجار', fmt(confirmed.totalAmount)],
+      ];
+      finCols.forEach(([label, value], i) => {
+        const fx = MX + i * F3W;
+        doc.rect(fx, y, F3W, 38).fill(i === 2 ? '#eff6ff' : i === 0 ? '#fef9f0' : LGRAY);
+        if (i < 2) doc.moveTo(fx + F3W, y + 4).lineTo(fx + F3W, y + 34).strokeColor(BORDER).lineWidth(0.4).stroke();
+        doc.font(FB).fontSize(8).fillColor(TEXT2).text(label, fx + 2, y + 6, { width: F3W - 4, align: 'center', lineBreak: false });
+        doc.font(FB).fontSize(13).fillColor(i === 2 ? ACCENT : i === 0 ? GOLD : TEXT1)
+           .text(value, fx + 2, y + 18, { width: F3W - 4, align: 'center', lineBreak: false });
+      });
+      doc.rect(MX, y, TW, 38).strokeColor(BORDER).lineWidth(0.4).stroke();
+      y += 46;
 
+      // ── Duration pill ─────────────────────────────────────────
+      if (confirmed.nights != null) {
+        const pill = `مدة الإقامة: ${confirmed.nights} ليلة`;
+        doc.rect(MX, y, TW, 18).fill('#f0f9ff');
+        doc.rect(MX, y, TW, 18).strokeColor('#bfdbfe').lineWidth(0.4).stroke();
+        doc.font(F).fontSize(8.5).fillColor(ACCENT).text(pill, MX + 4, y + 4, { width: TW - 8, align: 'center', lineBreak: false });
+        y += 24;
+      }
+
+      // ── Furniture (inventory) ─────────────────────────────────
       if (type === 'inventory' && confirmed.furniture?.length) {
-        y = sectionBar('قائمة المحتويات المستلمة', y);
-        y = dataTable(confirmed.furniture.map((item, i) => [`البند ${i + 1}`, item]), y) + 14;
+        y = sectionBar('قائمة المحتويات المستلمة', y, 20);
+        y = twoColTable(confirmed.furniture.map((item, i) => [`البند ${i + 1}`, item]), y, 19, 80) + 6;
       }
 
+      // ── Notes ─────────────────────────────────────────────────
       if (confirmed.notes) {
-        y = sectionBar('ملاحظات', y);
-        const notesH = Math.max(44, doc.heightOfString(confirmed.notes, { width: W - 2*MX - 20 }) + 16);
-        doc.rect(MX, y, W - 2*MX, notesH).fill(LGRAY);
-        doc.rect(MX, y, W - 2*MX, notesH).strokeColor(BORDER).lineWidth(0.5).stroke();
-        doc.font(F).fontSize(9).fillColor(TEXT2)
-           .text(confirmed.notes, MX + 10, y + 10, { width: W - 2*MX - 20, align: 'right' });
-        y += notesH + 14;
+        y = sectionBar('ملاحظات', y, 20);
+        const nh = Math.max(30, doc.heightOfString(confirmed.notes, { width: TW - 16 }) + 12);
+        doc.rect(MX, y, TW, nh).fill(LGRAY);
+        doc.rect(MX, y, TW, nh).strokeColor(BORDER).lineWidth(0.4).stroke();
+        doc.font(F).fontSize(8.5).fillColor(TEXT2).text(confirmed.notes, MX + 8, y + 8, { width: TW - 16, align: 'right' });
+        y += nh + 6;
       }
 
-      drawPageFooter(1);
+      // ── Terms notice strip ────────────────────────────────────
+      doc.rect(MX, y, TW, 16).fill('#fef3c7');
+      doc.rect(MX, y, TW, 16).strokeColor('#fcd34d').lineWidth(0.4).stroke();
+      doc.font(F).fontSize(7.5).fillColor('#92400e')
+         .text('بالتوقيع أدناه يُقرّ المستأجر بقراءة وقبول جميع الشروط والأحكام المرفقة مع هذا العقد.',
+               MX + 6, y + 3, { width: TW - 12, align: 'right', lineBreak: false });
+      y += 22;
 
       // ════════════════════════════════════════════════════════
-      // PAGE 2 — Terms & Conditions + Signatures
+      // SIGNATURES
       // ════════════════════════════════════════════════════════
-      doc.addPage({ size: 'A4', margin: 0 });
-      drawPageHeader('الشروط والأحكام');
+      const SIG_W  = (TW - 16) / 2;
+      const SIG_H  = 82;
+      const sigY   = H - 26 - SIG_H - 10; // pin to bottom above footer
 
-      y = 92;
-      y = sectionBar('الشروط والأحكام — تُعدّ هذه الشروط جزءاً لا يتجزأ من العقد', y);
+      // Right: manager
+      doc.rect(MX + SIG_W + 16, sigY, SIG_W, SIG_H).fill(LGRAY);
+      doc.rect(MX + SIG_W + 16, sigY, SIG_W, SIG_H).strokeColor('#d1d5db').lineWidth(0.6).stroke();
+      doc.font(FB).fontSize(9.5).fillColor(TEXT1)
+         .text('توقيع المسؤول', MX + SIG_W + 16, sigY + 7, { width: SIG_W, align: 'center' });
+      doc.moveTo(MX + SIG_W + 16, sigY + 22).lineTo(MX + SIG_W + 16 + SIG_W, sigY + 22).strokeColor(BORDER).lineWidth(0.4).stroke();
+      doc.font(F).fontSize(8).fillColor(TEXT2)
+         .text('الاسم:  _______________________', MX + SIG_W + 16, sigY + 28, { width: SIG_W, align: 'center' })
+         .text('التاريخ:  _____________________', MX + SIG_W + 16, sigY + 44, { width: SIG_W, align: 'center' })
+         .text('التوقيع:  ____________________', MX + SIG_W + 16, sigY + 60, { width: SIG_W, align: 'center' });
 
-      // Render 16 terms with auto page-break before signatures
-      for (let i = 0; i < TERMS.length; i++) {
-        const term   = TERMS[i];
-        const textH  = doc.heightOfString(term, { width: W - 2*MX - 46, align: 'right' });
-        const rowH   = Math.max(22, textH + 10);
+      // Left: tenant
+      doc.rect(MX, sigY, SIG_W, SIG_H).fill(LGRAY);
+      doc.rect(MX, sigY, SIG_W, SIG_H).strokeColor('#d1d5db').lineWidth(0.6).stroke();
+      doc.font(FB).fontSize(9.5).fillColor(TEXT1)
+         .text('توقيع المستأجر', MX, sigY + 7, { width: SIG_W, align: 'center' });
+      doc.moveTo(MX, sigY + 22).lineTo(MX + SIG_W, sigY + 22).strokeColor(BORDER).lineWidth(0.4).stroke();
+      doc.font(F).fontSize(8).fillColor(TEXT2)
+         .text('الاسم:  _______________________', MX, sigY + 28, { width: SIG_W, align: 'center' })
+         .text('التاريخ:  _____________________', MX, sigY + 44, { width: SIG_W, align: 'center' })
+         .text('التوقيع:  ____________________', MX, sigY + 60, { width: SIG_W, align: 'center' });
 
-        // Page break mid-terms (keep 160px for signatures on last terms page)
-        if (y + rowH > H - (i === TERMS.length - 1 ? 200 : 34)) {
-          drawPageFooter(2);
-          doc.addPage({ size: 'A4', margin: 0 });
-          drawPageHeader('الشروط والأحكام — تابع');
-          y = 92;
-        }
-
-        const bg = i % 2 === 0 ? LGRAY : '#ffffff';
-        doc.rect(MX, y, W - 2*MX, rowH).fill(bg);
-        doc.moveTo(MX, y + rowH).lineTo(MX + (W - 2*MX), y + rowH).strokeColor(BORDER).lineWidth(0.4).stroke();
-
-        // Number badge
-        doc.rect(MX, y, 30, rowH).fill(ACCENT);
-        doc.font(FB).fontSize(8.5).fillColor('#ffffff')
-           .text(String(i + 1), MX, y + (rowH - 10) / 2, { width: 30, align: 'center', lineBreak: false });
-
-        // Term text
-        doc.font(F).fontSize(8.5).fillColor(TEXT1)
-           .text(term, MX + 38, y + 5, { width: W - 2*MX - 46, align: 'right' });
-
-        y += rowH;
-      }
-
-      // Outer border around all terms
-      y += 16;
-
-      // ── Signature boxes ───────────────────────────────────────
-      const SIG_W = (W - 2*MX - 24) / 2;
-
-      // Right box: manager
-      doc.rect(MX + SIG_W + 24, y, SIG_W, 88).strokeColor('#d1d5db').lineWidth(0.8).stroke();
-      doc.font(FB).fontSize(10).fillColor(TEXT1)
-         .text('توقيع المسؤول', MX + SIG_W + 24, y + 8, { width: SIG_W, align: 'center' });
-      doc.font(F).fontSize(8.5).fillColor(TEXT2)
-         .text('الاسم:  ___________________________', MX + SIG_W + 24, y + 30, { width: SIG_W, align: 'center' })
-         .text('التاريخ:  _________________________', MX + SIG_W + 24, y + 50, { width: SIG_W, align: 'center' })
-         .text('التوقيع:  ________________________', MX + SIG_W + 24, y + 68, { width: SIG_W, align: 'center' });
-
-      // Left box: tenant
-      doc.rect(MX, y, SIG_W, 88).strokeColor('#d1d5db').lineWidth(0.8).stroke();
-      doc.font(FB).fontSize(10).fillColor(TEXT1)
-         .text('توقيع المستأجر', MX, y + 8, { width: SIG_W, align: 'center' });
-      doc.font(F).fontSize(8.5).fillColor(TEXT2)
-         .text('الاسم:  ___________________________', MX, y + 30, { width: SIG_W, align: 'center' })
-         .text('التاريخ:  _________________________', MX, y + 50, { width: SIG_W, align: 'center' })
-         .text('التوقيع:  ________________________', MX, y + 68, { width: SIG_W, align: 'center' });
-
-      y += 104;
-
-      // ── Companions box ────────────────────────────────────────
-      doc.rect(MX, y, W - 2*MX, 52).fill(LGRAY);
-      doc.rect(MX, y, W - 2*MX, 52).strokeColor(BORDER).lineWidth(0.5).stroke();
-      doc.font(FB).fontSize(9).fillColor(TEXT1)
-         .text('بيانات المرافقين  (الاسم — رقم الهوية — صلة القرابة)', MX + 10, y + 7, { width: W - 2*MX - 20, align: 'right' });
-      doc.font(F).fontSize(8.5).fillColor('#9ca3af')
-         .text('____________________________________________________________', MX + 10, y + 24, { width: W - 2*MX - 20, align: 'right' })
-         .text('____________________________________________________________', MX + 10, y + 37, { width: W - 2*MX - 20, align: 'right' });
-
-      drawPageFooter(2);
+      // ── Footer ───────────────────────────────────────────────
+      doc.rect(0, H - 26, W, 26).fill(NAVY);
+      doc.font(F).fontSize(7).fillColor('#9ca3af')
+         .text(`BAREZ Smart Archive  •  BK-${bkId}  •  ${new Date().toISOString().slice(0,10)}`,
+               0, H - 16, { width: W, align: 'center' });
 
       // ════════════════════════════════════════════════════════
-      // REMAINING PAGES — Original Scans
+      // EXTRA PAGES — Original Scans (if uploaded)
       // ════════════════════════════════════════════════════════
       if (pages?.length) {
         pages.forEach((p, i) => {
