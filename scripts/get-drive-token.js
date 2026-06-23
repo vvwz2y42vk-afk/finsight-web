@@ -12,7 +12,7 @@
 const http = require('http');
 const { exec } = require('child_process');
 
-const CLIENT_ID     = process.env.GDRIVE_CLIENT_ID     || '73139913910-3c563a6idbli5k4hucsdk2qv17rmortu.apps.googleusercontent.com';
+const CLIENT_ID     = process.env.GDRIVE_CLIENT_ID     || '739139913910-3c563a6idbli5k4hucsdk2qv17rmortu.apps.googleusercontent.com';
 const CLIENT_SECRET = process.env.GDRIVE_CLIENT_SECRET || '';
 const REDIRECT_URI  = 'http://localhost:3001/callback';
 const SCOPE         = 'https://www.googleapis.com/auth/drive.file';
