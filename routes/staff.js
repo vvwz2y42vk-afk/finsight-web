@@ -587,12 +587,32 @@ router.delete('/api/bookings/:id/payments/:pid', reqStaff, async (req, res) => {
 
 
 // ── Google Drive Upload Helper ─────────────────────────────────
-async function uploadToDrive(pdfBuffer, filename) {
+
+async function driveGetOrCreateFolder(accessToken, name, parentId) {
+  // Search for existing folder with this name under parentId
+  const q = encodeURIComponent(`name='${name}' and mimeType='application/vnd.google-apps.folder' and '${parentId}' in parents and trashed=false`);
+  const searchRes = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id)&pageSize=1`, {
+    headers: { 'Authorization': `Bearer ${accessToken}` },
+  });
+  const { files } = await searchRes.json();
+  if (files?.length) return files[0].id;
+
+  // Create folder
+  const createRes = await fetch('https://www.googleapis.com/drive/v3/files?fields=id', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, mimeType: 'application/vnd.google-apps.folder', parents: [parentId] }),
+  });
+  const folder = await createRes.json();
+  return folder.id;
+}
+
+async function uploadToDrive(pdfBuffer, filename, building) {
   const clientId     = process.env.GDRIVE_CLIENT_ID;
   const clientSecret = process.env.GDRIVE_CLIENT_SECRET;
   const refreshToken = process.env.GDRIVE_REFRESH_TOKEN;
-  const folderId     = process.env.GDRIVE_FOLDER_ID;
-  if (!clientId || !clientSecret || !refreshToken || !folderId)
+  const rootFolderId = process.env.GDRIVE_FOLDER_ID;
+  if (!clientId || !clientSecret || !refreshToken || !rootFolderId)
     throw new Error('Google Drive غير مُهيَّأ — أضف GDRIVE_* في Vercel env vars');
 
   // 1. Get fresh access token
@@ -607,9 +627,14 @@ async function uploadToDrive(pdfBuffer, filename) {
   const { access_token, error: tokenErr } = await tokenRes.json();
   if (!access_token) throw new Error('Drive token error: ' + tokenErr);
 
-  // 2. Multipart upload
+  // 2. Get or create building subfolder
+  const targetFolderId = building
+    ? await driveGetOrCreateFolder(access_token, building, rootFolderId)
+    : rootFolderId;
+
+  // 3. Multipart upload
   const boundary = 'barez_' + Date.now();
-  const meta = JSON.stringify({ name: filename, mimeType: 'application/pdf', parents: [folderId] });
+  const meta = JSON.stringify({ name: filename, mimeType: 'application/pdf', parents: [targetFolderId] });
   const body = Buffer.concat([
     Buffer.from(`--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${meta}\r\n`),
     Buffer.from(`--${boundary}\r\nContent-Type: application/pdf\r\n\r\n`),
@@ -634,7 +659,7 @@ async function uploadToDrive(pdfBuffer, filename) {
   }
   const file = await upRes.json();
 
-  // 3. Make file publicly readable (anyone with link)
+  // 4. Make file publicly readable (anyone with link)
   await fetch(`https://www.googleapis.com/drive/v3/files/${file.id}/permissions`, {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${access_token}`, 'Content-Type': 'application/json' },
@@ -960,7 +985,7 @@ router.post('/api/bookings/:id/documents/generate', reqStaff, async (req, res) =
 
     let pdfUrl;
     try {
-      pdfUrl = await uploadToDrive(pdfBuf, filename);
+      pdfUrl = await uploadToDrive(pdfBuf, filename, bk.building || null);
       console.log('[docs] Drive upload OK:', pdfUrl);
     } catch (driveErr) {
       console.error('[docs] Drive error:', driveErr.message);
