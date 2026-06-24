@@ -1,6 +1,6 @@
 ﻿const express = require('express');
 const router = express.Router();
-const Contract = require('../models/Contract');
+const Booking = require('../models/Booking');
 
 async function sendEmail(subject, html) {
   if (!process.env.RESEND_API_KEY) return;
@@ -31,29 +31,28 @@ const totalUnits = Object.keys(BUILDINGS).reduce((s, b) => s + countApts(b), 0);
 
 router.get('/', async (req, res) => {
   try {
-    const contracts = await Contract.find({ n: { $exists: true, $ne: '' } }).lean();
-    const active = contracts.filter(c => c.st !== 'مغلق');
-    const occupied = new Set(active.map(c => `${c.sheet}-${c.a}`));
+    const active = await Booking.find({
+      status: { $in: ['awaiting_checkin', 'active'] },
+      building: { $exists: true, $ne: null },
+      propertyId: null,
+    }, 'building apt').lean();
+    const occupied = new Set(active.map(b => `${b.building}-${b.apt}`));
     const freeCount = totalUnits - occupied.size;
     res.render('index', {
-      stats: {
-        totalContracts: contracts.length,
-        buildings: 4,
-        totalUnits,
-        freeUnits: freeCount,
-      }
+      stats: { buildings: 4, totalUnits, freeUnits: freeCount },
     });
-  } catch (e) { res.render('index', { stats: { totalContracts: 0, buildings: 4, totalUnits, freeUnits: 0 } }); }
+  } catch (e) { res.render('index', { stats: { buildings: 4, totalUnits, freeUnits: 0 } }); }
 });
 
 router.get('/apartments', async (req, res) => {
   try {
     const filter = req.query.building || '';
-    const active = await Contract.find(
-      { st: { $in: ['مفتوح', 'بانتظار دخول العميل'] }, n: { $exists: true, $ne: '' } },
-      'sheet a'
-    ).lean();
-    const occupiedSet = new Set(active.map(c => `${c.sheet}-${c.a}`));
+    const active = await Booking.find({
+      status: { $in: ['awaiting_checkin', 'active'] },
+      building: { $exists: true, $ne: null },
+      propertyId: null,
+    }, 'building apt').lean();
+    const occupiedSet = new Set(active.map(b => `${b.building}-${b.apt}`));
 
     const result = {};
     const targets = filter ? [filter] : Object.keys(BUILDINGS);
