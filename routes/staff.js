@@ -564,8 +564,9 @@ router.delete('/api/bookings/:id/payments/:pid', reqStaff, async (req, res) => {
   if (req.staff.role !== 'manager')
     return res.status(403).json({ error: 'حذف الدفعات للمديرين فقط' });
   try {
-    const B = require('../models/Booking');
-    const V = require('../models/Voucher');
+    const B  = require('../models/Booking');
+    const V  = require('../models/Voucher');
+    const AL = require('../models/ActivityLog');
     const bkFilter = req.staff.propertyId
       ? { _id: req.params.id, propertyId: req.staff.propertyId }
       : { _id: req.params.id, building: req.staff.building, propertyId: null };
@@ -575,12 +576,29 @@ router.delete('/api/bookings/:id/payments/:pid', reqStaff, async (req, res) => {
     const pay = bk.payments.id(req.params.pid);
     if (!pay) return res.status(404).json({ error: 'الدفعة غير موجودة' });
 
+    const deletedAmount  = pay.amount;
+    const deletedMethod  = pay.paymentMethod || 'cash';
+    const deletedIsDeposit = pay.isDeposit;
+    const paidBefore     = bk.paidAmount;
+
     if (pay.voucherId) {
       await V.findByIdAndDelete(pay.voucherId).catch(() => {});
     }
     bk.payments.pull(req.params.pid);
     bk.paidAmount = bk.payments.reduce((s, p) => s + (p.amount || 0), 0);
     await bk.save();
+
+    AL.create({
+      building: bk.building,
+      staffName: req.staff.name,
+      action: 'payment_delete',
+      apt: bk.apt,
+      guestName: bk.name,
+      bookingId: bk._id,
+      propertyId: bk.propertyId || null,
+      details: `حذف دفعة ${deletedAmount} ريال (${deletedMethod}${deletedIsDeposit ? ' — تأمين' : ''}) | المدفوع: ${paidBefore} → ${bk.paidAmount}`,
+    }).catch(() => {});
+
     res.json({ success: true, paidAmount: bk.paidAmount });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
@@ -1678,6 +1696,18 @@ router.put('/api/housekeeping/:apt', reqStaff, async (req,res) => {
     AL.create({building:req.staff.building,staffName:req.staff.name,action:'housekeeping',apt:req.params.apt,details:status,propertyId:pid}).catch(()=>{});
     res.json({success:true});
   } catch(e){ res.status(500).json({error:e.message}); }
+});
+
+// ── API: Financial Log per Booking ────────────────────────
+router.get('/api/bookings/:id/financial-log', reqStaff, async (req, res) => {
+  try {
+    const AL = require('../models/ActivityLog');
+    const entries = await AL.find({
+      bookingId: req.params.id,
+      action: { $in: ['payment_add', 'payment_delete', 'booking_edit'] },
+    }).sort({ createdAt: -1 }).limit(50).lean();
+    res.json(entries);
+  } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
 // ── API: Activity Log ─────────────────────────────────────
