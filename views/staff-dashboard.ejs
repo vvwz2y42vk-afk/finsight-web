@@ -2304,21 +2304,37 @@ button,.apt,.sn,.ia,.af,.tab-btn,.pager-btn,[onclick]{touch-action:manipulation;
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
             <!-- عقد الإيجار -->
             <div style="border:1.5px solid #dbeafe;border-radius:12px;padding:12px;background:#f8faff;">
-              <div style="font-size:10px;font-weight:800;color:#1d4ed8;margin-bottom:10px;">📄 عقد الإيجار</div>
-              <div id="doc-contract-preview" style="margin-bottom:8px;min-height:32px;"></div>
-              <button onclick="generateContractDirect('contract')" style="width:100%;padding:10px;background:linear-gradient(135deg,#1d4ed8,#1e40af);color:#fff;border:none;border-radius:9px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">
-                📄 إنشاء عقد من البيانات المدخلة
+              <div style="font-size:10px;font-weight:800;color:#1d4ed8;margin-bottom:8px;">📄 عقد الإيجار</div>
+              <div id="doc-contract-preview" style="margin-bottom:8px;min-height:28px;"></div>
+              <button onclick="generateContractDirect('contract')" style="width:100%;padding:9px;background:linear-gradient(135deg,#1d4ed8,#1e40af);color:#fff;border:none;border-radius:9px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;margin-bottom:6px;">
+                📄 إنشاء عقد من البيانات
               </button>
-              <div id="doc-contract-direct-status" style="margin-top:6px;"></div>
+              <div style="border-top:1px dashed #bfdbfe;padding-top:7px;margin-top:2px;">
+                <div style="font-size:10px;color:#64748b;margin-bottom:5px;text-align:center;">أو صوّر العقد الورقي</div>
+                <input type="file" id="photo-contract-file" accept="image/*" multiple capture="environment" style="display:none;" onchange="onPhotoFiles(this,'contract')">
+                <div id="photo-contract-thumbs" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:5px;"></div>
+                <button onclick="document.getElementById('photo-contract-file').click()" style="width:100%;padding:7px;background:#eff6ff;color:#1d4ed8;border:1.5px dashed #93c5fd;border-radius:8px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;">📷 تصوير</button>
+                <button id="photo-contract-upload-btn" onclick="uploadPhotos('contract')" style="display:none;width:100%;margin-top:5px;padding:7px;background:#1d4ed8;color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">⬆ رفع الصور</button>
+                <div id="photo-contract-status" style="margin-top:5px;"></div>
+              </div>
+              <div id="doc-contract-direct-status" style="margin-top:4px;"></div>
             </div>
             <!-- محضر الاستلام -->
             <div style="border:1.5px solid #d1fae5;border-radius:12px;padding:12px;background:#f0fdf8;">
-              <div style="font-size:10px;font-weight:800;color:#065f46;margin-bottom:10px;">📋 محضر استلام المحتويات</div>
-              <div id="doc-inventory-preview" style="margin-bottom:8px;min-height:32px;"></div>
-              <button onclick="generateContractDirect('inventory')" style="width:100%;padding:10px;background:linear-gradient(135deg,#059669,#047857);color:#fff;border:none;border-radius:9px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">
-                📋 إنشاء محضر من البيانات المدخلة
+              <div style="font-size:10px;font-weight:800;color:#065f46;margin-bottom:8px;">📋 محضر الاستلام</div>
+              <div id="doc-inventory-preview" style="margin-bottom:8px;min-height:28px;"></div>
+              <button onclick="generateContractDirect('inventory')" style="width:100%;padding:9px;background:linear-gradient(135deg,#059669,#047857);color:#fff;border:none;border-radius:9px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;margin-bottom:6px;">
+                📋 إنشاء محضر من البيانات
               </button>
-              <div id="doc-inventory-direct-status" style="margin-top:6px;"></div>
+              <div style="border-top:1px dashed #6ee7b7;padding-top:7px;margin-top:2px;">
+                <div style="font-size:10px;color:#64748b;margin-bottom:5px;text-align:center;">أو صوّر محضر الاستلام</div>
+                <input type="file" id="photo-inventory-file" accept="image/*" multiple capture="environment" style="display:none;" onchange="onPhotoFiles(this,'inventory')">
+                <div id="photo-inventory-thumbs" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:5px;"></div>
+                <button onclick="document.getElementById('photo-inventory-file').click()" style="width:100%;padding:7px;background:#f0fdf4;color:#065f46;border:1.5px dashed #6ee7b7;border-radius:8px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;">📷 تصوير</button>
+                <button id="photo-inventory-upload-btn" onclick="uploadPhotos('inventory')" style="display:none;width:100%;margin-top:5px;padding:7px;background:#059669;color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;">⬆ رفع الصور</button>
+                <div id="photo-inventory-status" style="margin-top:5px;"></div>
+              </div>
+              <div id="doc-inventory-direct-status" style="margin-top:4px;"></div>
             </div>
           </div>
         </div>
@@ -5633,6 +5649,65 @@ function _renderDocThumbs(type) {
   if (st && pages.length) st.innerHTML = `<div style="font-size:10px;color:#64748b;">✓ ${pages.length} صورة جاهزة للرفع</div>`;
 }
 
+// ── Photo upload (no AI) ─────────────────────────────────────────
+const _photoPages = { contract: [], inventory: [] };
+
+function onPhotoFiles(input, type) {
+  const files = Array.from(input.files);
+  if (!files.length) return;
+  const thumbsEl = document.getElementById(`photo-${type}-thumbs`);
+  const uploadBtn = document.getElementById(`photo-${type}-upload-btn`);
+  files.forEach(f => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      _photoPages[type].push({ data: e.target.result.split(',')[1], mime: f.type || 'image/jpeg' });
+      if (thumbsEl) {
+        const img = document.createElement('img');
+        img.src = e.target.result;
+        img.style.cssText = 'width:44px;height:56px;object-fit:cover;border-radius:6px;border:1.5px solid #e2e8f0;';
+        thumbsEl.appendChild(img);
+      }
+      if (uploadBtn && _photoPages[type].length) uploadBtn.style.display = 'block';
+    };
+    reader.readAsDataURL(f);
+  });
+  input.value = '';
+}
+
+async function uploadPhotos(type) {
+  if (!editBkId) { toast('افتح الحجز أولاً', 'error'); return; }
+  const pages = _photoPages[type];
+  if (!pages.length) { toast('اختر صورة أولاً', 'error'); return; }
+  const st  = document.getElementById(`photo-${type}-status`);
+  const btn = document.getElementById(`photo-${type}-upload-btn`);
+  if (st) st.innerHTML = '<div style="font-size:10px;color:#64748b;">⏳ جاري الرفع...</div>';
+  if (btn) btn.disabled = true;
+  try {
+    const r = await fetch(`/staff/api/bookings/${editBkId}/upload-photos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type, pages }),
+    });
+    const d = await r.json();
+    if (!r.ok || !d.success) throw new Error(d.error || 'فشل الرفع');
+    _photoPages[type] = [];
+    const thumbsEl = document.getElementById(`photo-${type}-thumbs`);
+    if (thumbsEl) thumbsEl.innerHTML = '';
+    if (btn) { btn.style.display = 'none'; btn.disabled = false; }
+    const pre = document.getElementById(`doc-${type}-preview`);
+    if (pre) pre.innerHTML = `<a href="${d.url}" target="_blank" style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:#dcfce7;border:1px solid #86efac;border-radius:8px;text-decoration:none;font-size:11px;font-weight:700;color:#065f46;">
+      <span>📄</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.filename||'وثيقة.pdf'}</span><span style="flex-shrink:0;font-weight:400;color:#16a34a;">عرض</span>
+    </a>`;
+    if (st) st.innerHTML = '';
+    toast('تم رفع الصور بنجاح ✅', 'success');
+    if (typeof loadBkDocs === 'function') loadBkDocs(editBkId);
+  } catch (e) {
+    if (st) st.innerHTML = `<div style="font-size:10px;color:#dc2626;">❌ ${e.message}</div>`;
+    if (btn) btn.disabled = false;
+    toast(e.message, 'error');
+  }
+}
+
 async function generateContractDirect(type) {
   if (!editBkId) { toast('افتح الحجز أولاً', 'error'); return; }
   const statusEl = document.getElementById(`doc-${type}-direct-status`);
@@ -5773,11 +5848,15 @@ function _onDocGenerated(type, bookingId, url, filename, pages) {
 
 function _resetDocs() {
   _docPages = { contract: [], inventory: [] };
+  if (typeof _photoPages !== 'undefined') { _photoPages.contract = []; _photoPages.inventory = []; }
   ['contract','inventory'].forEach(t => {
     const el = document.getElementById(`doc-${t}-thumbs`); if (el) { el.innerHTML=''; el.style.display='none'; }
     const st = document.getElementById(`doc-${t}-status`); if (st) st.innerHTML='';
     const btn = document.getElementById(`doc-${t}-btn`); if (btn) { btn.style.display='none'; btn.textContent='🤖 قراءة ذكية + مراجعة'; btn.style.background='#1a3d8f'; btn.disabled=false; }
     const fi = document.getElementById(`doc-${t}-file`); if (fi) fi.value='';
+    const pt = document.getElementById(`photo-${t}-thumbs`); if (pt) pt.innerHTML='';
+    const pb = document.getElementById(`photo-${t}-upload-btn`); if (pb) { pb.style.display='none'; pb.disabled=false; }
+    const ps = document.getElementById(`photo-${t}-status`); if (ps) ps.innerHTML='';
   });
 }
 

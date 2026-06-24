@@ -1105,6 +1105,53 @@ router.post('/api/bookings/:id/contract', reqStaff, async (req, res) => {
   }
 });
 
+// ── Photo Upload — images → PDF → Drive (no AI) ──────────────────
+router.post('/api/bookings/:id/upload-photos', reqStaff, async (req, res) => {
+  try {
+    const B = require('../models/Booking');
+    const bk = await B.findById(req.params.id);
+    if (!bk) return res.status(404).json({ error: 'الحجز غير موجود' });
+
+    const { type = 'contract', pages = [] } = req.body;
+    if (!pages.length) return res.status(400).json({ error: 'لم تُرسَل صور' });
+
+    const PDFDocument = require('pdfkit');
+    const pdfBuf = await new Promise((resolve, reject) => {
+      const doc = new PDFDocument({ autoFirstPage: false, margin: 0 });
+      const chunks = [];
+      doc.on('data', c => chunks.push(c));
+      doc.on('end',  () => resolve(Buffer.concat(chunks)));
+      doc.on('error', reject);
+      for (const page of pages) {
+        try {
+          const imgBuf = Buffer.from(page.data, 'base64');
+          doc.addPage({ size: 'A4', margin: 0 });
+          doc.image(imgBuf, 0, 0, { fit: [595.28, 841.89], align: 'center', valign: 'center' });
+        } catch { /* skip corrupt page */ }
+      }
+      doc.end();
+    });
+
+    const field    = type === 'contract' ? 'contractDoc' : 'inventoryDoc';
+    const prefix   = type === 'contract' ? 'عقد' : 'استلام';
+    const filename = `${prefix}_${bk.name||'نزيل'}_${Date.now()}.pdf`;
+    const pdfUrl   = await uploadToDrive(pdfBuf, filename, bk.building || null, bk.name || null);
+
+    await B.findByIdAndUpdate(bk._id, {
+      [field]: {
+        url: pdfUrl, urls: [pdfUrl], filename,
+        uploadedBy: req.staff.name, uploadedAt: new Date(),
+        pages: pages.length, ocrText: '', parsedData: {},
+      },
+    });
+
+    res.json({ success: true, url: pdfUrl, filename });
+  } catch (e) {
+    console.error('[upload-photos]', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ── AI Generate — with AI-confirmed data + scanned pages ─────────
 router.post('/api/bookings/:id/documents/generate', reqStaff, async (req, res) => {
   try {
