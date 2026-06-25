@@ -106,7 +106,6 @@ textarea.form-control { resize:vertical; min-height:120px; }
       <a href="/listings?cat=sale_apartment" class="csb-sublnk">شقق للبيع</a>
     </div>
     <div class="csb-divider"></div>
-    <a href="/apartments" class="csb-lnk"><span class="csb-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg></span><span>الوحدات المتاحة</span></a>
     <a href="/search" class="csb-lnk"><span class="csb-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></span><span>بحث</span></a>
     <% if (typeof customer !== 'undefined' && customer) { %>
     <a href="/account" class="csb-lnk"><span class="csb-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span><span><%= customer.name %></span></a>
@@ -178,7 +177,7 @@ textarea.form-control { resize:vertical; min-height:120px; }
       <div class="success-ico">✓</div>
       <div class="success-title">تم إرسال طلبك بنجاح!</div>
       <p class="success-sub">استلمنا رسالتك وسيتواصل معك فريقنا في أقرب وقت ممكن.</p>
-      <a href="/apartments" class="btn btn-gold">تصفح الوحدات المتاحة</a>
+      <a href="/listings" class="btn btn-gold">تصفح عقاراتنا</a>
     </div>
 
     <% } else { %>
@@ -263,14 +262,14 @@ textarea.form-control { resize:vertical; min-height:120px; }
         <a href="/">الرئيسية</a>
         <a href="/about">من نحن</a>
         <a href="/listings">عقاراتنا</a>
-        <a href="/apartments">الوحدات المتاحة</a>
+        <a href="/inquiry">تواصل معنا</a>
       </div>
       <div class="footer-col">
         <div class="footer-col__title">المجمعات</div>
-        <a href="/apartments?building=المنارا">مجمع المنارا</a>
-        <a href="/apartments?building=جوان ان">مجمع جوان إن</a>
-        <a href="/apartments?building=الماسة">مجمع الماسة</a>
-        <a href="/apartments?building=الواحة">مجمع الواحة</a>
+        <a href="/inquiry?building=%D8%A7%D9%84%D9%85%D9%86%D8%A7%D8%B1%D8%A7">مجمع المنارا</a>
+        <a href="/inquiry?building=%D8%AC%D9%88%D8%A7%D9%86+%D8%A7%D9%86">مجمع جوان إن</a>
+        <a href="/inquiry?building=%D8%A7%D9%84%D9%85%D8%A7%D8%B3%D8%A9">مجمع الماسة</a>
+        <a href="/inquiry?building=%D8%A7%D9%84%D9%88%D8%A7%D8%AD%D8%A9">مجمع الواحة</a>
       </div>
       <div class="footer-col">
         <div class="footer-col__title">تواصل معنا</div>

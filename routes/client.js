@@ -44,68 +44,6 @@ router.get('/', async (req, res) => {
   } catch (e) { res.render('index', { stats: { buildings: 4, totalUnits, freeUnits: 0 } }); }
 });
 
-router.get('/apartments', async (req, res) => {
-  try {
-    const now      = new Date();
-    const soonDate = new Date(now.getTime() + 5 * 86400000); // 5 days
-
-    const bookings = await Booking.find({
-      status: { $in: ['awaiting_checkin', 'active'] },
-      building: { $exists: true, $ne: null },
-      propertyId: null,
-    }, 'building apt status checkOut').lean();
-
-    // Build occupancy map: "bldg__apt" → { status, checkOut, daysLeft }
-    const oMap = {};
-    bookings.forEach(b => {
-      const key = `${b.building}__${b.apt}`;
-      const co  = b.checkOut ? new Date(b.checkOut) : null;
-      const days = co ? Math.ceil((co - now) / 86400000) : null;
-      let s = 'occupied';
-      if (b.status === 'awaiting_checkin') s = 'incoming';
-      else if (co && co <= soonDate)       s = 'soon';
-      oMap[key] = { status: s, daysLeft: days };
-    });
-
-    const sel   = req.query.building || '';
-    const targets = sel ? [sel] : Object.keys(BUILDINGS);
-
-    const result = {};
-    let totalAll = 0, totalFree = 0, totalOccupied = 0, totalSoon = 0, totalIncoming = 0;
-
-    targets.forEach(bName => {
-      let bFree = 0, bOcc = 0;
-      const floors = BUILDINGS[bName].floors.map(fl => ({
-        label: fl.l,
-        apts: fl.r.map(apt => {
-          const info   = oMap[`${bName}__${apt}`];
-          const status = info ? info.status : 'available';
-          if (status === 'available') { bFree++; totalFree++; }
-          else if (status === 'occupied') { bOcc++; totalOccupied++; }
-          else if (status === 'soon')     { bOcc++; totalSoon++; }
-          else if (status === 'incoming') { bOcc++; totalIncoming++; }
-          return { apt, status, daysLeft: info?.daysLeft ?? null };
-        }),
-      }));
-      const total = countApts(bName);
-      result[bName] = { floors, total, free: bFree, occupied: bOcc };
-      totalAll += total;
-    });
-
-    res.render('apartments', {
-      buildings: result,
-      selectedBuilding: sel,
-      buildingNames: Object.keys(BUILDINGS),
-      stats: { total: totalAll, free: totalFree, occupied: totalOccupied, soon: totalSoon, incoming: totalIncoming },
-    });
-  } catch (e) {
-    console.error(e);
-    res.render('apartments', {
-      buildings: {}, selectedBuilding: '', buildingNames: Object.keys(BUILDINGS),
-      stats: { total: 0, free: 0, occupied: 0, soon: 0, incoming: 0 },
-    });
-  }
-});
 
 router.get('/about', (req, res) => {
   res.render('about');
