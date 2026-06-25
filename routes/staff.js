@@ -710,27 +710,63 @@ router.post('/api/bookings/:id/documents/parse', reqStaff, async (req, res) => {
     const bk = await B.findById(req.params.id).lean();
     if (!bk) return res.status(404).json({ error: 'الحجز غير موجود' });
 
-    const prompt = `أنت خبير في قراءة عقود الإيجار العقارية السعودية. هذه صور لوثيقة (عقد أو محضر استلام).
+    const fmtD = d => d ? new Date(d).toLocaleDateString('ar-SA', { day:'2-digit', month:'2-digit', year:'numeric' }) : '';
+    const bookingContext = `
+بيانات الحجز المُدخلة يدوياً (أعطها الأولوية القصوى على ما في الصورة):
+- الاسم: ${bk.name || ''}
+- الجوال: ${bk.phone || ''}
+- رقم الهوية: ${bk.idNumber || ''}
+- نوع الهوية: ${bk.idType || ''}
+- رقم الشقة: ${bk.apt || ''}
+- المبنى: ${bk.building || ''}
+- تاريخ الدخول: ${fmtD(bk.checkIn)}
+- تاريخ الخروج: ${fmtD(bk.checkOut)}
+- عدد الليالي: ${bk.nights || ''}
+- الإجمالي: ${bk.totalPrice || ''}
+- المدفوع: ${bk.paidAmount || ''}
+- المتبقي: ${(bk.totalPrice || 0) - (bk.paidAmount || 0)}
+`;
 
-استخرج البيانات التالية وأعدها كـ JSON فقط بدون أي نص آخر:
-{
-  "name": "الاسم الكامل للمستأجر",
-  "idType": "national_id أو passport أو iqama أو family_card",
-  "idNumber": "رقم الهوية",
-  "phone": "رقم الجوال",
-  "apt": "رقم الوحدة/الشقة",
-  "building": "اسم المجمع أو المبنى",
-  "checkIn": "YYYY-MM-DD",
-  "checkOut": "YYYY-MM-DD",
-  "nights": عدد_الليالي,
-  "totalAmount": المبلغ_الإجمالي_رقم,
-  "paidAmount": المبلغ_المدفوع_رقم,
-  "remaining": المتبقي_رقم,
-  "notes": "أي ملاحظات مهمة",
-  "furniture": ["قائمة المحتويات المستلمة إن وجدت"]
+    const prompt = `أنت خبير قانوني ومطور ويب متخصص في استخراج البيانات (OCR) وهيكلتها من وثائق الإيجار وعقود الوحدات السكنية في المملكة العربية السعودية.
+
+مهمتك هي تحليل الصورة المرفقة (سواء كانت صورة لعقد إيجار يومي أو محضر جرد واستلام محتويات شقة) واستخراج كافة النصوص والبيانات، ثم دمجها مع البيانات التالية من النظام، وإعادة صياغتها لتوليد مستند HTML/CSS متكامل، نظيف، وجاهز للطباعة على ورقة قياس A4.
+
+${bookingContext}
+
+### 1. الكشف عن نوع المستند:
+* إذا كان "عقد إيجار": ولّد HTML بناءً على هيكل عقد الإيجار اليومي الموحد المكون من 4 أقسام (بيانات الأطراف، تفاصيل الإقامة، حصر المحتويات مع قيم التعويض، والشروط الـ 16).
+* إذا كان "محضر جرد واستلام": ولّد HTML بناءً على هيكل محضر جرد (جدول الجرد المكون من 12 بنداً، إقرار التعهد، التواقيع).
+
+### 2. معايير الخط والشكل:
+* الخط: Noto Naskh Arabic أو Simplified Arabic مع fallback sans-serif.
+* جميع النصوص بوزن عريض (font-weight: 700 !important).
+* أبعاد ثابتة A4: width: 210mm، height: 297mm، هوامش تمنع التمدد لصفحة ثانية.
+* الحقول القابلة للتعديل: input type="text" class="print-input" بحدود تختفي عند الطباعة ويبقى خط منقط أسفلها فقط.
+
+### 3. أسعار التعويض لحصر المحتويات:
+مكيفات: 1200 | شاشة تلفزيون: 800 | ثلاجة: 1300 | فرن: 800 | غلاية مياه: 50 | ميكروويف: 220 | كواية ملابس: 90 | طاولة: 150 | مرآة: 150 | سرير+مرتبة: 600 | دولاب ملابس: 400 | فرش السرير: 80 | ستائر: 100 | سجاد: 100 | سخان مياه: 250
+
+### 4. الشروط الـ 16 (لعقد الإيجار):
+اكتبها كاملة بحجم 12.5px على الأقل، مع البند 16 بالنص التالي:
+"16. في حالة تأخر الطرف الثاني عن إخلاء الشقة وتسليمها في الموعد المحدد، يلتزم بدفع غرامة تأخير قدرها 300 ريال سعودي عن كل يوم تأخير."
+
+### 5. قواعد دمج البيانات:
+* الأولوية للبيانات المُدخلة يدوياً من النظام (المذكورة أعلاه).
+* اسحب من الصورة فقط ما لا يوجد في بيانات النظام.
+* سطر تفاصيل الإقامة يجب أن يكون في سطر واحد مستمر: "انه بتاريخ [التاريخ] واتفق الطرفان على أن يؤجر الطرف الأول للطرف الثاني الوحدة رقم ([الرقم]) بإيجار يومي بقيمة ([السعر]) ريال."
+
+### 6. التواقيع:
+صندوقا التواقيع منقسمان بالتساوي: "توقيع المستأجر" على اليمين، "توقيع المسؤول" على اليسار.
+
+### CSS للطباعة يجب تضمينه:
+\`\`\`css
+@media print {
+  .print-input { border: none !important; border-bottom: 1px dotted #000 !important; background: transparent !important; }
+  .no-print { display: none !important; }
 }
+\`\`\`
 
-استخدم null لأي حقل غير موجود في الوثيقة. أعد JSON فقط.`;
+أعد كود HTML/CSS متكامل فقط داخل \`\`\`html ... \`\`\` بدون أي نص خارج الكود.`;
 
     const parts = [
       ...pages.map(p => ({ inline_data: { mime_type: p.mime || 'image/jpeg', data: p.data } })),
@@ -748,7 +784,7 @@ router.post('/api/bookings/:id/documents/parse', reqStaff, async (req, res) => {
       );
       if (resp.ok) {
         const data = await resp.json();
-        raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+        raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
         break;
       }
       try {
@@ -761,22 +797,12 @@ router.post('/api/bookings/:id/documents/parse', reqStaff, async (req, res) => {
 
     if (!raw) return res.status(502).json({ error: lastErrMsg });
 
-    const jsonMatch = raw.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) return res.status(422).json({ error: 'لم يتمكن الذكاء الاصطناعي من قراءة الوثيقة' });
+    // Extract HTML from markdown code block if wrapped
+    const htmlMatch = raw.match(/```html\s*([\s\S]*?)```/) || raw.match(/```\s*([\s\S]*?)```/);
+    const html = htmlMatch ? htmlMatch[1].trim() : raw.trim();
+    if (!html) return res.status(422).json({ error: 'لم يتمكن الذكاء الاصطناعي من قراءة الوثيقة' });
 
-    let parsed;
-    try { parsed = JSON.parse(jsonMatch[0]); }
-    catch { return res.status(422).json({ error: 'خطأ في تحليل نتيجة الذكاء الاصطناعي' }); }
-
-    // Merge with booking data for any missing fields
-    if (!parsed.name)     parsed.name     = bk.name;
-    if (!parsed.phone)    parsed.phone    = bk.phone;
-    if (!parsed.apt)      parsed.apt      = bk.apt;
-    if (!parsed.building) parsed.building = bk.building;
-    if (!parsed.checkIn && bk.checkIn)  parsed.checkIn  = new Date(bk.checkIn).toISOString().split('T')[0];
-    if (!parsed.checkOut && bk.checkOut) parsed.checkOut = new Date(bk.checkOut).toISOString().split('T')[0];
-
-    res.json({ success: true, parsed });
+    res.json({ success: true, html });
   } catch (e) {
     console.error('[doc-parse]', e);
     res.status(500).json({ error: e.message });

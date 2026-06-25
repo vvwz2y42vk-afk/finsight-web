@@ -5827,10 +5827,10 @@ async function _uploadDocToServer(type, bookingId) {
     if (!parseR.ok) throw new Error(parseD.error || 'فشل التحليل');
 
     if (btn) { btn.disabled = false; btn.textContent = '🤖 قراءة ذكية + مراجعة'; }
-    if (st) st.innerHTML = `<div style="font-size:11px;color:#059669;font-weight:700;">✅ تم التحليل — راجع البيانات في النافذة</div>`;
+    if (st) st.innerHTML = `<div style="font-size:11px;color:#059669;font-weight:700;">✅ تم التحليل — راجع المستند</div>`;
 
-    // ── Phase 2: Open review modal ─────────────────────────────────────────
-    openDocReview(bookingId, type, pages, parseD.parsed || {});
+    // ── Phase 2: Open HTML preview modal ──────────────────────────────────
+    openDocHtmlPreview(parseD.html || '');
 
   } catch(e) {
     if (st) st.innerHTML = `<div style="color:#dc2626;font-size:11px;">❌ ${e?.message || 'فشل التحليل'}</div>`;
@@ -8958,5 +8958,44 @@ async function generatePremiumPDF() {
   </div>
 </div>
 <!-- ── End AI Document Review Modal ─────────────────────────────── -->
+
+<!-- ── AI HTML Document Preview Modal ───────────────────────────── -->
+<div id="docHtmlModal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);align-items:center;justify-content:center;">
+  <div style="background:#1e293b;border-radius:16px;width:min(900px,97vw);height:90vh;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.5);overflow:hidden;">
+    <!-- Header -->
+    <div style="background:linear-gradient(135deg,#111827,#1e3a8a);padding:14px 18px;display:flex;align-items:center;gap:12px;flex-shrink:0;">
+      <div style="width:36px;height:36px;background:#1d4ed8;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;">📄</div>
+      <div style="flex:1;">
+        <div style="font-size:14px;font-weight:800;color:#fff;">معاينة المستند — جاهز للطباعة</div>
+        <div style="font-size:11px;color:#93c5fd;margin-top:1px;">راجع المستند وعدّل الحقول مباشرة ثم اطبع</div>
+      </div>
+      <button onclick="printDocHtml()" style="background:#059669;border:none;color:#fff;padding:7px 16px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px;" class="no-print">🖨️ طباعة</button>
+      <button onclick="closeDocHtmlPreview()" style="background:rgba(255,255,255,.1);border:none;color:#fff;width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:16px;margin-right:4px;">✕</button>
+    </div>
+    <!-- iframe -->
+    <iframe id="docHtmlFrame" style="flex:1;border:none;background:#fff;"></iframe>
+  </div>
+</div>
+
+<script>
+function openDocHtmlPreview(html) {
+  const modal = document.getElementById('docHtmlModal');
+  const frame = document.getElementById('docHtmlFrame');
+  frame.srcdoc = html;
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+function closeDocHtmlPreview() {
+  document.getElementById('docHtmlModal').style.display = 'none';
+  document.getElementById('docHtmlFrame').srcdoc = '';
+  document.body.style.overflow = '';
+}
+function printDocHtml() {
+  const frame = document.getElementById('docHtmlFrame');
+  frame.contentWindow.focus();
+  frame.contentWindow.print();
+}
+</script>
+<!-- ── End AI HTML Document Preview Modal ───────────────────────── -->
 </body>
 </html>
