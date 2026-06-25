@@ -56,7 +56,7 @@
     <a href="/listings/<%= listing._id %>" class="book-listing-preview">
       <div class="book-listing-preview__photo">
         <% if (listing.photos && listing.photos.length) { %>
-        <img src="<%= listing.photos[0] % loading="lazy">" alt="<%= listing.title %>">
+        <img src="<%= listing.photos[0] %>" alt="<%= listing.title %>" loading="lazy">
         <% } else { %>
         <div class="listing-card__photo-ph" style="height:100%;">🏢</div>
         <% } %>

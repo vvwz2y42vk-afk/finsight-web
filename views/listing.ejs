@@ -73,13 +73,13 @@
     <% if (listing.photos && listing.photos.length > 0) { %>
     <div class="listing-gallery">
       <div class="listing-gallery__main" id="mainPhoto" onclick="openLightbox(currentPhotoIndex)" style="cursor:zoom-in;">
-        <img src="<%= listing.photos[0] % loading="lazy">" alt="<%= listing.title %>" id="mainImg">
+        <img src="<%= listing.photos[0] %>" alt="<%= listing.title %>" id="mainImg" loading="lazy">
       </div>
       <% if (listing.photos.length > 1) { %>
       <div class="listing-gallery__thumbs">
         <% listing.photos.forEach((ph, i) => { %>
         <div class="listing-gallery__thumb <%= i===0?'active':'' %>" onclick="setPhoto('<%= ph %>',this)">
-          <img src="<%= ph % loading="lazy">" alt="صورة <%= i+1 %>">
+          <img src="<%= ph %>" alt="صورة <%= i+1 %>" loading="lazy">
         </div>
         <% }); %>
       </div>

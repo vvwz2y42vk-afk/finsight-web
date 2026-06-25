@@ -154,7 +154,7 @@
       <div class="bk-photo">
         <% const photo = b.listing?.photos?.[0]; %>
         <% if (photo) { %>
-        <img src="<%= photo % loading="lazy">" alt="<%= b.listingTitle %>">
+        <img src="<%= photo %>" alt="<%= b.listingTitle %>" loading="lazy">
         <% } else { %>
         <div class="bk-photo-ph">🏢</div>
         <% } %>

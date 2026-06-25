@@ -240,7 +240,7 @@
       <a href="/listings/<%= l._id %>" class="listing-card">
         <div class="listing-card__photo">
           <% if (l.photos && l.photos.length) { %>
-          <img src="<%= l.photos[0] % loading="lazy">" alt="<%= l.title %>" loading="lazy">
+          <img src="<%= l.photos[0] %>" alt="<%= l.title %>" loading="lazy">
           <% } else { %>
           <div class="listing-card__photo-ph"><%= catEmoji %></div>
           <% } %>

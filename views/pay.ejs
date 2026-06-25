@@ -76,7 +76,7 @@ body{font-family:'Cairo',sans-serif;background:linear-gradient(135deg,#0f0f1a 0%
   <!-- Booking summary -->
   <div class="booking-card">
     <% if (booking.listing?.photos?.[0]) { %>
-    <img src="<%= booking.listing.photos[0] % loading="lazy">" alt="" style="width:100%;height:140px;object-fit:cover;border-radius:10px;margin-bottom:14px;">
+    <img src="<%= booking.listing.photos[0] %>" alt="" style="width:100%;height:140px;object-fit:cover;border-radius:10px;margin-bottom:14px;" loading="lazy">
     <% } %>
     <div class="bk-row">
       <span class="bk-lbl">العقار</span>
