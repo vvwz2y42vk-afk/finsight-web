@@ -756,7 +756,7 @@ body.csb-layout {
   border-right: 3px solid transparent;
 }
 .csb-lnk:hover { background: rgba(26,58,92,.55); color: #ffffff; }
-.csb-lnk.active { background: #1a3a5c; color: #ffffff; border-right-color: #4a90e2; }
+.csb-lnk.active { background: #1a3a6b; color: #ffffff; border: 1px solid rgba(59,130,246,.5); border-right-color: rgba(59,130,246,.5); box-shadow: 0 0 12px rgba(59,130,246,.6), 0 0 24px rgba(59,130,246,.3); }
 .csb-ico { font-size: 16px; width: 22px; text-align: center; flex-shrink: 0; color: inherit; }
 .csb-divider { height: 1px; background: rgba(255,255,255,.07); margin: 6px 8px; }
 .csb-sub {
@@ -1157,10 +1157,11 @@ body.aos-done [data-aos]:not(.aos-animate) { opacity: 1 !important; transform: n
   transform: none !important;
 }
 .csb-lnk.active {
-  background: #1a3a5c !important;
+  background: #1a3a6b !important;
   color: #ffffff !important;
-  border-right-color: #4a90e2 !important;
-  box-shadow: none !important;
+  border: 1px solid rgba(59,130,246,.5) !important;
+  border-right-color: rgba(59,130,246,.5) !important;
+  box-shadow: 0 0 12px rgba(59,130,246,.6), 0 0 24px rgba(59,130,246,.3) !important;
 }
 .csb-sublnk {
   color: #8899aa !important;
