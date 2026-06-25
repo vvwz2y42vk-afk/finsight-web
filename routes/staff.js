@@ -769,7 +769,11 @@ ${bookingContext}
 أعد كود HTML/CSS متكامل فقط داخل \`\`\`html ... \`\`\` بدون أي نص خارج الكود.`;
 
     const parts = [
-      ...pages.map(p => ({ inline_data: { mime_type: p.mime || 'image/jpeg', data: p.data } })),
+      ...pages.map(p => {
+        // Strip data URL prefix if present (Gemini needs raw base64 only)
+        const raw = p.data.includes(',') ? p.data.split(',')[1] : p.data;
+        return { inline_data: { mime_type: p.mime || 'image/jpeg', data: raw } };
+      }),
       { text: prompt },
     ];
 
