@@ -1134,3 +1134,244 @@ body.aos-done [data-aos]:not(.aos-animate) { opacity: 1 !important; transform: n
   border-color: rgba(74,144,226,.35) !important;
 }
 .csb-ham span { background: #7ec8f8 !important; }
+
+/* ══════════════════════════════════════════════════════════════
+   BAREZ LUXURY DESIGN SYSTEM v3 — PREMIUM WORLD-CLASS EDITION
+══════════════════════════════════════════════════════════════ */
+
+/* ── 1. Sidebar Premium Glassmorphism ── */
+.client-sidebar {
+  background: rgba(4, 11, 28, 0.88) !important;
+  backdrop-filter: blur(14px) saturate(1.8) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(1.8) !important;
+  border-left: 1px solid rgba(255,255,255,0.07) !important;
+  box-shadow: inset -1px 0 0 rgba(74,144,226,0.1) !important;
+}
+.csb-lnk {
+  transition: all 0.25s cubic-bezier(0.23,1,0.32,1) !important;
+}
+.csb-lnk:hover {
+  background: rgba(74,144,226,0.12) !important;
+  color: #fff !important;
+  transform: translateX(-2px);
+}
+.csb-lnk.active {
+  background: rgba(74,144,226,0.18) !important;
+  border-right-color: #4a90e2 !important;
+  box-shadow: inset 0 0 20px rgba(74,144,226,0.08) !important;
+}
+
+/* ── 2. Hero Search Glassmorphism ── */
+.hero-search-glass {
+  background: rgba(255,255,255,0.06) !important;
+  backdrop-filter: blur(14px) saturate(1.5) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(1.5) !important;
+  border: 1px solid rgba(255,255,255,0.10) !important;
+  border-radius: 16px !important;
+  padding: 8px !important;
+  display: flex !important;
+  gap: 8px !important;
+  max-width: 580px !important;
+  margin: 0 auto 28px !important;
+  width: 100% !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.08) !important;
+}
+.hero-search-glass select,
+.hero-search-glass input[type="text"] {
+  background: rgba(255,255,255,0.07) !important;
+  border: 1px solid rgba(255,255,255,0.12) !important;
+  color: #fff !important;
+  transition: all 0.3s ease !important;
+}
+.hero-search-glass select:focus,
+.hero-search-glass input[type="text"]:focus {
+  background: rgba(255,255,255,0.12) !important;
+  border-color: rgba(74,144,226,0.7) !important;
+  box-shadow: 0 0 0 3px rgba(74,144,226,0.15) !important;
+  outline: none !important;
+}
+.hero-search-glass button[type="submit"] {
+  background: linear-gradient(135deg, #1a3d8f, #2a5cc7) !important;
+  transition: all 0.35s cubic-bezier(0.23,1,0.32,1) !important;
+  box-shadow: 0 6px 20px rgba(26,61,143,0.45) !important;
+}
+.hero-search-glass button[type="submit"]:hover {
+  transform: scale(1.04) !important;
+  box-shadow: 0 10px 32px rgba(26,61,143,0.6) !important;
+}
+
+/* ── 3. Prop Card — Cursor-Reactive 3D ── */
+.prop-card {
+  transform-style: preserve-3d !important;
+  transition: transform 0.6s cubic-bezier(0.23,1,0.32,1),
+              box-shadow 0.6s cubic-bezier(0.23,1,0.32,1) !important;
+  will-change: transform, box-shadow !important;
+}
+.prop-card:hover {
+  box-shadow:
+    0 32px 80px rgba(0,0,0,0.28),
+    0 0 0 1px rgba(74,144,226,0.25),
+    inset 0 1px 0 rgba(255,255,255,0.08) !important;
+}
+.prop-card .prop-card__img {
+  overflow: hidden;
+  position: relative;
+}
+.prop-card .prop-card__img::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.14) 0%, transparent 55%);
+  opacity: 0;
+  transition: opacity 0.45s ease;
+  pointer-events: none;
+}
+.prop-card:hover .prop-card__img::after { opacity: 1; }
+
+/* ── 4. Luxury Pulse — Conversion Buttons ── */
+@keyframes luxuryPulse {
+  0%, 100% { box-shadow: 0 4px 20px rgba(26,61,143,0.38), 0 0 0 0 rgba(26,61,143,0.32); }
+  60%       { box-shadow: 0 4px 20px rgba(26,61,143,0.5), 0 0 0 14px rgba(26,61,143,0); }
+}
+.btn-gold.btn-lg {
+  animation: luxuryPulse 2.8s cubic-bezier(0.66,0,0,1) infinite !important;
+}
+.btn-gold.btn-lg:hover {
+  animation: none !important;
+  background: linear-gradient(135deg, #2557d6, #1a3d8f) !important;
+  transform: translateY(-5px) scale(1.05) !important;
+  box-shadow: 0 16px 48px rgba(26,61,143,0.58), 0 0 0 4px rgba(74,144,226,0.18) !important;
+}
+
+/* ── 5. احجز Button Luxury (apartments page) ── */
+.apt-card a {
+  display: block;
+  margin-top: 10px;
+  background: linear-gradient(135deg, #1a3d8f, #2a5cc7);
+  color: #fff !important;
+  border-radius: 8px;
+  padding: 9px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+  transition: all 0.35s cubic-bezier(0.23,1,0.32,1);
+  position: relative;
+  overflow: hidden;
+  animation: luxuryPulse 3.2s cubic-bezier(0.66,0,0,1) infinite;
+}
+.apt-card a::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 60%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.22), transparent);
+  transform: skewX(-20deg);
+  transition: left 0.55s ease;
+  pointer-events: none;
+}
+.apt-card a:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 12px 32px rgba(26,61,143,0.5);
+  animation: none;
+}
+.apt-card a:hover::before { left: 150%; }
+
+/* ── 6. Prop Card Cinematic Entrance ── */
+@keyframes cardRise {
+  from { opacity: 0; transform: translateY(36px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.props-grid .prop-card {
+  animation: cardRise 0.7s cubic-bezier(0.23,1,0.32,1) both;
+}
+.props-grid .prop-card:nth-child(1) { animation-delay: 0ms; }
+.props-grid .prop-card:nth-child(2) { animation-delay: 100ms; }
+.props-grid .prop-card:nth-child(3) { animation-delay: 200ms; }
+.props-grid .prop-card:nth-child(4) { animation-delay: 300ms; }
+
+/* ── 7. Apt Card Cinematic Entrance ── */
+@keyframes aptRise {
+  from { opacity: 0; transform: translateY(22px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.apt-card {
+  animation: aptRise 0.5s cubic-bezier(0.23,1,0.32,1) both;
+  transition: transform 0.4s cubic-bezier(0.23,1,0.32,1),
+              box-shadow 0.4s cubic-bezier(0.23,1,0.32,1) !important;
+  position: relative;
+  overflow: hidden;
+}
+.apt-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #1a3d8f, #4a90e2, #7ec8f8, #4a90e2, #1a3d8f);
+  background-size: 300%;
+  animation: shimmerLine 3s ease infinite;
+  opacity: 0;
+  transition: opacity 0.35s;
+  pointer-events: none;
+}
+.apt-card:hover::before { opacity: 1; }
+.apt-card:hover {
+  transform: translateY(-6px) !important;
+  box-shadow: 0 18px 44px rgba(26,61,143,0.15), 0 0 0 1px rgba(74,144,226,0.2) !important;
+}
+@keyframes shimmerLine {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 300% 50%; }
+}
+
+/* ── 8. Filter Buttons Premium ── */
+.filter-btn {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.35s cubic-bezier(0.23,1,0.32,1) !important;
+}
+.filter-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(74,144,226,0.22), rgba(26,61,143,0.12));
+  opacity: 0;
+  transition: opacity 0.3s;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.filter-btn:hover::after,
+.filter-btn.active::after { opacity: 1; }
+.filter-btn:hover { transform: translateY(-2px); }
+.filter-btn:active { transform: scale(0.96); }
+
+/* ── 9. Section Title Accent ── */
+.sec-title { position: relative; display: inline-block; }
+.sec-title::after {
+  content: '';
+  display: block;
+  width: 44px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--gold), var(--gold-light));
+  border-radius: 2px;
+  margin: 10px auto 0;
+}
+
+/* ── 10. Service Card Enhanced ── */
+.service-card {
+  transition: transform 0.45s cubic-bezier(0.23,1,0.32,1),
+              box-shadow 0.45s cubic-bezier(0.23,1,0.32,1),
+              background 0.3s ease !important;
+}
+.service-card:hover {
+  transform: perspective(700px) rotateX(-4deg) translateY(-8px) !important;
+  box-shadow: 0 24px 56px rgba(0,0,0,0.4), 0 0 0 1px rgba(74,144,226,0.2) !important;
+}
+
+/* ── 11. Footer social buttons ── */
+.social-btn {
+  transition: all 0.3s cubic-bezier(0.23,1,0.32,1) !important;
+}
+.social-btn:hover {
+  transform: translateY(-4px) scale(1.12) !important;
+  box-shadow: 0 8px 24px rgba(26,61,143,0.3) !important;
+}

@@ -97,5 +97,33 @@
   <p>© 2026 Barez — جميع الحقوق محفوظة &nbsp;·&nbsp; <a href="/terms" style="color:inherit;opacity:.6;">الشروط والأحكام</a></p>
 </footer>
 
+<script>
+/* Staggered entrance delays */
+document.querySelectorAll('.apt-card').forEach(function(card, i) {
+  card.style.animationDelay = (i * 42) + 'ms';
+});
+
+/* Cursor-reactive 3D tilt on apt cards */
+document.querySelectorAll('.apt-card').forEach(function(card) {
+  card.addEventListener('mousemove', function(e) {
+    var r = card.getBoundingClientRect();
+    var x = (e.clientX - r.left) / r.width  - 0.5;
+    var y = (e.clientY - r.top)  / r.height - 0.5;
+    card.style.transform = 'perspective(500px) rotateY('+(x*-10)+'deg) rotateX('+(y*8)+'deg) translateY(-6px)';
+  });
+  card.addEventListener('mouseleave', function() { card.style.transform = ''; });
+});
+
+/* Filter button smooth page transition */
+document.querySelectorAll('.filter-btn').forEach(function(btn) {
+  btn.addEventListener('click', function(e) {
+    if (!btn.classList.contains('active')) {
+      document.querySelector('.section-inner').style.opacity = '0';
+      document.querySelector('.section-inner').style.transform = 'translateY(10px)';
+      document.querySelector('.section-inner').style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+    }
+  });
+});
+</script>
 </body>
 </html>

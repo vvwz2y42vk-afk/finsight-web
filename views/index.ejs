@@ -83,19 +83,18 @@
     </div>
 
     <!-- Quick Search -->
-    <form method="GET" action="/search" style="display:flex;gap:10px;max-width:580px;margin:0 auto 28px;width:100%;">
-      <select name="type" style="padding:14px 14px;border-radius:12px;border:2px solid rgba(74,144,226,.35);background:rgba(255,255,255,.08);color:#fff;font-family:'Cairo',sans-serif;font-size:13px;outline:none;flex-shrink:0;backdrop-filter:blur(8px);cursor:pointer;">
-        <option value="" style="background:#1a2744;color:#fff;">كل الأنواع</option>
-        <option value="rental_apartment" style="background:#1a2744;color:#fff;">شقق إيجار</option>
-        <option value="sale_apartment" style="background:#1a2744;color:#fff;">شقق بيع</option>
-        <option value="rental_commercial" style="background:#1a2744;color:#fff;">معارض إيجار</option>
-        <option value="sale_land" style="background:#1a2744;color:#fff;">أراضي بيع</option>
+    <form method="GET" action="/search" class="hero-search-glass">
+      <select name="type" style="padding:13px 12px;border-radius:10px;font-family:'Cairo',sans-serif;font-size:13px;flex-shrink:0;cursor:pointer;">
+        <option value="" style="background:#0d1f42;color:#fff;">كل الأنواع</option>
+        <option value="rental_apartment" style="background:#0d1f42;color:#fff;">شقق إيجار</option>
+        <option value="sale_apartment" style="background:#0d1f42;color:#fff;">شقق بيع</option>
+        <option value="rental_commercial" style="background:#0d1f42;color:#fff;">معارض إيجار</option>
+        <option value="sale_land" style="background:#0d1f42;color:#fff;">أراضي بيع</option>
       </select>
       <input type="text" name="q" placeholder="ابحث بالاسم أو الموقع..."
-        style="flex:1;padding:14px 18px;border-radius:12px;border:2px solid rgba(74,144,226,.35);background:rgba(255,255,255,.08);color:#fff;font-family:'Cairo',sans-serif;font-size:14px;outline:none;min-width:0;backdrop-filter:blur(8px);"
-        onfocus="this.style.borderColor='rgba(126,200,248,.8)';this.style.background='rgba(255,255,255,.12)'" onblur="this.style.borderColor='rgba(74,144,226,.35)';this.style.background='rgba(255,255,255,.08)'">
+        style="flex:1;padding:13px 16px;border-radius:10px;font-family:'Cairo',sans-serif;font-size:14px;min-width:0;">
       <button type="submit"
-        style="padding:14px 22px;border-radius:12px;background:linear-gradient(135deg,#1a3d8f,#2a5cc7);border:none;color:#fff;font-family:'Cairo',sans-serif;font-size:14px;font-weight:800;cursor:pointer;white-space:nowrap;flex-shrink:0;box-shadow:0 8px 24px rgba(26,61,143,.4);">
+        style="padding:13px 22px;border-radius:10px;border:none;color:#fff;font-family:'Cairo',sans-serif;font-size:14px;font-weight:800;cursor:pointer;white-space:nowrap;flex-shrink:0;">
         بحث
       </button>
     </form>
@@ -494,9 +493,21 @@ if (typeof AOS !== 'undefined') {
 if (typeof VanillaTilt !== 'undefined') {
   try {
     VanillaTilt.init(document.querySelectorAll('.prop-card,.service-card,.kpi,.about-val,.vmv-card'), {
-      max: 8, speed: 400, glare: true, 'max-glare': 0.15, scale: 1.03
+      max: 14, speed: 500, glare: true, 'max-glare': 0.22, scale: 1.04,
+      perspective: 900, gyroscope: true,
     });
   } catch(e) {}
+} else {
+  /* Fallback cursor-reactive 3D tilt */
+  document.querySelectorAll('.prop-card').forEach(function(card) {
+    card.addEventListener('mousemove', function(e) {
+      var r = card.getBoundingClientRect();
+      var x = (e.clientX - r.left) / r.width  - 0.5;
+      var y = (e.clientY - r.top)  / r.height - 0.5;
+      card.style.transform = 'perspective(900px) rotateY('+(x*-16)+'deg) rotateX('+(y*12)+'deg) translateY(-14px) scale(1.04)';
+    });
+    card.addEventListener('mouseleave', function() { card.style.transform = ''; });
+  });
 }
 
 /* ── Hero Particle Network ── */
