@@ -5787,8 +5787,8 @@ async function uploadDocNow(type) {
     window._drvType     = type;
     window._drvBookingId = editBkId;
 
-    openDocReview(editBkId, type, pageData, d.parsed||{});
-    if (st) st.innerHTML = `<div style="color:#059669;font-size:11px;font-weight:600;">✅ تمت القراءة الذكية — راجع البيانات في النافذة</div>`;
+    openDocHtmlPreview(d.html || '');
+    if (st) st.innerHTML = `<div style="color:#059669;font-size:11px;font-weight:600;">✅ تمت القراءة الذكية — راجع المستند</div>`;
     if (btn) { btn.disabled=false; btn.textContent='↺ إعادة القراءة'; btn.style.background='#1d4ed8'; }
   } catch(e) {
     if (st) st.innerHTML = `<div style="color:#dc2626;font-size:11px;">❌ ${e?.message||'خطأ في الاتصال'}</div>`;
