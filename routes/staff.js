@@ -625,7 +625,7 @@ async function driveGetOrCreateFolder(accessToken, name, parentId) {
   return folder.id;
 }
 
-async function uploadToDrive(pdfBuffer, filename, building, clientName) {
+async function uploadToDrive(pdfBuffer, filename, building, clientName, pages = []) {
   const clientId     = process.env.GDRIVE_CLIENT_ID;
   const clientSecret = process.env.GDRIVE_CLIENT_SECRET;
   const refreshToken = process.env.GDRIVE_REFRESH_TOKEN;
@@ -654,41 +654,47 @@ async function uploadToDrive(pdfBuffer, filename, building, clientName) {
       : buildingFolderId;
   }
 
-  // 3. Multipart upload
-  const boundary = 'barez_' + Date.now();
-  const meta = JSON.stringify({ name: filename, mimeType: 'application/pdf', parents: [targetFolderId] });
-  const body = Buffer.concat([
-    Buffer.from(`--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${meta}\r\n`),
-    Buffer.from(`--${boundary}\r\nContent-Type: application/pdf\r\n\r\n`),
-    pdfBuffer,
-    Buffer.from(`\r\n--${boundary}--`),
-  ]);
-
-  const upRes = await fetch(
-    'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name',
-    {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${access_token}`,
-        'Content-Type': `multipart/related; boundary="${boundary}"`,
-      },
-      body,
+  // helper: upload any buffer to Drive
+  async function uploadOne(buffer, name, mimeType) {
+    const boundary = 'barez_' + Date.now();
+    const meta = JSON.stringify({ name, mimeType, parents: [targetFolderId] });
+    const body = Buffer.concat([
+      Buffer.from(`--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${meta}\r\n`),
+      Buffer.from(`--${boundary}\r\nContent-Type: ${mimeType}\r\n\r\n`),
+      buffer,
+      Buffer.from(`\r\n--${boundary}--`),
+    ]);
+    const upRes = await fetch(
+      'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name',
+      { method: 'POST', headers: { 'Authorization': `Bearer ${access_token}`, 'Content-Type': `multipart/related; boundary="${boundary}"` }, body }
+    );
+    if (!upRes.ok) {
+      const e = await upRes.json().catch(() => ({}));
+      throw new Error('فشل رفع Drive: ' + (e.error?.message || upRes.status));
     }
-  );
-  if (!upRes.ok) {
-    const e = await upRes.json().catch(() => ({}));
-    throw new Error('فشل رفع Drive: ' + (e.error?.message || upRes.status));
+    const file = await upRes.json();
+    await fetch(`https://www.googleapis.com/drive/v3/files/${file.id}/permissions`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${access_token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role: 'reader', type: 'anyone' }),
+    });
+    return `https://drive.google.com/file/d/${file.id}/view`;
   }
-  const file = await upRes.json();
 
-  // 4. Make file publicly readable (anyone with link)
-  await fetch(`https://www.googleapis.com/drive/v3/files/${file.id}/permissions`, {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${access_token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ role: 'reader', type: 'anyone' }),
-  });
+  // 3. Upload generated PDF
+  const pdfUrl = await uploadOne(pdfBuffer, filename, 'application/pdf');
 
-  return `https://drive.google.com/file/d/${file.id}/view`;
+  // 4. Upload original scanned pages
+  const baseName = filename.replace(/\.pdf$/i, '');
+  for (let i = 0; i < pages.length; i++) {
+    const p = pages[i];
+    const mime = p.mime || 'image/jpeg';
+    const ext  = mime.split('/')[1] || 'jpg';
+    const imgBuf = Buffer.from(p.data, 'base64');
+    await uploadOne(imgBuf, `${baseName}_صورة_${i + 1}.${ext}`, mime);
+  }
+
+  return pdfUrl;
 }
 
 // ── AI Document Parse (Step 1 of 2) ───────────────────────────
@@ -697,21 +703,14 @@ router.post('/api/bookings/:id/documents/parse', reqStaff, async (req, res) => {
     const { pages } = req.body; // [{data: base64, mime}]
     if (!pages?.length) return res.status(400).json({ error: 'لا توجد صور' });
 
-    const anthropicKey = process.env.ANTHROPIC_API_KEY;
-    if (!anthropicKey) return res.status(500).json({ error: 'ANTHROPIC_API_KEY غير مُهيَّأ' });
+    const geminiKey = process.env.GEMINI_API_KEY;
+    if (!geminiKey) return res.status(500).json({ error: 'GEMINI_API_KEY غير مُهيَّأ' });
 
     const B  = require('../models/Booking');
     const bk = await B.findById(req.params.id).lean();
     if (!bk) return res.status(404).json({ error: 'الحجز غير موجود' });
 
-    // Send ALL pages to Claude in one call for context
-    const content = pages.map((p, i) => ({
-      type: 'image',
-      source: { type: 'base64', media_type: p.mime || 'image/jpeg', data: p.data },
-    }));
-    content.push({
-      type: 'text',
-      text: `أنت خبير في قراءة عقود الإيجار العقارية السعودية. هذه صور لوثيقة (عقد أو محضر استلام).
+    const prompt = `أنت خبير في قراءة عقود الإيجار العقارية السعودية. هذه صور لوثيقة (عقد أو محضر استلام).
 
 استخرج البيانات التالية وأعدها كـ JSON فقط بدون أي نص آخر:
 {
@@ -731,46 +730,37 @@ router.post('/api/bookings/:id/documents/parse', reqStaff, async (req, res) => {
   "furniture": ["قائمة المحتويات المستلمة إن وجدت"]
 }
 
-استخدم null لأي حقل غير موجود في الوثيقة. أعد JSON فقط.`,
-    });
+استخدم null لأي حقل غير موجود في الوثيقة. أعد JSON فقط.`;
 
-    // Try sonnet first, fall back to haiku on overload
-    const MODELS = ['claude-sonnet-4-6', 'claude-haiku-4-5-20251001'];
-    let resp, lastErrMsg = 'فشل الاتصال بالذكاء الاصطناعي';
+    const parts = [
+      ...pages.map(p => ({ inline_data: { mime_type: p.mime || 'image/jpeg', data: p.data } })),
+      { text: prompt },
+    ];
+
+    const MODELS = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+    let raw = null, lastErrMsg = 'فشل الاتصال بالذكاء الاصطناعي';
 
     for (const model of MODELS) {
-      resp = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'x-api-key': anthropicKey,
-          'anthropic-version': '2023-06-01',
-          'content-type': 'application/json',
-        },
-        body: JSON.stringify({ model, max_tokens: 1024, messages: [{ role: 'user', content }] }),
-      });
-      if (resp.ok) break;
+      const resp = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`,
+        { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts }] }) }
+      );
+      if (resp.ok) {
+        const data = await resp.json();
+        raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+        break;
+      }
       try {
-        const errBody = await resp.json();
-        const errType = errBody?.error?.type || '';
-        if (errType === 'overloaded_error' || resp.status === 529) {
-          lastErrMsg = 'الذكاء الاصطناعي مشغول — جاري تجربة نموذج أسرع...';
-          continue; // try next model
-        }
-        if (errType === 'rate_limit_error') lastErrMsg = 'تم تجاوز حد الطلبات — حاول بعد دقيقة';
-        else if (errType === 'authentication_error') lastErrMsg = 'خطأ في مفتاح API — تواصل مع الدعم';
-        else if (errBody?.error?.message) lastErrMsg = errBody.error.message.slice(0, 100);
-        break; // non-retryable error
+        const err = await resp.json();
+        lastErrMsg = err.error?.message?.slice(0, 120) || lastErrMsg;
+        if (resp.status === 429 || resp.status === 503) continue;
+        break;
       } catch { break; }
     }
 
-    if (!resp.ok) {
-      return res.status(502).json({ error: lastErrMsg, retryable: false });
-    }
+    if (!raw) return res.status(502).json({ error: lastErrMsg });
 
-    const data = await resp.json();
-    let raw = data.content?.[0]?.text || '{}';
-
-    // Extract JSON from response (Claude sometimes wraps in markdown)
     const jsonMatch = raw.match(/\{[\s\S]*\}/);
     if (!jsonMatch) return res.status(422).json({ error: 'لم يتمكن الذكاء الاصطناعي من قراءة الوثيقة' });
 
@@ -1077,7 +1067,7 @@ async function uploadAndSave(bk, type, confirmed, pdfBuf, pages, staffName) {
   const arLabel = type === 'contract' ? 'عقد_موثق' : 'استلام_محتويات';
   const filename = `${bk.name||'عميل'}_BK${bkId}_${arLabel}.pdf`;
 
-  const pdfUrl = await uploadToDrive(pdfBuf, filename, bk.building||null, bk.name||null);
+  const pdfUrl = await uploadToDrive(pdfBuf, filename, bk.building||null, bk.name||null, pages||[]);
 
   const field = type === 'contract' ? 'contractDoc' : 'inventoryDoc';
   await B.findByIdAndUpdate(bk._id, {
