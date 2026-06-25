@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title><%= q ? 'نتائج: ' + q : 'بحث متقدم' %> — Barez</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/client.css">
 <style>
@@ -238,7 +240,7 @@
       <a href="/listings/<%= l._id %>" class="listing-card">
         <div class="listing-card__photo">
           <% if (l.photos && l.photos.length) { %>
-          <img src="<%= l.photos[0] %>" alt="<%= l.title %>" loading="lazy">
+          <img src="<%= l.photos[0] % loading="lazy">" alt="<%= l.title %>" loading="lazy">
           <% } else { %>
           <div class="listing-card__photo-ph"><%= catEmoji %></div>
           <% } %>

@@ -994,7 +994,7 @@ body.csb-layout {
   50%      { background-position: 100% 50%; }
 }
 
-/* ── Button Shimmer ── */
+/* ── Button Shimmer — transform only (GPU) ── */
 .btn-gold {
   position: relative;
   overflow: hidden;
@@ -1002,21 +1002,21 @@ body.csb-layout {
 .btn-gold::after {
   content: '';
   position: absolute;
-  top: 0; left: -100%;
+  top: 0; left: 0;
   width: 60%;
   height: 100%;
   background: linear-gradient(90deg, transparent, rgba(255,255,255,.25), transparent);
-  transform: skewX(-20deg);
+  transform: translateX(-200%) skewX(-20deg);
   animation: shimmer 2.5s ease infinite;
+  will-change: transform;
 }
 @keyframes shimmer {
-  0%   { left: -100%; }
-  100% { left: 200%; }
+  to { transform: translateX(500%) skewX(-20deg); }
 }
 
 /* ── 3D Button Press ── */
 .btn {
-  transition: all .2s cubic-bezier(.175,.885,.32,1.275);
+  transition: transform .2s cubic-bezier(.175,.885,.32,1.275), opacity .15s;
 }
 .btn:hover  { transform: translateY(-3px); }
 .btn:active { transform: translateY(0) scale(.97); }
@@ -1030,13 +1030,13 @@ body.csb-layout {
   50%      { transform: translateY(-8px); }
 }
 
-/* ── Glow Pulse ── */
+/* ── Glow Pulse — opacity only (GPU) ── */
 .glow-pulse {
   animation: glowPulse 2.5s ease-in-out infinite;
 }
 @keyframes glowPulse {
-  0%,100% { box-shadow: 0 0 20px rgba(74,144,226,.3); }
-  50%      { box-shadow: 0 0 40px rgba(74,144,226,.7), 0 0 80px rgba(74,144,226,.2); }
+  0%,100% { opacity: .45; }
+  50%      { opacity: 1; }
 }
 
 /* ── Counter Highlight ── */
@@ -1210,31 +1210,27 @@ body.aos-done [data-aos]:not(.aos-animate) { opacity: 1 !important; transform: n
   background: rgba(255,255,255,0.07) !important;
   border: 1px solid rgba(255,255,255,0.12) !important;
   color: #fff !important;
-  transition: all 0.3s ease !important;
+  transition: border-color 0.3s ease, background 0.3s ease !important;
 }
 .hero-search-glass select:focus,
 .hero-search-glass input[type="text"]:focus {
   background: rgba(255,255,255,0.12) !important;
   border-color: rgba(74,144,226,0.7) !important;
-  box-shadow: 0 0 0 3px rgba(74,144,226,0.15) !important;
   outline: none !important;
 }
 .hero-search-glass button[type="submit"] {
   background: linear-gradient(135deg, #1a3d8f, #2a5cc7) !important;
-  transition: all 0.35s cubic-bezier(0.23,1,0.32,1) !important;
-  box-shadow: 0 6px 20px rgba(26,61,143,0.45) !important;
+  transition: transform 0.35s cubic-bezier(0.23,1,0.32,1) !important;
 }
 .hero-search-glass button[type="submit"]:hover {
   transform: scale(1.04) !important;
-  box-shadow: 0 10px 32px rgba(26,61,143,0.6) !important;
 }
 
 /* ── 3. Prop Card — Cursor-Reactive 3D ── */
 .prop-card {
   transform-style: preserve-3d !important;
-  transition: transform 0.6s cubic-bezier(0.23,1,0.32,1),
-              box-shadow 0.6s cubic-bezier(0.23,1,0.32,1) !important;
-  will-change: transform, box-shadow !important;
+  transition: transform 0.6s cubic-bezier(0.23,1,0.32,1) !important;
+  will-change: transform !important;
 }
 .prop-card:hover {
   box-shadow:
@@ -1257,22 +1253,35 @@ body.aos-done [data-aos]:not(.aos-animate) { opacity: 1 !important; transform: n
 }
 .prop-card:hover .prop-card__img::after { opacity: 1; }
 
-/* ── 4. Luxury Pulse — Conversion Buttons ── */
-@keyframes luxuryPulse {
-  0%, 100% { box-shadow: 0 4px 20px rgba(26,61,143,0.38), 0 0 0 0 rgba(26,61,143,0.32); }
-  60%       { box-shadow: 0 4px 20px rgba(26,61,143,0.5), 0 0 0 14px rgba(26,61,143,0); }
+/* ── 4. Luxury Pulse — transform+opacity ring (GPU only) ── */
+@keyframes btnPulse {
+  0%   { transform: scale(1);   opacity: .55; }
+  100% { transform: scale(1.65); opacity: 0; }
 }
 .btn-gold.btn-lg {
-  animation: luxuryPulse 2.8s cubic-bezier(0.66,0,0,1) infinite !important;
+  position: relative;
+  overflow: visible;
+}
+.btn-gold.btn-lg::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  border: 2px solid rgba(26,61,143,.55);
+  animation: btnPulse 2.8s cubic-bezier(.66,0,0,1) infinite;
+  pointer-events: none;
+  will-change: transform, opacity;
 }
 .btn-gold.btn-lg:hover {
-  animation: none !important;
   background: linear-gradient(135deg, #2557d6, #1a3d8f) !important;
   transform: translateY(-5px) scale(1.05) !important;
-  box-shadow: 0 16px 48px rgba(26,61,143,0.58), 0 0 0 4px rgba(74,144,226,0.18) !important;
+}
+.btn-gold.btn-lg:hover::before {
+  animation: none;
+  opacity: 0;
 }
 
-/* ── 5. احجز Button Luxury (apartments page) ── */
+/* ── 5. احجز Button (apartments) — GPU only ── */
 .apt-card a {
   display: block;
   margin-top: 10px;
@@ -1283,27 +1292,24 @@ body.aos-done [data-aos]:not(.aos-animate) { opacity: 1 !important; transform: n
   font-size: 12px;
   font-weight: 700;
   text-align: center;
-  transition: all 0.35s cubic-bezier(0.23,1,0.32,1);
+  transition: transform 0.35s cubic-bezier(0.23,1,0.32,1);
   position: relative;
   overflow: hidden;
-  animation: luxuryPulse 3.2s cubic-bezier(0.66,0,0,1) infinite;
+  will-change: transform;
 }
 .apt-card a::before {
   content: '';
   position: absolute;
-  top: 0; left: -100%;
+  top: 0; left: 0;
   width: 60%; height: 100%;
   background: linear-gradient(90deg, transparent, rgba(255,255,255,0.22), transparent);
-  transform: skewX(-20deg);
-  transition: left 0.55s ease;
+  transform: translateX(-200%) skewX(-20deg);
+  transition: transform 0.55s ease;
   pointer-events: none;
+  will-change: transform;
 }
-.apt-card a:hover {
-  transform: translateY(-3px) scale(1.05);
-  box-shadow: 0 12px 32px rgba(26,61,143,0.5);
-  animation: none;
-}
-.apt-card a:hover::before { left: 150%; }
+.apt-card a:hover { transform: translateY(-3px) scale(1.05); }
+.apt-card a:hover::before { transform: translateX(400%) skewX(-20deg); }
 
 /* ── 6. Prop Card Cinematic Entrance ── */
 @keyframes cardRise {
@@ -1318,17 +1324,17 @@ body.aos-done [data-aos]:not(.aos-animate) { opacity: 1 !important; transform: n
 .props-grid .prop-card:nth-child(3) { animation-delay: 200ms; }
 .props-grid .prop-card:nth-child(4) { animation-delay: 300ms; }
 
-/* ── 7. Apt Card Cinematic Entrance ── */
+/* ── 7. Apt Card Cinematic Entrance — GPU only ── */
 @keyframes aptRise {
   from { opacity: 0; transform: translateY(22px) scale(0.95); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 .apt-card {
   animation: aptRise 0.5s cubic-bezier(0.23,1,0.32,1) both;
-  transition: transform 0.4s cubic-bezier(0.23,1,0.32,1),
-              box-shadow 0.4s cubic-bezier(0.23,1,0.32,1) !important;
+  transition: transform 0.4s cubic-bezier(0.23,1,0.32,1) !important;
   position: relative;
   overflow: hidden;
+  will-change: transform;
 }
 .apt-card::before {
   content: '';
@@ -1341,12 +1347,10 @@ body.aos-done [data-aos]:not(.aos-animate) { opacity: 1 !important; transform: n
   opacity: 0;
   transition: opacity 0.35s;
   pointer-events: none;
+  will-change: background-position, opacity;
 }
 .apt-card:hover::before { opacity: 1; }
-.apt-card:hover {
-  transform: translateY(-6px) !important;
-  box-shadow: 0 18px 44px rgba(26,61,143,0.15), 0 0 0 1px rgba(74,144,226,0.2) !important;
-}
+.apt-card:hover { transform: translateY(-6px) !important; }
 @keyframes shimmerLine {
   0%   { background-position: 0% 50%; }
   100% { background-position: 300% 50%; }
@@ -1356,7 +1360,7 @@ body.aos-done [data-aos]:not(.aos-animate) { opacity: 1 !important; transform: n
 .filter-btn {
   position: relative;
   overflow: hidden;
-  transition: all 0.35s cubic-bezier(0.23,1,0.32,1) !important;
+  transition: transform 0.25s cubic-bezier(0.23,1,0.32,1), color 0.25s, background 0.25s !important;
 }
 .filter-btn::after {
   content: '';
@@ -1387,20 +1391,38 @@ body.aos-done [data-aos]:not(.aos-animate) { opacity: 1 !important; transform: n
 
 /* ── 10. Service Card Enhanced ── */
 .service-card {
-  transition: transform 0.45s cubic-bezier(0.23,1,0.32,1),
-              box-shadow 0.45s cubic-bezier(0.23,1,0.32,1),
-              background 0.3s ease !important;
+  transition: transform 0.45s cubic-bezier(0.23,1,0.32,1) !important;
 }
 .service-card:hover {
   transform: perspective(700px) rotateX(-4deg) translateY(-8px) !important;
-  box-shadow: 0 24px 56px rgba(0,0,0,0.4), 0 0 0 1px rgba(74,144,226,0.2) !important;
 }
 
 /* ── 11. Footer social buttons ── */
 .social-btn {
-  transition: all 0.3s cubic-bezier(0.23,1,0.32,1) !important;
+  transition: transform 0.3s cubic-bezier(0.23,1,0.32,1) !important;
 }
 .social-btn:hover {
   transform: translateY(-4px) scale(1.12) !important;
-  box-shadow: 0 8px 24px rgba(26,61,143,0.3) !important;
+}
+
+/* ── 12. Contain layout for grids ── */
+.props-grid  { contain: layout style; }
+.apt-grid    { contain: layout style; }
+.listing-grid { contain: layout style; }
+
+/* ── 13. Backdrop-filter: apply only where needed ── */
+.hero-search-glass {
+  /* Limit blur to small element, add GPU hint */
+  transform: translateZ(0);
+}
+.lc-badge--type { backdrop-filter: none !important; background: rgba(0,0,0,.6) !important; }
+
+/* ── 14. Prefers Reduced Motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>لوحة المضيف — BAREZ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -549,7 +551,7 @@ function renderListings(list) {
   g.innerHTML = list.map(l => `
     <div class="lcard">
       <div class="lcard-photo">
-        ${l.photos?.length ? `<img src="${l.photos[0]}" alt="">` : `<div class="lcard-photo-ph">${catIcon[l.category]||'🏠'}</div>`}
+        ${l.photos?.length ? `<img src="${l.photos[0]}" alt="" loading="lazy">` : `<div class="lcard-photo-ph">${catIcon[l.category]||'🏠'}</div>`}
         <span class="lcard-avail ${l.available?'on':'off'}">${l.available?'متاح':'غير متاح'}</span>
       </div>
       <div class="lcard-body">
@@ -570,7 +572,7 @@ function renderRecentListings() {
   w.innerHTML = `<div class="listing-grid">${list.map(l => `
     <div class="lcard">
       <div class="lcard-photo">
-        ${l.photos?.length ? `<img src="${l.photos[0]}" alt="">` : `<div class="lcard-photo-ph">${catIcon[l.category]||'🏠'}</div>`}
+        ${l.photos?.length ? `<img src="${l.photos[0]}" alt="" loading="lazy">` : `<div class="lcard-photo-ph">${catIcon[l.category]||'🏠'}</div>`}
         <span class="lcard-avail ${l.available?'on':'off'}">${l.available?'متاح':'غير متاح'}</span>
       </div>
       <div class="lcard-body">
@@ -778,7 +780,7 @@ function renderPhotoPreviews() {
   const wrap = document.getElementById('photo-wrap');
   wrap.innerHTML = uploadedPhotos.map((url, i) => `
     <div style="position:relative;display:inline-block;">
-      <img src="${url}" class="photo-thumb" alt="">
+      <img src="${url}" class="photo-thumb" alt="" loading="lazy">
       <button class="photo-del" onclick="removePhoto(${i})">✕</button>
     </div>`).join('') +
     '<div class="photo-add" onclick="document.getElementById(\'photo-file\').click()">+</div>';
