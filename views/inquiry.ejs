@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
@@ -6,6 +6,86 @@
 <title>تواصل معنا — Barez</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/client.css">
+<style>
+.inq-grid { display:grid; grid-template-columns:1fr 1fr; gap:24px; max-width:860px; margin:0 auto; }
+@media(max-width:680px){ .inq-grid { grid-template-columns:1fr; } }
+
+.contact-card {
+  display:flex; align-items:center; gap:18px;
+  background:#fff; border-radius:16px; padding:22px 24px;
+  border:1.5px solid var(--border);
+  text-decoration:none; color:var(--text);
+  transition:all .3s cubic-bezier(.23,1,.32,1);
+  box-shadow:0 2px 12px rgba(0,0,0,.04);
+}
+.contact-card:hover {
+  transform:translateY(-4px);
+  box-shadow:0 12px 36px rgba(0,0,0,.1);
+  border-color:rgba(26,61,143,.2);
+  text-decoration:none; color:var(--text);
+}
+.contact-card__ico {
+  width:52px; height:52px; border-radius:14px;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.contact-card__title { font-size:13px; color:var(--text3); margin-bottom:4px; }
+.contact-card__val   { font-size:15px; font-weight:700; }
+.contact-card__hint  { font-size:12px; color:var(--text3); margin-top:2px; }
+.contact-card__arrow { margin-right:auto; font-size:18px; color:var(--text3); opacity:.4; }
+
+.inq-form-wrap {
+  background:#fff; border-radius:20px; padding:36px;
+  border:1.5px solid var(--border); max-width:860px; margin:28px auto 0;
+  box-shadow:0 4px 24px rgba(0,0,0,.05);
+}
+.inq-form-title {
+  font-size:1.1rem; font-weight:700; margin-bottom:24px;
+  padding-bottom:16px; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; gap:10px; color:var(--text);
+}
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+@media(max-width:560px){ .form-row { grid-template-columns:1fr; } }
+.form-group { display:flex; flex-direction:column; gap:6px; margin-bottom:16px; }
+.form-label { font-size:13px; font-weight:600; color:var(--text2); }
+.form-control {
+  width:100%; padding:12px 14px; border-radius:10px;
+  border:1.5px solid var(--border); font-family:inherit; font-size:14px;
+  color:var(--text); background:#fafafa;
+  transition:border-color .2s, box-shadow .2s; box-sizing:border-box;
+}
+.form-control:focus {
+  outline:none; border-color:rgba(26,61,143,.5);
+  box-shadow:0 0 0 3px rgba(26,61,143,.08); background:#fff;
+}
+textarea.form-control { resize:vertical; min-height:120px; }
+.form-required { color:#e53e3e; margin-right:2px; }
+.btn-submit {
+  width:100%; padding:14px; background:linear-gradient(135deg,#1a3d8f,#2a5cc7);
+  border:none; border-radius:12px; color:#fff; font-family:inherit;
+  font-size:15px; font-weight:700; cursor:pointer; margin-top:8px;
+  transition:all .35s cubic-bezier(.23,1,.32,1);
+}
+.btn-submit:hover { transform:translateY(-2px); box-shadow:0 10px 28px rgba(26,61,143,.4); }
+
+.success-state {
+  text-align:center; padding:60px 24px; background:#fff; border-radius:20px;
+  border:1.5px solid #d4edda; max-width:480px; margin:28px auto 0;
+}
+.success-ico {
+  width:72px; height:72px; border-radius:50%;
+  background:linear-gradient(135deg,#28a745,#20c997);
+  display:flex; align-items:center; justify-content:center;
+  margin:0 auto 20px; font-size:2rem; color:#fff;
+}
+.success-title { font-size:1.3rem; font-weight:700; margin-bottom:10px; }
+.success-sub   { color:var(--text3); font-size:14px; margin-bottom:24px; }
+.error-banner  { background:#fff5f5; border:1px solid #ffd5d5; border-radius:10px; padding:12px 16px; color:#c53030; font-size:14px; margin-bottom:16px; }
+.pre-fill-badge {
+  display:inline-flex; align-items:center; gap:8px;
+  background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.2);
+  border-radius:24px; padding:6px 16px; font-size:13px; color:#fff; margin-top:16px;
+}
+</style>
 </head>
 <body class="home-page csb-layout">
 
@@ -18,12 +98,13 @@
     <div class="csb-divider"></div>
     <a href="/listings" class="csb-lnk"><span class="csb-ico">🏢</span><span>عقاراتنا</span></a>
     <div class="csb-sub">
-      <a href="/listings?cat=rental_apartment" class="csb-sublnk">🛏 شقق للإيجار</a>
-      <a href="/listings?cat=rental_commercial" class="csb-sublnk">🏪 معارض للإيجار</a>
-      <a href="/listings?cat=sale_land" class="csb-sublnk">🌍 أراضي للبيع</a>
-      <a href="/listings?cat=sale_apartment" class="csb-sublnk">🏠 شقق للبيع</a>
+      <a href="/listings?cat=rental_apartment" class="csb-sublnk">شقق للإيجار</a>
+      <a href="/listings?cat=rental_commercial" class="csb-sublnk">معارض للإيجار</a>
+      <a href="/listings?cat=sale_land" class="csb-sublnk">أراضي للبيع</a>
+      <a href="/listings?cat=sale_apartment" class="csb-sublnk">شقق للبيع</a>
     </div>
     <div class="csb-divider"></div>
+    <a href="/apartments" class="csb-lnk"><span class="csb-ico">🏠</span><span>الوحدات المتاحة</span></a>
     <a href="/search" class="csb-lnk"><span class="csb-ico">🔍</span><span>بحث</span></a>
     <% if (typeof customer !== 'undefined' && customer) { %>
     <a href="/account" class="csb-lnk"><span class="csb-ico">👤</span><span><%= customer.name %></span></a>
@@ -38,7 +119,6 @@
       <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
       <span>0590561057</span>
     </a>
-    
   </div>
 </aside>
 <div class="csb-overlay" id="csbOverlay" onclick="closeSidebar()"></div>
@@ -47,46 +127,122 @@
 <div class="csb-content">
 
 <!-- HERO -->
-<section class="about-hero">
+<section class="about-hero" style="min-height:240px;">
+  <div class="about-hero__overlay"></div>
   <div class="about-hero__content">
     <div class="sec-tag">تواصل معنا</div>
     <h1 class="about-hero__title">نحن هنا <span class="c-gold">لمساعدتك</span></h1>
-    <p class="about-hero__sub">تواصل معنا عبر واتساب أو إيميل وسنرد عليك في أقرب وقت</p>
+    <p class="about-hero__sub">تواصل معنا مباشرة أو أرسل استفسارك وسنرد خلال ٢٤ ساعة</p>
+    <% if (building && apartment) { %>
+    <div class="pre-fill-badge">🏠 طلب حجز: <%= building %> — وحدة <%= apartment %></div>
+    <% } %>
   </div>
 </section>
 
-<!-- CONTACT OPTIONS -->
-<section style="padding:88px 0;background:#fff;">
+<!-- CONTENT -->
+<section style="padding:56px 0 80px; background:var(--light);">
   <div class="page-container">
-    <div style="max-width:600px;margin:0 auto;display:flex;flex-direction:column;gap:20px;">
 
-      <!-- واتساب -->
-      <a href="https://wa.me/966590561057" target="_blank" class="contact-option-card">
-        <div class="contact-option-card__ico" style="background:linear-gradient(135deg,#25D366,#128C7E);">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+    <!-- Contact Cards -->
+    <div class="inq-grid">
+      <a href="https://wa.me/966590561057" target="_blank" class="contact-card">
+        <div class="contact-card__ico" style="background:linear-gradient(135deg,#25D366,#128C7E);">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
         </div>
-        <div class="contact-option-card__text">
-          <div class="contact-option-card__title">واتساب</div>
-          <div class="contact-option-card__val">0590561057</div>
-          <div class="contact-option-card__hint">اضغط للتواصل المباشر</div>
+        <div>
+          <div class="contact-card__title">واتساب — تواصل فوري</div>
+          <div class="contact-card__val">0590561057</div>
+          <div class="contact-card__hint">اضغط للتواصل المباشر</div>
         </div>
-        <div class="contact-option-card__arrow">←</div>
+        <div class="contact-card__arrow">→</div>
       </a>
 
-      <!-- إيميل -->
-      <a href="mailto:realstate@barezz.com" class="contact-option-card">
-        <div class="contact-option-card__ico" style="background:linear-gradient(135deg,#D4AF37,#A8892A);">
-          <svg width="32" height="32" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      <a href="mailto:realstate@barezz.com" class="contact-card">
+        <div class="contact-card__ico" style="background:linear-gradient(135deg,#1a3d8f,#2a5cc7);">
+          <svg width="28" height="28" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
         </div>
-        <div class="contact-option-card__text">
-          <div class="contact-option-card__title">البريد الإلكتروني</div>
-          <div class="contact-option-card__val">realstate@barezz.com</div>
-          <div class="contact-option-card__hint">راسلنا وسنرد خلال ٢٤ ساعة</div>
+        <div>
+          <div class="contact-card__title">البريد الإلكتروني</div>
+          <div class="contact-card__val" style="font-size:13px;">realstate@barezz.com</div>
+          <div class="contact-card__hint">نرد خلال ٢٤ ساعة</div>
         </div>
-        <div class="contact-option-card__arrow">←</div>
+        <div class="contact-card__arrow">→</div>
       </a>
-
     </div>
+
+    <!-- Form / Success -->
+    <% if (success) { %>
+    <div class="success-state">
+      <div class="success-ico">✓</div>
+      <div class="success-title">تم إرسال طلبك بنجاح!</div>
+      <p class="success-sub">استلمنا رسالتك وسيتواصل معك فريقنا في أقرب وقت ممكن.</p>
+      <a href="/apartments" class="btn btn-gold">تصفح الوحدات المتاحة</a>
+    </div>
+
+    <% } else { %>
+    <div class="inq-form-wrap">
+      <div class="inq-form-title">
+        <svg width="18" height="18" fill="none" stroke="var(--gold)" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        أرسل استفساراً أو طلب حجز
+      </div>
+
+      <% if (typeof error !== 'undefined' && error) { %>
+      <div class="error-banner">⚠️ <%= error %></div>
+      <% } %>
+
+      <form method="POST" action="/inquiry">
+        <% if (building) { %>
+        <input type="hidden" name="building" value="<%= building %>">
+        <input type="hidden" name="apartment" value="<%= apartment %>">
+        <div style="background:rgba(26,61,143,.06);border:1px solid rgba(26,61,143,.15);border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:13px;color:var(--text2);">
+          🏠 <strong><%= building %></strong><% if (apartment) { %> — وحدة رقم <strong><%= apartment %></strong><% } %>
+        </div>
+        <% } %>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">الاسم الكامل <span class="form-required">*</span></label>
+            <input type="text" name="name" class="form-control" placeholder="اسمك الكريم" required autocomplete="name">
+          </div>
+          <div class="form-group">
+            <label class="form-label">رقم الجوال <span class="form-required">*</span></label>
+            <input type="tel" name="phone" class="form-control" placeholder="05xxxxxxxx" required autocomplete="tel" dir="ltr">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">البريد الإلكتروني <span style="color:var(--text3);font-weight:400;font-size:12px;">(اختياري)</span></label>
+            <input type="email" name="email" class="form-control" placeholder="example@email.com" autocomplete="email" dir="ltr">
+          </div>
+          <div class="form-group">
+            <label class="form-label">الموضوع</label>
+            <select name="subject" class="form-control">
+              <% if (building) { %>
+              <option value="طلب حجز وحدة" selected>طلب حجز وحدة</option>
+              <% } else { %>
+              <option value="">اختر الموضوع</option>
+              <% } %>
+              <option value="استفسار عن سعر">استفسار عن سعر</option>
+              <option value="طلب حجز وحدة"<% if (!building) { %>>طلب حجز وحدة<% } else { %> disabled>طلب حجز وحدة<% } %></option>
+              <option value="استفسار عام">استفسار عام</option>
+              <option value="شكوى أو اقتراح">شكوى أو اقتراح</option>
+              <option value="طلب عرض سعر">طلب عرض سعر</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">رسالتك <span class="form-required">*</span></label>
+          <textarea name="message" class="form-control" required
+            placeholder="<% if (building && apartment) { %>أرغب في حجز وحدة رقم <%= apartment %> في مجمع <%= building %>...<% } else { %>اكتب رسالتك هنا...<% } %>"><% if (building && apartment) { %>أرغب في حجز وحدة رقم <%= apartment %> في مجمع <%= building %>، يرجى التواصل معي.<% } %></textarea>
+        </div>
+
+        <button type="submit" class="btn-submit">إرسال الطلب →</button>
+      </form>
+    </div>
+    <% } %>
+
   </div>
 </section>
 
@@ -96,11 +252,7 @@
     <div class="footer-grid">
       <div class="footer-brand">
         <div class="footer-brand__logo">
-          <div class="nav-logo-icon">FS</div>
-          <div>
-            <div class="nav-logo-name">BAREZ</div>
-            <div class="nav-logo-sub"></div>
-          </div>
+          <img src="/images/logo-dark.png" alt="Barez" style="height:40px;width:auto;">
         </div>
         <p class="footer-brand__desc">شركة رائدة في إدارة الأملاك والوساطة العقارية بالمدينة المنورة.</p>
       </div>
@@ -108,8 +260,8 @@
         <div class="footer-col__title">روابط سريعة</div>
         <a href="/">الرئيسية</a>
         <a href="/about">من نحن</a>
-        <a href="/apartments">عقاراتنا</a>
-        <a href="/inquiry">تواصل معنا</a>
+        <a href="/listings">عقاراتنا</a>
+        <a href="/apartments">الوحدات المتاحة</a>
       </div>
       <div class="footer-col">
         <div class="footer-col__title">المجمعات</div>
@@ -120,13 +272,13 @@
       </div>
       <div class="footer-col">
         <div class="footer-col__title">تواصل معنا</div>
-        <a href="https://wa.me/966590561057">0590561057</a>
+        <a href="tel:+966590561057">0590561057</a>
         <a href="mailto:realstate@barezz.com">realstate@barezz.com</a>
+        <a href="https://wa.me/966590561057">واتساب مباشر</a>
       </div>
     </div>
     <div class="footer-bottom">
-      <p>© 2026 Barez — جميع الحقوق محفوظة <p>© 2026 Barez — جميع الحقوق محفوظة</p>nbsp;·<p>© 2026 Barez — جميع الحقوق محفوظة</p>nbsp; <a href="/terms" style="color:inherit;opacity:.6;">الشروط والأحكام</a></p>
-      
+      <p>© 2026 Barez — جميع الحقوق محفوظة &nbsp;·&nbsp; <a href="/terms" style="color:inherit;opacity:.6;">الشروط والأحكام</a></p>
     </div>
   </div>
 </footer>

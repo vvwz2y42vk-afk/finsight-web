@@ -1,46 +1,70 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>الوحدات المتاحة — BAREZ</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/client.css">
 </head>
-<body>
+<body class="home-page csb-layout">
 
-<header class="site-header">
-  <div class="header-inner">
-    <div class="logo">
-      <div class="logo-ico">FS</div>
-      <div>
-        <img src="/images/logo-dark.png" alt="Barez" style="height:44px;width:auto;">
-      </div>
+<aside class="client-sidebar" id="clientSidebar">
+  <div class="csb-logo">
+    <img src="/images/logo-dark.png" alt="Barez" style="height:52px;width:auto;">
+  </div>
+  <nav class="csb-nav">
+    <a href="/" class="csb-lnk"><span class="csb-ico"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span><span>الرئيسية</span></a>
+    <div class="csb-divider"></div>
+    <a href="/listings" class="csb-lnk"><span class="csb-ico"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg></span><span>عقاراتنا</span></a>
+    <div class="csb-sub">
+      <a href="/listings?cat=rental_apartment" class="csb-sublnk">شقق للإيجار</a>
+      <a href="/listings?cat=rental_commercial" class="csb-sublnk">معارض للإيجار</a>
+      <a href="/listings?cat=sale_land" class="csb-sublnk">أراضي للبيع</a>
+      <a href="/listings?cat=sale_apartment" class="csb-sublnk">شقق للبيع</a>
     </div>
-    <nav class="site-nav">
-      <a href="/" class="nav-link">الرئيسية</a>
-      <a href="/apartments" class="nav-link active">الوحدات المتاحة</a>
-      <a href="/inquiry" class="nav-link">تواصل معنا</a>
-      <a href="/inquiry" class="btn btn-gold btn-sm" style="margin-right:8px;">احجز الآن</a>
-    </nav>
+    <div class="csb-divider"></div>
+    <a href="/apartments" class="csb-lnk active"><span class="csb-ico"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span><span>الوحدات المتاحة</span></a>
+    <a href="/search" class="csb-lnk"><span class="csb-ico"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span><span>بحث</span></a>
+    <% if (typeof customer !== 'undefined' && customer) { %>
+    <a href="/account" class="csb-lnk"><span class="csb-ico"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span><span><%= customer.name %></span></a>
+    <% } else { %>
+    <a href="/account/login" class="csb-lnk"><span class="csb-ico"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span><span>حسابي</span></a>
+    <% } %>
+    <a href="/about" class="csb-lnk"><span class="csb-ico"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span><span>من نحن</span></a>
+    <a href="/inquiry" class="csb-lnk"><span class="csb-ico"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span><span>تواصل معنا</span></a>
+  </nav>
+  <div class="csb-foot">
+    <a href="https://wa.me/966590561057" target="_blank" class="csb-wa">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+      <span>0590561057</span>
+    </a>
   </div>
-</header>
+</aside>
+<div class="csb-overlay" id="csbOverlay" onclick="closeSidebar()"></div>
+<button class="csb-ham" id="csbHam" onclick="toggleSidebar()"><span></span><span></span><span></span></button>
 
-<div class="page-hero">
-  <div class="page-hero-inner">
-    <h1>🏠 الوحدات المتاحة</h1>
-    <p>تصفح الوحدات الشاغرة واحجز مباشرة</p>
+<div class="csb-content">
+
+<!-- HERO -->
+<section class="about-hero" style="min-height:260px;">
+  <div class="about-hero__overlay"></div>
+  <div class="about-hero__content">
+    <div class="sec-tag">الوحدات المتاحة</div>
+    <h1 class="about-hero__title">شقق شاغرة <span class="c-gold">جاهزة للحجز</span></h1>
+    <p class="about-hero__sub">تصفح الوحدات الشاغرة في مجمعاتنا الأربعة واحجز مباشرة</p>
   </div>
-</div>
+</section>
 
-<section class="section">
-  <div class="section-inner">
+<!-- FILTERS + UNITS -->
+<section style="padding:48px 0 72px;background:var(--light);">
+  <div class="page-container">
 
-    <!-- Filter -->
-    <div class="filter-bar">
-      <a href="/apartments" class="filter-btn <%= selectedBuilding === '' ? 'active' : '' %>">الكل</a>
+    <!-- Filter Bar -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:36px;">
+      <a href="/apartments" class="filter-btn <%= selectedBuilding === '' ? 'active' : '' %>" style="padding:9px 20px;border-radius:24px;font-size:13px;font-weight:600;border:1.5px solid var(--border);background:#fff;color:var(--text);text-decoration:none;transition:all .25s;">الكل</a>
       <% buildings.forEach(b => { %>
-        <a href="/apartments?building=<%= encodeURIComponent(b) %>" class="filter-btn <%= selectedBuilding === b ? 'active' : '' %>"><%= b %></a>
+        <a href="/apartments?building=<%= encodeURIComponent(b) %>" class="filter-btn <%= selectedBuilding === b ? 'active' : '' %>" style="padding:9px 20px;border-radius:24px;font-size:13px;font-weight:600;border:1.5px solid var(--border);background:#fff;color:var(--text);text-decoration:none;transition:all .25s;"><%= b %></a>
       <% }) %>
     </div>
 
@@ -51,22 +75,21 @@
     %>
 
     <% if (keys.length === 0) { %>
-      <div class="empty-state">
-        <div class="ico">🏠</div>
-        <p>لا توجد وحدات متاحة حالياً في هذا المجمع</p>
-        <a href="/inquiry" class="btn btn-gold" style="margin-top:16px;display:inline-flex;">📩 أرسل طلب انتظار</a>
+      <div style="text-align:center;padding:80px 0;">
+        <div style="font-size:3rem;margin-bottom:16px;">🏠</div>
+        <h3 style="font-size:1.3rem;font-weight:700;margin-bottom:8px;">لا توجد وحدات متاحة حالياً</h3>
+        <p style="color:var(--text3);margin-bottom:24px;">أرسل طلبك وسنتواصل معك فور توفر وحدة مناسبة</p>
+        <a href="/inquiry" class="btn btn-gold btn-lg">أرسل طلب انتظار</a>
       </div>
     <% } else { %>
       <% keys.forEach(bName => { %>
         <% const data = available[bName]; %>
         <% if (data.free.length === 0) return; %>
-        <div class="apt-section">
-          <div class="apt-section-hd <%= bClass[bName] || 'm' %>">
-            <span style="font-size:1.4rem;"><%= bIcon[bName] || '🏢' %></span>
-            <div>
-              <h3><%= bName %></h3>
-            </div>
-            <div class="apt-count"><%= data.free.length %> وحدة متاحة</div>
+        <div style="margin-bottom:40px;">
+          <div class="apt-section-hd <%= bClass[bName] || 'm' %>" style="display:flex;align-items:center;gap:12px;padding:14px 20px;border-radius:14px;margin-bottom:16px;">
+            <span style="font-size:1.5rem;"><%= bIcon[bName] || '🏢' %></span>
+            <h3 style="font-size:1.1rem;font-weight:700;color:#fff;margin:0;"><%= bName %></h3>
+            <div class="apt-count" style="margin-right:auto;background:rgba(255,255,255,.15);color:#fff;border-radius:20px;padding:4px 14px;font-size:12px;font-weight:600;"><%= data.free.length %> وحدة متاحة</div>
           </div>
           <div class="apt-grid">
             <% data.free.forEach(apt => { %>
@@ -74,7 +97,7 @@
                 <div class="apt-num"><%= apt.apt %></div>
                 <div class="apt-floor"><%= apt.floor %></div>
                 <div class="apt-status">متاحة</div>
-                <a href="/inquiry?building=<%= encodeURIComponent(bName) %>&apartment=<%= apt.apt %>">احجز ←</a>
+                <a href="/inquiry?building=<%= encodeURIComponent(bName) %>&apartment=<%= apt.apt %>">احجز الآن</a>
               </div>
             <% }) %>
           </div>
@@ -85,25 +108,69 @@
   </div>
 </section>
 
-<section class="cta-banner">
-  <div class="container">
-    <h2>لم تجد ما يناسبك؟</h2>
-    <p>أرسل طلبك وسنتواصل معك بمجرد توفر وحدة مناسبة</p>
-    <a href="/inquiry" class="btn btn-gold">📩 أرسل طلبك</a>
+<!-- CTA -->
+<section class="cta-section">
+  <div class="page-container">
+    <div class="cta-section__inner">
+      <div class="cta-section__deco"></div>
+      <h2 class="cta-section__title">لم تجد ما يناسبك؟</h2>
+      <p class="cta-section__sub">أرسل طلبك وسنتواصل معك بمجرد توفر وحدة مناسبة لاحتياجاتك</p>
+      <div class="cta-section__btns">
+        <a href="/inquiry" class="btn btn-gold btn-lg">أرسل طلب انتظار</a>
+        <a href="/listings" class="btn btn-ghost btn-lg">تصفح العقارات</a>
+      </div>
+    </div>
   </div>
 </section>
 
-<footer class="site-footer">
-  <p>© 2026 Barez — جميع الحقوق محفوظة &nbsp;·&nbsp; <a href="/terms" style="color:inherit;opacity:.6;">الشروط والأحكام</a></p>
+<!-- FOOTER -->
+<footer class="site-footer-new">
+  <div class="page-container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-brand__logo">
+          <img src="/images/logo-dark.png" alt="Barez" style="height:40px;width:auto;">
+        </div>
+        <p class="footer-brand__desc">شركة رائدة في إدارة الوحدات السكنية بالمدينة المنورة.</p>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col__title">روابط سريعة</div>
+        <a href="/">الرئيسية</a>
+        <a href="/about">من نحن</a>
+        <a href="/listings">عقاراتنا</a>
+        <a href="/inquiry">تواصل معنا</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col__title">المجمعات</div>
+        <a href="/apartments?building=المنارا">مجمع المنارا</a>
+        <a href="/apartments?building=جوان ان">مجمع جوان إن</a>
+        <a href="/apartments?building=الماسة">مجمع الماسة</a>
+        <a href="/apartments?building=الواحة">مجمع الواحة</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col__title">تواصل معنا</div>
+        <a href="tel:+966590561057">0590561057</a>
+        <a href="mailto:realstate@barezz.com">realstate@barezz.com</a>
+        <a href="/inquiry">أرسل استفساراً</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 Barez — جميع الحقوق محفوظة &nbsp;·&nbsp; <a href="/terms" style="color:inherit;opacity:.6;">الشروط والأحكام</a></p>
+    </div>
+  </div>
 </footer>
 
+</div><!-- /csb-content -->
 <script>
-/* Staggered entrance delays */
+function toggleSidebar(){document.getElementById('clientSidebar').classList.toggle('open');document.getElementById('csbOverlay').classList.toggle('open');document.getElementById('csbHam').classList.toggle('active');}
+function closeSidebar(){document.getElementById('clientSidebar').classList.remove('open');document.getElementById('csbOverlay').classList.remove('open');document.getElementById('csbHam').classList.remove('active');}
+
+/* Staggered entrance */
 document.querySelectorAll('.apt-card').forEach(function(card, i) {
   card.style.animationDelay = (i * 42) + 'ms';
 });
 
-/* Cursor-reactive 3D tilt on apt cards */
+/* Cursor-reactive 3D tilt */
 document.querySelectorAll('.apt-card').forEach(function(card) {
   card.addEventListener('mousemove', function(e) {
     var r = card.getBoundingClientRect();
@@ -114,15 +181,21 @@ document.querySelectorAll('.apt-card').forEach(function(card) {
   card.addEventListener('mouseleave', function() { card.style.transform = ''; });
 });
 
-/* Filter button smooth page transition */
+/* Filter fade transition */
 document.querySelectorAll('.filter-btn').forEach(function(btn) {
-  btn.addEventListener('click', function(e) {
+  btn.addEventListener('click', function() {
     if (!btn.classList.contains('active')) {
-      document.querySelector('.section-inner').style.opacity = '0';
-      document.querySelector('.section-inner').style.transform = 'translateY(10px)';
-      document.querySelector('.section-inner').style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+      var grid = document.querySelector('.apt-grid, .page-container');
+      if (grid) { grid.style.opacity='0'; grid.style.transition='opacity .2s'; }
     }
   });
+});
+
+/* Active filter styling */
+document.querySelectorAll('.filter-btn.active').forEach(function(btn) {
+  btn.style.background = 'var(--gold)';
+  btn.style.color = '#fff';
+  btn.style.borderColor = 'var(--gold)';
 });
 </script>
 </body>
