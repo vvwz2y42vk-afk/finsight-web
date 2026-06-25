@@ -472,13 +472,32 @@ function closeSidebar(){
   document.getElementById('csbHam').classList.remove('active');
 }
 
-/* ── AOS Init ── */
-AOS.init({ duration: 800, once: true, offset: 60 });
+/* ── AOS Init with fallback ── */
+function revealAll() {
+  document.querySelectorAll('[data-aos]').forEach(function(el) {
+    el.classList.add('aos-animate');
+    el.style.opacity = '1';
+    el.style.transform = 'none';
+  });
+  document.body.classList.add('aos-done');
+}
+if (typeof AOS !== 'undefined') {
+  try {
+    AOS.init({ duration: 800, once: true, offset: 60 });
+    setTimeout(revealAll, 2000);
+  } catch(e) { revealAll(); }
+} else {
+  revealAll();
+}
 
 /* ── 3D Tilt on Cards ── */
-VanillaTilt.init(document.querySelectorAll('.prop-card,.service-card,.kpi,.about-val,.vmv-card'), {
-  max: 8, speed: 400, glare: true, 'max-glare': 0.15, scale: 1.03
-});
+if (typeof VanillaTilt !== 'undefined') {
+  try {
+    VanillaTilt.init(document.querySelectorAll('.prop-card,.service-card,.kpi,.about-val,.vmv-card'), {
+      max: 8, speed: 400, glare: true, 'max-glare': 0.15, scale: 1.03
+    });
+  } catch(e) {}
+}
 
 /* ── Hero Particle Network ── */
 (function() {

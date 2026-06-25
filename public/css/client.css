@@ -114,9 +114,10 @@ img { max-width: 100%; display: block; }
   min-height: 88vh;
   position: relative;
   display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
   background:
     linear-gradient(160deg, rgba(0,0,0,.88) 0%, rgba(8,14,30,.8) 50%, rgba(0,0,0,.92) 100%),
-    url('https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1920&q=80') center/cover no-repeat fixed;
+    url('https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1920&q=80') center/cover no-repeat;
   padding: 80px 24px 60px;
   text-align: center;
 }
@@ -149,6 +150,7 @@ img { max-width: 100%; display: block; }
   background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
   border-radius: 16px; padding: 20px 10px; backdrop-filter: blur(8px);
   max-width: 580px; margin: 0 auto; flex-wrap: wrap;
+  position: relative; z-index: 4;
 }
 .hero-stat-item { flex: 1; min-width: 90px; text-align: center; padding: 4px 16px; }
 .hero-stat-divider { width: 1px; height: 36px; background: rgba(255,255,255,.15); flex-shrink: 0; }
@@ -482,7 +484,7 @@ h3 { font-size: 1.15rem; font-weight: 700; }
   .nav-links { display: none; position: fixed; top: 72px; right: 0; left: 0; background: rgba(8,8,8,.98); flex-direction: column; padding: 16px 24px 24px; gap: 4px; border-bottom: 1px solid var(--border-dark); z-index: 199; }
   .nav-links.open { display: flex; }
   .hamburger { display: flex; }
-  .hero-section { min-height: 90vh; background-attachment: scroll; }
+  .hero-section { min-height: 90vh; }
   .hero-stats-bar { padding: 14px 6px; }
   .hero-stat-item { min-width: 75px; padding: 4px 8px; }
   .hero-stat-item__num { font-size: 1.5rem; }
@@ -811,7 +813,7 @@ body.csb-layout {
   transition: color .15s;
 }
 .csb-admin:hover { color: rgba(255,255,255,.5); }
-.csb-content { flex: 1; min-width: 0; }
+.csb-content { flex: 1; min-width: 0; overflow-x: hidden; isolation: isolate; }
 
 /* Mobile hamburger */
 .csb-ham {
@@ -1033,18 +1035,15 @@ body.csb-layout {
   font-weight: 600 !important;
 }
 
-/* ── Section Reveal (AOS custom) ── */
-[data-aos] { opacity: 0; transition: opacity .7s ease, transform .7s cubic-bezier(.25,.46,.45,.94); }
-[data-aos="fade-up"]    { transform: translateY(40px); }
-[data-aos="fade-right"] { transform: translateX(-40px); }
-[data-aos="fade-left"]  { transform: translateX(40px); }
-[data-aos="zoom-in"]    { transform: scale(.9); }
-[data-aos].aos-animate  { opacity: 1; transform: none; }
+/* ── Section Reveal — AOS guarantee ── */
+[data-aos].aos-animate { opacity: 1 !important; transform: none !important; }
+/* Fallback: show all if AOS JS never ran */
+body.aos-done [data-aos]:not(.aos-animate) { opacity: 1 !important; transform: none !important; }
 
 /* ── Background Grid ── */
 .csb-content::before {
   content: '';
-  position: fixed;
+  position: absolute;
   inset: 0;
   background-image:
     linear-gradient(rgba(26,61,143,.03) 1px, transparent 1px),
@@ -1053,6 +1052,7 @@ body.csb-layout {
   pointer-events: none;
   z-index: 0;
 }
+.csb-content { position: relative; }
 .csb-content > * { position: relative; z-index: 1; }
 
 /* ── Numbers Section 3D ── */
