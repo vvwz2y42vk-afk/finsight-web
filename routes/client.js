@@ -46,32 +46,64 @@ router.get('/', async (req, res) => {
 
 router.get('/apartments', async (req, res) => {
   try {
-    const filter = req.query.building || '';
-    const active = await Booking.find({
+    const now      = new Date();
+    const soonDate = new Date(now.getTime() + 5 * 86400000); // 5 days
+
+    const bookings = await Booking.find({
       status: { $in: ['awaiting_checkin', 'active'] },
       building: { $exists: true, $ne: null },
       propertyId: null,
-    }, 'building apt').lean();
-    const occupiedSet = new Set(active.map(b => `${b.building}-${b.apt}`));
+    }, 'building apt status checkOut').lean();
 
-    const result = {};
-    const targets = filter ? [filter] : Object.keys(BUILDINGS);
-
-    targets.forEach(bName => {
-      const free = [];
-      BUILDINGS[bName].floors.forEach(floor => {
-        floor.r.forEach(apt => {
-          if (!occupiedSet.has(`${bName}-${apt}`)) {
-            free.push({ apt, floor: floor.l });
-          }
-        });
-      });
-      result[bName] = { free, total: countApts(bName) };
+    // Build occupancy map: "bldg__apt" → { status, checkOut, daysLeft }
+    const oMap = {};
+    bookings.forEach(b => {
+      const key = `${b.building}__${b.apt}`;
+      const co  = b.checkOut ? new Date(b.checkOut) : null;
+      const days = co ? Math.ceil((co - now) / 86400000) : null;
+      let s = 'occupied';
+      if (b.status === 'awaiting_checkin') s = 'incoming';
+      else if (co && co <= soonDate)       s = 'soon';
+      oMap[key] = { status: s, daysLeft: days };
     });
 
-    res.render('apartments', { available: result, selectedBuilding: filter, buildings: Object.keys(BUILDINGS) });
+    const sel   = req.query.building || '';
+    const targets = sel ? [sel] : Object.keys(BUILDINGS);
+
+    const result = {};
+    let totalAll = 0, totalFree = 0, totalOccupied = 0, totalSoon = 0, totalIncoming = 0;
+
+    targets.forEach(bName => {
+      let bFree = 0, bOcc = 0;
+      const floors = BUILDINGS[bName].floors.map(fl => ({
+        label: fl.l,
+        apts: fl.r.map(apt => {
+          const info   = oMap[`${bName}__${apt}`];
+          const status = info ? info.status : 'available';
+          if (status === 'available') { bFree++; totalFree++; }
+          else if (status === 'occupied') { bOcc++; totalOccupied++; }
+          else if (status === 'soon')     { bOcc++; totalSoon++; }
+          else if (status === 'incoming') { bOcc++; totalIncoming++; }
+          return { apt, status, daysLeft: info?.daysLeft ?? null };
+        }),
+      }));
+      const total = countApts(bName);
+      result[bName] = { floors, total, free: bFree, occupied: bOcc };
+      totalAll += total;
+    });
+
+    res.render('apartments', {
+      buildings: result,
+      selectedBuilding: sel,
+      buildingNames: Object.keys(BUILDINGS),
+      stats: { total: totalAll, free: totalFree, occupied: totalOccupied, soon: totalSoon, incoming: totalIncoming },
+    });
   } catch (e) {
-    res.render('apartments', { available: {}, selectedBuilding: '', buildings: Object.keys(BUILDINGS) });
+    console.error(e);
+    res.render('apartments', {
+      buildings: {}, selectedBuilding: '', buildingNames: Object.keys(BUILDINGS),
+      stats: { total: 0, free: 0, occupied: 0, soon: 0, incoming: 0 },
+    });
   }
 });
 
