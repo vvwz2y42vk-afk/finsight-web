@@ -595,6 +595,11 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
             <option value="جود">جود</option>
             <option value="none">بدون مسوق</option>
           </select>
+          <select id="sbk-client-type" onchange="renderStaffBookings(true)" style="font-size:11px;padding:5px 10px;border:1px solid var(--b2);border-radius:8px;background:var(--s);color:var(--t1);font-family:inherit;">
+            <option value="">كل العملاء</option>
+            <option value="new">عميل جديد 🆕</option>
+            <option value="returning">عميل قديم 🔄</option>
+          </select>
           <input type="date" id="sbk-date-from" onchange="renderStaffBookings(true)" title="الدخول من" style="font-size:11px;padding:5px 8px;border:1px solid var(--b2);border-radius:8px;background:var(--s);color:var(--t1);font-family:inherit;">
           <input type="date" id="sbk-date-to" onchange="renderStaffBookings(true)" title="الدخول إلى" style="font-size:11px;padding:5px 8px;border:1px solid var(--b2);border-radius:8px;background:var(--s);color:var(--t1);font-family:inherit;">
           <button onclick="resetSbkFilters()" style="font-size:11px;padding:5px 10px;border:1px solid var(--b2);border-radius:8px;background:var(--s2);color:var(--t3);cursor:pointer;font-family:inherit;">× مسح</button>
@@ -2222,7 +2227,7 @@ async function loadStaffBookings() {
 let _sbkPage=1; const _sbkPS=30;
 function resetSbkFilters(){
   ['sbk-search','sbk-date-from','sbk-date-to'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
-  ['sbk-building','sbk-type','sbk-status','sbk-mkt'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  ['sbk-building','sbk-type','sbk-status','sbk-mkt','sbk-client-type'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   renderStaffBookings(true);
 }
 function renderStaffBookings(resetPage) {
@@ -2230,12 +2235,13 @@ function renderStaffBookings(resetPage) {
   const tbody = document.getElementById('staff-bk-tbody');
   const countEl = document.getElementById('staff-bk-count');
   if (!tbody) return;
-  const building  = document.getElementById('sbk-building')?.value  || '';
-  const status    = document.getElementById('sbk-status')?.value    || '';
-  const bkType    = document.getElementById('sbk-type')?.value      || '';
-  const mkt       = document.getElementById('sbk-mkt')?.value       || '';
-  const dateFrom  = document.getElementById('sbk-date-from')?.value || '';
-  const dateTo    = document.getElementById('sbk-date-to')?.value   || '';
+  const building   = document.getElementById('sbk-building')?.value    || '';
+  const status     = document.getElementById('sbk-status')?.value      || '';
+  const bkType     = document.getElementById('sbk-type')?.value        || '';
+  const mkt        = document.getElementById('sbk-mkt')?.value         || '';
+  const clientType = document.getElementById('sbk-client-type')?.value || '';
+  const dateFrom   = document.getElementById('sbk-date-from')?.value   || '';
+  const dateTo     = document.getElementById('sbk-date-to')?.value     || '';
   const q = (document.getElementById('sbk-search')?.value||'').trim().toLowerCase();
   let all = allStaffBookings;
   if (building) all = all.filter(b => b.building === building);
@@ -2245,6 +2251,20 @@ function renderStaffBookings(resetPage) {
   else if (mkt) all = all.filter(b => b.marketer === mkt);
   if (dateFrom) { const df=new Date(dateFrom); all=all.filter(b=>b.checkIn&&new Date(b.checkIn)>=df); }
   if (dateTo)   { const dt=new Date(dateTo); dt.setHours(23,59,59); all=all.filter(b=>b.checkIn&&new Date(b.checkIn)<=dt); }
+  if (clientType) {
+    // أقدم تاريخ حجز لكل رقم هاتف عبر كل البيانات
+    const firstBk = {};
+    allStaffBookings.forEach(b => {
+      if (!b.phone) return;
+      const t = new Date(b.createdAt || b.checkIn || 0).getTime();
+      if (!firstBk[b.phone] || t < firstBk[b.phone]) firstBk[b.phone] = t;
+    });
+    all = all.filter(b => {
+      const t = new Date(b.createdAt || b.checkIn || 0).getTime();
+      const isNew = firstBk[b.phone] === t;
+      return clientType === 'new' ? isNew : !isNew;
+    });
+  }
   if (q) all = all.filter(b => (b.name||'').toLowerCase().includes(q)||(b.apt||'').includes(q)||(b.phone||'').includes(q));
   if (countEl)  countEl.textContent = all.length.toLocaleString('ar-SA') + ' حجز';
   const pages = Math.max(1,Math.ceil(all.length/_sbkPS));
