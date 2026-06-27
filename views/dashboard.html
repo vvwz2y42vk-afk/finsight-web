@@ -161,6 +161,8 @@ tbody td{padding:11px 12px;font-size:12px;vertical-align:middle;}
 .srt{flex:1;height:5px;background:var(--b);border-radius:20px;overflow:hidden;}
 .srf{height:100%;border-radius:20px;}
 .srv{font-size:10px;color:var(--t3);width:45px;text-align:left;}
+.src-period-btn{padding:5px 14px;border-radius:20px;border:1.5px solid var(--b2);background:var(--s);font-size:11px;font-weight:600;color:var(--t3);cursor:pointer;font-family:inherit;transition:all 150ms;}
+.src-period-btn.active{background:var(--gold);color:#fff;border-color:var(--gold);}
 .month-ctrl{display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:10px 14px;background:var(--s);border:1px solid var(--b);border-radius:10px;}
 .curr-month{font-size:13px;font-weight:700;color:var(--gold);}
 .hist-item{background:var(--s2);border:1px solid var(--b);border-radius:10px;padding:10px 12px;margin-bottom:6px;}
@@ -554,16 +556,19 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
     </div>
   </div>
   <div class="tc" id="tab-contracts">
-    <div class="sr">
-      <input class="si" type="text" id="cSearch" placeholder="🔍 ابحث..." oninput="renderContracts(true)" style="flex:2;">
-      <select class="si" id="cSheet" onchange="renderContracts(true)"><option value="">كل المباني</option><option>المنارا</option><option>جوان ان</option><option>الماسة</option><option>الواحة</option></select>
-      <select class="si" id="cStatus" onchange="renderContracts(true)"><option value="">كل الحالات</option><option>مفتوح</option><option>مغلق</option></select>
+    <!-- العقود القديمة (legacy) — مخفية لأنها فارغة في الإنتاج -->
+    <div style="display:none;">
+      <div class="sr">
+        <input class="si" type="text" id="cSearch" oninput="renderContracts(true)">
+        <select class="si" id="cSheet" onchange="renderContracts(true)"><option value="">كل المباني</option><option>المنارا</option><option>جوان ان</option><option>الماسة</option><option>الواحة</option></select>
+        <select class="si" id="cStatus" onchange="renderContracts(true)"><option value="">كل الحالات</option><option>مفتوح</option><option>مغلق</option></select>
+      </div>
+      <div class="card"><div class="tbl-wrap"><table><thead><tr><th>العميل</th><th>المبنى</th><th>الشقة</th><th>القيمة</th><th>المدفوع</th><th>المتبقي</th><th>الدخول</th><th>الخروج</th><th>الحالة</th><th>السداد</th><th>رسوم إيجار</th><th>طريقة الدفع</th><th></th></tr></thead><tbody id="contracts-tbody"></tbody></table></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;flex-wrap:wrap;gap:6px;">
+        <div style="font-size:10px;color:var(--t3);" id="c-count"></div>
+        <div style="display:flex;align-items:center;gap:6px;" id="c-pager"></div>
+      </div></div>
     </div>
-    <div class="card"><div class="tbl-wrap"><table><thead><tr><th>العميل</th><th>المبنى</th><th>الشقة</th><th>القيمة</th><th>المدفوع</th><th>المتبقي</th><th>الدخول</th><th>الخروج</th><th>الحالة</th><th>السداد</th><th>رسوم إيجار</th><th>طريقة الدفع</th><th></th></tr></thead><tbody id="contracts-tbody"></tbody></table></div>
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;flex-wrap:wrap;gap:6px;">
-      <div style="font-size:10px;color:var(--t3);" id="c-count"></div>
-      <div style="display:flex;align-items:center;gap:6px;" id="c-pager"></div>
-    </div></div>
 
     <!-- حجوزات الموظفين -->
     <div style="margin-top:24px;">
@@ -680,12 +685,31 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
     <div class="card"><div class="card-hd"><div class="card-title">العقود المنتهية قريباً</div></div><div id="expiry-list"></div></div>
   </div>
   <div class="tc" id="tab-performance">
-    <div class="g2" style="margin-bottom:10px;">
-      <div class="card"><div class="card-hd"><div class="card-title">📈 أداء المسوقين</div></div><div id="perf-marketers"></div></div>
-      <div class="card"><div class="card-hd"><div class="card-title">🏢 نسبة التحصيل</div></div><div id="perf-sheets"></div></div>
+    <!-- KPIs سريعة -->
+    <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:14px;">
+      <div class="kpi c1"><div class="kpi-lbl">إجمالي الحجوزات</div><div class="kpi-val" id="perf-kpi-total">—</div></div>
+      <div class="kpi c2"><div class="kpi-lbl">المحصّل</div><div class="kpi-val" id="perf-kpi-paid">—</div></div>
+      <div class="kpi c3"><div class="kpi-lbl">المتبقي</div><div class="kpi-val" id="perf-kpi-rem">—</div></div>
+      <div class="kpi c4"><div class="kpi-lbl">نسبة التحصيل</div><div class="kpi-val" id="perf-kpi-pct">—</div></div>
+    </div>
+    <div class="g2" style="margin-bottom:12px;">
+      <div class="card">
+        <div class="card-hd"><div class="card-title">📈 عمولات المسوقين</div></div>
+        <div id="perf-marketers" style="margin-bottom:10px;"></div>
+        <canvas id="perfMktChart" height="140"></canvas>
+      </div>
+      <div class="card">
+        <div class="card-hd"><div class="card-title">🏢 نسبة التحصيل لكل فرع</div></div>
+        <div id="perf-sheets" style="margin-bottom:10px;"></div>
+        <canvas id="perfBldChart" height="140"></canvas>
+      </div>
     </div>
     <div class="g2">
-      <div class="card"><div class="card-hd"><div class="card-title">📋 نوع العقود</div></div><div id="perf-types"></div></div>
+      <div class="card">
+        <div class="card-hd"><div class="card-title">📋 نوع الحجوزات</div></div>
+        <div id="perf-types" style="margin-bottom:10px;"></div>
+        <canvas id="perfTypeChart" height="140"></canvas>
+      </div>
       <div class="card"><div class="card-hd"><div class="card-title">📊 ملخص عام</div></div><div id="month-summary"></div></div>
     </div>
   </div>
@@ -841,10 +865,42 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
   </div>
 
   <div class="tc" id="tab-sources">
-    <div class="g2">
-      <div class="card"><div class="card-hd"><div class="card-title">مصادر الحجز</div></div><div id="src-count"></div></div>
-      <div class="card"><div class="card-hd"><div class="card-title">إجمالي القيمة</div></div><div id="src-value"></div></div>
+    <!-- فلتر الفترة -->
+    <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;align-items:center;">
+      <span style="font-size:11px;color:var(--t3);font-weight:600;">الفترة:</span>
+      <button class="src-period-btn active" onclick="setSrcPeriod('month',this)">الشهر الحالي</button>
+      <button class="src-period-btn" onclick="setSrcPeriod('3m',this)">آخر 3 أشهر</button>
+      <button class="src-period-btn" onclick="setSrcPeriod('year',this)">هذه السنة</button>
+      <button class="src-period-btn" onclick="setSrcPeriod('all',this)">الكل</button>
     </div>
+    <!-- KPIs -->
+    <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:14px;">
+      <div class="kpi c1"><div class="kpi-lbl">إجمالي الحجوزات</div><div class="kpi-val" id="src-kpi-total">—</div></div>
+      <div class="kpi c2"><div class="kpi-lbl">إجمالي الإيرادات</div><div class="kpi-val" id="src-kpi-rev">—</div></div>
+      <div class="kpi c4"><div class="kpi-lbl">المصدر الأول</div><div class="kpi-val" id="src-kpi-top" style="font-size:14px;">—</div></div>
+    </div>
+    <!-- مخطط + جدول -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+      <div class="card">
+        <div class="card-hd"><div class="card-title">عدد الحجوزات</div></div>
+        <canvas id="srcCountChart" height="220"></canvas>
+      </div>
+      <div class="card">
+        <div class="card-hd"><div class="card-title">إجمالي القيمة</div></div>
+        <canvas id="srcValueChart" height="220"></canvas>
+      </div>
+    </div>
+    <!-- جدول تفصيلي -->
+    <div class="card">
+      <div class="card-hd"><div class="card-title">تفاصيل المصادر</div></div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>#</th><th>المصدر</th><th>الحجوزات</th><th>النسبة</th><th>الإيرادات</th><th>متوسط الحجز</th></tr></thead>
+        <tbody id="src-detail-tbody"></tbody>
+      </table></div>
+    </div>
+    <!-- شريط قديم للتوافق -->
+    <div style="display:none;" id="src-count"></div>
+    <div style="display:none;" id="src-value"></div>
   </div>
 
   <!-- ═══════════════════════════════════ LISTINGS TAB ═══ -->
@@ -984,6 +1040,27 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
         <div style="font-size:11px;color:var(--t3);margin-bottom:12px;">حدد التبويبات والأدوات التي يستطيع هذا الموظف الوصول إليها</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;" id="permsGrid"></div>
         <button class="btn btn-gold" style="width:100%;justify-content:center;margin-top:14px;" onclick="savePerms()">حفظ الصلاحيات</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STAFF EDIT MODAL -->
+  <div class="overlay" id="staffEditOverlay" style="display:none;" onclick="if(event.target===this)closeStaffEdit()">
+    <div class="modal" style="max-width:400px;">
+      <div class="modal-hd"><div class="modal-title">✏️ تعديل بيانات الموظف</div><button class="modal-close" onclick="closeStaffEdit()">×</button></div>
+      <div class="modal-body">
+        <input type="hidden" id="se-id">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+          <div><label class="form-lbl">الاسم الكامل</label><input class="form-inp" id="se-name" type="text" placeholder="اسم الموظف"></div>
+          <div><label class="form-lbl">المبنى</label>
+            <select class="form-inp" id="se-building">
+              <option>المنارا</option><option>جوان ان</option><option>الماسة</option><option>الواحة</option>
+            </select>
+          </div>
+          <div style="grid-column:1/-1;"><label class="form-lbl">كلمة المرور الجديدة <span style="color:var(--t3);font-weight:400;">(اتركها فارغة للإبقاء)</span></label><input class="form-inp" id="se-password" type="password" placeholder="••••••••"></div>
+        </div>
+        <div id="se-err" style="color:#dc2626;font-size:12px;margin-bottom:8px;display:none;"></div>
+        <button class="btn btn-gold" style="width:100%;justify-content:center;" onclick="submitStaffEdit()">حفظ التعديلات</button>
       </div>
     </div>
   </div>
@@ -1813,16 +1890,37 @@ function showRoom(sheet,apt){
 }
 function closeRoom(){document.getElementById('roomOverlay').style.display='none';}
 
+let _perfMktChart=null,_perfBldChart=null,_perfTypeChart=null;
 function renderPerformance(){
+  const bks=allStaffBookings.filter(b=>b.name);
+  const total=bks.length,paid=bks.reduce((a,b)=>a+(b.paidAmount||0),0),rev=bks.reduce((a,b)=>a+(b.totalPrice||0),0),rem=Math.max(0,rev-paid);
+  set('perf-kpi-total',toAr(total));
+  set('perf-kpi-paid',fmt(paid)+' ﷼');
+  set('perf-kpi-rem',fmt(rem)+' ﷼');
+  set('perf-kpi-pct',toAr(Math.round(paid/(rev||1)*100))+'٪');
+  // المسوقون
   const amT=currComm.filter(c=>c.m==='عبدالملك').reduce((a,c)=>a+c.a,0),jT=currComm.filter(c=>c.m==='جود').reduce((a,c)=>a+c.a,0),tot=Math.max(amT+jT,1);
   set('perf-marketers',`<div class="perf-bar"><div class="perf-lbl">عبد الملك</div><div class="perf-track"><div class="perf-fill" style="width:${Math.round(amT/tot*100)}%;background:var(--gold);"></div></div><div class="perf-val" style="color:var(--gold);">${fmt(amT)} ﷼</div></div><div class="perf-bar"><div class="perf-lbl">جود</div><div class="perf-track"><div class="perf-fill" style="width:${Math.round(jT/tot*100)}%;background:var(--blue);"></div></div><div class="perf-val" style="color:var(--blue);">${fmt(jT)} ﷼</div></div>`);
-  const clrs=['var(--gold)','var(--green)','var(--blue)','#A04000'];
-  let sh='';SHEETS.forEach((s,i)=>{const bs=allStaffBookings.filter(b=>b.building===s&&b.name),p=bs.reduce((a,b)=>a+(b.paidAmount||0),0),v=bs.reduce((a,b)=>a+(b.totalPrice||0),0),pct=Math.round(p/(v||1)*100);sh+=`<div class="perf-bar"><div class="perf-lbl">${s}</div><div class="perf-track"><div class="perf-fill" style="width:${pct}%;background:${clrs[i]};"></div></div><div class="perf-val">${toAr(pct)}٪</div></div>`;});
+  // مخطط المسوقين
+  if(_perfMktChart)_perfMktChart.destroy();
+  const mktCtx=document.getElementById('perfMktChart')?.getContext('2d');
+  if(mktCtx)_perfMktChart=new Chart(mktCtx,{type:'doughnut',data:{labels:['عبد الملك','جود'],datasets:[{data:[amT,jT],backgroundColor:['rgba(26,61,143,.8)','rgba(26,82,118,.6)'],borderWidth:0}]},options:{plugins:{legend:{position:'bottom',labels:{font:{family:'IBM Plex Sans Arabic',size:11}}}},cutout:'60%'}});
+  // المباني
+  const clrs=['rgba(26,61,143,.8)','rgba(26,115,64,.8)','rgba(26,82,118,.8)','rgba(160,64,0,.8)'];
+  let sh='';const bldPcts=[];
+  SHEETS.forEach((s,i)=>{const bs=bks.filter(b=>b.building===s),p=bs.reduce((a,b)=>a+(b.paidAmount||0),0),v=bs.reduce((a,b)=>a+(b.totalPrice||0),0),pct=Math.round(p/(v||1)*100);bldPcts.push(pct);sh+=`<div class="perf-bar"><div class="perf-lbl">${s}</div><div class="perf-track"><div class="perf-fill" style="width:${pct}%;background:${clrs[i]};"></div></div><div class="perf-val">${toAr(pct)}٪</div></div>`;});
   set('perf-sheets',sh);
+  if(_perfBldChart)_perfBldChart.destroy();
+  const bldCtx=document.getElementById('perfBldChart')?.getContext('2d');
+  if(bldCtx)_perfBldChart=new Chart(bldCtx,{type:'bar',data:{labels:SHEETS,datasets:[{label:'نسبة التحصيل ٪',data:bldPcts,backgroundColor:clrs,borderRadius:6,borderSkipped:false}]},options:{plugins:{legend:{display:false}},scales:{y:{max:100,ticks:{callback:v=>v+'٪',font:{family:'IBM Plex Sans Arabic'}},grid:{color:'rgba(0,0,0,.05)'}},x:{ticks:{font:{family:'IBM Plex Sans Arabic',size:10}},grid:{display:false}}}}});
+  // الأنواع
+  const types={};bks.forEach(b=>{const t=b.bookingType==='annual'?'شهري':b.bookingType==='daily'?'يومي':'أخرى';types[t]=(types[t]||0)+1;});const tts=Object.values(types).reduce((a,b)=>a+b,0);
+  set('perf-types',Object.entries(types).map(([t,n],i)=>`<div class="perf-bar"><div class="perf-lbl">${t}</div><div class="perf-track"><div class="perf-fill" style="width:${Math.round(n/tts*100)}%;background:${clrs[i]};"></div></div><div class="perf-val">${toAr(n)} حجز</div></div>`).join(''));
+  if(_perfTypeChart)_perfTypeChart.destroy();
+  const typeCtx=document.getElementById('perfTypeChart')?.getContext('2d');
+  if(typeCtx)_perfTypeChart=new Chart(typeCtx,{type:'doughnut',data:{labels:Object.keys(types),datasets:[{data:Object.values(types),backgroundColor:clrs,borderWidth:0}]},options:{plugins:{legend:{position:'bottom',labels:{font:{family:'IBM Plex Sans Arabic',size:11}}}},cutout:'55%'}});
   const bs=window._bkStats||{total:0,revenue:0,paid:0,remaining:0};
   set('month-summary',`<div class="ssr"><span style="color:var(--t3)">الحجوزات</span><span style="font-weight:600;">${toAr(bs.total)}</span></div><div class="ssr"><span style="color:var(--t3)">المحصّل</span><span style="font-weight:600;color:var(--green);">${fmt(bs.paid)} ﷼</span></div><div class="ssr"><span style="color:var(--t3)">المتبقي</span><span style="font-weight:600;color:var(--red);">${fmt(bs.remaining)} ﷼</span></div><div class="ssr" style="border:none;"><span style="color:var(--t3)">التحصيل</span><span style="font-weight:700;color:var(--gold);">${Math.round(bs.paid/(bs.revenue||1)*100)}٪</span></div>`);
-  const types={};allStaffBookings.filter(b=>b.name).forEach(b=>{const t=b.bookingType==='annual'?'شهري':b.bookingType==='daily'?'يومي':'أخرى';types[t]=(types[t]||0)+1;});const tts=Object.values(types).reduce((a,b)=>a+b,0);
-  set('perf-types',Object.entries(types).map(([t,n],i)=>`<div class="perf-bar"><div class="perf-lbl">${t}</div><div class="perf-track"><div class="perf-fill" style="width:${Math.round(n/tts*100)}%;background:${clrs[i]};"></div></div><div class="perf-val">${toAr(n)} حجز</div></div>`).join(''));
 }
 
 function normSource(s){
@@ -1836,12 +1934,55 @@ function normSource(s){
   if(/^agoda/i.test(s))return'Agoda';
   return s;
 }
+let _srcPeriod='month',_srcCountChart=null,_srcValueChart=null;
+function setSrcPeriod(p,btn){
+  _srcPeriod=p;
+  document.querySelectorAll('.src-period-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderSources();
+}
+function getSrcBookings(){
+  const now=new Date(),y=now.getFullYear(),m=now.getMonth();
+  return allStaffBookings.filter(b=>{
+    if(!b.name)return false;
+    if(_srcPeriod==='all')return true;
+    const d=new Date(b.checkIn||b.createdAt||0);
+    if(_srcPeriod==='month')return d.getFullYear()===y&&d.getMonth()===m;
+    if(_srcPeriod==='3m'){const cut=new Date(y,m-2,1);return d>=cut;}
+    if(_srcPeriod==='year')return d.getFullYear()===y;
+    return true;
+  });
+}
 function renderSources(){
-  const sc={},sv={};allStaffBookings.filter(b=>b.name).forEach(b=>{const s=normSource(b.source);sc[s]=(sc[s]||0)+1;sv[s]=(sv[s]||0)+(b.totalPrice||0);});
-  const sorted=Object.entries(sc).sort((a,b)=>b[1]-a[1]),total=Object.values(sc).reduce((a,b)=>a+b,0);
-  set('src-count',sorted.length?sorted.map((s,i)=>`<div class="sri"><div class="srn">${s[0]||'غير محدد'}</div><div class="srt"><div class="srf" style="width:${Math.round(s[1]/total*100)}%;background:${SC[i]||'#888'};"></div></div><div class="srv">${toAr(s[1])} حجز</div></div>`).join(''):'<div style="text-align:center;padding:16px;color:var(--t3);">لا توجد بيانات</div>');
-  const svS=Object.entries(sv).sort((a,b)=>b[1]-a[1]),maxV=svS[0]?.[1]||1;
-  set('src-value',svS.length?svS.map((s,i)=>`<div class="sri"><div class="srn">${s[0]||'غير محدد'}</div><div class="srt"><div class="srf" style="width:${Math.round(s[1]/maxV*100)}%;background:${SC[i]||'#888'};"></div></div><div class="srv">${fmt(Math.round(s[1]/1000))}ك</div></div>`).join(''):'<div style="text-align:center;padding:16px;color:var(--t3);">لا توجد بيانات</div>');
+  const SRC_COLORS=['#1a3d8f','#1A7340','#1A5276','#A04000','#7D3C98','#C0392B','#17A589','#884EA0','#E67E22'];
+  const bks=getSrcBookings();
+  const sc={},sv={};
+  bks.forEach(b=>{const s=normSource(b.source);sc[s]=(sc[s]||0)+1;sv[s]=(sv[s]||0)+(b.totalPrice||0);});
+  const sorted=Object.entries(sc).sort((a,b)=>b[1]-a[1]);
+  const total=bks.length,totalRev=bks.reduce((a,b)=>a+(b.totalPrice||0),0);
+  // KPIs
+  set('src-kpi-total',toAr(total));
+  set('src-kpi-rev',fmt(Math.round(totalRev/1000))+'ك ﷼');
+  set('src-kpi-top',sorted[0]?sorted[0][0]:'—');
+  // مخطط العدد
+  if(_srcCountChart)_srcCountChart.destroy();
+  const cCtx=document.getElementById('srcCountChart')?.getContext('2d');
+  if(cCtx&&sorted.length)_srcCountChart=new Chart(cCtx,{type:'bar',data:{labels:sorted.map(s=>s[0]),datasets:[{data:sorted.map(s=>s[1]),backgroundColor:SRC_COLORS,borderRadius:6,borderSkipped:false}]},options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{font:{family:'IBM Plex Sans Arabic',size:10}},grid:{color:'rgba(0,0,0,.05)'}},y:{ticks:{font:{family:'IBM Plex Sans Arabic',size:10}},grid:{display:false}}}}});
+  // مخطط القيمة
+  const svS=Object.entries(sv).sort((a,b)=>b[1]-a[1]);
+  if(_srcValueChart)_srcValueChart.destroy();
+  const vCtx=document.getElementById('srcValueChart')?.getContext('2d');
+  if(vCtx&&svS.length)_srcValueChart=new Chart(vCtx,{type:'bar',data:{labels:svS.map(s=>s[0]),datasets:[{data:svS.map(s=>Math.round(s[1]/1000)),backgroundColor:SRC_COLORS,borderRadius:6,borderSkipped:false}]},options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{callback:v=>v+'ك',font:{family:'IBM Plex Sans Arabic',size:10}},grid:{color:'rgba(0,0,0,.05)'}},y:{ticks:{font:{family:'IBM Plex Sans Arabic',size:10}},grid:{display:false}}}}});
+  // جدول تفصيلي
+  const rows=sorted.map((s,i)=>{const rev=sv[s[0]]||0,avg=s[1]?Math.round(rev/s[1]):0;return`<tr>
+    <td style="color:var(--t3);">${toAr(i+1)}</td>
+    <td style="font-weight:600;"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${SRC_COLORS[i]||'#888'};margin-left:6px;"></span>${s[0]}</td>
+    <td style="font-weight:700;">${toAr(s[1])}</td>
+    <td><div style="display:flex;align-items:center;gap:6px;"><div style="flex:1;height:6px;background:#EEF2F8;border-radius:3px;overflow:hidden;"><div style="height:100%;background:${SRC_COLORS[i]||'#888'};border-radius:3px;width:${Math.round(s[1]/Math.max(total,1)*100)}%;"></div></div><span style="font-size:10px;color:var(--t3);min-width:28px;">${Math.round(s[1]/Math.max(total,1)*100)}٪</span></div></td>
+    <td style="font-weight:600;color:var(--green);">${fmt(Math.round(rev/1000))}ك ﷼</td>
+    <td style="color:var(--t3);font-size:11px;">${fmt(avg)} ﷼</td>
+  </tr>`;}).join('');
+  set('src-detail-tbody',rows||'<tr><td colspan="6" style="text-align:center;padding:16px;color:var(--t3);">لا توجد بيانات</td></tr>');
 }
 
 function openAdd(){editId=null;set('formTitle','+ إضافة عقد جديد');['name','apt','val','paid','entry','exit','phone','src','notes','ejar'].forEach(f=>{const e=document.getElementById('f-'+f);if(e)e.value='';});document.getElementById('f-pay-method').value='';document.getElementById('f-sheet').value='المنارا';document.getElementById('f-status').value='مفتوح';document.getElementById('f-pay').value='تم السداد';document.getElementById('f-type').value='ورقي';document.getElementById('f-mkt').value='';document.getElementById('formOverlay').style.display='flex';}
@@ -3183,8 +3324,8 @@ function renderStaff(){
             ?`<button class="dd-item red" onclick="closeDD('sdd-${s._id}');updateStaff('${s._id}','active',false)"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>تعطيل</button>`
             :`<button class="dd-item" style="color:#166534;" onclick="closeDD('sdd-${s._id}');updateStaff('${s._id}','active',true)"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>تفعيل</button>`
           }
+          <button class="dd-item blue" onclick="closeDD('sdd-${s._id}');openStaffEdit('${s._id}','${s.name}','${s.building}')"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>تعديل البيانات</button>
           <button class="dd-item blue" onclick="closeDD('sdd-${s._id}');openPermsModal('${s._id}','${s.name}',${allStaff.indexOf(s)})"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>الصلاحيات</button>
-          <button class="dd-item gold" onclick="closeDD('sdd-${s._id}');resetPassPrompt('${s._id}','${s.name}')"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><line x1="12" y1="11" x2="20" y2="3"/><line x1="19" y1="4" x2="21" y2="6"/></svg>كلمة المرور</button>
           <a href="/staff/login" target="_blank" class="dd-item" onclick="closeDD('sdd-${s._id}')"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>دخول الموظف</a>
         </div>
       </div>
@@ -3251,6 +3392,36 @@ async function savePerms(){
     else showToast('❌ '+(d.error||'حدث خطأ'));
   }catch(e){showToast('❌ حدث خطأ');}
 }
+// ── تعديل بيانات الموظف ───────────────────────────────────
+function openStaffEdit(id,name,building){
+  document.getElementById('se-id').value=id;
+  document.getElementById('se-name').value=name;
+  document.getElementById('se-building').value=building;
+  document.getElementById('se-password').value='';
+  document.getElementById('se-err').style.display='none';
+  document.getElementById('staffEditOverlay').style.display='flex';
+}
+function closeStaffEdit(){document.getElementById('staffEditOverlay').style.display='none';}
+async function submitStaffEdit(){
+  const id=document.getElementById('se-id').value;
+  const name=document.getElementById('se-name').value.trim();
+  const building=document.getElementById('se-building').value;
+  const password=document.getElementById('se-password').value.trim();
+  const errEl=document.getElementById('se-err');
+  if(!name){errEl.textContent='الاسم مطلوب';errEl.style.display='block';return;}
+  try{
+    const updates=[
+      fetch('/staff/api/admin/update',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,field:'name',value:name})}),
+      fetch('/staff/api/admin/update',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,field:'building',value:building})}),
+    ];
+    if(password) updates.push(fetch('/staff/api/admin/update',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,field:'password',value:password})}));
+    const results=await Promise.all(updates);
+    const allOk=results.every(r=>r.ok);
+    if(allOk){closeStaffEdit();showToast('✅ تم تحديث بيانات الموظف');loadStaff();}
+    else{errEl.textContent='حدث خطأ في الحفظ';errEl.style.display='block';}
+  }catch(e){errEl.textContent='خطأ في الاتصال';errEl.style.display='block';}
+}
+
 function openStaffForm(){document.getElementById('staffOverlay').style.display='flex';document.getElementById('sf-err').style.display='none';}
 function closeStaffForm(){document.getElementById('staffOverlay').style.display='none';}
 async function submitStaffForm(){
