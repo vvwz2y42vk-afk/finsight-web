@@ -646,7 +646,7 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
     </div>
     <div class="card" style="margin-bottom:10px;">
       <div class="card-hd"><div class="card-title">عمولات الشهر الحالي</div><span class="badge b-gold" id="comm-total-b">—</span></div>
-      <div class="tbl-wrap"><table><thead><tr><th>#</th><th>العميل</th><th>الشيت</th><th>المسوّق</th><th>التاريخ</th><th>العمولة</th><th style="text-align:center;">الإثبات</th></tr></thead><tbody id="comm-tbody"></tbody></table></div>
+      <div class="tbl-wrap"><table><thead><tr><th>#</th><th>العميل</th><th>الفرع</th><th>المسوّق</th><th>التاريخ</th><th>العمولة</th><th style="text-align:center;">الإثبات</th></tr></thead><tbody id="comm-tbody"></tbody></table></div>
       <div style="margin-top:8px;padding:8px 12px;background:var(--gl);border:1px solid var(--gb);border-radius:8px;display:flex;justify-content:space-between;align-items:center;"><span style="font-size:11px;color:var(--t3);">الإجمالي</span><span style="font-size:16px;font-weight:700;color:var(--gold);" id="comm-grand">—</span></div>
     </div>
     <div class="card">
@@ -1317,6 +1317,14 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
 <script>
 const SHEETS=['المنارا','جوان ان','الماسة','الواحة'];
 const SP={'المنارا':'pm','جوان ان':'pj','الماسة':'pa','الواحة':'pw'};
+const BRANCH_LABEL={'المنارا':'المنارة','جوان ان':'جوان إن','الماسة':'الماسة','الواحة':'الواحة'};
+function getBranch(sh,clientName){
+  if(sh&&BRANCH_LABEL[sh])return{key:sh,label:BRANCH_LABEL[sh]};
+  // جرّب الجلب من allStaffBookings بالاسم
+  const bk=(allStaffBookings||[]).find(b=>b.name&&clientName&&b.name.trim()===clientName.trim()&&b.building);
+  if(bk)return{key:bk.building,label:BRANCH_LABEL[bk.building]||bk.building};
+  return{key:sh||'',label:sh||'—'};
+}
 const SC=['#1a3d8f','#1A7340','#1A5276','#A04000','#C0392B','#888'];
 const BCOLORS={'المنارا':'#1A5276','جوان ان':'#1A7340','الماسة':'#7D6608','الواحة':'#6E2F00'};
 const COMM_RATE={'عبدالملك':50,'جود':40};
@@ -1679,15 +1687,15 @@ function renderCommissions(){
   set('comm-grand',fmt(totalAmT+totalJdT)+' ﷼');
   set('comm-tbody',currComm.length===0
     ?'<tr><td colspan="7" style="text-align:center;color:var(--t3);padding:14px;">لا توجد عمولات — تم التصفير ✓</td></tr>'
-    :currComm.map((c,i)=>`<tr>
+    :currComm.map((c,i)=>{const br=getBranch(c.sh,c.c);return`<tr>
       <td style="color:var(--t3);">${toAr(i+1)}</td>
       <td style="font-weight:600;">${c.c}</td>
-      <td><span class="pill ${SP[c.sh]||'pm'}">${c.sh}</span></td>
+      <td><span class="pill ${SP[br.key]||'pm'}">${br.label}</span></td>
       <td style="font-weight:600;color:${c.m==='عبدالملك'?'var(--gold)':'var(--blue)'};">${c.m}</td>
       <td style="color:var(--t3);font-size:10px;">${c.d}</td>
       <td style="font-weight:700;color:${c.m==='عبدالملك'?'var(--gold)':'var(--blue)'};">${fmt(c.a)} ﷼</td>
       ${proofCell(c,null)}
-    </tr>`).join(''));
+    </tr>`;}).join(''));
   // ── قائمة السنوات ──
   const yearSel=document.getElementById('hist-filter-year');
   if(yearSel){
@@ -1707,15 +1715,15 @@ function renderCommissions(){
   set('comm-history',filtered.length===0?'<div style="text-align:center;padding:14px;color:var(--t3);">لا توجد سجلات للفترة المحددة</div>':filtered.map(h=>{
     const amH=h.comm.filter(c=>c.m==='عبدالملك').reduce((a,c)=>a+c.a,0),jH=h.comm.filter(c=>c.m==='جود').reduce((a,c)=>a+c.a,0);
     const amHP=h.comm.filter(c=>c.m==='عبدالملك'&&c.proof?.url).length,jHP=h.comm.filter(c=>c.m==='جود'&&c.proof?.url).length;
-    const rows=h.comm.map((c,i)=>`<tr>
+    const rows=h.comm.map((c,i)=>{const br=getBranch(c.sh,c.c);return`<tr>
       <td style="color:var(--t3);">${toAr(i+1)}</td>
       <td style="font-weight:600;">${c.c}</td>
-      <td><span class="pill ${SP[c.sh]||'pm'}">${c.sh}</span></td>
+      <td><span class="pill ${SP[br.key]||'pm'}">${br.label}</span></td>
       <td style="font-weight:600;color:${c.m==='عبدالملك'?'var(--gold)':'var(--blue)'};">${c.m}</td>
       <td style="color:var(--t3);font-size:10px;">${c.d||''}</td>
       <td style="font-weight:700;color:${c.m==='عبدالملك'?'var(--gold)':'var(--blue)'};">${fmt(c.a)} ﷼</td>
       ${proofCell(c,h.key)}
-    </tr>`).join('');
+    </tr>`;}).join('');
     const amHTotal=h.comm.filter(c=>c.m==='عبدالملك').length,jHTotal=h.comm.filter(c=>c.m==='جود').length;
     return`<div class="hist-item">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px;">
