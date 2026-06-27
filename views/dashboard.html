@@ -3743,7 +3743,8 @@ async function loadAdminUsers(){
   try{
     const r=await fetch('/api/admin-users');
     if(!r.ok)return;
-    adminUsers=await r.json();
+    const data=await r.json();
+    adminUsers=Array.isArray(data)?data:(data.data||[]);
     renderAdminUsers();
   }catch(e){showToast('خطأ في تحميل المستخدمين');}
 }
