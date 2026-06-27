@@ -2252,16 +2252,20 @@ function renderStaffBookings(resetPage) {
   if (dateFrom) { const df=new Date(dateFrom); all=all.filter(b=>b.checkIn&&new Date(b.checkIn)>=df); }
   if (dateTo)   { const dt=new Date(dateTo); dt.setHours(23,59,59); all=all.filter(b=>b.checkIn&&new Date(b.checkIn)<=dt); }
   if (clientType) {
-    // أقدم تاريخ حجز لكل رقم هاتف عبر كل البيانات
+    // العملاء الذين سكنوا قبل الشهر الحالي
+    const now = new Date();
+    const curY = now.getFullYear(), curM = now.getMonth();
+    const monthStart = new Date(curY, curM, 1).getTime();
+    // رصيد أقدم حجز لكل هاتف
     const firstBk = {};
     allStaffBookings.forEach(b => {
       if (!b.phone) return;
-      const t = new Date(b.createdAt || b.checkIn || 0).getTime();
+      const t = new Date(b.checkIn || b.createdAt || 0).getTime();
       if (!firstBk[b.phone] || t < firstBk[b.phone]) firstBk[b.phone] = t;
     });
     all = all.filter(b => {
-      const t = new Date(b.createdAt || b.checkIn || 0).getTime();
-      const isNew = firstBk[b.phone] === t;
+      const first = firstBk[b.phone] || 0;
+      const isNew = first >= monthStart; // أول حجز له في الشهر الحالي
       return clientType === 'new' ? isNew : !isNew;
     });
   }
