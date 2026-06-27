@@ -1,13 +1,14 @@
 const mongoose = require('mongoose');
 
 const commEntrySchema = new mongoose.Schema({
-  month:    { type: Number, required: true },  // 1-12
-  year:     { type: Number, required: true },
-  amount:   { type: Number, default: 0 },
-  paid:     { type: Boolean, default: false },
-  paidAt:   Date,
-  notes:    String,
-}, { _id: false });
+  id:    String,
+  m:     String,
+  c:     String,
+  sh:    String,
+  d:     String,
+  a:     Number,
+  proof: { url: String, ts: Date },
+}, { _id: false, strict: false });
 
 const commissionHistorySchema = new mongoose.Schema({
   key:   { type: String, required: true },

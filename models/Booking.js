@@ -34,6 +34,7 @@ const bookingSchema = new mongoose.Schema({
     voucherId:     { type: mongoose.Schema.Types.ObjectId, ref: 'Voucher', default: null },
   }],
   source:       String,
+  marketer:     { type: String, default: '' },
   pricePerNight: Number,
   pricePerMonth: Number,
   propertyId:   { type: mongoose.Schema.Types.ObjectId, ref: 'Property', index: true, default: null },

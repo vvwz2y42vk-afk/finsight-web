@@ -130,6 +130,37 @@ router.post('/commission-history', auth, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+router.post('/commission-proof', auth, async (req, res) => {
+  try {
+    const { imageBase64, mimeType } = req.body;
+    if (!imageBase64) return res.status(400).json({ error: 'no image' });
+    const crypto     = require('crypto');
+    const cloudName  = process.env.CLOUDINARY_CLOUD_NAME;
+    const apiKey     = process.env.CLOUDINARY_API_KEY;
+    const apiSecret  = process.env.CLOUDINARY_API_SECRET;
+    if (!cloudName || !apiKey || !apiSecret)
+      return res.status(503).json({ error: 'Cloudinary not configured' });
+    const folder    = 'barez/commission-proofs';
+    const timestamp = Math.floor(Date.now() / 1000);
+    const toSign    = `folder=${folder}&timestamp=${timestamp}${apiSecret}`;
+    const signature = crypto.createHash('sha1').update(toSign).digest('hex');
+    const upRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        file:      `data:${mimeType || 'image/jpeg'};base64,${imageBase64}`,
+        api_key:   apiKey,
+        timestamp,
+        signature,
+        folder,
+      }),
+    });
+    if (!upRes.ok) return res.status(500).json({ error: 'upload failed' });
+    const upData = await upRes.json();
+    res.json({ url: upData.secure_url });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // ─── Available Apartments (public) ───────────────────────
 router.get('/apartments/available', async (req, res) => {
   try {
@@ -353,7 +384,7 @@ router.put('/bookings/:id', auth, async (req, res) => {
     const newStatus  = req.body.status;
 
     // paidAmount excluded — must go through /staff/api/bookings/:id/payments to keep vouchers in sync
-    const BOOKING_UPDATE_FIELDS = ['status','notes','name','phone','checkIn','checkOut','nights','totalPrice','idType','idNumber','bookingType','guests'];
+    const BOOKING_UPDATE_FIELDS = ['status','notes','name','phone','checkIn','checkOut','nights','totalPrice','idType','idNumber','bookingType','guests','marketer','building','apt'];
     const update = Object.fromEntries(BOOKING_UPDATE_FIELDS.filter(k => k in req.body).map(k => [k, req.body[k]]));
     await Booking.findByIdAndUpdate(req.params.id, update);
     audit(req, 'update', 'Booking', req.params.id, `تحديث الحجز${newStatus && newStatus !== prevStatus ? ': ' + prevStatus + ' → ' + newStatus : ''}`);
@@ -465,8 +496,8 @@ router.post('/bookings', auth, async (req, res) => {
 router.get('/staff-bookings-full', auth, async (req, res) => {
   try {
     const bookings = await Booking.find(
-      { building: { $exists: true, $ne: null }, listing: null, status: { $ne: 'cancelled' } },
-      { name:1, phone:1, building:1, apt:1, totalPrice:1, paidAmount:1, status:1, checkIn:1, checkOut:1, source:1, bookingType:1, nights:1 }
+      { building: { $exists: true, $ne: null }, listing: null },
+      { name:1, phone:1, building:1, apt:1, totalPrice:1, paidAmount:1, status:1, checkIn:1, checkOut:1, source:1, bookingType:1, nights:1, marketer:1, createdAt:1 }
     ).sort({ checkIn: -1 }).lean();
     res.json(bookings);
   } catch(e) { res.status(500).json({ error: e.message }); }
