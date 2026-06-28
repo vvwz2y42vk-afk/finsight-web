@@ -3543,7 +3543,7 @@ function renderTopDebts(bld){
   const debts=(allStaffBookings||[]).filter(b=>
     b.name&&(b.paidAmount||0)<(b.totalPrice||0)&&(bld==='all'||b.building===bld)
   ).map(b=>({...b,rem:(b.totalPrice||0)-(b.paidAmount||0)}))
-   .sort((a,b2)=>b2.rem-a.rem).slice(0,5);
+   .sort((a,b2)=>new Date(b2.createdAt||b2.checkIn||0)-new Date(a.createdAt||a.checkIn||0)).slice(0,5);
   set('bd-count',toAr(debts.length)+' حالات');
   set('top-debts',debts.map(b=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--b);"><div><div style="font-size:11px;font-weight:600;">${b.name}</div><div style="font-size:9px;color:var(--t3);">شقة ${b.apt} · <span class="pill ${SP[b.building]||''}">${b.building}</span></div></div><div style="font-size:12px;font-weight:700;color:var(--red);">${fmt(b.rem)} ﷼</div></div>`).join(''));
 }
