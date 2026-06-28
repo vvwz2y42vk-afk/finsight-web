@@ -776,7 +776,7 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
     <!-- مخطط الإيرادات الشهرية -->
     <div class="chart-card" style="margin-bottom:14px;">
       <div class="chart-title" id="rpt-chart-title">الإيرادات اليومية</div>
-      <canvas id="revenueChart" style="width:100%;height:200px;"></canvas>
+      <canvas id="revenueChart" style="display:block;width:100%;height:200px;"></canvas>
     </div>
 
     <!-- مخطط السنة -->
@@ -785,7 +785,7 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
         <div class="chart-title" style="margin-bottom:0;">مقارنة الإيرادات — آخر 12 شهر</div>
         <div id="yearly-total" style="font-size:12px;font-weight:700;color:var(--green);"></div>
       </div>
-      <canvas id="yearlyChart" style="width:100%;height:220px;"></canvas>
+      <canvas id="yearlyChart" style="display:block;width:100%;height:220px;"></canvas>
       <div id="yearly-summary" style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;"></div>
     </div>
 
@@ -806,12 +806,12 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
       <!-- مخطط الإيرادات الشهرية للمبنى المحدد -->
       <div class="chart-card" style="margin-bottom:14px;">
         <div class="chart-title" id="bld-chart-title">الإيرادات الشهرية</div>
-        <canvas id="bldMonthlyChart" style="width:100%;height:220px;"></canvas>
+        <canvas id="bldMonthlyChart" style="display:block;width:100%;height:220px;"></canvas>
       </div>
       <!-- إذا الكل: مخطط المقارنة بين المباني -->
       <div id="bld-compare-wrap" class="chart-card" style="margin-bottom:14px;">
         <div class="chart-title">مقارنة المباني — آخر 12 شهر</div>
-        <canvas id="bldCompareChart" style="width:100%;height:240px;"></canvas>
+        <canvas id="bldCompareChart" style="display:block;width:100%;height:240px;"></canvas>
       </div>
       <!-- بطاقات ملخص المباني (الكل فقط) -->
       <div id="bld-summary-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;"></div>
@@ -2702,16 +2702,14 @@ function renderBldStats(){
 
   const mCanvas=document.getElementById('bldMonthlyChart');
   if(mCanvas){
-    mCanvas.width=mCanvas.parentElement.clientWidth||700; mCanvas.height=220;
     if(bldMonthlyChartInst)bldMonthlyChartInst.destroy();
-    const c=cfg.color.replace('.8','');
     bldMonthlyChartInst=new Chart(mCanvas.getContext('2d'),{
       type:'bar',
       data:{labels:monthData.map(m=>m.label),datasets:[
         {label:'يومي',data:monthData.map(m=>m.daily),backgroundColor:cfg.color,borderRadius:4,stack:'r'},
         {label:'شهري',data:monthData.map(m=>m.annual),backgroundColor:cfg.color.replace(/[\d.]+\)$/,'0.4)'),borderRadius:4,stack:'r'},
       ]},
-      options:{responsive:false,plugins:{legend:{display:true,position:'top',align:'end',labels:{font:{family:'Cairo',size:11},boxWidth:12}},tooltip:{rtl:true,bodyFont:{family:'Cairo'},callbacks:{label:ctx=>ctx.dataset.label+': '+fmt(ctx.parsed.y)+' ﷼'}}},scales:{x:{stacked:true,ticks:{font:{family:'Cairo',size:10}},grid:{display:false}},y:{stacked:true,beginAtZero:true,ticks:{font:{family:'Cairo',size:10},callback:v=>fmt(v)},grid:{color:'rgba(0,0,0,.04)'}}}}
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'top',align:'end',labels:{font:{family:'Cairo',size:11},boxWidth:12}},tooltip:{rtl:true,bodyFont:{family:'Cairo',size:12},callbacks:{title:ctx=>ctx[0].label,label:ctx=>ctx.dataset.label+': '+fmt(ctx.parsed.y)+' ﷼',footer:ctx=>{const t=ctx.reduce((s,c)=>s+c.parsed.y,0);return'الإجمالي: '+fmt(t)+' ﷼';}}}},scales:{x:{stacked:true,ticks:{font:{family:'Cairo',size:10}},grid:{display:false}},y:{stacked:true,beginAtZero:true,ticks:{font:{family:'Cairo',size:10},callback:v=>fmt(v)},grid:{color:'rgba(0,0,0,.04)'}}}}
     });
   }
 
@@ -2725,7 +2723,6 @@ function renderBldStats(){
     const colors=['rgba(26,61,143,.75)','rgba(124,58,237,.75)','rgba(4,120,87,.75)','rgba(194,65,12,.75)'];
     const cmpCanvas=document.getElementById('bldCompareChart');
     if(cmpCanvas){
-      cmpCanvas.width=cmpCanvas.parentElement.clientWidth||700; cmpCanvas.height=240;
       if(bldCompareChartInst)bldCompareChartInst.destroy();
       bldCompareChartInst=new Chart(cmpCanvas.getContext('2d'),{
         type:'bar',
@@ -2740,7 +2737,7 @@ function renderBldStats(){
             backgroundColor:colors[i],borderRadius:3,
           }))
         },
-        options:{responsive:false,plugins:{legend:{display:true,position:'top',align:'end',labels:{font:{family:'Cairo',size:11},boxWidth:12,padding:12}},tooltip:{rtl:true,bodyFont:{family:'Cairo'},callbacks:{label:ctx=>ctx.dataset.label+': '+fmt(ctx.parsed.y)+' ﷼'}}},scales:{x:{ticks:{font:{family:'Cairo',size:10}},grid:{display:false}},y:{beginAtZero:true,ticks:{font:{family:'Cairo',size:10},callback:v=>fmt(v)},grid:{color:'rgba(0,0,0,.04)'}}}}
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'top',align:'end',labels:{font:{family:'Cairo',size:11},boxWidth:12,padding:12}},tooltip:{rtl:true,bodyFont:{family:'Cairo',size:12},callbacks:{title:ctx=>ctx[0].label,label:ctx=>ctx.dataset.label+': '+fmt(ctx.parsed.y)+' ﷼',footer:ctx=>{const t=ctx.reduce((s,c)=>s+c.parsed.y,0);return'الإجمالي: '+fmt(t)+' ﷼';}}}},scales:{x:{ticks:{font:{family:'Cairo',size:10}},grid:{display:false}},y:{beginAtZero:true,ticks:{font:{family:'Cairo',size:10},callback:v=>fmt(v)},grid:{color:'rgba(0,0,0,.04)'}}}}
       });
     }
     // بطاقات ملخص لكل مبنى
@@ -2845,12 +2842,11 @@ function renderReports(){
   });
   const rCanvas=document.getElementById('revenueChart');
   if(rCanvas){
-    rCanvas.width=rCanvas.parentElement.clientWidth||600; rCanvas.height=200;
     if(adminRevenueChartInst)adminRevenueChartInst.destroy();
     adminRevenueChartInst=new Chart(rCanvas.getContext('2d'),{
       type:'bar',
-      data:{labels:Array.from({length:daysInMonth},(_,i)=>String(i+1)),datasets:[{label:'الإيراد',data:dailyRev,backgroundColor:'rgba(26,61,143,.18)',borderColor:'rgba(26,61,143,.7)',borderWidth:1.5,borderRadius:6,hoverBackgroundColor:'rgba(26,61,143,.35)'}]},
-      options:{responsive:false,plugins:{legend:{display:false},tooltip:{rtl:true,bodyFont:{family:'Cairo'},callbacks:{label:ctx=>fmt(ctx.parsed.y)+' ﷼'}}},scales:{x:{ticks:{font:{family:'Cairo',size:10}},grid:{display:false}},y:{beginAtZero:true,ticks:{font:{family:'Cairo',size:10},callback:v=>fmt(v)},grid:{color:'rgba(0,0,0,.04)'}}}}
+      data:{labels:Array.from({length:daysInMonth},(_,i)=>String(i+1)),datasets:[{label:'الإيراد',data:dailyRev,backgroundColor:'rgba(26,61,143,.18)',borderColor:'rgba(26,61,143,.7)',borderWidth:1.5,borderRadius:6,hoverBackgroundColor:'rgba(26,61,143,.45)'}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{rtl:true,bodyFont:{family:'Cairo',size:12},callbacks:{title:ctx=>'اليوم '+ctx[0].label,label:ctx=>fmt(ctx.parsed.y)+' ﷼'}}},scales:{x:{ticks:{font:{family:'Cairo',size:10}},grid:{display:false}},y:{beginAtZero:true,ticks:{font:{family:'Cairo',size:10},callback:v=>fmt(v)},grid:{color:'rgba(0,0,0,.04)'}}}}
     });
   }
 
@@ -2876,7 +2872,6 @@ function renderReports(){
     <div style="flex:1;min-width:130px;background:#F3E8FF;border-radius:10px;padding:10px 14px;"><div style="font-size:11px;color:var(--t3);margin-bottom:2px;">إجمالي الحجوزات</div><div style="font-size:13px;font-weight:700;color:#7C3AED;">${toAr(yearData.reduce((s,m)=>s+m.count,0))} حجز</div></div>`;
   const yCanvas=document.getElementById('yearlyChart');
   if(yCanvas){
-    yCanvas.width=yCanvas.parentElement.clientWidth||700; yCanvas.height=220;
     if(adminYearlyChartInst)adminYearlyChartInst.destroy();
     adminYearlyChartInst=new Chart(yCanvas.getContext('2d'),{
       type:'bar',
@@ -2884,7 +2879,7 @@ function renderReports(){
         {label:'يومي',data:yearData.map(m=>m.daily),backgroundColor:'rgba(26,61,143,.75)',borderRadius:5,stack:'rev'},
         {label:'شهري',data:yearData.map(m=>m.annual),backgroundColor:'rgba(139,92,246,.75)',borderRadius:5,stack:'rev'},
       ]},
-      options:{responsive:false,plugins:{legend:{display:true,position:'top',align:'end',labels:{font:{family:'Cairo',size:11},boxWidth:12,padding:12}},tooltip:{rtl:true,bodyFont:{family:'Cairo'},callbacks:{label:ctx=>ctx.dataset.label+': '+fmt(ctx.parsed.y)+' ﷼'}}},scales:{x:{stacked:true,ticks:{font:{family:'Cairo',size:10},maxRotation:45},grid:{display:false}},y:{stacked:true,beginAtZero:true,ticks:{font:{family:'Cairo',size:10},callback:v=>fmt(v)},grid:{color:'rgba(0,0,0,.04)'}}}}
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'top',align:'end',labels:{font:{family:'Cairo',size:11},boxWidth:12,padding:12}},tooltip:{rtl:true,bodyFont:{family:'Cairo',size:12},callbacks:{title:ctx=>ctx[0].label,label:ctx=>ctx.dataset.label+': '+fmt(ctx.parsed.y)+' ﷼',footer:ctx=>{const t=ctx.reduce((s,c)=>s+c.parsed.y,0);return'الإجمالي: '+fmt(t)+' ﷼';}}}},scales:{x:{stacked:true,ticks:{font:{family:'Cairo',size:10},maxRotation:45},grid:{display:false}},y:{stacked:true,beginAtZero:true,ticks:{font:{family:'Cairo',size:10},callback:v=>fmt(v)},grid:{color:'rgba(0,0,0,.04)'}}}}
     });
   }
 
