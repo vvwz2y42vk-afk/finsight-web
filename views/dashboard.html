@@ -3541,6 +3541,18 @@ function renderBuildingCards(){
   const wrap=document.getElementById('bld-cards');
   if(!wrap)return;
   const BCOLORS={المنارا:'#1A5276','جوان ان':'#1A7340',الماسة:'#7D6608',الواحة:'#6E2F00'};
+  // دخل الشهر الحالي لكل مبنى من المدفوعات
+  const now=new Date(),cy=now.getFullYear(),cm=now.getMonth();
+  const monthIncome={};
+  (allStaffBookings||[]).forEach(b=>{
+    if(!b.building||!b.payments?.length)return;
+    b.payments.forEach(p=>{
+      const pd=new Date(p.date||0);
+      if(pd.getFullYear()===cy&&pd.getMonth()===cm){
+        monthIncome[b.building]=(monthIncome[b.building]||0)+(p.amount||0);
+      }
+    });
+  });
   wrap.innerHTML=Object.entries(aptsData).map(([name,data])=>{
     const rate=data.total?Math.round(data.occupied/data.total*100):0;
     let cin=0,cout=0,vacant=0,awt=0;
@@ -3551,6 +3563,7 @@ function renderBuildingCards(){
       else if(r.status==='awaiting'||r.status==='awaiting_payment')awt++;
     }));
     const color=BCOLORS[name]||'var(--gold)';
+    const income=monthIncome[name]||0;
     return `<div class="card" style="border-top:3px solid ${color};cursor:pointer;" onclick="go('apts',document.getElementById('nav-apts'))">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
         <div style="font-size:12px;font-weight:700;color:${color};">${name}</div>
@@ -3560,6 +3573,10 @@ function renderBuildingCards(){
         <div style="width:${rate}%;height:100%;background:${color};border-radius:20px;transition:width .8s;"></div>
       </div>
       <div style="font-size:10px;color:var(--t3);margin-bottom:6px;">${data.occupied}/${data.total} مؤجرة</div>
+      <div style="border-top:1px solid var(--b);margin:6px 0;padding-top:6px;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:9px;color:var(--t3);font-weight:600;">دخل الشهر</span>
+        <span style="font-size:11px;font-weight:700;color:${color};">${fmt(income)} ﷼</span>
+      </div>
       <div style="display:flex;gap:4px;flex-wrap:wrap;">
         ${cin>0?`<span style="font-size:9px;padding:2px 6px;border-radius:20px;background:rgba(26,82,118,.1);color:#1A5276;font-weight:600;">↓${cin} وصول</span>`:''}
         ${cout>0?`<span style="font-size:9px;padding:2px 6px;border-radius:20px;background:rgba(160,64,0,.1);color:#A04000;font-weight:600;">↑${cout} خروج</span>`:''}
