@@ -1444,7 +1444,7 @@ let allC=[], currComm=[], commHistory=[], editId=null, deleteId=null, mapFilter=
 let _proofCommId=null, _proofHistKey=null;
 
 const fmt=n=>Number(n||0).toLocaleString('ar-SA');
-const toAr=n=>String(n).replace(/\d/g,d=>'٠١٢٣٤٥٦٧٨٩'[d]);
+const toAr=n=>String(n);
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5);
 function daysTo(d){if(!d)return 999;const p=String(d).trim().split('/');if(p.length!==3)return 999;const dt=new Date(`${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`);return isNaN(dt)?999:Math.round((dt-today)/864e5);}
 function daysToISO(d){if(!d)return 999;const dt=new Date(d);return isNaN(dt)?999:Math.round((dt-today)/864e5);}
