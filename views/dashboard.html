@@ -1634,9 +1634,6 @@ function renderAll(){
   const exps=_sbActive.filter(b=>b.checkOut).map(b=>({...b,d:daysToISO(b.checkOut)})).filter(b=>b.d>=0&&b.d<=30).sort((a,b2)=>a.d-b2.d).slice(0,5);
   set('exp-count',toAr(exps.length)+' حجز');
   set('top-expiry',exps.map(b=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--b);"><div><div style="font-size:11px;font-weight:600;">${b.name}</div><div style="font-size:9px;color:var(--t3);">شقة ${b.apt} · ${fmtDate(b.checkOut)}</div></div><div style="font-size:12px;font-weight:700;color:${b.d<=7?'var(--red)':b.d<=15?'var(--gold)':'var(--green)'};">${toAr(b.d)} يوم</div></div>`).join(''));
-  const exps=_sbActive.filter(b=>b.checkOut).map(b=>({...b,d:daysToISO(b.checkOut)})).filter(b=>b.d>=0&&b.d<=30).sort((a,b2)=>a.d-b2.d).slice(0,5);
-  set('exp-count',toAr(exps.length)+' حجز');
-  set('top-expiry',exps.map(b=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--b);"><div><div style="font-size:11px;font-weight:600;">${b.name}</div><div style="font-size:9px;color:var(--t3);">شقة ${b.apt} · ${fmtDate(b.checkOut)}</div></div><div style="font-size:12px;font-weight:700;color:${b.d<=7?'var(--red)':b.d<=15?'var(--gold)':'var(--green)'};">${toAr(b.d)} يوم</div></div>`).join(''));
   renderContracts();renderCommissions();renderCollection();renderExpiry();renderMap();renderPerformance();renderSources();renderReports();
   initAdminMrSelects();renderBldStats();
   // init occupancy date defaults
