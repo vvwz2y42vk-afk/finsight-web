@@ -3533,6 +3533,14 @@ function updateAptsBadges(){
   renderAdminDonut(totOcc,totAll);
 }
 
+function renderDonutForBuilding(bld){
+  if(!aptsData)return;
+  let occ=0,tot=0;
+  const src=bld==='all'?Object.values(aptsData):[aptsData[bld]].filter(Boolean);
+  src.forEach(b=>{occ+=b.occupied;tot+=b.total;});
+  renderAdminDonut(occ,tot);
+}
+
 function renderBuildingCards(){
   if(!aptsData)return;
   const wrap=document.getElementById('bld-cards');
@@ -3915,6 +3923,7 @@ function switchWeeklyTab(tab,btn){
   if(sub) sub.textContent=tab==='all'?'إشغال آخر 7 أيام — جميع المباني':`إشغال آخر 7 أيام — ${tab}`;
   renderAdminWeeklyChart();
   renderKPIs();
+  renderDonutForBuilding(tab);
 }
 function renderKPIs(){
   const bld=_kpiBuilding;
