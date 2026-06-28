@@ -1615,13 +1615,10 @@ function changeProof(){
 function renderAll(){
   const tv=allC.reduce((a,c)=>a+c.v,0),tp=allC.reduce((a,c)=>a+c.p,0),tr=allC.reduce((a,c)=>a+c.r,0);
   const op=allC.filter(c=>c.st==='مفتوح').length,cl=allC.filter(c=>c.st==='مغلق').length;
-  const amT=currComm.filter(c=>c.m==='عبدالملك').reduce((a,c)=>a+c.a,0),amN=currComm.filter(c=>c.m==='عبدالملك').length;
-  const bs=window._bkStats||{total:0,revenue:0,paid:0,remaining:0,open:0,closed:0};
-  const bsTotal=bs.total,bsPaid=bs.paid,bsRev=bs.revenue,bsRem=bs.remaining,bsOpen=bs.open,bsClosed=bs.closed;
-  set('k0',toAr(bsTotal));set('k1',fmt(Math.round(bsPaid))+' ﷼');set('k1n',Math.round(bsPaid/(bsRev||1)*100)+'٪ تحصيل');
-  set('k2',fmt(Math.round(bsRem))+' ﷼');set('k3',fmt(amT)+' ﷼');set('k3n',toAr(amN)+' عقد');
-  set('k4',toAr(bsOpen));set('k4n',toAr(bsClosed)+' مغلق');
+  _kpiBuilding='all';
+  renderKPIs();
   // KPI month-over-month delta
+  const bs=window._bkStats||{total:0,revenue:0,paid:0,remaining:0,open:0,closed:0};
   const tm=bs.thisMonth||{count:0,paid:0},pm2=bs.prevMonth||{count:0,paid:0};
   const _delta=(cur,prv)=>{if(!prv)return'';const d=Math.round((cur-prv)/(prv||1)*100);return `<div style="font-size:9px;margin-top:3px;color:${d>=0?'#166534':'#dc2626'};">${d>=0?'▲':'▼'} ${Math.abs(d)}٪ عن الشهر الماضي</div>`;};
   const _kd0=document.getElementById('k0-delta');if(_kd0)_kd0.innerHTML=_delta(tm.count,pm2.count);
@@ -3908,13 +3905,43 @@ async function loadWeeklyStats(){
   }catch(e){}
 }
 
+let _kpiBuilding='all';
 function switchWeeklyTab(tab,btn){
   _weeklyTab=tab;
+  _kpiBuilding=tab;
   document.querySelectorAll('.wtab').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
   const sub=document.getElementById('weekly-sub');
   if(sub) sub.textContent=tab==='all'?'إشغال آخر 7 أيام — جميع المباني':`إشغال آخر 7 أيام — ${tab}`;
   renderAdminWeeklyChart();
+  renderKPIs();
+}
+function renderKPIs(){
+  const bld=_kpiBuilding;
+  const bks=(allStaffBookings||[]).filter(b=>b.name&&(bld==='all'||b.building===bld));
+  const total=bks.length;
+  const paid=bks.reduce((a,b)=>a+(b.paidAmount||0),0);
+  const rev=bks.reduce((a,b)=>a+(b.totalPrice||0),0);
+  const rem=Math.max(0,rev-paid);
+  const activeStatuses=['active','awaiting_checkin','awaiting_payment'];
+  const open=bks.filter(b=>activeStatuses.includes(b.status)).length;
+  const closed=bks.filter(b=>b.status==='checkout').length;
+  // عمولات المبنى المختار من currComm
+  const commBks=bld==='all'?currComm:currComm.filter(c=>c.sh===bld);
+  const amT=commBks.filter(c=>c.m==='عبدالملك').reduce((a,c)=>a+c.a,0);
+  const amN=commBks.filter(c=>c.m==='عبدالملك').length;
+  // تحديث الكاردات
+  set('k0',toAr(total));
+  set('k1',fmt(Math.round(paid))+' ﷼');
+  set('k1n',Math.round(paid/(rev||1)*100)+'٪ تحصيل');
+  set('k2',fmt(Math.round(rem))+' ﷼');
+  set('k3',fmt(amT)+' ﷼');
+  set('k3n',toAr(amN)+' عقد');
+  set('k4',toAr(open));
+  set('k4n',toAr(closed)+' مغلق');
+  // عنوان الصفحة — أضف اسم الفرع
+  const lbl=bld==='all'?'لوحة <span>التحكم</span>':`لوحة <span>التحكم</span> — <span style="color:var(--green);">${bld}</span>`;
+  const pt=document.getElementById('pageTitle');if(pt)pt.innerHTML=lbl;
 }
 
 function renderAdminWeeklyChart(){
