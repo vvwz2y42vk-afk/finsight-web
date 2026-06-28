@@ -2710,7 +2710,7 @@ function renderBldStats(){
         {label:'يومي',data:monthData.map(m=>m.daily),backgroundColor:cfg.color,borderRadius:4,stack:'r'},
         {label:'شهري',data:monthData.map(m=>m.annual),backgroundColor:cfg.color.replace(/[\d.]+\)$/,'0.4)'),borderRadius:4,stack:'r'},
       ]},
-      options:{responsive:false,plugins:{legend:{display:true,position:'top',align:'end',labels:{font:{family:'Cairo',size:11},boxWidth:12}},tooltip:{rtl:true,bodyFont:{family:'Cairo',size:12},callbacks:{title:ctx=>ctx[0].label,label:ctx=>ctx.dataset.label+': '+fmt(ctx.parsed.y)+' ﷼',footer:ctx=>{const t=ctx.reduce((s,c)=>s+c.parsed.y,0);return'الإجمالي: '+fmt(t)+' ﷼';}}}},scales:{x:{stacked:true,ticks:{font:{family:'Cairo',size:10}},grid:{display:false}},y:{stacked:true,beginAtZero:true,ticks:{font:{family:'Cairo',size:10},callback:v=>fmt(v)},grid:{color:'rgba(0,0,0,.04)'}}}}
+      options:{responsive:false,devicePixelRatio:window.devicePixelRatio||2,plugins:{legend:{display:true,position:'top',align:'end',labels:{font:{family:'Cairo',size:11},boxWidth:12}},tooltip:{rtl:true,bodyFont:{family:'Cairo',size:12},callbacks:{title:ctx=>ctx[0].label,label:ctx=>ctx.dataset.label+': '+fmt(ctx.parsed.y)+' ﷼',footer:ctx=>{const t=ctx.reduce((s,c)=>s+c.parsed.y,0);return'الإجمالي: '+fmt(t)+' ﷼';}}}},scales:{x:{stacked:true,ticks:{font:{family:'Cairo',size:10}},grid:{display:false}},y:{stacked:true,beginAtZero:true,ticks:{font:{family:'Cairo',size:10},callback:v=>fmt(v)},grid:{color:'rgba(0,0,0,.04)'}}}}
     });
   }
 
@@ -2739,7 +2739,7 @@ function renderBldStats(){
             backgroundColor:colors[i],borderRadius:3,
           }))
         },
-        options:{responsive:false,plugins:{legend:{display:true,position:'top',align:'end',labels:{font:{family:'Cairo',size:11},boxWidth:12,padding:12}},tooltip:{rtl:true,bodyFont:{family:'Cairo',size:12},callbacks:{title:ctx=>ctx[0].label,label:ctx=>ctx.dataset.label+': '+fmt(ctx.parsed.y)+' ﷼',footer:ctx=>{const t=ctx.reduce((s,c)=>s+c.parsed.y,0);return'الإجمالي: '+fmt(t)+' ﷼';}}}},scales:{x:{ticks:{font:{family:'Cairo',size:10}},grid:{display:false}},y:{beginAtZero:true,ticks:{font:{family:'Cairo',size:10},callback:v=>fmt(v)},grid:{color:'rgba(0,0,0,.04)'}}}}
+        options:{responsive:false,devicePixelRatio:window.devicePixelRatio||2,plugins:{legend:{display:true,position:'top',align:'end',labels:{font:{family:'Cairo',size:11},boxWidth:12,padding:12}},tooltip:{rtl:true,bodyFont:{family:'Cairo',size:12},callbacks:{title:ctx=>ctx[0].label,label:ctx=>ctx.dataset.label+': '+fmt(ctx.parsed.y)+' ﷼',footer:ctx=>{const t=ctx.reduce((s,c)=>s+c.parsed.y,0);return'الإجمالي: '+fmt(t)+' ﷼';}}}},scales:{x:{ticks:{font:{family:'Cairo',size:10}},grid:{display:false}},y:{beginAtZero:true,ticks:{font:{family:'Cairo',size:10},callback:v=>fmt(v)},grid:{color:'rgba(0,0,0,.04)'}}}}
       });
     }
     // بطاقات ملخص لكل مبنى
@@ -2849,7 +2849,7 @@ function renderReports(){
     adminRevenueChartInst=new Chart(rCanvas.getContext('2d'),{
       type:'bar',
       data:{labels:Array.from({length:daysInMonth},(_,i)=>String(i+1)),datasets:[{label:'الإيراد',data:dailyRev,backgroundColor:'rgba(26,61,143,.18)',borderColor:'rgba(26,61,143,.7)',borderWidth:1.5,borderRadius:6,hoverBackgroundColor:'rgba(26,61,143,.45)'}]},
-      options:{responsive:false,plugins:{legend:{display:false},tooltip:{rtl:true,bodyFont:{family:'Cairo',size:12},callbacks:{title:ctx=>'اليوم '+ctx[0].label,label:ctx=>fmt(ctx.parsed.y)+' ﷼'}}},scales:{x:{ticks:{font:{family:'Cairo',size:10}},grid:{display:false}},y:{beginAtZero:true,ticks:{font:{family:'Cairo',size:10},callback:v=>fmt(v)},grid:{color:'rgba(0,0,0,.04)'}}}}
+      options:{responsive:false,devicePixelRatio:window.devicePixelRatio||2,plugins:{legend:{display:false},tooltip:{rtl:true,bodyFont:{family:'Cairo',size:12},callbacks:{title:ctx=>'اليوم '+ctx[0].label,label:ctx=>fmt(ctx.parsed.y)+' ﷼'}}},scales:{x:{ticks:{font:{family:'Cairo',size:10}},grid:{display:false}},y:{beginAtZero:true,ticks:{font:{family:'Cairo',size:10},callback:v=>fmt(v)},grid:{color:'rgba(0,0,0,.04)'}}}}
     });
   }
 
@@ -2883,7 +2883,7 @@ function renderReports(){
         {label:'يومي',data:yearData.map(m=>m.daily),backgroundColor:'rgba(26,61,143,.75)',borderRadius:5,stack:'rev'},
         {label:'شهري',data:yearData.map(m=>m.annual),backgroundColor:'rgba(139,92,246,.75)',borderRadius:5,stack:'rev'},
       ]},
-      options:{responsive:false,plugins:{legend:{display:true,position:'top',align:'end',labels:{font:{family:'Cairo',size:11},boxWidth:12,padding:12}},tooltip:{rtl:true,bodyFont:{family:'Cairo',size:12},callbacks:{title:ctx=>ctx[0].label,label:ctx=>ctx.dataset.label+': '+fmt(ctx.parsed.y)+' ﷼',footer:ctx=>{const t=ctx.reduce((s,c)=>s+c.parsed.y,0);return'الإجمالي: '+fmt(t)+' ﷼';}}}},scales:{x:{stacked:true,ticks:{font:{family:'Cairo',size:10},maxRotation:45},grid:{display:false}},y:{stacked:true,beginAtZero:true,ticks:{font:{family:'Cairo',size:10},callback:v=>fmt(v)},grid:{color:'rgba(0,0,0,.04)'}}}}
+      options:{responsive:false,devicePixelRatio:window.devicePixelRatio||2,plugins:{legend:{display:true,position:'top',align:'end',labels:{font:{family:'Cairo',size:11},boxWidth:12,padding:12}},tooltip:{rtl:true,bodyFont:{family:'Cairo',size:12},callbacks:{title:ctx=>ctx[0].label,label:ctx=>ctx.dataset.label+': '+fmt(ctx.parsed.y)+' ﷼',footer:ctx=>{const t=ctx.reduce((s,c)=>s+c.parsed.y,0);return'الإجمالي: '+fmt(t)+' ﷼';}}}},scales:{x:{stacked:true,ticks:{font:{family:'Cairo',size:10},maxRotation:45},grid:{display:false}},y:{stacked:true,beginAtZero:true,ticks:{font:{family:'Cairo',size:10},callback:v=>fmt(v)},grid:{color:'rgba(0,0,0,.04)'}}}}
     });
   }
 
