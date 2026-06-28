@@ -3918,15 +3918,35 @@ function switchWeeklyTab(tab,btn){
 }
 function renderKPIs(){
   const bld=_kpiBuilding;
-  const bks=(allStaffBookings||[]).filter(b=>b.name&&(bld==='all'||b.building===bld));
+  // نطاق الشهر الحالي: من أول الشهر إلى اليوم
+  const _n=new Date(),_y=_n.getFullYear(),_m=_n.getMonth();
+  const monthStart=new Date(_y,_m,1).getTime();
+  const todayEnd=new Date(_y,_m,_n.getDate(),23,59,59).getTime();
+  const bks=(allStaffBookings||[]).filter(b=>{
+    if(!b.name)return false;
+    if(bld!=='all'&&b.building!==bld)return false;
+    const t=new Date(b.checkIn||b.createdAt||0).getTime();
+    return t>=monthStart&&t<=todayEnd;
+  });
   const total=bks.length;
-  const paid=bks.reduce((a,b)=>a+(b.paidAmount||0),0);
+  // المحصّل: مجموع الدفعات الواقعة في الشهر الحالي
+  let paid=0;
+  bks.forEach(b=>{
+    if(b.payments&&b.payments.length){
+      b.payments.forEach(p=>{
+        const pt=new Date(p.date||0).getTime();
+        if(pt>=monthStart&&pt<=todayEnd)paid+=(p.amount||0);
+      });
+    } else {
+      paid+=(b.paidAmount||0);
+    }
+  });
   const rev=bks.reduce((a,b)=>a+(b.totalPrice||0),0);
   const rem=Math.max(0,rev-paid);
   const activeStatuses=['active','awaiting_checkin','awaiting_payment'];
   const open=bks.filter(b=>activeStatuses.includes(b.status)).length;
   const closed=bks.filter(b=>b.status==='checkout').length;
-  // عمولات المبنى المختار من currComm
+  // عمولات المبنى المختار من currComm (currComm مرتبط بالشهر الحالي بطبيعته)
   const commBks=bld==='all'?currComm:currComm.filter(c=>c.sh===bld);
   const amT=commBks.filter(c=>c.m==='عبدالملك').reduce((a,c)=>a+c.a,0);
   const amN=commBks.filter(c=>c.m==='عبدالملك').length;
