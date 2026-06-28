@@ -1626,13 +1626,14 @@ function renderAll(){
   const _activeStatuses=['active','awaiting_checkin','awaiting_payment'];
   const _sbDebt=allStaffBookings.filter(b=>b.name&&(b.paidAmount||0)<(b.totalPrice||0));
   const _sbActive=allStaffBookings.filter(b=>_activeStatuses.includes(b.status));
-  set('nb-total',toAr(bsTotal));set('nb-debt',toAr(_sbDebt.length));
+  set('nb-total',toAr(allStaffBookings.length));set('nb-debt',toAr(_sbDebt.length));
   const exp7=_sbActive.filter(b=>b.checkOut).map(b=>({...b,d:daysToISO(b.checkOut)})).filter(b=>b.d>=0&&b.d<=7);
   set('alerts-wrap',exp7.length?`<div class="alert-box"><span>⏰</span><span>تنبيه: ${toAr(exp7.length)} حجز ينتهي خلال ٧ أيام — <strong>${exp7.map(b=>b.name).join('، ')}</strong></span></div>`:'');
   const _eb=document.getElementById('expiry-badge');if(_eb){if(exp7.length){_eb.textContent=exp7.length;_eb.style.display='inline-block';}else _eb.style.display='none';}
-  const dbs=_sbDebt.map(b=>({...b,rem:(b.totalPrice||0)-(b.paidAmount||0)})).sort((a,b2)=>b2.rem-a.rem).slice(0,5);
-  set('bd-count',toAr(dbs.length)+' حالات');
-  set('top-debts',dbs.map(b=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--b);"><div><div style="font-size:11px;font-weight:600;">${b.name}</div><div style="font-size:9px;color:var(--t3);">شقة ${b.apt} · <span class="pill ${SP[b.building]||''}">${b.building}</span></div></div><div style="font-size:12px;font-weight:700;color:var(--red);">${fmt(b.rem)} ﷼</div></div>`).join(''));
+  renderTopDebts('all');
+  const exps=_sbActive.filter(b=>b.checkOut).map(b=>({...b,d:daysToISO(b.checkOut)})).filter(b=>b.d>=0&&b.d<=30).sort((a,b2)=>a.d-b2.d).slice(0,5);
+  set('exp-count',toAr(exps.length)+' حجز');
+  set('top-expiry',exps.map(b=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--b);"><div><div style="font-size:11px;font-weight:600;">${b.name}</div><div style="font-size:9px;color:var(--t3);">شقة ${b.apt} · ${fmtDate(b.checkOut)}</div></div><div style="font-size:12px;font-weight:700;color:${b.d<=7?'var(--red)':b.d<=15?'var(--gold)':'var(--green)'};">${toAr(b.d)} يوم</div></div>`).join(''));
   const exps=_sbActive.filter(b=>b.checkOut).map(b=>({...b,d:daysToISO(b.checkOut)})).filter(b=>b.d>=0&&b.d<=30).sort((a,b2)=>a.d-b2.d).slice(0,5);
   set('exp-count',toAr(exps.length)+' حجز');
   set('top-expiry',exps.map(b=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--b);"><div><div style="font-size:11px;font-weight:600;">${b.name}</div><div style="font-size:9px;color:var(--t3);">شقة ${b.apt} · ${fmtDate(b.checkOut)}</div></div><div style="font-size:12px;font-weight:700;color:${b.d<=7?'var(--red)':b.d<=15?'var(--gold)':'var(--green)'};">${toAr(b.d)} يوم</div></div>`).join(''));
@@ -3541,6 +3542,15 @@ function renderDonutForBuilding(bld){
   renderAdminDonut(occ,tot);
 }
 
+function renderTopDebts(bld){
+  const debts=(allStaffBookings||[]).filter(b=>
+    b.name&&(b.paidAmount||0)<(b.totalPrice||0)&&(bld==='all'||b.building===bld)
+  ).map(b=>({...b,rem:(b.totalPrice||0)-(b.paidAmount||0)}))
+   .sort((a,b2)=>b2.rem-a.rem).slice(0,5);
+  set('bd-count',toAr(debts.length)+' حالات');
+  set('top-debts',debts.map(b=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--b);"><div><div style="font-size:11px;font-weight:600;">${b.name}</div><div style="font-size:9px;color:var(--t3);">شقة ${b.apt} · <span class="pill ${SP[b.building]||''}">${b.building}</span></div></div><div style="font-size:12px;font-weight:700;color:var(--red);">${fmt(b.rem)} ﷼</div></div>`).join(''));
+}
+
 function renderBuildingCards(){
   if(!aptsData)return;
   const wrap=document.getElementById('bld-cards');
@@ -3924,6 +3934,7 @@ function switchWeeklyTab(tab,btn){
   renderAdminWeeklyChart();
   renderKPIs();
   renderDonutForBuilding(tab);
+  renderTopDebts(tab);
 }
 function renderKPIs(){
   const bld=_kpiBuilding;
