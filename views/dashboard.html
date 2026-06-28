@@ -1618,8 +1618,8 @@ function renderAll(){
   const amT=currComm.filter(c=>c.m==='عبدالملك').reduce((a,c)=>a+c.a,0),amN=currComm.filter(c=>c.m==='عبدالملك').length;
   const bs=window._bkStats||{total:0,revenue:0,paid:0,remaining:0,open:0,closed:0};
   const bsTotal=bs.total,bsPaid=bs.paid,bsRev=bs.revenue,bsRem=bs.remaining,bsOpen=bs.open,bsClosed=bs.closed;
-  set('k0',toAr(bsTotal));set('k1',fmt(Math.round(bsPaid/1000))+'ك');set('k1n',Math.round(bsPaid/(bsRev||1)*100)+'٪ تحصيل');
-  set('k2',fmt(Math.round(bsRem/1000))+'ك');set('k3',fmt(amT)+' ﷼');set('k3n',toAr(amN)+' عقد');
+  set('k0',toAr(bsTotal));set('k1',fmt(Math.round(bsPaid))+' ﷼');set('k1n',Math.round(bsPaid/(bsRev||1)*100)+'٪ تحصيل');
+  set('k2',fmt(Math.round(bsRem))+' ﷼');set('k3',fmt(amT)+' ﷼');set('k3n',toAr(amN)+' عقد');
   set('k4',toAr(bsOpen));set('k4n',toAr(bsClosed)+' مغلق');
   // KPI month-over-month delta
   const tm=bs.thisMonth||{count:0,paid:0},pm2=bs.prevMonth||{count:0,paid:0};
