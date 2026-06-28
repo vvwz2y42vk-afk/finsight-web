@@ -2702,6 +2702,7 @@ function renderBldStats(){
 
   const mCanvas=document.getElementById('bldMonthlyChart');
   if(mCanvas){
+    mCanvas.width=mCanvas.parentElement.clientWidth||700;mCanvas.height=220;
     if(bldMonthlyChartInst)bldMonthlyChartInst.destroy();
     bldMonthlyChartInst=new Chart(mCanvas.getContext('2d'),{
       type:'bar',
@@ -2709,7 +2710,7 @@ function renderBldStats(){
         {label:'يومي',data:monthData.map(m=>m.daily),backgroundColor:cfg.color,borderRadius:4,stack:'r'},
         {label:'شهري',data:monthData.map(m=>m.annual),backgroundColor:cfg.color.replace(/[\d.]+\)$/,'0.4)'),borderRadius:4,stack:'r'},
       ]},
-      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'top',align:'end',labels:{font:{family:'Cairo',size:11},boxWidth:12}},tooltip:{rtl:true,bodyFont:{family:'Cairo',size:12},callbacks:{title:ctx=>ctx[0].label,label:ctx=>ctx.dataset.label+': '+fmt(ctx.parsed.y)+' ﷼',footer:ctx=>{const t=ctx.reduce((s,c)=>s+c.parsed.y,0);return'الإجمالي: '+fmt(t)+' ﷼';}}}},scales:{x:{stacked:true,ticks:{font:{family:'Cairo',size:10}},grid:{display:false}},y:{stacked:true,beginAtZero:true,ticks:{font:{family:'Cairo',size:10},callback:v=>fmt(v)},grid:{color:'rgba(0,0,0,.04)'}}}}
+      options:{responsive:false,plugins:{legend:{display:true,position:'top',align:'end',labels:{font:{family:'Cairo',size:11},boxWidth:12}},tooltip:{rtl:true,bodyFont:{family:'Cairo',size:12},callbacks:{title:ctx=>ctx[0].label,label:ctx=>ctx.dataset.label+': '+fmt(ctx.parsed.y)+' ﷼',footer:ctx=>{const t=ctx.reduce((s,c)=>s+c.parsed.y,0);return'الإجمالي: '+fmt(t)+' ﷼';}}}},scales:{x:{stacked:true,ticks:{font:{family:'Cairo',size:10}},grid:{display:false}},y:{stacked:true,beginAtZero:true,ticks:{font:{family:'Cairo',size:10},callback:v=>fmt(v)},grid:{color:'rgba(0,0,0,.04)'}}}}
     });
   }
 
@@ -2723,6 +2724,7 @@ function renderBldStats(){
     const colors=['rgba(26,61,143,.75)','rgba(124,58,237,.75)','rgba(4,120,87,.75)','rgba(194,65,12,.75)'];
     const cmpCanvas=document.getElementById('bldCompareChart');
     if(cmpCanvas){
+      cmpCanvas.width=cmpCanvas.parentElement.clientWidth||700;cmpCanvas.height=240;
       if(bldCompareChartInst)bldCompareChartInst.destroy();
       bldCompareChartInst=new Chart(cmpCanvas.getContext('2d'),{
         type:'bar',
@@ -2737,7 +2739,7 @@ function renderBldStats(){
             backgroundColor:colors[i],borderRadius:3,
           }))
         },
-        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'top',align:'end',labels:{font:{family:'Cairo',size:11},boxWidth:12,padding:12}},tooltip:{rtl:true,bodyFont:{family:'Cairo',size:12},callbacks:{title:ctx=>ctx[0].label,label:ctx=>ctx.dataset.label+': '+fmt(ctx.parsed.y)+' ﷼',footer:ctx=>{const t=ctx.reduce((s,c)=>s+c.parsed.y,0);return'الإجمالي: '+fmt(t)+' ﷼';}}}},scales:{x:{ticks:{font:{family:'Cairo',size:10}},grid:{display:false}},y:{beginAtZero:true,ticks:{font:{family:'Cairo',size:10},callback:v=>fmt(v)},grid:{color:'rgba(0,0,0,.04)'}}}}
+        options:{responsive:false,plugins:{legend:{display:true,position:'top',align:'end',labels:{font:{family:'Cairo',size:11},boxWidth:12,padding:12}},tooltip:{rtl:true,bodyFont:{family:'Cairo',size:12},callbacks:{title:ctx=>ctx[0].label,label:ctx=>ctx.dataset.label+': '+fmt(ctx.parsed.y)+' ﷼',footer:ctx=>{const t=ctx.reduce((s,c)=>s+c.parsed.y,0);return'الإجمالي: '+fmt(t)+' ﷼';}}}},scales:{x:{ticks:{font:{family:'Cairo',size:10}},grid:{display:false}},y:{beginAtZero:true,ticks:{font:{family:'Cairo',size:10},callback:v=>fmt(v)},grid:{color:'rgba(0,0,0,.04)'}}}}
       });
     }
     // بطاقات ملخص لكل مبنى
@@ -2842,11 +2844,12 @@ function renderReports(){
   });
   const rCanvas=document.getElementById('revenueChart');
   if(rCanvas){
+    rCanvas.width=rCanvas.parentElement.clientWidth||600;rCanvas.height=200;
     if(adminRevenueChartInst)adminRevenueChartInst.destroy();
     adminRevenueChartInst=new Chart(rCanvas.getContext('2d'),{
       type:'bar',
       data:{labels:Array.from({length:daysInMonth},(_,i)=>String(i+1)),datasets:[{label:'الإيراد',data:dailyRev,backgroundColor:'rgba(26,61,143,.18)',borderColor:'rgba(26,61,143,.7)',borderWidth:1.5,borderRadius:6,hoverBackgroundColor:'rgba(26,61,143,.45)'}]},
-      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{rtl:true,bodyFont:{family:'Cairo',size:12},callbacks:{title:ctx=>'اليوم '+ctx[0].label,label:ctx=>fmt(ctx.parsed.y)+' ﷼'}}},scales:{x:{ticks:{font:{family:'Cairo',size:10}},grid:{display:false}},y:{beginAtZero:true,ticks:{font:{family:'Cairo',size:10},callback:v=>fmt(v)},grid:{color:'rgba(0,0,0,.04)'}}}}
+      options:{responsive:false,plugins:{legend:{display:false},tooltip:{rtl:true,bodyFont:{family:'Cairo',size:12},callbacks:{title:ctx=>'اليوم '+ctx[0].label,label:ctx=>fmt(ctx.parsed.y)+' ﷼'}}},scales:{x:{ticks:{font:{family:'Cairo',size:10}},grid:{display:false}},y:{beginAtZero:true,ticks:{font:{family:'Cairo',size:10},callback:v=>fmt(v)},grid:{color:'rgba(0,0,0,.04)'}}}}
     });
   }
 
@@ -2872,6 +2875,7 @@ function renderReports(){
     <div style="flex:1;min-width:130px;background:#F3E8FF;border-radius:10px;padding:10px 14px;"><div style="font-size:11px;color:var(--t3);margin-bottom:2px;">إجمالي الحجوزات</div><div style="font-size:13px;font-weight:700;color:#7C3AED;">${toAr(yearData.reduce((s,m)=>s+m.count,0))} حجز</div></div>`;
   const yCanvas=document.getElementById('yearlyChart');
   if(yCanvas){
+    yCanvas.width=yCanvas.parentElement.clientWidth||700;yCanvas.height=220;
     if(adminYearlyChartInst)adminYearlyChartInst.destroy();
     adminYearlyChartInst=new Chart(yCanvas.getContext('2d'),{
       type:'bar',
@@ -2879,7 +2883,7 @@ function renderReports(){
         {label:'يومي',data:yearData.map(m=>m.daily),backgroundColor:'rgba(26,61,143,.75)',borderRadius:5,stack:'rev'},
         {label:'شهري',data:yearData.map(m=>m.annual),backgroundColor:'rgba(139,92,246,.75)',borderRadius:5,stack:'rev'},
       ]},
-      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'top',align:'end',labels:{font:{family:'Cairo',size:11},boxWidth:12,padding:12}},tooltip:{rtl:true,bodyFont:{family:'Cairo',size:12},callbacks:{title:ctx=>ctx[0].label,label:ctx=>ctx.dataset.label+': '+fmt(ctx.parsed.y)+' ﷼',footer:ctx=>{const t=ctx.reduce((s,c)=>s+c.parsed.y,0);return'الإجمالي: '+fmt(t)+' ﷼';}}}},scales:{x:{stacked:true,ticks:{font:{family:'Cairo',size:10},maxRotation:45},grid:{display:false}},y:{stacked:true,beginAtZero:true,ticks:{font:{family:'Cairo',size:10},callback:v=>fmt(v)},grid:{color:'rgba(0,0,0,.04)'}}}}
+      options:{responsive:false,plugins:{legend:{display:true,position:'top',align:'end',labels:{font:{family:'Cairo',size:11},boxWidth:12,padding:12}},tooltip:{rtl:true,bodyFont:{family:'Cairo',size:12},callbacks:{title:ctx=>ctx[0].label,label:ctx=>ctx.dataset.label+': '+fmt(ctx.parsed.y)+' ﷼',footer:ctx=>{const t=ctx.reduce((s,c)=>s+c.parsed.y,0);return'الإجمالي: '+fmt(t)+' ﷼';}}}},scales:{x:{stacked:true,ticks:{font:{family:'Cairo',size:10},maxRotation:45},grid:{display:false}},y:{stacked:true,beginAtZero:true,ticks:{font:{family:'Cairo',size:10},callback:v=>fmt(v)},grid:{color:'rgba(0,0,0,.04)'}}}}
     });
   }
 
