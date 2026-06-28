@@ -685,6 +685,29 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
     <div class="card"><div class="card-hd"><div class="card-title">العقود المنتهية قريباً</div></div><div id="expiry-list"></div></div>
   </div>
   <div class="tc" id="tab-performance">
+    <!-- شريط الفلاتر -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px;padding:12px 14px;background:var(--s);border:1px solid var(--b);border-radius:12px;">
+      <span style="font-size:11px;font-weight:700;color:var(--t3);">تصفية:</span>
+      <select id="perf-f-period" onchange="renderPerformance()" style="font-size:11px;padding:5px 10px;border:1px solid var(--b2);border-radius:8px;background:var(--s);color:var(--t1);font-family:inherit;">
+        <option value="month">الشهر الحالي</option>
+        <option value="3m">آخر 3 أشهر</option>
+        <option value="year">هذه السنة</option>
+        <option value="all">كل الوقت</option>
+      </select>
+      <select id="perf-f-bld" onchange="renderPerformance()" style="font-size:11px;padding:5px 10px;border:1px solid var(--b2);border-radius:8px;background:var(--s);color:var(--t1);font-family:inherit;">
+        <option value="">كل الفروع</option>
+        <option>المنارا</option><option>جوان ان</option><option>الماسة</option><option>الواحة</option>
+      </select>
+      <select id="perf-f-type" onchange="renderPerformance()" style="font-size:11px;padding:5px 10px;border:1px solid var(--b2);border-radius:8px;background:var(--s);color:var(--t1);font-family:inherit;">
+        <option value="">كل الأنواع</option>
+        <option value="daily">يومي</option>
+        <option value="annual">شهري</option>
+      </select>
+      <input type="date" id="perf-f-from" onchange="renderPerformance()" title="من تاريخ" style="font-size:11px;padding:5px 8px;border:1px solid var(--b2);border-radius:8px;background:var(--s);color:var(--t1);font-family:inherit;">
+      <input type="date" id="perf-f-to" onchange="renderPerformance()" title="إلى تاريخ" style="font-size:11px;padding:5px 8px;border:1px solid var(--b2);border-radius:8px;background:var(--s);color:var(--t1);font-family:inherit;">
+      <button onclick="resetPerfFilters()" style="font-size:11px;padding:5px 12px;border:1px solid var(--b2);border-radius:8px;background:var(--s2);color:var(--t3);cursor:pointer;font-family:inherit;">× مسح</button>
+      <span id="perf-f-count" style="font-size:10px;color:var(--t3);margin-right:auto;"></span>
+    </div>
     <!-- KPIs سريعة -->
     <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:14px;">
       <div class="kpi c1"><div class="kpi-lbl">إجمالي الحجوزات</div><div class="kpi-val" id="perf-kpi-total">—</div></div>
@@ -1891,36 +1914,67 @@ function showRoom(sheet,apt){
 function closeRoom(){document.getElementById('roomOverlay').style.display='none';}
 
 let _perfMktChart=null,_perfBldChart=null,_perfTypeChart=null;
+function getPerfBookings(){
+  const period=document.getElementById('perf-f-period')?.value||'month';
+  const bld=document.getElementById('perf-f-bld')?.value||'';
+  const type=document.getElementById('perf-f-type')?.value||'';
+  const from=document.getElementById('perf-f-from')?.value||'';
+  const to=document.getElementById('perf-f-to')?.value||'';
+  const now=new Date(),y=now.getFullYear(),m=now.getMonth();
+  return allStaffBookings.filter(b=>{
+    if(!b.name)return false;
+    if(bld&&b.building!==bld)return false;
+    if(type&&b.bookingType!==type)return false;
+    const d=new Date(b.checkIn||b.createdAt||0);
+    // فلتر تاريخ يدوي يأخذ الأولوية
+    if(from&&d<new Date(from))return false;
+    if(to){const dt=new Date(to);dt.setHours(23,59,59);if(d>dt)return false;}
+    if(from||to)return true;
+    // فلتر الفترة
+    if(period==='month')return d.getFullYear()===y&&d.getMonth()===m;
+    if(period==='3m'){const cut=new Date(y,m-2,1);return d>=cut;}
+    if(period==='year')return d.getFullYear()===y;
+    return true;
+  });
+}
+function resetPerfFilters(){
+  ['perf-f-bld','perf-f-type','perf-f-from','perf-f-to'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  document.getElementById('perf-f-period').value='month';
+  renderPerformance();
+}
 function renderPerformance(){
-  const bks=allStaffBookings.filter(b=>b.name);
+  const bks=getPerfBookings();
   const total=bks.length,paid=bks.reduce((a,b)=>a+(b.paidAmount||0),0),rev=bks.reduce((a,b)=>a+(b.totalPrice||0),0),rem=Math.max(0,rev-paid);
+  const cntEl=document.getElementById('perf-f-count');
+  if(cntEl)cntEl.textContent=toAr(total)+' حجز مُصفّى';
   set('perf-kpi-total',toAr(total));
   set('perf-kpi-paid',fmt(paid)+' ﷼');
   set('perf-kpi-rem',fmt(rem)+' ﷼');
   set('perf-kpi-pct',toAr(Math.round(paid/(rev||1)*100))+'٪');
-  // المسوقون
-  const amT=currComm.filter(c=>c.m==='عبدالملك').reduce((a,c)=>a+c.a,0),jT=currComm.filter(c=>c.m==='جود').reduce((a,c)=>a+c.a,0),tot=Math.max(amT+jT,1);
+  // المسوقون — من الحجوزات المصفّاة
+  const mktMap={};bks.forEach(b=>{if(b.marketer&&COMM_RATE[b.marketer]){mktMap[b.marketer]=(mktMap[b.marketer]||0)+COMM_RATE[b.marketer];}});
+  const amT=mktMap['عبدالملك']||0,jT=mktMap['جود']||0,tot=Math.max(amT+jT,1);
   set('perf-marketers',`<div class="perf-bar"><div class="perf-lbl">عبد الملك</div><div class="perf-track"><div class="perf-fill" style="width:${Math.round(amT/tot*100)}%;background:var(--gold);"></div></div><div class="perf-val" style="color:var(--gold);">${fmt(amT)} ﷼</div></div><div class="perf-bar"><div class="perf-lbl">جود</div><div class="perf-track"><div class="perf-fill" style="width:${Math.round(jT/tot*100)}%;background:var(--blue);"></div></div><div class="perf-val" style="color:var(--blue);">${fmt(jT)} ﷼</div></div>`);
-  // مخطط المسوقين
   if(_perfMktChart)_perfMktChart.destroy();
   const mktCtx=document.getElementById('perfMktChart')?.getContext('2d');
   if(mktCtx)_perfMktChart=new Chart(mktCtx,{type:'doughnut',data:{labels:['عبد الملك','جود'],datasets:[{data:[amT,jT],backgroundColor:['rgba(26,61,143,.8)','rgba(26,82,118,.6)'],borderWidth:0}]},options:{plugins:{legend:{position:'bottom',labels:{font:{family:'IBM Plex Sans Arabic',size:11}}}},cutout:'60%'}});
   // المباني
   const clrs=['rgba(26,61,143,.8)','rgba(26,115,64,.8)','rgba(26,82,118,.8)','rgba(160,64,0,.8)'];
-  let sh='';const bldPcts=[];
-  SHEETS.forEach((s,i)=>{const bs=bks.filter(b=>b.building===s),p=bs.reduce((a,b)=>a+(b.paidAmount||0),0),v=bs.reduce((a,b)=>a+(b.totalPrice||0),0),pct=Math.round(p/(v||1)*100);bldPcts.push(pct);sh+=`<div class="perf-bar"><div class="perf-lbl">${s}</div><div class="perf-track"><div class="perf-fill" style="width:${pct}%;background:${clrs[i]};"></div></div><div class="perf-val">${toAr(pct)}٪</div></div>`;});
+  const bldFilter=document.getElementById('perf-f-bld')?.value||'';
+  const sheetsList=bldFilter?[bldFilter]:SHEETS;
+  let sh='';const bldPcts=[],bldLabels=[];
+  sheetsList.forEach((s,i)=>{const bs=bks.filter(b=>b.building===s),p=bs.reduce((a,b)=>a+(b.paidAmount||0),0),v=bs.reduce((a,b)=>a+(b.totalPrice||0),0),pct=Math.round(p/(v||1)*100);bldPcts.push(pct);bldLabels.push(s);sh+=`<div class="perf-bar"><div class="perf-lbl">${s}</div><div class="perf-track"><div class="perf-fill" style="width:${pct}%;background:${clrs[i%4]};"></div></div><div class="perf-val">${toAr(pct)}٪ · ${toAr(bs.length)} حجز</div></div>`;});
   set('perf-sheets',sh);
   if(_perfBldChart)_perfBldChart.destroy();
   const bldCtx=document.getElementById('perfBldChart')?.getContext('2d');
-  if(bldCtx)_perfBldChart=new Chart(bldCtx,{type:'bar',data:{labels:SHEETS,datasets:[{label:'نسبة التحصيل ٪',data:bldPcts,backgroundColor:clrs,borderRadius:6,borderSkipped:false}]},options:{plugins:{legend:{display:false}},scales:{y:{max:100,ticks:{callback:v=>v+'٪',font:{family:'IBM Plex Sans Arabic'}},grid:{color:'rgba(0,0,0,.05)'}},x:{ticks:{font:{family:'IBM Plex Sans Arabic',size:10}},grid:{display:false}}}}});
+  if(bldCtx)_perfBldChart=new Chart(bldCtx,{type:'bar',data:{labels:bldLabels,datasets:[{label:'نسبة التحصيل ٪',data:bldPcts,backgroundColor:clrs,borderRadius:6,borderSkipped:false}]},options:{plugins:{legend:{display:false}},scales:{y:{max:100,ticks:{callback:v=>v+'٪',font:{family:'IBM Plex Sans Arabic'}},grid:{color:'rgba(0,0,0,.05)'}},x:{ticks:{font:{family:'IBM Plex Sans Arabic',size:10}},grid:{display:false}}}}});
   // الأنواع
   const types={};bks.forEach(b=>{const t=b.bookingType==='annual'?'شهري':b.bookingType==='daily'?'يومي':'أخرى';types[t]=(types[t]||0)+1;});const tts=Object.values(types).reduce((a,b)=>a+b,0);
   set('perf-types',Object.entries(types).map(([t,n],i)=>`<div class="perf-bar"><div class="perf-lbl">${t}</div><div class="perf-track"><div class="perf-fill" style="width:${Math.round(n/tts*100)}%;background:${clrs[i]};"></div></div><div class="perf-val">${toAr(n)} حجز</div></div>`).join(''));
   if(_perfTypeChart)_perfTypeChart.destroy();
   const typeCtx=document.getElementById('perfTypeChart')?.getContext('2d');
   if(typeCtx)_perfTypeChart=new Chart(typeCtx,{type:'doughnut',data:{labels:Object.keys(types),datasets:[{data:Object.values(types),backgroundColor:clrs,borderWidth:0}]},options:{plugins:{legend:{position:'bottom',labels:{font:{family:'IBM Plex Sans Arabic',size:11}}}},cutout:'55%'}});
-  const bs=window._bkStats||{total:0,revenue:0,paid:0,remaining:0};
-  set('month-summary',`<div class="ssr"><span style="color:var(--t3)">الحجوزات</span><span style="font-weight:600;">${toAr(bs.total)}</span></div><div class="ssr"><span style="color:var(--t3)">المحصّل</span><span style="font-weight:600;color:var(--green);">${fmt(bs.paid)} ﷼</span></div><div class="ssr"><span style="color:var(--t3)">المتبقي</span><span style="font-weight:600;color:var(--red);">${fmt(bs.remaining)} ﷼</span></div><div class="ssr" style="border:none;"><span style="color:var(--t3)">التحصيل</span><span style="font-weight:700;color:var(--gold);">${Math.round(bs.paid/(bs.revenue||1)*100)}٪</span></div>`);
+  set('month-summary',`<div class="ssr"><span style="color:var(--t3)">الحجوزات</span><span style="font-weight:600;">${toAr(total)}</span></div><div class="ssr"><span style="color:var(--t3)">المحصّل</span><span style="font-weight:600;color:var(--green);">${fmt(paid)} ﷼</span></div><div class="ssr"><span style="color:var(--t3)">المتبقي</span><span style="font-weight:600;color:var(--red);">${fmt(rem)} ﷼</span></div><div class="ssr" style="border:none;"><span style="color:var(--t3)">التحصيل</span><span style="font-weight:700;color:var(--gold);">${toAr(Math.round(paid/(rev||1)*100))}٪</span></div>`);
 }
 
 function normSource(s){
