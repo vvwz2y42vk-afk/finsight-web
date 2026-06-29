@@ -1906,7 +1906,28 @@ function renderCollection(){
     :d.sort((a,b2)=>b2.rem-a.rem);
   const cc=document.getElementById('coll-f-count');if(cc)cc.textContent=d.length+' حالة';
   set('total-debt-amt',fmt(d.reduce((a,b)=>a+b.rem,0))+' ﷼');
-  set('debt-list',d.length?d.map(b=>`<div class="debt-item"><div class="debt-info"><div class="debt-name">${b.name}</div><div class="debt-meta">شقة ${b.apt} · <span class="pill ${SP[b.building]||''}">${b.building||'—'}</span> · ${b.bookingType==='daily'?'يومي':'شهري'}</div></div><div class="debt-amt">${fmt(b.rem)} ﷼</div><a class="wa-btn" href="https://wa.me/${(b.phone||'').replace(/^0/,'966')}?text=${encodeURIComponent('السلام عليكم '+b.name+'، نود تذكيركم بالمبلغ المتبقي '+fmt(b.rem)+' ﷼ لشقة رقم '+b.apt+'. شكراً لتعاملكم مع BAREZ.')}" target="_blank">📱 واتساب</a></div>`).join(''):'<div style="text-align:center;padding:32px;color:var(--t3);">لا توجد مديونيات ✓</div>');
+  const _fd=d=>d?new Date(d).toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit',year:'numeric'}):'—';
+  const _overdue=d=>{if(!d)return false;return new Date(d)<new Date();};
+  set('debt-list',d.length?d.map(b=>{
+    const overdue=_overdue(b.checkOut);
+    const dueDays=b.checkOut?Math.ceil((new Date(b.checkOut)-new Date())/(1000*60*60*24)):null;
+    const dueColor=overdue?'var(--red)':dueDays!==null&&dueDays<=7?'var(--gold)':'var(--t3)';
+    const dueLabel=overdue?`متأخر ${Math.abs(dueDays)} يوم`:dueDays===0?'اليوم':dueDays!==null?`بعد ${dueDays} يوم`:'—';
+    return`<div class="debt-item">
+      <div class="debt-info" style="flex:1;">
+        <div class="debt-name">${b.name}</div>
+        <div class="debt-meta">شقة ${b.apt} · <span class="pill ${SP[b.building]||''}">${b.building||'—'}</span> · ${b.bookingType==='daily'?'يومي':'شهري'}</div>
+        <div style="display:flex;gap:12px;margin-top:5px;flex-wrap:wrap;">
+          <div style="font-size:10px;color:var(--t3);">دخول: <span style="color:var(--t1);font-weight:600;">${_fd(b.checkIn)}</span></div>
+          <div style="font-size:10px;color:${dueColor};font-weight:600;">استحقاق: <span>${_fd(b.checkOut)}</span> <span style="background:${overdue?'var(--rg)':dueDays!==null&&dueDays<=7?'var(--gl)':'var(--b)'};padding:1px 6px;border-radius:10px;font-size:9px;">${dueLabel}</span></div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+        <div class="debt-amt">${fmt(b.rem)} ﷼</div>
+        <a class="wa-btn" href="https://wa.me/${(b.phone||'').replace(/^0/,'966')}?text=${encodeURIComponent('السلام عليكم '+b.name+'، نود تذكيركم بالمبلغ المتبقي '+fmt(b.rem)+' ﷼ لشقة رقم '+b.apt+'. شكراً لتعاملكم مع BAREZ.')}" target="_blank">📱 واتساب</a>
+      </div>
+    </div>`;
+  }).join(''):'<div style="text-align:center;padding:32px;color:var(--t3);">لا توجد مديونيات ✓</div>');
 }
 
 function renderExpiry(){
