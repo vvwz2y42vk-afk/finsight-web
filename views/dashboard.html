@@ -1549,27 +1549,6 @@ async function loadData(){
     setSyncStatus('err',`خطأ: ${e.message}`);
   }
   renderAll();
-  // استرجاع التبويب الأخير بعد اكتمال التحميل والرسم
-  const _savedTab=localStorage.getItem('fs-active-tab');
-  if(_savedTab&&_savedTab!=='dashboard'){
-    // إخفاء كل التبويبات وإظهار المحفوظ
-    document.querySelectorAll('.tc').forEach(t=>t.classList.remove('active'));
-    const _tc=document.getElementById('tab-'+_savedTab);
-    if(_tc){
-      _tc.classList.add('active');
-      // تحديث الأزرار النشطة
-      document.querySelectorAll('.ni,.tab').forEach(b=>b.classList.remove('active'));
-      const _nb=document.getElementById('nav-'+_savedTab)||document.getElementById('tab-nav-'+_savedTab);
-      if(_nb)_nb.classList.add('active');
-      // تحديث العنوان
-      set('pageTitle',titles[_savedTab]||_savedTab);
-      // تحميل البيانات الخاصة بالتبويب إذا لزم
-      if(_savedTab==='listings')loadListings();
-      if(_savedTab==='bookings')loadBookings();
-      if(_savedTab==='customers')loadCustomers();
-      if(_savedTab==='reports')setTimeout(renderReports,60);
-    }
-  }
 }
 
 function showResetConfirm(){document.getElementById('resetOverlay').style.display='flex';}
@@ -4373,8 +4352,24 @@ function closeDD(id){const wrap=document.getElementById(id);if(!wrap)return;wrap
 document.addEventListener('click',e=>{if(!e.target.closest('.dd-wrap'))_closeDDs();});
 document.addEventListener('scroll',_closeDDs,true);
 
-window.addEventListener('load',()=>{
-  loadUser();loadData();loadListings();loadBookings();loadHosts();loadMessages();loadApts();loadActivity();loadStaffPerformance();loadWeeklyStats();
+window.addEventListener('load', async ()=>{
+  loadUser();
+  await loadData(); // ننتظر تحميل البيانات ورسمها
+  // استعادة التبويب بعد اكتمال كل شيء
+  const _st=localStorage.getItem('fs-active-tab');
+  if(_st&&_st!=='dashboard'){
+    document.querySelectorAll('.tc').forEach(t=>t.classList.remove('active'));
+    const _tc=document.getElementById('tab-'+_st);
+    if(_tc){
+      _tc.classList.add('active');
+      document.querySelectorAll('.ni,.tab').forEach(b=>b.classList.remove('active'));
+      const _nb=document.getElementById('nav-'+_st)||document.getElementById('tab-nav-'+_st);
+      if(_nb)_nb.classList.add('active');
+      set('pageTitle',titles[_st]||_st);
+      if(_st==='reports')setTimeout(renderReports,60);
+    }
+  }
+  loadListings();loadBookings();loadHosts();loadMessages();loadApts();loadActivity();loadStaffPerformance();loadWeeklyStats();
   setInterval(loadData,60000);setInterval(loadMessages,30000);setInterval(loadApts,30000);setInterval(loadBookings,30000);setInterval(loadActivity,30000);setInterval(loadStaffPerformance,120000);setInterval(loadWeeklyStats,300000);
   if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});
 });
