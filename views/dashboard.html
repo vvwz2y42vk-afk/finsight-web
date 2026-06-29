@@ -690,6 +690,8 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
         <option value="recent">الأحدث</option>
       </select>
       <input id="coll-f-q" type="text" placeholder="بحث بالاسم..." oninput="renderCollection()" style="font-size:11px;padding:5px 10px;border:1px solid var(--b2);border-radius:8px;background:var(--s);color:var(--t1);font-family:inherit;flex:1;min-width:130px;">
+      <input type="date" id="coll-f-from" onchange="renderCollection()" title="من تاريخ" style="font-size:11px;padding:5px 8px;border:1px solid var(--b2);border-radius:8px;background:var(--s);color:var(--t1);font-family:inherit;">
+      <input type="date" id="coll-f-to" onchange="renderCollection()" title="إلى تاريخ" style="font-size:11px;padding:5px 8px;border:1px solid var(--b2);border-radius:8px;background:var(--s);color:var(--t1);font-family:inherit;">
       <button onclick="resetCollFilters()" style="font-size:11px;padding:5px 12px;border:1px solid var(--b2);border-radius:8px;background:var(--s2);color:var(--t3);cursor:pointer;font-family:inherit;">× مسح</button>
       <span id="coll-f-count" style="font-size:10px;color:var(--t3);margin-right:auto;"></span>
     </div>
@@ -1878,7 +1880,7 @@ function renderCommissions(){
 }
 
 function resetCollFilters(){
-  ['coll-f-bld','coll-f-type','coll-f-q'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  ['coll-f-bld','coll-f-type','coll-f-q','coll-f-from','coll-f-to'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   const s=document.getElementById('coll-f-sort');if(s)s.value='amount';
   renderCollection();
 }
@@ -1887,11 +1889,16 @@ function renderCollection(){
   const type=document.getElementById('coll-f-type')?.value||'';
   const sort=document.getElementById('coll-f-sort')?.value||'amount';
   const q=(document.getElementById('coll-f-q')?.value||'').trim().toLowerCase();
+  const from=document.getElementById('coll-f-from')?.value||'';
+  const to=document.getElementById('coll-f-to')?.value||'';
   let d=allStaffBookings.filter(b=>{
     if(!b.name||(b.paidAmount||0)>=(b.totalPrice||0))return false;
     if(bld&&b.building!==bld)return false;
     if(type&&b.bookingType!==type)return false;
     if(q&&!b.name.toLowerCase().includes(q)&&!(b.apt||'').includes(q))return false;
+    const ci=new Date(b.checkIn||b.createdAt||0);
+    if(from&&ci<new Date(from))return false;
+    if(to){const dt=new Date(to);dt.setHours(23,59,59);if(ci>dt)return false;}
     return true;
   }).map(b=>({...b,rem:(b.totalPrice||0)-(b.paidAmount||0)}));
   d=sort==='recent'
