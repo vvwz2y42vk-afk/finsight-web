@@ -2011,16 +2011,22 @@ function renderCommissions(){
       ${proofCell(c,h.key)}
     </tr>`;}).join('');
     const amHTotal=h.comm.filter(c=>c.m==='عبدالملك').length,jHTotal=h.comm.filter(c=>c.m==='جود').length;
+    const hid='hist-'+h.key;
     return`<div class="hist-item">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px;">
-        <div class="hist-month">${h.label}</div>
-        <div style="display:flex;gap:10px;font-size:10px;flex-wrap:wrap;">
-          <span style="color:var(--gold);font-weight:700;">عبدالملك: ${fmt(amH)} ﷼ <span style="color:#22c55e;">(${amHP}/${amHTotal} ✓)</span></span>
-          <span style="color:var(--blue);font-weight:700;">جود: ${fmt(jH)} ﷼ <span style="color:#22c55e;">(${jHP}/${jHTotal} ✓)</span></span>
-          <span style="color:var(--t3);">إجمالي: <b style="color:var(--gold);">${fmt(amH+jH)} ﷼</b></span>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;cursor:pointer;" onclick="(function(el){const t=el.nextElementSibling;const open=t.style.display!=='none';t.style.display=open?'none':'block';el.querySelector('.hist-chevron').style.transform=open?'rotate(0)':'rotate(180deg)'})(this)">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <svg class="hist-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="transition:transform .2s;color:var(--t3);"><polyline points="6 9 12 15 18 9"/></svg>
+          <div class="hist-month">${h.label}</div>
+        </div>
+        <div style="display:flex;gap:10px;font-size:10px;flex-wrap:wrap;pointer-events:none;">
+          <span style="color:var(--gold);font-weight:700;">عبدالملك: ${fmt(amH)} ﷼</span>
+          <span style="color:var(--blue);font-weight:700;">جود: ${fmt(jH)} ﷼</span>
+          <span style="color:var(--t3);">الإجمالي: <b style="color:var(--gold);">${fmt(amH+jH)} ﷼</b></span>
         </div>
       </div>
-      <div class="tbl-wrap"><table><thead><tr><th>#</th><th>العميل</th><th>المبنى</th><th>المسوّق</th><th>التاريخ</th><th>العمولة</th><th style="text-align:center;">الإثبات</th></tr></thead><tbody>${rows}</tbody></table></div>
+      <div style="display:none;margin-top:8px;">
+        <div class="tbl-wrap"><table><thead><tr><th>#</th><th>العميل</th><th>المبنى</th><th>المسوّق</th><th>التاريخ</th><th>العمولة</th><th style="text-align:center;">الإثبات</th></tr></thead><tbody>${rows}</tbody></table></div>
+      </div>
     </div>`;
   }).join(''));
   // ── كارت عمولات الموظفين التلقائية ──
