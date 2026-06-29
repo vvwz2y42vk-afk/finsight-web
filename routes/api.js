@@ -127,7 +127,7 @@ router.get('/commissions', auth, async (req, res) => {
       status: { $ne: 'cancelled' },
       createdAt: { $gte: monthStart },
     })
-      .select('name building apt marketer createdAt checkIn')
+      .select('name building apt marketer createdAt checkIn marketerProof')
       .sort({ createdAt: -1 })
       .lean();
     res.json(bookings.map(b => ({
@@ -138,7 +138,20 @@ router.get('/commissions', auth, async (req, res) => {
       marketer: b.marketer,
       date: b.createdAt,
       amount: COMM_RATES[b.marketer] || 0,
+      proof: b.marketerProof?.url || '',
+      proofAt: b.marketerProof?.uploadedAt || null,
     })));
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.put('/bookings/:id/marketer-proof', auth, async (req, res) => {
+  try {
+    const { url } = req.body;
+    await Booking.findByIdAndUpdate(req.params.id, {
+      'marketerProof.url': url || '',
+      'marketerProof.uploadedAt': url ? new Date() : null,
+    });
+    res.json({ ok: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 

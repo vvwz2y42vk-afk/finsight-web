@@ -674,9 +674,49 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
         <div class="card-title">تفاصيل العمولات</div>
       </div>
       <div class="tbl-wrap"><table>
-        <thead><tr><th>#</th><th>العميل</th><th>الشقة</th><th>الفرع</th><th>المسوّق</th><th>تاريخ الحجز</th><th>العمولة</th></tr></thead>
+        <thead><tr><th>#</th><th>العميل</th><th>الشقة</th><th>الفرع</th><th>المسوّق</th><th>تاريخ الحجز</th><th>العمولة</th><th style="text-align:center;width:60px;">الإثبات</th></tr></thead>
         <tbody id="comm-tbody"></tbody>
       </table></div>
+    </div>
+
+    <!-- مودال رفع الإثبات -->
+    <div id="proof-modal" onclick="if(event.target===this)this.style.display='none'" style="display:none;position:fixed;inset:0;z-index:8000;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);align-items:center;justify-content:center;">
+      <div style="background:var(--s);border:1px solid var(--b2);border-radius:18px;padding:24px;width:340px;max-width:92vw;box-shadow:0 20px 60px rgba(0,0,0,.3);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <div style="font-size:14px;font-weight:700;">إثبات التسويق</div>
+          <button onclick="document.getElementById('proof-modal').style.display='none'" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--t3);line-height:1;">×</button>
+        </div>
+        <div id="proof-current" style="display:none;margin-bottom:12px;text-align:center;">
+          <img id="proof-current-img" style="max-width:100%;max-height:200px;object-fit:contain;border-radius:10px;cursor:zoom-in;border:1px solid var(--b2);" onclick="viewProof(this.src)" />
+          <div style="font-size:10px;color:var(--t3);margin-top:4px;" id="proof-current-date"></div>
+        </div>
+        <div id="proof-new-preview" style="display:none;margin-bottom:12px;text-align:center;">
+          <img id="proof-preview-img" style="max-width:100%;max-height:180px;object-fit:contain;border-radius:10px;border:2px dashed var(--blue);" />
+          <div style="font-size:10px;color:var(--blue);margin-top:4px;">معاينة — لم يُحفظ بعد</div>
+        </div>
+        <label style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border:2px dashed var(--b2);border-radius:12px;cursor:pointer;color:var(--t2);font-size:12px;margin-bottom:12px;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor='var(--b2)'">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          اختر صورة أو اسحبها هنا
+          <input type="file" id="proof-file" accept="image/*" style="display:none;" onchange="previewProof(this)" />
+        </label>
+        <div style="display:flex;gap:8px;">
+          <button onclick="uploadProof()" style="flex:1;background:var(--blue);color:#fff;border:none;border-radius:10px;padding:10px;font-size:12px;font-weight:600;cursor:pointer;">حفظ الإثبات</button>
+          <button onclick="document.getElementById('proof-modal').style.display='none'" style="padding:10px 16px;border:1px solid var(--b2);background:none;border-radius:10px;font-size:12px;cursor:pointer;color:var(--t2);">إلغاء</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- لايت بوكس عرض الصورة -->
+    <div id="proof-lightbox" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.93);align-items:center;justify-content:center;cursor:zoom-out;" onclick="if(event.target===this||event.target===document.getElementById('proof-lb-wrap'))closeLightbox()">
+      <button onclick="closeLightbox()" style="position:absolute;top:16px;right:20px;background:rgba(255,255,255,.1);border:none;color:#fff;font-size:22px;width:40px;height:40px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;">×</button>
+      <div style="position:absolute;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:8px;">
+        <button onclick="lbZoom(0.8)" style="background:rgba(255,255,255,.12);border:none;color:#fff;padding:6px 14px;border-radius:20px;cursor:pointer;font-size:13px;">−</button>
+        <button onclick="lbZoom(1)" style="background:rgba(255,255,255,.12);border:none;color:#fff;padding:6px 14px;border-radius:20px;cursor:pointer;font-size:13px;">١:١</button>
+        <button onclick="lbZoom(1.3)" style="background:rgba(255,255,255,.12);border:none;color:#fff;padding:6px 14px;border-radius:20px;cursor:pointer;font-size:13px;">+</button>
+      </div>
+      <div id="proof-lb-wrap" style="overflow:auto;max-width:95vw;max-height:90vh;display:flex;align-items:center;justify-content:center;">
+        <img id="proof-lb-img" style="max-width:90vw;max-height:88vh;object-fit:contain;border-radius:8px;transition:transform .2s;transform-origin:center;cursor:default;" onclick="event.stopPropagation()" />
+      </div>
     </div>
 
     <!-- السجل السابق -->
@@ -1826,6 +1866,83 @@ function getSbCommCurr(){
     return d>=periodStart;
   });
 }
+// ── Proof image helpers ──────────────────────────────────
+let _proofBkId='';
+function openProofModal(id,currentUrl,proofAt){
+  _proofBkId=id;
+  const cur=document.getElementById('proof-current');
+  const curImg=document.getElementById('proof-current-img');
+  const curDate=document.getElementById('proof-current-date');
+  const newPrev=document.getElementById('proof-new-preview');
+  document.getElementById('proof-file').value='';
+  newPrev.style.display='none';
+  if(currentUrl){
+    curImg.src=currentUrl;
+    curDate.textContent=proofAt?'رُفع '+new Date(proofAt).toLocaleDateString('ar-SA',{day:'numeric',month:'short',year:'2-digit'}):'';
+    cur.style.display='block';
+  } else {
+    cur.style.display='none';
+  }
+  document.getElementById('proof-modal').style.display='flex';
+}
+function previewProof(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    document.getElementById('proof-preview-img').src=e.target.result;
+    document.getElementById('proof-new-preview').style.display='block';
+  };
+  reader.readAsDataURL(file);
+}
+async function uploadProof(){
+  const file=document.getElementById('proof-file').files[0];
+  if(!file)return;
+  const dataUrl=await compressProof(file);
+  try{
+    const r=await fetch(`/api/bookings/${_proofBkId}/marketer-proof`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:dataUrl})});
+    if(r.ok){document.getElementById('proof-modal').style.display='none';loadCommissions();}
+  }catch(e){}
+}
+function compressProof(file){
+  return new Promise(resolve=>{
+    const img=new Image();
+    const burl=URL.createObjectURL(file);
+    img.onload=()=>{
+      URL.revokeObjectURL(burl);
+      const maxW=1200,scale=Math.min(1,maxW/img.width);
+      const c=document.createElement('canvas');
+      c.width=img.width*scale;c.height=img.height*scale;
+      c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+      resolve(c.toDataURL('image/jpeg',.75));
+    };
+    img.src=burl;
+  });
+}
+let _lbZoom=1;
+function viewProof(url){
+  _lbZoom=1;
+  const img=document.getElementById('proof-lb-img');
+  img.style.transform='scale(1)';img.src=url;
+  document.getElementById('proof-lightbox').style.display='flex';
+}
+function closeLightbox(){document.getElementById('proof-lightbox').style.display='none';}
+function lbZoom(factor){
+  if(factor===1){_lbZoom=1;}else{_lbZoom=Math.max(.25,Math.min(5,_lbZoom*factor));}
+  document.getElementById('proof-lb-img').style.transform=`scale(${_lbZoom})`;
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLightbox();});
+(function(){
+  let _lbLast=0;
+  document.addEventListener('wheel',e=>{
+    const lb=document.getElementById('proof-lightbox');
+    if(!lb||lb.style.display==='none')return;
+    e.preventDefault();
+    _lbZoom=Math.max(.25,Math.min(5,_lbZoom*(e.deltaY<0?1.1:.9)));
+    document.getElementById('proof-lb-img').style.transform=`scale(${_lbZoom})`;
+  },{passive:false});
+})();
+// ────────────────────────────────────────────────────────
+
 function renderCommissions(){
   const fDate=d=>d?new Date(d).toLocaleDateString('ar-SA',{day:'numeric',month:'short',year:'2-digit'}):'—';
   set('curr-month-lbl',monthLabel(currMonthKey()));
@@ -1842,16 +1959,29 @@ function renderCommissions(){
   set('comm-j',fmt(jdT)+' ﷼');
   set('comm-j-n',toAr(jd.length)+' حجز هذا الشهر');
   set('comm-tbody',allCommissions.length===0
-    ?'<tr><td colspan="7" style="text-align:center;color:var(--t3);padding:14px;">لا توجد عمولات هذا الشهر</td></tr>'
-    :allCommissions.map((c,i)=>`<tr>
-      <td style="color:var(--t3);">${toAr(i+1)}</td>
-      <td style="font-weight:600;">${c.name||'—'}</td>
-      <td style="color:var(--t3);font-size:11px;">${c.apt||'—'}</td>
-      <td><span class="pill ${SP[c.building]||'pm'}">${c.building||'—'}</span></td>
-      <td style="font-weight:600;color:${c.marketer==='عبدالملك'?'var(--gold)':'var(--blue)'};">${c.marketer}</td>
-      <td style="color:var(--t3);font-size:10px;">${fDate(c.date)}</td>
-      <td style="font-weight:700;color:${c.marketer==='عبدالملك'?'var(--gold)':'var(--blue)'};">${fmt(c.amount)} ﷼</td>
-    </tr>`).join(''));
+    ?'<tr><td colspan="8" style="text-align:center;color:var(--t3);padding:14px;">لا توجد عمولات هذا الشهر</td></tr>'
+    :allCommissions.map((c,i)=>{
+      const proofCell=c.proof
+        ?`<div style="display:flex;gap:4px;justify-content:center;align-items:center;">
+            <img src="${c.proof}" style="width:34px;height:34px;object-fit:cover;border-radius:8px;cursor:zoom-in;border:1.5px solid var(--b2);" onclick="viewProof('${c.proof}')" title="عرض الإثبات" />
+            <button onclick="openProofModal('${c._id}','${c.proof}','${c.proofAt||''}')" style="background:none;border:none;cursor:pointer;padding:2px;opacity:.5;transition:.2s;" title="تغيير الإثبات" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.5">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+          </div>`
+        :`<button onclick="openProofModal('${c._id}','','')" style="background:none;border:1.5px dashed var(--b2);border-radius:8px;width:34px;height:34px;cursor:pointer;display:flex;align-items:center;justify-content:center;margin:auto;opacity:.5;transition:.2s;" title="رفع إثبات" onmouseover="this.style.opacity=1;this.style.borderColor='var(--blue)'" onmouseout="this.style.opacity=.5;this.style.borderColor='var(--b2)'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          </button>`;
+      return`<tr>
+        <td style="color:var(--t3);">${toAr(i+1)}</td>
+        <td style="font-weight:600;">${c.name||'—'}</td>
+        <td style="color:var(--t3);font-size:11px;">${c.apt||'—'}</td>
+        <td><span class="pill ${SP[c.building]||'pm'}">${c.building||'—'}</span></td>
+        <td style="font-weight:600;color:${c.marketer==='عبدالملك'?'var(--gold)':'var(--blue)'};">${c.marketer}</td>
+        <td style="color:var(--t3);font-size:10px;">${fDate(c.date)}</td>
+        <td style="font-weight:700;color:${c.marketer==='عبدالملك'?'var(--gold)':'var(--blue)'};">${fmt(c.amount)} ﷼</td>
+        <td>${proofCell}</td>
+      </tr>`;
+    }).join(''));
   // ── قائمة السنوات ──
   const yearSel=document.getElementById('hist-filter-year');
   if(yearSel){

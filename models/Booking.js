@@ -54,6 +54,10 @@ const bookingSchema = new mongoose.Schema({
       notes:       String, furniture: [String],
     },
   },
+  marketerProof: {
+    url:        { type: String, default: '' },
+    uploadedAt: Date,
+  },
   inventoryDoc: {
     url:        { type: String, default: '' },
     urls:       [{ type: String }],
