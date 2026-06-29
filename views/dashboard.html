@@ -1552,9 +1552,23 @@ async function loadData(){
   // استرجاع التبويب الأخير بعد اكتمال التحميل والرسم
   const _savedTab=localStorage.getItem('fs-active-tab');
   if(_savedTab&&_savedTab!=='dashboard'){
-    const _niBtn=document.querySelector(`.ni[onclick*="go('${_savedTab}'"]`);
-    const _tabBtn=document.querySelector(`.tab[onclick*="st('${_savedTab}'"]`);
-    if(_niBtn)_niBtn.click();else if(_tabBtn)_tabBtn.click();
+    // إخفاء كل التبويبات وإظهار المحفوظ
+    document.querySelectorAll('.tc').forEach(t=>t.classList.remove('active'));
+    const _tc=document.getElementById('tab-'+_savedTab);
+    if(_tc){
+      _tc.classList.add('active');
+      // تحديث الأزرار النشطة
+      document.querySelectorAll('.ni,.tab').forEach(b=>b.classList.remove('active'));
+      const _nb=document.getElementById('nav-'+_savedTab)||document.getElementById('tab-nav-'+_savedTab);
+      if(_nb)_nb.classList.add('active');
+      // تحديث العنوان
+      set('pageTitle',titles[_savedTab]||_savedTab);
+      // تحميل البيانات الخاصة بالتبويب إذا لزم
+      if(_savedTab==='listings')loadListings();
+      if(_savedTab==='bookings')loadBookings();
+      if(_savedTab==='customers')loadCustomers();
+      if(_savedTab==='reports')setTimeout(renderReports,60);
+    }
   }
 }
 
