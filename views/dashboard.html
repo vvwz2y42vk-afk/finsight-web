@@ -673,6 +673,26 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
     <div id="sbcomm-section" style="margin-top:10px;"></div>
   </div>
   <div class="tc" id="tab-collection">
+    <!-- شريط الفلاتر -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;padding:10px 14px;background:var(--s);border:1px solid var(--b);border-radius:12px;">
+      <span style="font-size:11px;font-weight:700;color:var(--t3);">تصفية:</span>
+      <select id="coll-f-bld" onchange="renderCollection()" style="font-size:11px;padding:5px 10px;border:1px solid var(--b2);border-radius:8px;background:var(--s);color:var(--t1);font-family:inherit;">
+        <option value="">كل الفروع</option>
+        <option>المنارا</option><option>جوان ان</option><option>الماسة</option><option>الواحة</option>
+      </select>
+      <select id="coll-f-type" onchange="renderCollection()" style="font-size:11px;padding:5px 10px;border:1px solid var(--b2);border-radius:8px;background:var(--s);color:var(--t1);font-family:inherit;">
+        <option value="">كل الأنواع</option>
+        <option value="daily">يومي</option>
+        <option value="annual">شهري</option>
+      </select>
+      <select id="coll-f-sort" onchange="renderCollection()" style="font-size:11px;padding:5px 10px;border:1px solid var(--b2);border-radius:8px;background:var(--s);color:var(--t1);font-family:inherit;">
+        <option value="amount">الأكبر مبلغاً</option>
+        <option value="recent">الأحدث</option>
+      </select>
+      <input id="coll-f-q" type="text" placeholder="بحث بالاسم..." oninput="renderCollection()" style="font-size:11px;padding:5px 10px;border:1px solid var(--b2);border-radius:8px;background:var(--s);color:var(--t1);font-family:inherit;flex:1;min-width:130px;">
+      <button onclick="resetCollFilters()" style="font-size:11px;padding:5px 12px;border:1px solid var(--b2);border-radius:8px;background:var(--s2);color:var(--t3);cursor:pointer;font-family:inherit;">× مسح</button>
+      <span id="coll-f-count" style="font-size:10px;color:var(--t3);margin-right:auto;"></span>
+    </div>
     <div style="background:var(--rg);border:1px solid var(--rb);border-radius:10px;padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;"><div style="font-size:11px;color:var(--t3);">إجمالي المتأخرات</div><div style="font-size:18px;font-weight:700;color:var(--red);" id="total-debt-amt">—</div></div>
     <div id="debt-list"></div>
   </div>
@@ -1857,10 +1877,29 @@ function renderCommissions(){
   }
 }
 
+function resetCollFilters(){
+  ['coll-f-bld','coll-f-type','coll-f-q'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  const s=document.getElementById('coll-f-sort');if(s)s.value='amount';
+  renderCollection();
+}
 function renderCollection(){
-  const d=allStaffBookings.filter(b=>b.name&&(b.paidAmount||0)<(b.totalPrice||0)).map(b=>({...b,rem:(b.totalPrice||0)-(b.paidAmount||0)})).sort((a,b2)=>b2.rem-a.rem);
+  const bld=document.getElementById('coll-f-bld')?.value||'';
+  const type=document.getElementById('coll-f-type')?.value||'';
+  const sort=document.getElementById('coll-f-sort')?.value||'amount';
+  const q=(document.getElementById('coll-f-q')?.value||'').trim().toLowerCase();
+  let d=allStaffBookings.filter(b=>{
+    if(!b.name||(b.paidAmount||0)>=(b.totalPrice||0))return false;
+    if(bld&&b.building!==bld)return false;
+    if(type&&b.bookingType!==type)return false;
+    if(q&&!b.name.toLowerCase().includes(q)&&!(b.apt||'').includes(q))return false;
+    return true;
+  }).map(b=>({...b,rem:(b.totalPrice||0)-(b.paidAmount||0)}));
+  d=sort==='recent'
+    ?d.sort((a,b2)=>new Date(b2.createdAt||b2.checkIn||0)-new Date(a.createdAt||a.checkIn||0))
+    :d.sort((a,b2)=>b2.rem-a.rem);
+  const cc=document.getElementById('coll-f-count');if(cc)cc.textContent=d.length+' حالة';
   set('total-debt-amt',fmt(d.reduce((a,b)=>a+b.rem,0))+' ﷼');
-  set('debt-list',d.length?d.map(b=>`<div class="debt-item"><div class="debt-info"><div class="debt-name">${b.name}</div><div class="debt-meta">شقة ${b.apt} · <span class="pill ${SP[b.building]||''}">${b.building||'—'}</span></div></div><div class="debt-amt">${fmt(b.rem)} ﷼</div><a class="wa-btn" href="https://wa.me/${(b.phone||'').replace(/^0/,'966')}?text=${encodeURIComponent('السلام عليكم '+b.name+'، نود تذكيركم بالمبلغ المتبقي '+fmt(b.rem)+' ﷼ لشقة رقم '+b.apt+'. شكراً لتعاملكم مع BAREZ.')}" target="_blank">📱 واتساب</a></div>`).join(''):'<div style="text-align:center;padding:32px;color:var(--t3);">لا توجد مديونيات ✓</div>');
+  set('debt-list',d.length?d.map(b=>`<div class="debt-item"><div class="debt-info"><div class="debt-name">${b.name}</div><div class="debt-meta">شقة ${b.apt} · <span class="pill ${SP[b.building]||''}">${b.building||'—'}</span> · ${b.bookingType==='daily'?'يومي':'شهري'}</div></div><div class="debt-amt">${fmt(b.rem)} ﷼</div><a class="wa-btn" href="https://wa.me/${(b.phone||'').replace(/^0/,'966')}?text=${encodeURIComponent('السلام عليكم '+b.name+'، نود تذكيركم بالمبلغ المتبقي '+fmt(b.rem)+' ﷼ لشقة رقم '+b.apt+'. شكراً لتعاملكم مع BAREZ.')}" target="_blank">📱 واتساب</a></div>`).join(''):'<div style="text-align:center;padding:32px;color:var(--t3);">لا توجد مديونيات ✓</div>');
 }
 
 function renderExpiry(){
