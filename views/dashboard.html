@@ -246,6 +246,10 @@ tbody td{padding:11px 12px;font-size:12px;vertical-align:middle;}
 .chart-title::before{content:'';display:block;width:3px;height:14px;background:var(--gold);border-radius:3px;flex-shrink:0;}
 .bld-tab{padding:5px 14px;border-radius:20px;border:1.5px solid var(--b2);background:var(--s);font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;color:var(--t2);transition:.15s;}
 .bld-tab.active{background:var(--gold);border-color:var(--gold);color:#fff;}
+.rpt-stab{padding:8px 18px;border-radius:10px;border:1.5px solid var(--b2);background:var(--s);font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;color:var(--t2);transition:.15s;}
+.rpt-stab.active{background:var(--blue);border-color:var(--blue);color:#fff;}
+.rpt-stab:hover:not(.active){background:var(--b2);}
+.rpt-stc{display:none;}.rpt-stc.active{display:block;}
 .bld-mini-card{background:#fff;border:1.5px solid var(--b2);border-radius:14px;padding:14px 16px;position:relative;overflow:hidden;}
 .bld-mini-card::before{content:'';position:absolute;top:0;right:0;width:4px;height:100%;border-radius:0 14px 14px 0;}
 .bld-mini-card.c-mna::before{background:#1a3d8f;}
@@ -784,7 +788,7 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
   
   <div class="tc" id="tab-reports">
     <!-- Header -->
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
       <div>
         <div style="font-size:16px;font-weight:800;color:var(--t);letter-spacing:-.02em;">التقارير والإحصاءات</div>
         <div style="display:flex;align-items:center;gap:6px;margin-top:8px;">
@@ -799,45 +803,49 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
       </div>
     </div>
 
-    <!-- اليوم -->
-    <div style="font-size:10px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">اليوم</div>
-    <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px;">
-      <div class="kpi c2"><div class="kpi-lbl">وصولات اليوم</div><div class="kpi-val" id="rpt-arrivals">—</div></div>
-      <div class="kpi c4"><div class="kpi-lbl">مغادرات اليوم</div><div class="kpi-val" id="rpt-departures">—</div></div>
-      <div class="kpi c1"><div class="kpi-lbl">نسبة الإشغال</div><div class="kpi-val" id="rpt-occ">—</div></div>
-      <div class="kpi c5"><div class="kpi-lbl">شقق مشغولة الآن</div><div class="kpi-val" id="rpt-active">—</div></div>
+    <!-- Sub-tabs -->
+    <div style="display:flex;gap:6px;margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid var(--b2);flex-wrap:wrap;">
+      <button class="rpt-stab active" onclick="rptSwitchTab('overview',this)">نظرة عامة</button>
+      <button class="rpt-stab" onclick="rptSwitchTab('buildings',this)">المباني</button>
+      <button class="rpt-stab" onclick="rptSwitchTab('reports',this)">التقارير</button>
+      <button class="rpt-stab" onclick="rptSwitchTab('bookings',this)">الحجوزات</button>
     </div>
 
-    <!-- الشهر المحدد -->
-    <div style="font-size:10px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;" id="rpt-month-section-lbl">الشهر الحالي</div>
-    <div class="kpi-grid" style="margin-bottom:20px;">
-      <div class="kpi c1"><div class="kpi-lbl">إجمالي الحجوزات</div><div class="kpi-val" id="rpt-month-bk">—</div></div>
-      <div class="kpi c2"><div class="kpi-lbl">إجمالي الإيرادات</div><div class="kpi-val" id="rpt-month-rev">—</div></div>
-      <div class="kpi c2"><div class="kpi-lbl">المحصّل</div><div class="kpi-val" id="rpt-month-paid">—</div></div>
-      <div class="kpi c3"><div class="kpi-lbl">المتبقي</div><div class="kpi-val" id="rpt-month-rem">—</div></div>
-      <div class="kpi c5"><div class="kpi-lbl">يومي</div><div class="kpi-val" id="rpt-month-daily-rev">—</div></div>
-    </div>
-
-    <!-- مخطط الإيرادات الشهرية -->
-    <div class="chart-card" style="margin-bottom:14px;">
-      <div class="chart-title" id="rpt-chart-title">الإيرادات اليومية</div>
-      <canvas id="revenueChart" style="display:block;width:100%;height:200px;"></canvas>
-    </div>
-
-    <!-- مخطط السنة -->
-    <div class="chart-card" style="margin-bottom:14px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-        <div class="chart-title" style="margin-bottom:0;">مقارنة الإيرادات — آخر 12 شهر</div>
-        <div id="yearly-total" style="font-size:12px;font-weight:700;color:var(--green);"></div>
+    <!-- ── Sub-tab: نظرة عامة ── -->
+    <div class="rpt-stc active" id="rpt-stc-overview">
+      <div style="font-size:10px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">اليوم</div>
+      <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px;">
+        <div class="kpi c2"><div class="kpi-lbl">وصولات اليوم</div><div class="kpi-val" id="rpt-arrivals">—</div></div>
+        <div class="kpi c4"><div class="kpi-lbl">مغادرات اليوم</div><div class="kpi-val" id="rpt-departures">—</div></div>
+        <div class="kpi c1"><div class="kpi-lbl">نسبة الإشغال</div><div class="kpi-val" id="rpt-occ">—</div></div>
+        <div class="kpi c5"><div class="kpi-lbl">شقق مشغولة الآن</div><div class="kpi-val" id="rpt-active">—</div></div>
       </div>
-      <canvas id="yearlyChart" style="display:block;width:100%;height:220px;"></canvas>
-      <div id="yearly-summary" style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;"></div>
+      <div style="font-size:10px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;" id="rpt-month-section-lbl">الشهر الحالي</div>
+      <div class="kpi-grid" style="margin-bottom:20px;">
+        <div class="kpi c1"><div class="kpi-lbl">إجمالي الحجوزات</div><div class="kpi-val" id="rpt-month-bk">—</div></div>
+        <div class="kpi c2"><div class="kpi-lbl">إجمالي الإيرادات</div><div class="kpi-val" id="rpt-month-rev">—</div></div>
+        <div class="kpi c2"><div class="kpi-lbl">المحصّل</div><div class="kpi-val" id="rpt-month-paid">—</div></div>
+        <div class="kpi c3"><div class="kpi-lbl">المتبقي</div><div class="kpi-val" id="rpt-month-rem">—</div></div>
+        <div class="kpi c5"><div class="kpi-lbl">يومي</div><div class="kpi-val" id="rpt-month-daily-rev">—</div></div>
+      </div>
+      <div class="chart-card" style="margin-bottom:14px;">
+        <div class="chart-title" id="rpt-chart-title">الإيرادات اليومية</div>
+        <canvas id="revenueChart" style="display:block;width:100%;height:200px;"></canvas>
+      </div>
+      <div class="chart-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div class="chart-title" style="margin-bottom:0;">مقارنة الإيرادات — آخر 12 شهر</div>
+          <div id="yearly-total" style="font-size:12px;font-weight:700;color:var(--green);"></div>
+        </div>
+        <canvas id="yearlyChart" style="display:block;width:100%;height:220px;"></canvas>
+        <div id="yearly-summary" style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;"></div>
+      </div>
     </div>
 
-    <!-- ── مقارنة المباني ── -->
-    <div style="margin-bottom:28px;border-bottom:2px solid var(--b2);padding-bottom:24px;">
+    <!-- ── Sub-tab: المباني ── -->
+    <div class="rpt-stc" id="rpt-stc-buildings">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
-        <div style="font-size:10px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.08em;">إحصاءات المباني</div>
+        <div style="font-size:12px;font-weight:700;color:var(--t2);">اختر المبنى لعرض إحصاءاته</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;" id="bld-tabs">
           <button class="bld-tab active" data-bld="" onclick="switchBldTab(this,'')">الكل</button>
           <button class="bld-tab" data-bld="المنارا" onclick="switchBldTab(this,'المنارا')">المنارا</button>
@@ -846,25 +854,22 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
           <button class="bld-tab" data-bld="الواحة" onclick="switchBldTab(this,'الواحة')">الواحة</button>
         </div>
       </div>
-      <!-- KPIs للمبنى المحدد -->
       <div id="bld-kpis" class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr));margin-bottom:16px;"></div>
-      <!-- مخطط الإيرادات الشهرية للمبنى المحدد -->
       <div class="chart-card" style="margin-bottom:14px;">
         <div class="chart-title" id="bld-chart-title">الإيرادات الشهرية</div>
         <canvas id="bldMonthlyChart" style="display:block;width:100%;height:220px;"></canvas>
       </div>
-      <!-- إذا الكل: مخطط المقارنة بين المباني -->
       <div id="bld-compare-wrap" class="chart-card" style="margin-bottom:14px;">
         <div class="chart-title">مقارنة المباني — آخر 12 شهر</div>
         <canvas id="bldCompareChart" style="display:block;width:100%;height:240px;"></canvas>
       </div>
-      <!-- بطاقات ملخص المباني (الكل فقط) -->
       <div id="bld-summary-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;"></div>
     </div>
 
-    <!-- ── التقرير الشهري ── -->
-    <div style="margin-bottom:28px;border-bottom:2px solid var(--b2);padding-bottom:24px;">
-      <div style="font-size:10px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;">التقرير الشهري</div>
+    <!-- ── Sub-tab: التقارير ── -->
+    <div class="rpt-stc" id="rpt-stc-reports">
+      <!-- التقرير الشهري -->
+      <div style="font-size:10px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">التقرير الشهري</div>
       <div style="background:var(--s);border:1.5px solid var(--b2);border-radius:14px;padding:16px;margin-bottom:14px;">
         <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
           <div>
@@ -891,12 +896,10 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
           <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t2);cursor:pointer;"><input type="radio" name="adm-mr-type" value="total" style="cursor:pointer;accent-color:var(--gold);"> تجميعي كلي</label>
         </div>
       </div>
-      <div id="adm-mr-body"></div>
-    </div>
+      <div id="adm-mr-body" style="margin-bottom:28px;"></div>
 
-    <!-- ── تقرير نسب الإشغال ── -->
-    <div style="margin-bottom:28px;border-bottom:2px solid var(--b2);padding-bottom:24px;">
-      <div style="font-size:10px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;">تقرير نسب الإشغال</div>
+      <!-- تقرير الإشغال -->
+      <div style="font-size:10px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">تقرير نسب الإشغال</div>
       <div style="background:var(--s);border:1.5px solid var(--b2);border-radius:14px;padding:16px;margin-bottom:14px;">
         <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
           <div>
@@ -923,13 +926,13 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
       <div id="adm-occ-body"></div>
     </div>
 
-    <!-- ── تفاصيل حجوزات الشهر (يتحكم بها شهر التنقل) ── -->
-    <div style="font-size:10px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;" id="rpt-detail-lbl">حجوزات الشهر</div>
-    <div id="rpt-monthly-table" style="margin-bottom:20px;"></div>
-
-    <!-- المديونيات -->
-    <div style="font-size:10px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">المديونيات — المبالغ المتبقية</div>
-    <div id="rpt-debts-wrap"></div>
+    <!-- ── Sub-tab: الحجوزات ── -->
+    <div class="rpt-stc" id="rpt-stc-bookings">
+      <div style="font-size:10px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;" id="rpt-detail-lbl">حجوزات الشهر</div>
+      <div id="rpt-monthly-table" style="margin-bottom:24px;"></div>
+      <div style="font-size:10px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">المديونيات — المبالغ المتبقية</div>
+      <div id="rpt-debts-wrap"></div>
+    </div>
   </div>
 
   <div class="tc" id="tab-sources">
@@ -2909,12 +2912,25 @@ function renderBldStats(){
 function rptPrevMonth(){
   rptMonth--; if(rptMonth<0){rptMonth=11;rptYear--;}
   renderReports();
+  if(_rptSubTab==='bookings')renderReportsBookings();
 }
 function rptNextMonth(){
   const n=new Date();
   if(rptYear>n.getFullYear()||(rptYear===n.getFullYear()&&rptMonth>=n.getMonth()))return;
   rptMonth++; if(rptMonth>11){rptMonth=0;rptYear++;}
   renderReports();
+  if(_rptSubTab==='bookings')renderReportsBookings();
+}
+let _rptSubTab='overview';
+function rptSwitchTab(tab,btn){
+  _rptSubTab=tab;
+  document.querySelectorAll('.rpt-stab').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  document.querySelectorAll('.rpt-stc').forEach(t=>t.classList.remove('active'));
+  const tc=document.getElementById('rpt-stc-'+tab);if(tc)tc.classList.add('active');
+  if(tab==='overview')renderReports();
+  else if(tab==='buildings')renderBldStats();
+  else if(tab==='bookings')renderReportsBookings();
 }
 function updateRptNav(){
   const el=document.getElementById('rpt-month-nav'); if(el)el.textContent=MONTHS_AR[rptMonth]+' '+rptYear;
@@ -3007,10 +3023,18 @@ function renderReports(){
     });
   }
 
-  // ── جدول الحجوزات التفصيلي ──
+}
+
+function renderReportsBookings(){
+  updateRptNav();
   const SL={pending:'جديد',awaiting_payment:'انتظار دفع',awaiting_checkin:'انتظار دخول',active:'نشط',checkout:'خروج',cancelled:'ملغي'};
   const SC={pending:'pup',awaiting_payment:'pw',awaiting_checkin:'pa',active:'pop',checkout:'pcl',cancelled:'pup'};
   const fD=d=>d?new Date(d).toLocaleDateString('ar-SA'):'—';
+  const monthBk=allStaffBookings.filter(b=>{
+    if(!b.checkIn)return false;
+    const d=new Date(b.checkIn);
+    return d.getMonth()===rptMonth && d.getFullYear()===rptYear && b.status!=='cancelled';
+  });
   const mtWrap=document.getElementById('rpt-monthly-table');
   if(mtWrap){
     if(!monthBk.length){
@@ -3036,8 +3060,6 @@ function renderReports(){
       </div>`;
     }
   }
-
-  // ── المديونيات ──
   const debts=allStaffBookings.filter(b=>{
     const rem=Number(b.totalPrice||0)-Number(b.paidAmount||0);
     return rem>0 && ['active','awaiting_checkin','awaiting_payment'].includes(b.status);
