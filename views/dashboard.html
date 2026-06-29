@@ -2221,24 +2221,28 @@ function closeMobNav(){
 }
 
 const PUBLIC_SECTIONS=['listings','bookings','customers','hosts','msgs','apts','staff','users','audit'];
-function go(id,el){
-  if(currentUser&&!currentUser.allowed.includes(id)&&!PUBLIC_SECTIONS.includes(id)){showToast('⛔ ليس لديك صلاحية لعرض هذا القسم');return;}
-  if((id==='users'||id==='audit')&&currentUser?.role!=='admin'){showToast('⛔ هذا القسم للمدير العام فقط');return;}
-  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));el?.classList.add('active');showTabById(id);set('pageTitle',titles[id]||id);document.getElementById('addBtn').style.display=id==='contracts'?'flex':'none';
+function _activateTab(id){
   if(id==='listings')loadListings();if(id==='bookings')loadBookings();if(id==='customers')loadCustomers();if(id==='hosts')loadHosts();if(id==='msgs')loadMessages();if(id==='apts')loadApts();if(id==='staff')loadStaff();
   if(id==='users')loadAdminUsers();if(id==='audit')loadAuditLogs(1);
   if(id==='contracts')loadStaffBookings();
   if(id==='reports')setTimeout(renderReports,60);
+  set('pageTitle',titles[id]||id);
+  document.getElementById('addBtn').style.display=id==='contracts'?'flex':'none';
+  showTabById(id);
+  localStorage.setItem('fs-active-tab',id);
+}
+function go(id,el){
+  if(currentUser&&!currentUser.allowed.includes(id)&&!PUBLIC_SECTIONS.includes(id)){showToast('⛔ ليس لديك صلاحية لعرض هذا القسم');return;}
+  if((id==='users'||id==='audit')&&currentUser?.role!=='admin'){showToast('⛔ هذا القسم للمدير العام فقط');return;}
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));el?.classList.add('active');
+  _activateTab(id);
   closeMobNav();
 }
 function st(id,el){
   if(currentUser&&!currentUser.allowed.includes(id)&&!PUBLIC_SECTIONS.includes(id)){showToast('⛔ ليس لديك صلاحية لعرض هذا القسم');return;}
   if((id==='users'||id==='audit')&&currentUser?.role!=='admin'){showToast('⛔ هذا القسم للمدير العام فقط');return;}
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el?.classList.add('active');showTabById(id);set('pageTitle',titles[id]||id);document.getElementById('addBtn').style.display=id==='contracts'?'flex':'none';
-  if(id==='listings')loadListings();if(id==='bookings')loadBookings();if(id==='customers')loadCustomers();if(id==='hosts')loadHosts();if(id==='msgs')loadMessages();if(id==='apts')loadApts();if(id==='staff')loadStaff();
-  if(id==='users')loadAdminUsers();if(id==='audit')loadAuditLogs(1);
-  if(id==='contracts')loadStaffBookings();
-  if(id==='reports')setTimeout(renderReports,60);
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el?.classList.add('active');
+  _activateTab(id);
 }
 function showTabById(id){document.querySelectorAll('.tc').forEach(t=>t.classList.remove('active'));document.getElementById('tab-'+id)?.classList.add('active');}
 
@@ -4348,7 +4352,18 @@ function closeDD(id){const wrap=document.getElementById(id);if(!wrap)return;wrap
 document.addEventListener('click',e=>{if(!e.target.closest('.dd-wrap'))_closeDDs();});
 document.addEventListener('scroll',_closeDDs,true);
 
-window.addEventListener('load',()=>{loadUser();loadData();loadListings();loadBookings();loadHosts();loadMessages();loadApts();loadActivity();loadStaffPerformance();loadWeeklyStats();setInterval(loadData,60000);setInterval(loadMessages,30000);setInterval(loadApts,30000);setInterval(loadBookings,30000);setInterval(loadActivity,30000);setInterval(loadStaffPerformance,120000);setInterval(loadWeeklyStats,300000);if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});});
+window.addEventListener('load',()=>{
+  loadUser();loadData();loadListings();loadBookings();loadHosts();loadMessages();loadApts();loadActivity();loadStaffPerformance();loadWeeklyStats();
+  setInterval(loadData,60000);setInterval(loadMessages,30000);setInterval(loadApts,30000);setInterval(loadBookings,30000);setInterval(loadActivity,30000);setInterval(loadStaffPerformance,120000);setInterval(loadWeeklyStats,300000);
+  // استرجاع التبويب الأخير
+  const savedTab=localStorage.getItem('fs-active-tab');
+  if(savedTab&&savedTab!=='dashboard'){
+    const niBtn=document.querySelector(`.ni[onclick*="go('${savedTab}'"]`);
+    const tabBtn=document.querySelector(`.tab[onclick*="st('${savedTab}'"]`);
+    if(niBtn)niBtn.click();else if(tabBtn)tabBtn.click();
+  }
+  if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});
+});
 </script>
 </body>
 </html>
