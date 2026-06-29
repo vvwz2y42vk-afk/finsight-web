@@ -1662,6 +1662,7 @@ function renderAll(){
   const op=allC.filter(c=>c.st==='مفتوح').length,cl=allC.filter(c=>c.st==='مغلق').length;
   _kpiBuilding='all';
   renderKPIs();
+  // لا تغيّر التبويب النشط — يُحدَّد من localStorage
   // KPI month-over-month delta
   const bs=window._bkStats||{total:0,revenue:0,paid:0,remaining:0,open:0,closed:0};
   const tm=bs.thisMonth||{count:0,paid:0},pm2=bs.prevMonth||{count:0,paid:0};
@@ -4352,10 +4353,8 @@ function closeDD(id){const wrap=document.getElementById(id);if(!wrap)return;wrap
 document.addEventListener('click',e=>{if(!e.target.closest('.dd-wrap'))_closeDDs();});
 document.addEventListener('scroll',_closeDDs,true);
 
-window.addEventListener('load', async ()=>{
-  loadUser();
-  await loadData(); // ننتظر تحميل البيانات ورسمها
-  // استعادة التبويب بعد اكتمال كل شيء
+window.addEventListener('load',()=>{
+  // استعادة التبويب فوراً قبل أي تحميل
   const _st=localStorage.getItem('fs-active-tab');
   if(_st&&_st!=='dashboard'){
     document.querySelectorAll('.tc').forEach(t=>t.classList.remove('active'));
@@ -4366,10 +4365,10 @@ window.addEventListener('load', async ()=>{
       const _nb=document.getElementById('nav-'+_st)||document.getElementById('tab-nav-'+_st);
       if(_nb)_nb.classList.add('active');
       set('pageTitle',titles[_st]||_st);
-      if(_st==='reports')setTimeout(renderReports,60);
     }
   }
-  loadListings();loadBookings();loadHosts();loadMessages();loadApts();loadActivity();loadStaffPerformance();loadWeeklyStats();
+  // تحميل البيانات (لا تغيّر التبويب)
+  loadUser();loadData();loadListings();loadBookings();loadHosts();loadMessages();loadApts();loadActivity();loadStaffPerformance();loadWeeklyStats();
   setInterval(loadData,60000);setInterval(loadMessages,30000);setInterval(loadApts,30000);setInterval(loadBookings,30000);setInterval(loadActivity,30000);setInterval(loadStaffPerformance,120000);setInterval(loadWeeklyStats,300000);
   if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});
 });
