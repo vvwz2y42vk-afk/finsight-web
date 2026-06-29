@@ -1828,6 +1828,7 @@ function getSbCommCurr(){
 }
 function renderCommissions(){
   const fDate=d=>d?new Date(d).toLocaleDateString('ar-SA',{day:'numeric',month:'short',year:'2-digit'}):'—';
+  set('curr-month-lbl',monthLabel(currMonthKey()));
   // ── KPIs من API الجديد ──
   const am=allCommissions.filter(c=>c.marketer==='عبدالملك');
   const jd=allCommissions.filter(c=>c.marketer==='جود');
@@ -1845,11 +1846,11 @@ function renderCommissions(){
     :allCommissions.map((c,i)=>`<tr>
       <td style="color:var(--t3);">${toAr(i+1)}</td>
       <td style="font-weight:600;">${c.name||'—'}</td>
+      <td style="color:var(--t3);font-size:11px;">${c.apt||'—'}</td>
       <td><span class="pill ${SP[c.building]||'pm'}">${c.building||'—'}</span></td>
       <td style="font-weight:600;color:${c.marketer==='عبدالملك'?'var(--gold)':'var(--blue)'};">${c.marketer}</td>
       <td style="color:var(--t3);font-size:10px;">${fDate(c.date)}</td>
       <td style="font-weight:700;color:${c.marketer==='عبدالملك'?'var(--gold)':'var(--blue)'};">${fmt(c.amount)} ﷼</td>
-      <td style="text-align:center;color:var(--t3);font-size:11px;">${c.apt||'—'}</td>
     </tr>`).join(''));
   // ── قائمة السنوات ──
   const yearSel=document.getElementById('hist-filter-year');
@@ -2202,10 +2203,9 @@ const titles={dashboard:'لوحة <span>التحكم</span>',contracts:'<span>ا
 async function loadCommissions(){
   try{
     const r=await fetch('/api/commissions');
-    if(!r.ok)return;
-    allCommissions=await r.json();
-    renderCommissions();
+    if(r.ok){const d=await r.json();if(Array.isArray(d))allCommissions=d;}
   }catch(e){}
+  renderCommissions();
 }
 async function loadUser(){
   try{
