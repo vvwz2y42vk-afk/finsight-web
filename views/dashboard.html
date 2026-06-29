@@ -658,7 +658,7 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
     </div>
     <div class="card" style="margin-bottom:10px;">
       <div class="card-hd"><div class="card-title">عمولات الشهر الحالي</div><span class="badge b-gold" id="comm-total-b">—</span></div>
-      <div class="tbl-wrap"><table><thead><tr><th>#</th><th>العميل</th><th>الفرع</th><th>المسوّق</th><th>التاريخ</th><th>العمولة</th><th style="text-align:center;">الإثبات</th></tr></thead><tbody id="comm-tbody"></tbody></table></div>
+      <div class="tbl-wrap"><table><thead><tr><th>#</th><th>العميل</th><th>الفرع</th><th>المسوّق</th><th>التاريخ</th><th>العمولة</th><th style="text-align:center;">الشقة</th></tr></thead><tbody id="comm-tbody"></tbody></table></div>
       <div style="margin-top:8px;padding:8px 12px;background:var(--gl);border:1px solid var(--gb);border-radius:8px;display:flex;justify-content:space-between;align-items:center;"><span style="font-size:11px;color:var(--t3);">الإجمالي</span><span style="font-size:16px;font-weight:700;color:var(--gold);" id="comm-grand">—</span></div>
     </div>
     <div class="card">
@@ -1493,7 +1493,7 @@ const BUILDINGS={
 function lsGet(k){try{const v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch(e){return null;}}
 function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 
-let allC=[], currComm=[], commHistory=[], editId=null, deleteId=null, mapFilter='all', resetDate=null, currentUser=null;
+let allC=[], currComm=[], commHistory=[], allCommissions=[], editId=null, deleteId=null, mapFilter='all', resetDate=null, currentUser=null;
 let _proofCommId=null, _proofHistKey=null;
 
 const fmt=n=>Number(n||0).toLocaleString('en-US');
@@ -1810,41 +1810,29 @@ function getSbCommCurr(){
 }
 function renderCommissions(){
   const fDate=d=>d?new Date(d).toLocaleDateString('ar-SA',{day:'numeric',month:'short',year:'2-digit'}):'—';
-  // ── عمولات تلقائية من حجوزات الموظفين (مدمجة) ──
-  const sbComm=getSbCommCurr();
-  const sbAm=sbComm.filter(b=>b.marketer==='عبدالملك');
-  const sbJd=sbComm.filter(b=>b.marketer==='جود');
-  const sbAmT=sbAm.reduce((a,b)=>a+COMM_RATE[b.marketer],0);
-  const sbJdT=sbJd.reduce((a,b)=>a+COMM_RATE[b.marketer],0);
-  // ── عمولات يدوية ──
-  const am=currComm.filter(c=>c.m==='عبدالملك'),jd=currComm.filter(c=>c.m==='جود');
-  const amT=am.reduce((a,c)=>a+c.a,0),jT=jd.reduce((a,c)=>a+c.a,0);
-  const totalAmT=amT+sbAmT, totalJdT=jT+sbJdT;
-  // ── إثبات (يدوي فقط) ──
-  const amProven=am.filter(c=>c.proof?.url),amPend=am.filter(c=>!c.proof?.url);
-  const jProven=jd.filter(c=>c.proof?.url),jPend=jd.filter(c=>!c.proof?.url);
-  set('comm-am',fmt(totalAmT));set('comm-j',fmt(totalJdT));
-  set('comm-am-n',toAr(am.length+sbAm.length)+' عقد × ٥٠ ﷼');
-  set('comm-j-n',toAr(jd.length+sbJd.length)+' عقد × ٤٠ ﷼');
-  set('comm-am-proof-cnt',toAr(amProven.length)+' من '+toAr(am.length));
-  set('comm-am-confirmed',fmt(amProven.reduce((a,c)=>a+c.a,0))+' ﷼');
-  set('comm-am-pending',fmt(amPend.reduce((a,c)=>a+c.a,0))+' ﷼');
-  set('comm-j-proof-cnt',toAr(jProven.length)+' من '+toAr(jd.length));
-  set('comm-j-confirmed',fmt(jProven.reduce((a,c)=>a+c.a,0))+' ﷼');
-  set('comm-j-pending',fmt(jPend.reduce((a,c)=>a+c.a,0))+' ﷼');
-  set('comm-total-b',fmt(totalAmT+totalJdT)+' ﷼');
-  set('comm-grand',fmt(totalAmT+totalJdT)+' ﷼');
-  set('comm-tbody',currComm.length===0
-    ?'<tr><td colspan="7" style="text-align:center;color:var(--t3);padding:14px;">لا توجد عمولات — تم التصفير ✓</td></tr>'
-    :currComm.map((c,i)=>{const br=getBranch(c.sh,c.c);return`<tr>
+  // ── KPIs من API الجديد ──
+  const am=allCommissions.filter(c=>c.marketer==='عبدالملك');
+  const jd=allCommissions.filter(c=>c.marketer==='جود');
+  const amT=am.reduce((a,c)=>a+c.amount,0);
+  const jdT=jd.reduce((a,c)=>a+c.amount,0);
+  set('comm-am',fmt(amT));set('comm-j',fmt(jdT));
+  set('comm-am-n',toAr(am.length)+' عقد × ٥٠ ﷼');
+  set('comm-j-n',toAr(jd.length)+' عقد × ٤٠ ﷼');
+  set('comm-am-proof-cnt','—');set('comm-am-confirmed','—');set('comm-am-pending','—');
+  set('comm-j-proof-cnt','—');set('comm-j-confirmed','—');set('comm-j-pending','—');
+  set('comm-total-b',fmt(amT+jdT)+' ﷼');
+  set('comm-grand',fmt(amT+jdT)+' ﷼');
+  set('comm-tbody',allCommissions.length===0
+    ?'<tr><td colspan="7" style="text-align:center;color:var(--t3);padding:14px;">لا توجد عمولات هذا الشهر</td></tr>'
+    :allCommissions.map((c,i)=>`<tr>
       <td style="color:var(--t3);">${toAr(i+1)}</td>
-      <td style="font-weight:600;">${c.c}</td>
-      <td><span class="pill ${SP[br.key]||'pm'}">${br.label}</span></td>
-      <td style="font-weight:600;color:${c.m==='عبدالملك'?'var(--gold)':'var(--blue)'};">${c.m}</td>
-      <td style="color:var(--t3);font-size:10px;">${c.d}</td>
-      <td style="font-weight:700;color:${c.m==='عبدالملك'?'var(--gold)':'var(--blue)'};">${fmt(c.a)} ﷼</td>
-      ${proofCell(c,null)}
-    </tr>`;}).join(''));
+      <td style="font-weight:600;">${c.name||'—'}</td>
+      <td><span class="pill ${SP[c.building]||'pm'}">${c.building||'—'}</span></td>
+      <td style="font-weight:600;color:${c.marketer==='عبدالملك'?'var(--gold)':'var(--blue)'};">${c.marketer}</td>
+      <td style="color:var(--t3);font-size:10px;">${fDate(c.date)}</td>
+      <td style="font-weight:700;color:${c.marketer==='عبدالملك'?'var(--gold)':'var(--blue)'};">${fmt(c.amount)} ﷼</td>
+      <td style="text-align:center;color:var(--t3);font-size:11px;">${c.apt||'—'}</td>
+    </tr>`).join(''));
   // ── قائمة السنوات ──
   const yearSel=document.getElementById('hist-filter-year');
   if(yearSel){
@@ -2193,6 +2181,14 @@ async function confirmDelete(){
 }
 
 const titles={dashboard:'لوحة <span>التحكم</span>',contracts:'<span>العقود</span>',commissions:'<span>العمولات</span>',collection:'<span>التحصيل</span>',expiry:'العقود <span>المنتهية</span>',map:'خريطة <span>الشقق</span>',performance:'تحليل <span>الأداء</span>',sources:'تحليل <span>المصادر</span>',reports:'<span>التقارير</span> الشهرية',listings:'إدارة <span>الإعلانات</span>',bookings:'طلبات <span>الحجز</span>',customers:'العملاء <span>المسجلون</span>',hosts:'المضيفون <span>الخارجيون</span>',msgs:'الرسائل <span>والمحادثات</span>',apts:'الشقق <span>والتسكين</span>',staff:'إدارة <span>الموظفين</span>',users:'مستخدمو <span>النظام</span>',audit:'سجل <span>المراقبة</span>'};
+async function loadCommissions(){
+  try{
+    const r=await fetch('/api/commissions');
+    if(!r.ok)return;
+    allCommissions=await r.json();
+    renderCommissions();
+  }catch(e){}
+}
 async function loadUser(){
   try{
     const res=await fetch('/api/me');
@@ -2234,6 +2230,7 @@ function _activateTab(id){
   if(id==='listings')loadListings();if(id==='bookings')loadBookings();if(id==='customers')loadCustomers();if(id==='hosts')loadHosts();if(id==='msgs')loadMessages();if(id==='apts')loadApts();if(id==='staff')loadStaff();
   if(id==='users')loadAdminUsers();if(id==='audit')loadAuditLogs(1);
   if(id==='contracts')loadStaffBookings();
+  if(id==='commissions')loadCommissions();
   if(id==='reports')setTimeout(renderReports,60);
   set('pageTitle',titles[id]||id);
   document.getElementById('addBtn').style.display=id==='contracts'?'flex':'none';
@@ -4417,7 +4414,7 @@ window.addEventListener('load',()=>{
     }
   }
   // تحميل البيانات (لا تغيّر التبويب)
-  loadUser();loadData();loadListings();loadBookings();loadHosts();loadMessages();loadApts();loadActivity();loadStaffPerformance();loadWeeklyStats();
+  loadUser();loadData();loadCommissions();loadListings();loadBookings();loadHosts();loadMessages();loadApts();loadActivity();loadStaffPerformance();loadWeeklyStats();
   setInterval(loadData,60000);setInterval(loadMessages,30000);setInterval(loadApts,30000);setInterval(loadBookings,30000);setInterval(loadActivity,30000);setInterval(loadStaffPerformance,120000);setInterval(loadWeeklyStats,300000);
   if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});
 });

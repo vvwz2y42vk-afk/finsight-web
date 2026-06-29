@@ -114,6 +114,34 @@ router.post('/contracts/bulk', auth, requireRole('admin'), async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ─── Commissions (from Booking.marketer) ─────────────────
+const COMM_RATES = { 'عبدالملك': 50, 'جود': 40 };
+
+router.get('/commissions', auth, async (req, res) => {
+  try {
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const bookings = await Booking.find({
+      marketer: { $in: Object.keys(COMM_RATES) },
+      propertyId: null,
+      status: { $ne: 'cancelled' },
+      createdAt: { $gte: monthStart },
+    })
+      .select('name building apt marketer createdAt checkIn')
+      .sort({ createdAt: -1 })
+      .lean();
+    res.json(bookings.map(b => ({
+      _id: b._id,
+      name: b.name,
+      building: b.building,
+      apt: b.apt,
+      marketer: b.marketer,
+      date: b.createdAt,
+      amount: COMM_RATES[b.marketer] || 0,
+    })));
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // ─── Commissions History ──────────────────────────────────
 router.get('/commission-history', auth, async (req, res) => {
   try {
