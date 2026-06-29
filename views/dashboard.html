@@ -803,8 +803,18 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
       </div>
     </div>
 
+    <!-- فلتر المبنى الموحّد -->
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+      <span style="font-size:11px;font-weight:700;color:var(--t3);">المبنى:</span>
+      <button class="wtab active" onclick="setRptBuilding('all',this)">الكل</button>
+      <button class="wtab" onclick="setRptBuilding('المنارا',this)">المنارا</button>
+      <button class="wtab" onclick="setRptBuilding('جوان ان',this)">جوان ان</button>
+      <button class="wtab" onclick="setRptBuilding('الماسة',this)">الماسة</button>
+      <button class="wtab" onclick="setRptBuilding('الواحة',this)">الواحة</button>
+    </div>
+
     <!-- Sub-tabs -->
-    <div style="display:flex;gap:6px;margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid var(--b2);flex-wrap:wrap;">
+    <div style="display:flex;gap:6px;margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid var(--b2);flex-wrap:wrap;" id="rpt-stab-row">
       <button class="rpt-stab active" onclick="rptSwitchTab('overview',this)">نظرة عامة</button>
       <button class="rpt-stab" onclick="rptSwitchTab('buildings',this)">المباني</button>
       <button class="rpt-stab" onclick="rptSwitchTab('reports',this)">التقارير</button>
@@ -2922,9 +2932,27 @@ function rptNextMonth(){
   if(_rptSubTab==='bookings')renderReportsBookings();
 }
 let _rptSubTab='overview';
+let _rptBuilding='all';
+const _BLD_TOTALS={المنارا:30,'جوان ان':21,الماسة:18,الواحة:20};
+function setRptBuilding(bld,btn){
+  _rptBuilding=bld;
+  // تحديث أزرار المبنى (فقط داخل صف فلتر التقارير)
+  btn.closest('div').querySelectorAll('.wtab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  // إعادة رسم التبويب الحالي
+  if(_rptSubTab==='overview')renderReports();
+  else if(_rptSubTab==='buildings'){
+    // مزامنة مع أزرار المباني الداخلية
+    const inner=bld==='all'?'':bld;
+    document.querySelectorAll('#bld-tabs .bld-tab').forEach(b=>b.classList.toggle('active',(b.dataset.bld||'')===inner));
+    _bldFilter=inner;renderBldStats();
+  }
+  else if(_rptSubTab==='reports')adminMonthlyReport();
+  else if(_rptSubTab==='bookings')renderReportsBookings();
+}
 function rptSwitchTab(tab,btn){
   _rptSubTab=tab;
-  document.querySelectorAll('.rpt-stab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('#rpt-stab-row .rpt-stab').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
   document.querySelectorAll('.rpt-stc').forEach(t=>t.classList.remove('active'));
   const tc=document.getElementById('rpt-stc-'+tab);if(tc)tc.classList.add('active');
@@ -2942,14 +2970,15 @@ function updateRptNav(){
 function renderReports(){
   updateRptNav();
   const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+  const bld=_rptBuilding;
+  const bks=bld==='all'?allStaffBookings:allStaffBookings.filter(b=>b.building===bld);
+  const TOTAL_APTS=bld==='all'?89:(_BLD_TOTALS[bld]||89);
   const today=new Date(); today.setHours(0,0,0,0);
-  const tomorrow=new Date(today); tomorrow.setDate(today.getDate()+1);
-  const TOTAL_APTS=89;
 
   // ── اليوم ──
-  const arrivals=allStaffBookings.filter(b=>{if(!b.checkIn)return false;const d=new Date(b.checkIn);d.setHours(0,0,0,0);return d.getTime()===today.getTime()&&['awaiting_checkin','active'].includes(b.status);}).length;
-  const departures=allStaffBookings.filter(b=>{if(!b.checkOut)return false;const d=new Date(b.checkOut);d.setHours(0,0,0,0);return d.getTime()===today.getTime()&&b.status==='active';}).length;
-  const activeNow=allStaffBookings.filter(b=>['active','awaiting_checkin'].includes(b.status)).length;
+  const arrivals=bks.filter(b=>{if(!b.checkIn)return false;const d=new Date(b.checkIn);d.setHours(0,0,0,0);return d.getTime()===today.getTime()&&['awaiting_checkin','active'].includes(b.status);}).length;
+  const departures=bks.filter(b=>{if(!b.checkOut)return false;const d=new Date(b.checkOut);d.setHours(0,0,0,0);return d.getTime()===today.getTime()&&b.status==='active';}).length;
+  const activeNow=bks.filter(b=>['active','awaiting_checkin'].includes(b.status)).length;
   const occRate=Math.round(activeNow/TOTAL_APTS*100);
   set('rpt-arrivals',toAr(arrivals));
   set('rpt-departures',toAr(departures));
@@ -2957,7 +2986,7 @@ function renderReports(){
   set('rpt-active',toAr(activeNow)+' / '+toAr(TOTAL_APTS));
 
   // ── الشهر ──
-  const monthBk=allStaffBookings.filter(b=>{
+  const monthBk=bks.filter(b=>{
     if(!b.checkIn)return false;
     const d=new Date(b.checkIn);
     return d.getMonth()===rptMonth && d.getFullYear()===rptYear && b.status!=='cancelled';
@@ -2997,8 +3026,8 @@ function renderReports(){
     return{label:MONTHS_AR[target.getMonth()]+' '+target.getFullYear(),month:target.getMonth(),year:target.getFullYear()};
   });
   const yearData=yearMonths.map(m=>{
-    const bks=allStaffBookings.filter(b=>{if(!b.checkIn||b.status==='cancelled')return false;const d=new Date(b.checkIn);return d.getMonth()===m.month&&d.getFullYear()===m.year;});
-    return{label:m.label,revenue:bks.reduce((s,b)=>s+Number(b.totalPrice||0),0),count:bks.length,daily:bks.filter(b=>b.bookingType==='daily').reduce((s,b)=>s+Number(b.totalPrice||0),0),annual:bks.filter(b=>b.bookingType!=='daily').reduce((s,b)=>s+Number(b.totalPrice||0),0)};
+    const mb=bks.filter(b=>{if(!b.checkIn||b.status==='cancelled')return false;const d=new Date(b.checkIn);return d.getMonth()===m.month&&d.getFullYear()===m.year;});
+    return{label:m.label,revenue:mb.reduce((s,b)=>s+Number(b.totalPrice||0),0),count:mb.length,daily:mb.filter(b=>b.bookingType==='daily').reduce((s,b)=>s+Number(b.totalPrice||0),0),annual:mb.filter(b=>b.bookingType!=='daily').reduce((s,b)=>s+Number(b.totalPrice||0),0)};
   });
   const totalYearRev=yearData.reduce((s,m)=>s+m.revenue,0);
   const bestM=yearData.reduce((a,b)=>b.revenue>a.revenue?b:a,yearData[0]);
@@ -3030,7 +3059,9 @@ function renderReportsBookings(){
   const SL={pending:'جديد',awaiting_payment:'انتظار دفع',awaiting_checkin:'انتظار دخول',active:'نشط',checkout:'خروج',cancelled:'ملغي'};
   const SC={pending:'pup',awaiting_payment:'pw',awaiting_checkin:'pa',active:'pop',checkout:'pcl',cancelled:'pup'};
   const fD=d=>d?new Date(d).toLocaleDateString('ar-SA'):'—';
-  const monthBk=allStaffBookings.filter(b=>{
+  const bld=_rptBuilding;
+  const bks=bld==='all'?allStaffBookings:allStaffBookings.filter(b=>b.building===bld);
+  const monthBk=bks.filter(b=>{
     if(!b.checkIn)return false;
     const d=new Date(b.checkIn);
     return d.getMonth()===rptMonth && d.getFullYear()===rptYear && b.status!=='cancelled';
@@ -3060,7 +3091,7 @@ function renderReportsBookings(){
       </div>`;
     }
   }
-  const debts=allStaffBookings.filter(b=>{
+  const debts=bks.filter(b=>{
     const rem=Number(b.totalPrice||0)-Number(b.paidAmount||0);
     return rem>0 && ['active','awaiting_checkin','awaiting_payment'].includes(b.status);
   }).sort((a,b)=>(Number(b.totalPrice||0)-Number(b.paidAmount||0))-(Number(a.totalPrice||0)-Number(a.paidAmount||0)));
@@ -3110,8 +3141,10 @@ function adminMonthlyReport(){
   const type=document.querySelector('input[name="adm-mr-type"]:checked')?.value||'detail';
   const body=document.getElementById('adm-mr-body');
   if(!body)return;
+  const bldF=_rptBuilding==='all'?null:_rptBuilding;
   const bks=(allStaffBookings||[]).filter(b=>{
     if(b.status==='cancelled')return false;
+    if(bldF&&b.building!==bldF)return false;
     const ci=new Date(b.checkIn||b.checkOut);
     return ci.getFullYear()===year && ci.getMonth()+1===month;
   });
@@ -3120,12 +3153,13 @@ function adminMonthlyReport(){
   const totPaid=bks.reduce((s,b)=>s+(b.paidAmount||0),0);
   const totRem=Math.max(0,totRev-totPaid);
   const totNights=bks.reduce((s,b)=>s+(b.nights||0),0);
+  const bldSuffix=bldF?` — ${bldF}`:'';
   const cardStyle='background:#fff;border:1.5px solid var(--b2);border-radius:12px;overflow:hidden;';
   const hdStyle='background:var(--gold);color:#fff;padding:12px 18px;font-weight:700;font-size:13px;display:flex;justify-content:space-between;align-items:center;';
   const ST_L={awaiting_checkin:'انتظار دخول',active:'مسكّن',checkout:'خروج',cancelled:'ملغي',pending:'قيد الانتظار',awaiting_payment:'انتظار دفع'};
   if(type==='total'){
     body.innerHTML=`<div style="${cardStyle}" id="adm-mr-printable">
-      <div style="${hdStyle}"><span>التقرير الشهري الكلي — ${mName} ${year}</span></div>
+      <div style="${hdStyle}"><span>التقرير الشهري الكلي — ${mName} ${year}${bldSuffix}</span></div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:0;">
         ${[{lbl:'إجمالي الحجوزات',val:bks.length,c:'#1a3d8f'},{lbl:'إجمالي الليالي',val:totNights,c:'#7c3aed'},
            {lbl:'إجمالي الإيرادات',val:fmt(totRev)+' ﷼',c:'#047857'},{lbl:'المحصّل',val:fmt(totPaid)+' ﷼',c:'#0369a1'},
@@ -3143,7 +3177,7 @@ function adminMonthlyReport(){
       byApt[k].count++;byApt[k].nights+=(b.nights||0);byApt[k].revenue+=(b.totalPrice||0);byApt[k].paid+=(b.paidAmount||0);});
     const rows=Object.values(byApt).sort((a,b)=>b.revenue-a.revenue);
     body.innerHTML=`<div style="${cardStyle}" id="adm-mr-printable">
-      <div style="${hdStyle}"><span>التقرير التجميعي — ${mName} ${year}</span><span style="font-size:11px;opacity:.8;">${bks.length} حجز</span></div>
+      <div style="${hdStyle}"><span>التقرير التجميعي — ${mName} ${year}${bldSuffix}</span><span style="font-size:11px;opacity:.8;">${bks.length} حجز</span></div>
       <div class="tbl-wrap"><table class="tbl"><thead><tr><th>الشقة</th><th>عدد الحجوزات</th><th>الليالي</th><th>الإيرادات</th><th>المحصّل</th><th>المتبقي</th></tr></thead>
       <tbody>${rows.length?rows.map(r=>`<tr><td style="font-weight:700;">${r.apt}</td><td style="text-align:center;">${r.count}</td><td style="text-align:center;">${r.nights}</td>
         <td style="font-weight:700;">${fmt(r.revenue)} ﷼</td><td style="color:#047857;">${fmt(r.paid)} ﷼</td>
@@ -3157,7 +3191,7 @@ function adminMonthlyReport(){
   }
   // detail
   body.innerHTML=`<div style="${cardStyle}" id="adm-mr-printable">
-    <div style="${hdStyle}"><span>التقرير التفصيلي — ${mName} ${year}</span><span style="font-size:11px;opacity:.8;">${bks.length} حجز</span></div>
+    <div style="${hdStyle}"><span>التقرير التفصيلي — ${mName} ${year}${bldSuffix}</span><span style="font-size:11px;opacity:.8;">${bks.length} حجز</span></div>
     <div class="tbl-wrap"><table class="tbl"><thead><tr><th>رقم</th><th>الشقة</th><th>المبنى</th><th>العميل</th><th>الدخول</th><th>الخروج</th><th>الليالي</th><th>الإجمالي</th><th>المحصّل</th><th>المتبقي</th><th>الحالة</th></tr></thead>
     <tbody>${bks.length?bks.map((b,i)=>{
       const rem=Math.max(0,(b.totalPrice||0)-(b.paidAmount||0));
