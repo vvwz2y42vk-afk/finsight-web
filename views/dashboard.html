@@ -699,6 +699,29 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
     <div id="debt-list"></div>
   </div>
   <div class="tc" id="tab-expiry">
+    <!-- شريط الفلاتر -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;padding:10px 14px;background:var(--s);border:1px solid var(--b);border-radius:12px;">
+      <span style="font-size:11px;font-weight:700;color:var(--t3);">تصفية:</span>
+      <select id="exp-f-range" onchange="renderExpiry()" style="font-size:11px;padding:5px 10px;border:1px solid var(--b2);border-radius:8px;background:var(--s);color:var(--t1);font-family:inherit;">
+        <option value="60">خلال 60 يوم</option>
+        <option value="7">خلال 7 أيام</option>
+        <option value="15">خلال 15 يوم</option>
+        <option value="30">خلال 30 يوم</option>
+        <option value="all">الكل</option>
+      </select>
+      <select id="exp-f-bld" onchange="renderExpiry()" style="font-size:11px;padding:5px 10px;border:1px solid var(--b2);border-radius:8px;background:var(--s);color:var(--t1);font-family:inherit;">
+        <option value="">كل الفروع</option>
+        <option>المنارا</option><option>جوان ان</option><option>الماسة</option><option>الواحة</option>
+      </select>
+      <select id="exp-f-type" onchange="renderExpiry()" style="font-size:11px;padding:5px 10px;border:1px solid var(--b2);border-radius:8px;background:var(--s);color:var(--t1);font-family:inherit;">
+        <option value="">كل الأنواع</option>
+        <option value="daily">يومي</option>
+        <option value="annual">شهري</option>
+      </select>
+      <input id="exp-f-q" type="text" placeholder="بحث بالاسم..." oninput="renderExpiry()" style="font-size:11px;padding:5px 10px;border:1px solid var(--b2);border-radius:8px;background:var(--s);color:var(--t1);font-family:inherit;flex:1;min-width:130px;">
+      <button onclick="resetExpFilters()" style="font-size:11px;padding:5px 12px;border:1px solid var(--b2);border-radius:8px;background:var(--s2);color:var(--t3);cursor:pointer;font-family:inherit;">× مسح</button>
+      <span id="exp-f-count" style="font-size:10px;color:var(--t3);margin-right:auto;"></span>
+    </div>
     <div class="ec">
       <div class="ecb u"><div class="ecl">خلال ٧ أيام</div><div class="ecv" id="cnt7">—</div></div>
       <div class="ecb s"><div class="ecl">خلال ١٥ يوم</div><div class="ecv" id="cnt15">—</div></div>
@@ -1929,11 +1952,37 @@ function renderCollection(){
   }).join(''):'<div style="text-align:center;padding:32px;color:var(--t3);">لا توجد مديونيات ✓</div>');
 }
 
+function resetExpFilters(){
+  ['exp-f-bld','exp-f-type','exp-f-q'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  const r=document.getElementById('exp-f-range');if(r)r.value='60';
+  renderExpiry();
+}
 function renderExpiry(){
+  const range=document.getElementById('exp-f-range')?.value||'60';
+  const bld=document.getElementById('exp-f-bld')?.value||'';
+  const type=document.getElementById('exp-f-type')?.value||'';
+  const q=(document.getElementById('exp-f-q')?.value||'').trim().toLowerCase();
   const actv=['active','awaiting_checkin','awaiting_payment'];
-  const up=allStaffBookings.filter(b=>b.name&&actv.includes(b.status)&&b.checkOut).map(b=>({...b,d:daysToISO(b.checkOut)})).filter(b=>b.d>=0&&b.d<=60).sort((a,b2)=>a.d-b2.d);
-  set('cnt7',toAr(up.filter(b=>b.d<=7).length));set('cnt15',toAr(up.filter(b=>b.d<=15).length));set('cnt30',toAr(up.filter(b=>b.d<=30).length));
-  set('expiry-list',up.length?up.map(b=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--b);"><div style="font-size:18px;font-weight:700;width:36px;text-align:center;color:${b.d<=7?'var(--red)':b.d<=15?'var(--gold)':'var(--green)'};">${toAr(b.d)}</div><div style="flex:1;"><div style="font-size:11px;font-weight:600;">${b.name}</div><div style="font-size:9px;color:var(--t3);">شقة ${b.apt} · <span class="pill ${SP[b.building]||''}">${b.building}</span> · ${fmtDate(b.checkOut)}</div></div><a class="wa-btn" href="https://wa.me/${(b.phone||'').replace(/^0/,'966')}?text=${encodeURIComponent('السلام عليكم '+b.name+'، موعد خروجكم قريب.')}" target="_blank">📱 تذكير</a></div>`).join(''):'<div style="text-align:center;padding:32px;color:var(--t3);">لا توجد عقود منتهية قريباً</div>');
+  const maxDays=range==='all'?9999:Number(range);
+  let up=allStaffBookings.filter(b=>{
+    if(!b.name||!actv.includes(b.status)||!b.checkOut)return false;
+    if(bld&&b.building!==bld)return false;
+    if(type&&b.bookingType!==type)return false;
+    if(q&&!b.name.toLowerCase().includes(q)&&!(b.apt||'').includes(q))return false;
+    return true;
+  }).map(b=>({...b,d:daysToISO(b.checkOut)})).filter(b=>b.d>=0&&b.d<=maxDays).sort((a,b2)=>a.d-b2.d);
+  const cc=document.getElementById('exp-f-count');if(cc)cc.textContent=up.length+' حجز';
+  set('cnt7',toAr(up.filter(b=>b.d<=7).length));
+  set('cnt15',toAr(up.filter(b=>b.d<=15).length));
+  set('cnt30',toAr(up.filter(b=>b.d<=30).length));
+  set('expiry-list',up.length?up.map(b=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--b);">
+    <div style="font-size:18px;font-weight:700;width:36px;text-align:center;color:${b.d<=7?'var(--red)':b.d<=15?'var(--gold)':'var(--green)'};">${b.d}</div>
+    <div style="flex:1;">
+      <div style="font-size:11px;font-weight:600;">${b.name}</div>
+      <div style="font-size:9px;color:var(--t3);">شقة ${b.apt} · <span class="pill ${SP[b.building]||''}">${b.building}</span> · ${b.bookingType==='daily'?'يومي':'شهري'} · ${fmtDate(b.checkOut)}</div>
+    </div>
+    <a class="wa-btn" href="https://wa.me/${(b.phone||'').replace(/^0/,'966')}?text=${encodeURIComponent('السلام عليكم '+b.name+'، موعد خروجكم قريب بتاريخ '+fmtDate(b.checkOut)+'.')}" target="_blank">📱 تذكير</a>
+  </div>`).join(''):'<div style="text-align:center;padding:32px;color:var(--t3);">لا توجد عقود في هذه الفترة</div>');
 }
 
 function setMapFilter(f,btn){mapFilter=f;document.querySelectorAll('.mf-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderMap();}
