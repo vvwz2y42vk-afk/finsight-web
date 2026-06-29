@@ -693,8 +693,8 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
         <option value="annual">شهري</option>
       </select>
       <select id="coll-f-sort" onchange="renderCollection()" style="font-size:11px;padding:5px 10px;border:1px solid var(--b2);border-radius:8px;background:var(--s);color:var(--t1);font-family:inherit;">
-        <option value="amount">الأكبر مبلغاً</option>
         <option value="recent">الأحدث</option>
+        <option value="amount">الأكبر مبلغاً</option>
       </select>
       <input id="coll-f-q" type="text" placeholder="بحث بالاسم..." oninput="renderCollection()" style="font-size:11px;padding:5px 10px;border:1px solid var(--b2);border-radius:8px;background:var(--s);color:var(--t1);font-family:inherit;flex:1;min-width:130px;">
       <input type="date" id="coll-f-from" onchange="renderCollection()" title="من تاريخ" style="font-size:11px;padding:5px 8px;border:1px solid var(--b2);border-radius:8px;background:var(--s);color:var(--t1);font-family:inherit;">
@@ -1913,7 +1913,7 @@ function renderCommissions(){
 
 function resetCollFilters(){
   ['coll-f-bld','coll-f-type','coll-f-q','coll-f-from','coll-f-to'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
-  const s=document.getElementById('coll-f-sort');if(s)s.value='amount';
+  const s=document.getElementById('coll-f-sort');if(s)s.value='recent';
   renderCollection();
 }
 function renderCollection(){
