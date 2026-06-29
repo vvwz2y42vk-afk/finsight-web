@@ -250,6 +250,9 @@ tbody td{padding:11px 12px;font-size:12px;vertical-align:middle;}
 .rpt-stab.active{background:var(--blue);border-color:var(--blue);color:#fff;}
 .rpt-stab:hover:not(.active){background:var(--b2);}
 .rpt-stc{display:none;}.rpt-stc.active{display:block;}
+.rpt-bld{padding:5px 13px;border-radius:20px;border:1.5px solid var(--b2);background:transparent;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;color:var(--t2);transition:.15s;}
+.rpt-bld.active{background:var(--blue);border-color:var(--blue);color:#fff;}
+.rpt-bld:hover:not(.active){background:var(--b2);}
 .bld-mini-card{background:#fff;border:1.5px solid var(--b2);border-radius:14px;padding:14px 16px;position:relative;overflow:hidden;}
 .bld-mini-card::before{content:'';position:absolute;top:0;right:0;width:4px;height:100%;border-radius:0 14px 14px 0;}
 .bld-mini-card.c-mna::before{background:#1a3d8f;}
@@ -787,34 +790,35 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
   </div>
   
   <div class="tc" id="tab-reports">
-    <!-- Header -->
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
-      <div>
-        <div style="font-size:16px;font-weight:800;color:var(--t);letter-spacing:-.02em;">التقارير والإحصاءات</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:8px;">
-          <button onclick="rptPrevMonth()" style="width:28px;height:28px;border-radius:8px;border:1.5px solid var(--b2);background:var(--s);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;color:var(--gold);font-family:inherit;">‹</button>
-          <span id="rpt-month-nav" style="font-size:13px;font-weight:700;color:var(--gold);min-width:120px;text-align:center;"></span>
-          <button onclick="rptNextMonth()" id="rpt-next-btn" style="width:28px;height:28px;border-radius:8px;border:1.5px solid var(--b2);background:var(--s);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;color:var(--gold);font-family:inherit;">›</button>
-        </div>
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="btn btn-gold" onclick="exportReportCSV()">⬇️ تصدير Excel</button>
+    <!-- Title + Actions -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+      <div style="font-size:16px;font-weight:800;color:var(--t);letter-spacing:-.02em;">التقارير والإحصاءات</div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-gold" onclick="exportReportCSV()">⬇️ Excel</button>
         <button class="btn" onclick="printReport()">🖨️ طباعة</button>
       </div>
     </div>
 
-    <!-- فلتر المبنى الموحّد -->
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
-      <span style="font-size:11px;font-weight:700;color:var(--t3);">المبنى:</span>
-      <button class="wtab active" onclick="setRptBuilding('all',this)">الكل</button>
-      <button class="wtab" onclick="setRptBuilding('المنارا',this)">المنارا</button>
-      <button class="wtab" onclick="setRptBuilding('جوان ان',this)">جوان ان</button>
-      <button class="wtab" onclick="setRptBuilding('الماسة',this)">الماسة</button>
-      <button class="wtab" onclick="setRptBuilding('الواحة',this)">الواحة</button>
+    <!-- شريط التحكم الموحّد -->
+    <div style="background:var(--s);border:1.5px solid var(--b2);border-radius:12px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+        <span style="font-size:11px;color:var(--t3);font-weight:600;margin-left:2px;">المبنى</span>
+        <button class="rpt-bld active" onclick="setRptBuilding('all',this)">الكل</button>
+        <button class="rpt-bld" onclick="setRptBuilding('المنارا',this)">المنارا</button>
+        <button class="rpt-bld" onclick="setRptBuilding('جوان ان',this)">جوان ان</button>
+        <button class="rpt-bld" onclick="setRptBuilding('الماسة',this)">الماسة</button>
+        <button class="rpt-bld" onclick="setRptBuilding('الواحة',this)">الواحة</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span style="font-size:11px;color:var(--t3);font-weight:600;">الشهر</span>
+        <button onclick="rptPrevMonth()" style="width:26px;height:26px;border-radius:7px;border:1.5px solid var(--b2);background:transparent;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;color:var(--gold);font-family:inherit;">‹</button>
+        <span id="rpt-month-nav" style="font-size:13px;font-weight:700;color:var(--gold);min-width:110px;text-align:center;"></span>
+        <button onclick="rptNextMonth()" id="rpt-next-btn" style="width:26px;height:26px;border-radius:7px;border:1.5px solid var(--b2);background:transparent;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;color:var(--gold);font-family:inherit;">›</button>
+      </div>
     </div>
 
     <!-- Sub-tabs -->
-    <div style="display:flex;gap:6px;margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid var(--b2);flex-wrap:wrap;" id="rpt-stab-row">
+    <div style="display:flex;gap:6px;margin-bottom:20px;border-bottom:2px solid var(--b2);padding-bottom:14px;flex-wrap:wrap;" id="rpt-stab-row">
       <button class="rpt-stab active" onclick="rptSwitchTab('overview',this)">نظرة عامة</button>
       <button class="rpt-stab" onclick="rptSwitchTab('buildings',this)">المباني</button>
       <button class="rpt-stab" onclick="rptSwitchTab('reports',this)">التقارير</button>
@@ -854,16 +858,7 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
 
     <!-- ── Sub-tab: المباني ── -->
     <div class="rpt-stc" id="rpt-stc-buildings">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
-        <div style="font-size:12px;font-weight:700;color:var(--t2);">اختر المبنى لعرض إحصاءاته</div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;" id="bld-tabs">
-          <button class="bld-tab active" data-bld="" onclick="switchBldTab(this,'')">الكل</button>
-          <button class="bld-tab" data-bld="المنارا" onclick="switchBldTab(this,'المنارا')">المنارا</button>
-          <button class="bld-tab" data-bld="جوان ان" onclick="switchBldTab(this,'جوان ان')">جوان ان</button>
-          <button class="bld-tab" data-bld="الماسة" onclick="switchBldTab(this,'الماسة')">الماسة</button>
-          <button class="bld-tab" data-bld="الواحة" onclick="switchBldTab(this,'الواحة')">الواحة</button>
-        </div>
-      </div>
+      <div id="bld-active-lbl" style="font-size:11px;color:var(--t3);font-weight:600;margin-bottom:14px;"></div>
       <div id="bld-kpis" class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr));margin-bottom:16px;"></div>
       <div class="chart-card" style="margin-bottom:14px;">
         <div class="chart-title" id="bld-chart-title">الإيرادات الشهرية</div>
@@ -2798,7 +2793,7 @@ function bkForBld(bld){
 }
 
 function renderBldStats(){
-  const bld=activeBldFilter;
+  const bld=_rptBuilding==='all'?'':_rptBuilding;
   const cfg=BLD_CFG[bld]||BLD_CFG[''];
   const ym=getYearMonths();
   const allBk=bkForBld(bld);
@@ -2936,17 +2931,13 @@ let _rptBuilding='all';
 const _BLD_TOTALS={المنارا:30,'جوان ان':21,الماسة:18,الواحة:20};
 function setRptBuilding(bld,btn){
   _rptBuilding=bld;
-  // تحديث أزرار المبنى (فقط داخل صف فلتر التقارير)
-  btn.closest('div').querySelectorAll('.wtab').forEach(b=>b.classList.remove('active'));
+  activeBldFilter=bld==='all'?'':bld;
+  btn.closest('div').querySelectorAll('.rpt-bld').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  // إعادة رسم التبويب الحالي
+  const lbl=document.getElementById('bld-active-lbl');
+  if(lbl)lbl.textContent=bld==='all'?'جميع المباني':bld;
   if(_rptSubTab==='overview')renderReports();
-  else if(_rptSubTab==='buildings'){
-    // مزامنة مع أزرار المباني الداخلية
-    const inner=bld==='all'?'':bld;
-    document.querySelectorAll('#bld-tabs .bld-tab').forEach(b=>b.classList.toggle('active',(b.dataset.bld||'')===inner));
-    _bldFilter=inner;renderBldStats();
-  }
+  else if(_rptSubTab==='buildings')renderBldStats();
   else if(_rptSubTab==='reports')adminMonthlyReport();
   else if(_rptSubTab==='bookings')renderReportsBookings();
 }
@@ -2956,6 +2947,8 @@ function rptSwitchTab(tab,btn){
   if(btn)btn.classList.add('active');
   document.querySelectorAll('.rpt-stc').forEach(t=>t.classList.remove('active'));
   const tc=document.getElementById('rpt-stc-'+tab);if(tc)tc.classList.add('active');
+  const lbl=document.getElementById('bld-active-lbl');
+  if(lbl)lbl.textContent=_rptBuilding==='all'?'جميع المباني':_rptBuilding;
   if(tab==='overview')renderReports();
   else if(tab==='buildings')renderBldStats();
   else if(tab==='bookings')renderReportsBookings();
