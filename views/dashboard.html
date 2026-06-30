@@ -1429,9 +1429,10 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
         <label style="font-size:11px;color:var(--t3);">من:</label>
-        <input type="date" id="adm-rec-from" onchange="loadAdminReceipts()" class="si" style="flex:none;">
+        <input type="date" id="adm-rec-from" class="si" style="flex:none;">
         <label style="font-size:11px;color:var(--t3);">إلى:</label>
-        <input type="date" id="adm-rec-to" onchange="loadAdminReceipts()" class="si" style="flex:none;">
+        <input type="date" id="adm-rec-to" class="si" style="flex:none;">
+        <button onclick="loadAdminReceipts()" style="padding:8px 22px;background:var(--gold);color:#000;border:none;border-radius:9px;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">عرض</button>
       </div>
     </div>
 
