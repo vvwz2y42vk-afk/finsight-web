@@ -4947,17 +4947,12 @@ function toggleDD(id){
   const wasOpen=wrap.classList.contains('open');
   _closeDDs();
   if(!wasOpen){
-    wrap.classList.add('open');
     const btn=wrap.querySelector('.dd-btn');
     const menu=wrap.querySelector('.dd-menu');
     if(btn&&menu){
       const r=btn.getBoundingClientRect();
-      // Measure off-screen to avoid flash before positioning
-      menu.style.visibility='hidden';
-      menu.style.display='block';
-      menu.style.position='fixed';
-      menu.style.top='-9999px';
-      menu.style.left='-9999px';
+      // ضع القائمة خارج الشاشة وقِس قبل أي عرض
+      menu.style.cssText='display:block;visibility:hidden;position:fixed;top:-9999px;left:-9999px;z-index:9999;';
       const mw=menu.offsetWidth||168;
       const mh=menu.offsetHeight||80;
       let left=r.right-mw;
@@ -4967,9 +4962,9 @@ function toggleDD(id){
       if(top+mh>window.innerHeight-8)top=r.top-mh-4;
       menu.style.top=top+'px';
       menu.style.left=left+'px';
-      menu.style.zIndex='9999';
       menu.style.visibility='';
     }
+    wrap.classList.add('open');
   }
 }
 function closeDD(id){const wrap=document.getElementById(id);if(!wrap)return;wrap.classList.remove('open');const m=wrap.querySelector('.dd-menu');if(m)m.style.cssText='';}
