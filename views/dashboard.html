@@ -411,7 +411,7 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
     <button id="nav-dashboard" class="ni active" onclick="go('dashboard',this)"><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>لوحة التحكم</button>
     <button id="nav-contracts" class="ni" onclick="go('contracts',this)"><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>العقود<span class="ni-badge" id="nb-total">—</span></button>
     <button id="nav-commissions" class="ni" onclick="go('commissions',this)"><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span>العمولات</button>
-    <button id="nav-vouchers" class="ni" onclick="go('vouchers',this)"><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="12" y1="17" x2="8" y2="17"/><line x1="12" y1="9" x2="16" y2="9"/></svg></span>الإيصالات<span class="ni-badge" id="nb-vouchers">—</span></button>
+    <button id="nav-vouchers" class="ni" onclick="go('vouchers',this)"><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="12" y1="17" x2="8" y2="17"/><line x1="12" y1="9" x2="16" y2="9"/></svg></span>حركة صندوق<span class="ni-badge" id="nb-vouchers">—</span></button>
     <button id="nav-collection" class="ni" onclick="go('collection',this)"><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>التحصيل<span class="ni-badge" id="nb-debt">—</span></button>
     <button id="nav-expiry" class="ni" onclick="go('expiry',this)"><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>المنتهية<span id="expiry-badge" style="display:none;background:#DC2626;color:#fff;font-size:9px;font-weight:700;border-radius:20px;padding:1px 7px;margin-right:auto;"></span></button>
     <button id="nav-performance" class="ni" onclick="go('performance',this)"><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></span>الأداء</button>
@@ -465,7 +465,7 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
     <button id="tab-nav-dashboard" class="tab active" onclick="st('dashboard',this)">⬡ الرئيسية</button>
     <button id="tab-nav-contracts" class="tab" onclick="st('contracts',this)">📋 العقود</button>
     <button id="tab-nav-commissions" class="tab" onclick="st('commissions',this)">💰 العمولات</button>
-    <button id="tab-nav-vouchers" class="tab" onclick="st('vouchers',this)">🧾 الإيصالات</button>
+    <button id="tab-nav-vouchers" class="tab" onclick="st('vouchers',this)">🧾 حركة صندوق</button>
     <button id="tab-nav-collection" class="tab" onclick="st('collection',this)">🚨 التحصيل</button>
     <button id="tab-nav-expiry" class="tab" onclick="st('expiry',this)">⏰ المنتهية</button>
     <button id="tab-nav-performance" class="tab" onclick="st('performance',this)">📈 الأداء</button>
@@ -739,7 +739,7 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
       <div id="comm-history"></div>
     </div>
   </div>
-  <!-- ═══════════════ تبويب الإيصالات ═══════════════ -->
+  <!-- ═══════════════ تبويب حركة صندوق ═══════════════ -->
   <div class="tc" id="tab-vouchers">
     <!-- شريط الفلاتر -->
     <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px;">
@@ -2488,7 +2488,7 @@ async function confirmDelete(){
   showToast('🗑️ تم الحذف — جاري المزامنة...');if(c)await syncToSheet('deleteContract',c);
 }
 
-const titles={dashboard:'لوحة <span>التحكم</span>',contracts:'<span>العقود</span>',commissions:'<span>العمولات</span>',vouchers:'<span>الإيصالات</span>',collection:'<span>التحصيل</span>',expiry:'العقود <span>المنتهية</span>',map:'خريطة <span>الشقق</span>',performance:'تحليل <span>الأداء</span>',sources:'تحليل <span>المصادر</span>',reports:'<span>التقارير</span> الشهرية',listings:'إدارة <span>الإعلانات</span>',bookings:'طلبات <span>الحجز</span>',customers:'العملاء <span>المسجلون</span>',hosts:'المضيفون <span>الخارجيون</span>',msgs:'الرسائل <span>والمحادثات</span>',apts:'الشقق <span>والتسكين</span>',staff:'إدارة <span>الموظفين</span>',users:'مستخدمو <span>النظام</span>',audit:'سجل <span>المراقبة</span>'};
+const titles={dashboard:'لوحة <span>التحكم</span>',contracts:'<span>العقود</span>',commissions:'<span>العمولات</span>',vouchers:'<span>حركة صندوق</span>',collection:'<span>التحصيل</span>',expiry:'العقود <span>المنتهية</span>',map:'خريطة <span>الشقق</span>',performance:'تحليل <span>الأداء</span>',sources:'تحليل <span>المصادر</span>',reports:'<span>التقارير</span> الشهرية',listings:'إدارة <span>الإعلانات</span>',bookings:'طلبات <span>الحجز</span>',customers:'العملاء <span>المسجلون</span>',hosts:'المضيفون <span>الخارجيون</span>',msgs:'الرسائل <span>والمحادثات</span>',apts:'الشقق <span>والتسكين</span>',staff:'إدارة <span>الموظفين</span>',users:'مستخدمو <span>النظام</span>',audit:'سجل <span>المراقبة</span>'};
 async function loadCommissions(){
   try{
     const r=await fetch('/api/commissions');
@@ -2532,7 +2532,7 @@ function closeMobNav(){
   document.getElementById('mobHam').classList.remove('active');
 }
 
-const PUBLIC_SECTIONS=['listings','bookings','customers','hosts','msgs','apts','staff','users','audit'];
+const PUBLIC_SECTIONS=['listings','bookings','customers','hosts','msgs','apts','staff','users','audit','vouchers'];
 function _activateTab(id){
   if(id==='listings')loadListings();if(id==='bookings')loadBookings();if(id==='customers')loadCustomers();if(id==='hosts')loadHosts();if(id==='msgs')loadMessages();if(id==='apts')loadApts();if(id==='staff')loadStaff();
   if(id==='users')loadAdminUsers();if(id==='audit')loadAuditLogs(1);
@@ -3883,7 +3883,7 @@ const PERM_LIST=[
   {v:'housekeeping',   l:'🧹 خدمة الغرف'},
   {v:'activity',       l:'📋 سجل الحركات'},
   {v:'reports',        l:'📊 التقارير والإحصاءات'},
-  {v:'vouchers',       l:'🧾 السندات والفواتير'},
+  {v:'vouchers',       l:'🧾 حركة صندوق'},
   {v:'guests',         l:'🧳 قاعدة الضيوف'},
   {v:'new_booking',    l:'➕ إضافة حجز'},
   {v:'edit_booking',   l:'✏️ تعديل الحجز'},
