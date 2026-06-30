@@ -1255,4 +1255,29 @@ router.get('/cron/checkout-reminders', async (req, res) => {
   }
 });
 
+// GET /api/receipts — إيصالات الدفع للأدمن (كل المباني)
+router.get('/receipts', auth, async (req, res) => {
+  try {
+    const Receipt = require('../models/Receipt');
+    const filter = {};
+    if (req.query.building) filter.building = req.query.building;
+    if (req.query.type && req.query.type !== 'all') filter['analysis.paymentType'] = req.query.type;
+    if (req.query.recStatus && req.query.recStatus !== 'all') filter.status = req.query.recStatus;
+    if (req.query.matchStatus === 'matched') filter['analysis.matchesBuilding'] = true;
+    if (req.query.matchStatus === 'warned')  filter['analysis.matchesBuilding'] = false;
+    if (req.query.createdBy) filter.createdBy = req.query.createdBy;
+    if (req.query.dateFrom || req.query.dateTo) {
+      filter.createdAt = {};
+      if (req.query.dateFrom) filter.createdAt.$gte = new Date(req.query.dateFrom);
+      if (req.query.dateTo)   filter.createdAt.$lte = new Date(req.query.dateTo + 'T23:59:59');
+    }
+    if (req.query.q) {
+      const re = new RegExp(req.query.q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      filter.$or = [{ guestName: re }, { apt: re }, { 'analysis.transactionNumber': re }];
+    }
+    const recs = await Receipt.find(filter).sort({ createdAt: -1 }).limit(500).lean();
+    res.json(recs);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 module.exports = router;

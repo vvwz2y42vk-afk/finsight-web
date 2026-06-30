@@ -488,6 +488,7 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
     <button id="tab-nav-contracts" class="tab" onclick="st('contracts',this)">📋 العقود</button>
     <button id="tab-nav-commissions" class="tab" onclick="st('commissions',this)">💰 العمولات</button>
     <button id="tab-nav-vouchers" class="tab" onclick="st('vouchers',this)">🧾 حركة صندوق</button>
+    <button id="tab-nav-receipts" class="tab" onclick="st('receipts',this)">🧾 إيصالات الدفع</button>
     <button id="tab-nav-collection" class="tab" onclick="st('collection',this)">🚨 التحصيل</button>
     <button id="tab-nav-expiry" class="tab" onclick="st('expiry',this)">⏰ المنتهية</button>
     <button id="tab-nav-performance" class="tab" onclick="st('performance',this)">📈 الأداء</button>
@@ -1380,6 +1381,66 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
     </div>
   </div>
 
+  <!-- ════════════════ RECEIPTS TAB ═══ -->
+  <div class="tc" id="tab-receipts">
+    <div class="topbar" style="margin-bottom:16px;">
+      <div>
+        <div class="page-title">إيصالات <span>الدفع</span></div>
+        <div style="font-size:10px;color:var(--t3);margin-top:2px;" id="adm-rec-count-lbl">—</div>
+      </div>
+      <div class="topbar-right">
+        <button onclick="loadAdminReceipts()" style="padding:7px 14px;background:var(--gold);color:#000;border:none;border-radius:8px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">↺ تحديث</button>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card" style="padding:14px;margin-bottom:14px;">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;align-items:center;">
+        <input type="text" id="adm-rec-q" placeholder="🔍 اسم النزيل، رقم الشقة، رقم العملية..." oninput="clearTimeout(window._admRecQT);window._admRecQT=setTimeout(loadAdminReceipts,400)"
+          style="flex:1;min-width:200px;padding:8px 12px;border:1.5px solid var(--b);border-radius:9px;font-family:inherit;font-size:12px;outline:none;background:var(--s2,#fff);color:var(--t1);">
+        <select id="adm-rec-bld" onchange="loadAdminReceipts()" class="si" style="flex:none;">
+          <option value="">كل المباني</option>
+          <option value="المنارا">المنارا</option>
+          <option value="جوان ان">جوان ان</option>
+          <option value="الماسة">الماسة</option>
+          <option value="الواحة">الواحة</option>
+        </select>
+        <select id="adm-rec-type" onchange="loadAdminReceipts()" class="si" style="flex:none;">
+          <option value="all">كل الأنواع</option>
+          <option value="network">شبكة</option>
+          <option value="transfer">تحويل بنكي</option>
+          <option value="cash">نقداً</option>
+        </select>
+        <select id="adm-rec-status" onchange="loadAdminReceipts()" class="si" style="flex:none;">
+          <option value="all">كل الحالات</option>
+          <option value="pending">⏳ قيد المراجعة</option>
+          <option value="linked">✅ مربوط</option>
+          <option value="rejected">❌ مرفوض</option>
+        </select>
+        <select id="adm-rec-match" onchange="loadAdminReceipts()" class="si" style="flex:none;">
+          <option value="all">كل التطابقات</option>
+          <option value="matched">✅ جهة مطابقة</option>
+          <option value="warned">⚠️ جهة مختلفة</option>
+        </select>
+        <select id="adm-rec-by" onchange="loadAdminReceipts()" class="si" style="flex:none;">
+          <option value="">كل الموظفين</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <label style="font-size:11px;color:var(--t3);">من:</label>
+        <input type="date" id="adm-rec-from" onchange="loadAdminReceipts()" class="si" style="flex:none;">
+        <label style="font-size:11px;color:var(--t3);">إلى:</label>
+        <input type="date" id="adm-rec-to" onchange="loadAdminReceipts()" class="si" style="flex:none;">
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div id="adm-rec-stats" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-bottom:16px;"></div>
+
+    <!-- Grid -->
+    <div id="adm-rec-grid"></div>
+  </div>
+
   <div class="tc" id="tab-hosts">
     <div class="topbar" style="margin-bottom:12px;">
       <div><div class="page-title">المضيفون <span>الخارجيون</span></div><div style="font-size:10px;color:var(--t3);">حسابات المضيفين المسجلين على المنصة</div></div>
@@ -2068,6 +2129,148 @@ async function admLoadCashFlow(){
   }catch(e){document.getElementById('adm-cf-body').innerHTML='<div style="color:var(--red);padding:20px;">❌ حدث خطأ في تحميل البيانات</div>';}
 }
 
+// ══════════════════════════════════════════════
+// إيصالات الدفع — الأدمن
+// ══════════════════════════════════════════════
+async function loadAdminReceipts(){
+  const el=document.getElementById('adm-rec-grid');
+  const statsEl=document.getElementById('adm-rec-stats');
+  const cntLbl=document.getElementById('adm-rec-count-lbl');
+  if(!el) return;
+  el.innerHTML='<div style="padding:40px;text-align:center;color:var(--t3);font-size:13px;">⏳ جاري التحميل...</div>';
+
+  const q=document.getElementById('adm-rec-q')?.value||'';
+  const bld=document.getElementById('adm-rec-bld')?.value||'';
+  const type=document.getElementById('adm-rec-type')?.value||'';
+  const status=document.getElementById('adm-rec-status')?.value||'';
+  const match=document.getElementById('adm-rec-match')?.value||'';
+  const by=document.getElementById('adm-rec-by')?.value||'';
+  const from=document.getElementById('adm-rec-from')?.value||'';
+  const to=document.getElementById('adm-rec-to')?.value||'';
+
+  const p=new URLSearchParams();
+  if(q) p.set('q',q);
+  if(bld) p.set('building',bld);
+  if(type&&type!=='all') p.set('type',type);
+  if(status&&status!=='all') p.set('recStatus',status);
+  if(match&&match!=='all') p.set('matchStatus',match);
+  if(by) p.set('createdBy',by);
+  if(from) p.set('dateFrom',from);
+  if(to) p.set('dateTo',to);
+
+  const r=await fetch('/api/receipts?'+p).catch(()=>null);
+  if(!r||!r.ok){ el.innerHTML='<div style="padding:40px;text-align:center;color:var(--red);">❌ خطأ في تحميل الإيصالات</div>'; return; }
+  const recs=await r.json();
+
+  if(cntLbl) cntLbl.textContent=`${recs.length} إيصال`;
+
+  // تحديث فلتر الموظفين
+  const byEl=document.getElementById('adm-rec-by');
+  if(byEl&&!byEl.dataset.populated){
+    const names=[...new Set(recs.map(r=>r.createdBy).filter(Boolean))].sort();
+    byEl.innerHTML='<option value="">كل الموظفين</option>'+names.map(n=>`<option value="${admEsc(n)}">${admEsc(n)}</option>`).join('');
+    byEl.dataset.populated='1';
+  }
+
+  // Stats
+  const getAmt=rec=>{ const a=rec.analysis||{}; return a.cashTotal??a.amount??0; };
+  const pending=recs.filter(r=>r.status==='pending').length;
+  const linked=recs.filter(r=>r.status==='linked').length;
+  const rejected=recs.filter(r=>r.status==='rejected').length;
+  const warned=recs.filter(r=>r.analysis?.matchesBuilding===false).length;
+  const matched=recs.filter(r=>r.analysis?.matchesBuilding===true).length;
+  const sumAll=recs.reduce((s,r)=>s+getAmt(r),0);
+  const sumNet=recs.filter(r=>r.analysis?.paymentType==='network').reduce((s,r)=>s+getAmt(r),0);
+  const sumTr=recs.filter(r=>r.analysis?.paymentType==='transfer').reduce((s,r)=>s+getAmt(r),0);
+  const sumCash=recs.filter(r=>r.analysis?.paymentType==='cash').reduce((s,r)=>s+getAmt(r),0);
+  const fmtN=n=>Number(n||0).toLocaleString('ar-SA',{minimumFractionDigits:0,maximumFractionDigits:0});
+
+  const sc=(n,lbl,bg,c,sub)=>`<div style="background:${bg};border:1.5px solid ${c}33;border-radius:12px;padding:12px 14px;">
+    <div style="font-size:22px;font-weight:900;color:${c};line-height:1;">${n}</div>
+    <div style="font-size:11px;font-weight:700;color:${c};margin-top:3px;">${lbl}</div>
+    ${sub?`<div style="font-size:10px;color:${c}99;margin-top:1px;">${sub}</div>`:''}
+  </div>`;
+
+  if(statsEl) statsEl.innerHTML=
+    sc(recs.length,'إجمالي الإيصالات','#f8fafc','#334155',fmtN(sumAll)+' ر.س')+
+    sc(pending,'قيد المراجعة','#fffbeb','#b45309','')+
+    sc(linked,'مربوطة بحجز','#f0fdf4','#059669','')+
+    sc(rejected,'مرفوضة','#fef2f2','#dc2626','')+
+    sc(matched,'جهة مطابقة','#ecfdf5','#047857','')+
+    sc(warned,'جهة مختلفة','#fef3c7','#92400e','')+
+    sc(fmtN(sumNet),'شبكة','#eff6ff','#1a3d8f','ريال')+
+    sc(fmtN(sumTr),'تحويل بنكي','#f0f9ff','#0369a1','ريال')+
+    sc(fmtN(sumCash),'نقداً','#f0fdf4','#047857','ريال');
+
+  if(!recs.length){ el.innerHTML='<div style="padding:60px;text-align:center;color:var(--t3);font-size:13px;">لا توجد إيصالات تطابق الفلتر</div>'; return; }
+
+  const typeLabel={network:'شبكة',transfer:'تحويل بنكي',cash:'نقداً',other:'أخرى'};
+  const typeBg={network:'#eff6ff',transfer:'#f0f9ff',cash:'#f0fdf4',other:'#f8fafc'};
+  const typeClr={network:'#1a3d8f',transfer:'#0369a1',cash:'#047857',other:'#64748b'};
+  const stBg={pending:'#fef3c7',linked:'#d1fae5',rejected:'#fee2e2'};
+  const stClr={pending:'#b45309',linked:'#059669',rejected:'#dc2626'};
+  const stLbl={pending:'⏳ قيد المراجعة',linked:'✅ مربوط',rejected:'❌ مرفوض'};
+
+  el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;">${
+    recs.map(rec=>{
+      const a=rec.analysis||{};
+      const amtVal=a.cashTotal!=null?a.cashTotal:a.amount;
+      const isMismatch=a.matchesBuilding===false;
+      const isMatchB=a.matchesBuilding===true;
+      const imgSrc=rec.imageData?`data:${rec.imageMimeType||'image/jpeg'};base64,${rec.imageData}`:null;
+      const dt=new Date(rec.createdAt);
+      const dateStr=dt.toLocaleDateString('ar-SA',{year:'numeric',month:'short',day:'numeric'});
+      const timeStr=dt.toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
+      const brdClr=rec.status==='rejected'?'#e2e8f0':rec.status==='linked'?'#6ee7b7':isMismatch?'#fcd34d':'var(--b)';
+      const rid=rec._id;
+
+      return `<div id="adm-rec-card-${rid}" style="background:var(--s,#fff);border:1.5px solid ${brdClr};border-radius:16px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.05);display:flex;flex-direction:column;">
+
+        ${imgSrc
+          ?`<div style="position:relative;height:160px;overflow:hidden;cursor:pointer;flex-shrink:0;"
+               onclick="document.getElementById('adm-rec-fullscreen-img').src='${imgSrc}';document.getElementById('adm-rec-fullscreen').style.display='flex'">
+               <img src="${imgSrc}" style="width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="this.parentElement.innerHTML='<div style=height:100%;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:32px;>🧾</div>'">
+               <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.35),transparent);pointer-events:none;"></div>
+               <span style="position:absolute;bottom:8px;right:10px;font-size:10px;color:#fff;font-weight:700;background:rgba(0,0,0,.4);padding:2px 7px;border-radius:10px;">🔍 عرض كامل</span>
+             </div>`
+          :`<div style="height:70px;background:#f8fafc;display:flex;align-items:center;justify-content:center;font-size:30px;border-bottom:1px solid var(--b);">🧾</div>`
+        }
+
+        <div style="padding:12px;flex:1;display:flex;flex-direction:column;gap:8px;">
+          <!-- شقة + حالة -->
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:15px;font-weight:800;color:var(--t1);">شقة ${admEsc(rec.apt||'—')} <span style="font-size:11px;font-weight:600;color:var(--t3);">${admEsc(rec.building||'')}</span></span>
+            <span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;background:${stBg[rec.status]||'#f1f5f9'};color:${stClr[rec.status]||'#64748b'};">${stLbl[rec.status]||rec.status}</span>
+          </div>
+
+          <!-- اسم العميل + تاريخ -->
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:12px;font-weight:600;color:var(--t2);">${admEsc(rec.guestName||'—')}</span>
+            <span style="font-size:10px;color:var(--t3);">${dateStr} ${timeStr}</span>
+          </div>
+
+          <!-- المبلغ + النوع -->
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+            <span style="font-size:16px;font-weight:900;color:#047857;">${amtVal!=null?fmtN(amtVal)+' ر.س':'—'}</span>
+            ${a.paymentType?`<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:${typeBg[a.paymentType]||'#f8fafc'};color:${typeClr[a.paymentType]||'#64748b'};">${typeLabel[a.paymentType]||a.paymentType}</span>`:''}
+          </div>
+
+          <!-- تفاصيل -->
+          <div style="background:#f8fafc;border-radius:9px;padding:8px 10px;font-size:11px;display:flex;flex-direction:column;gap:3px;">
+            ${a.transactionNumber?`<div style="display:flex;gap:6px;"><span style="color:var(--t3);white-space:nowrap;">رقم العملية:</span><span style="font-weight:700;word-break:break-all;">${admEsc(a.transactionNumber)}</span></div>`:''}
+            ${a.entityName?`<div style="display:flex;gap:6px;align-items:center;"><span style="color:var(--t3);">الجهة:</span><span style="font-weight:700;color:${isMismatch?'#b45309':isMatchB?'#059669':'var(--t1)'};">${admEsc(a.entityName)} ${isMismatch?'⚠️':isMatchB?'✅':''}</span></div>`:''}
+            ${rec.bookingId?`<div style="display:flex;gap:6px;"><span style="color:var(--t3);">رقم الحجز:</span><span style="font-weight:700;color:#1a3d8f;">#${String(rec.bookingId).slice(-6)}</span></div>`:''}
+            ${rec.createdBy?`<div style="display:flex;gap:6px;"><span style="color:var(--t3);">رفعه:</span><span style="font-weight:600;">${admEsc(rec.createdBy)}</span></div>`:''}
+            ${rec.rejectionReason?`<div style="display:flex;gap:6px;"><span style="color:var(--t3);">سبب الرفض:</span><span style="font-weight:700;color:#dc2626;">${admEsc(rec.rejectionReason)}</span></div>`:''}
+          </div>
+
+          ${isMismatch?`<div style="font-size:10px;color:#92400e;font-weight:700;background:#fef3c7;border-radius:7px;padding:5px 9px;">⚠️ الجهة لا تطابق المبنى</div>`:''}
+        </div>
+      </div>`;
+    }).join('')
+  }</div>`;
+}
+
 function admPrintCashFlow(){
   const el=document.getElementById('adm-cf-printable');
   if(!el){showToast('اضغط عرض أولاً');return;}
@@ -2592,13 +2795,14 @@ function closeMobNav(){
   document.getElementById('mobHam').classList.remove('active');
 }
 
-const PUBLIC_SECTIONS=['listings','bookings','customers','hosts','msgs','apts','staff','users','audit','vouchers'];
+const PUBLIC_SECTIONS=['listings','bookings','customers','hosts','msgs','apts','staff','users','audit','vouchers','receipts'];
 function _activateTab(id){
   if(id==='listings')loadListings();if(id==='bookings')loadBookings();if(id==='customers')loadCustomers();if(id==='hosts')loadHosts();if(id==='msgs')loadMessages();if(id==='apts')loadApts();if(id==='staff')loadStaff();
   if(id==='users')loadAdminUsers();if(id==='audit')loadAuditLogs(1);
   if(id==='contracts')loadStaffBookings();
   if(id==='commissions')loadCommissions();
   if(id==='vouchers')admInitCfDates();
+  if(id==='receipts')loadAdminReceipts();
   if(id==='reports')setTimeout(renderReports,60);
   set('pageTitle',titles[id]||id);
   document.getElementById('addBtn').style.display=id==='contracts'?'flex':'none';
@@ -4787,5 +4991,12 @@ window.addEventListener('load',()=>{
   if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});
 });
 </script>
+
+<!-- Fullscreen Receipt Viewer -->
+<div id="adm-rec-fullscreen" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9999;align-items:center;justify-content:center;" onclick="this.style.display='none'">
+  <img id="adm-rec-fullscreen-img" src="" style="max-width:90vw;max-height:90vh;border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,.6);">
+  <button onclick="document.getElementById('adm-rec-fullscreen').style.display='none'" style="position:absolute;top:18px;left:18px;background:rgba(255,255,255,.15);border:none;color:#fff;font-size:22px;width:40px;height:40px;border-radius:50%;cursor:pointer;font-family:inherit;">×</button>
+</div>
+
 </body>
 </html>
