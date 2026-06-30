@@ -159,17 +159,23 @@ router.put('/bookings/:id/marketer-proof', auth, async (req, res) => {
 // ─── Vouchers (staff receipts) ───────────────────────────
 router.get('/vouchers', auth, async (req, res) => {
   try {
-    const { building, type, year, month, page = 1, limit = 50 } = req.query;
+    const { building, type, year, month, from, to, num, paymentMethod, page = 1, limit = 50 } = req.query;
     const filter = { propertyId: null };
     if (building && building !== 'all') filter.building = building;
     if (type && type !== 'all') filter.type = type;
-    if (year || month) {
-      const y = parseInt(year) || new Date().getFullYear();
-      const m = month ? parseInt(month) - 1 : null;
-      if (m !== null) {
-        filter.date = { $gte: new Date(y, m, 1), $lt: new Date(y, m + 1, 1) };
+    if (paymentMethod) filter.paymentMethod = paymentMethod;
+    if (num) filter.number = { $regex: num, $options: 'i' };
+    if (from || to || year || month) {
+      if (year || month) {
+        const y = parseInt(year) || new Date().getFullYear();
+        const m = month ? parseInt(month) - 1 : null;
+        filter.date = m !== null
+          ? { $gte: new Date(y, m, 1), $lt: new Date(y, m + 1, 1) }
+          : { $gte: new Date(y, 0, 1), $lt: new Date(y + 1, 0, 1) };
       } else {
-        filter.date = { $gte: new Date(y, 0, 1), $lt: new Date(y + 1, 0, 1) };
+        filter.date = {};
+        if (from) filter.date.$gte = new Date(from);
+        if (to) filter.date.$lte = new Date(to + 'T23:59:59');
       }
     }
     const skip = (parseInt(page) - 1) * parseInt(limit);
@@ -184,6 +190,31 @@ router.get('/vouchers', auth, async (req, res) => {
     const byType = {};
     agg.forEach(a => { byType[a._id] = { count: a.count, total: a.total }; });
     res.json({ vouchers, total, byType, page: parseInt(page), pages: Math.ceil(total / parseInt(limit)) });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.post('/vouchers', auth, async (req, res) => {
+  try {
+    const { type, date, name, phone, apt, building, amount, description, notes, checkNumber, bankName, dueDate, bookingId, paymentMethod } = req.body;
+    if (!type || !amount) return res.status(400).json({ error: 'نوع الوثيقة والمبلغ مطلوبان' });
+    const VALID_TYPES = ['receipt', 'invoice', 'disbursement', 'check', 'tax'];
+    if (!VALID_TYPES.includes(type)) return res.status(400).json({ error: 'نوع سند غير صالح' });
+    const parsedAmount = parseFloat(amount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) return res.status(400).json({ error: 'المبلغ يجب أن يكون أكبر من صفر' });
+    const bld = building || '';
+    const count = await Voucher.countDocuments({ building: bld, type, propertyId: null });
+    const prefixes = { receipt: 'QBD', invoice: 'INV', disbursement: 'SRF', check: 'KMB', tax: 'ZRB' };
+    const number = prefixes[type] + '-' + String(count + 1).padStart(4, '0');
+    const v = await new Voucher({ building: bld, type, number, date: date ? new Date(date) : new Date(), name, phone, apt, amount: parsedAmount, description, notes, checkNumber, bankName, dueDate: dueDate ? new Date(dueDate) : undefined, bookingId: bookingId || undefined, createdBy: req.user?.name || req.user?.username || 'admin', paymentMethod: paymentMethod || '', propertyId: null }).save();
+    res.json({ success: true, id: v._id, number: v.number });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.delete('/vouchers/:id', auth, requireRole('admin', 'manager'), async (req, res) => {
+  try {
+    const v = await Voucher.findOneAndDelete({ _id: req.params.id, propertyId: null });
+    if (!v) return res.status(404).json({ error: 'السند غير موجود' });
+    res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 

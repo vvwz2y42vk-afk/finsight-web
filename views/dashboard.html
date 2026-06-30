@@ -398,6 +398,28 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
 
 /* ── Mobile topbar fix ──────────────────────────────── */
 @media(max-width:900px){.topbar{padding:12px 14px;border-radius:12px;}}
+
+/* ── Voucher Cards (حركة صندوق) ── */
+.vou-cards{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:24px;}
+.vou-card{flex:1;min-width:130px;background:var(--s);border:1.5px solid var(--b);border-radius:16px;padding:18px 14px;cursor:pointer;text-align:center;transition:transform .2s,box-shadow .2s,border-color .2s;position:relative;overflow:hidden;}
+.vou-card:hover{transform:translateY(-5px);box-shadow:0 8px 24px rgba(26,61,143,.12);border-color:rgba(26,61,143,.2);}
+.vou-ico-w{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;box-shadow:0 4px 14px rgba(0,0,0,.1);}
+.vou-lbl{font-size:12px;font-weight:700;color:var(--t1);}
+.vou-sublbl{font-size:10px;color:var(--t3);margin-top:3px;}
+.vou-section{display:none;}.vou-section.active{display:block;}
+.vs-btns{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+.vs-btn{padding:8px 16px;border:none;border-radius:10px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;color:#fff;transition:.15s;}
+.vs-filter{background:var(--s);border:1.5px solid var(--b);border-radius:12px;padding:12px 14px;margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;}
+.vs-filter label{font-size:11px;font-weight:600;color:var(--t3);display:block;margin-bottom:3px;}
+.vs-filter input,.vs-filter select{padding:7px 10px;border:1.5px solid var(--b);border-radius:8px;font-family:inherit;font-size:12px;outline:none;background:var(--s2);color:var(--t1);}
+.vs-tbl table{width:100%;border-collapse:collapse;}.vs-tbl{border-radius:12px;border:1px solid #DDE4F0;overflow-x:auto;}
+.vs-tbl th{background:#f8fafd;padding:9px 12px;font-size:11px;font-weight:700;color:var(--t2);border-bottom:1px solid #DDE4F0;white-space:nowrap;}
+.vs-tbl td{padding:9px 12px;font-size:12px;border-bottom:1px solid #f0f4fb;vertical-align:middle;}
+.vs-tbl tr:last-child td{border-bottom:none;}
+.vs-tbl tr:hover td{background:#f8fafd;}
+.fi{width:100%;padding:9px 12px;border:1.5px solid var(--b);border-radius:10px;font-family:inherit;font-size:13px;outline:none;background:var(--s2);color:var(--t1);transition:border-color .15s;}
+.fi:focus{border-color:#1a3d8f;background:#fff;}
+.flbl{font-size:12px;font-weight:700;color:var(--t2);display:block;margin-bottom:5px;}
 </style>
 </head>
 <body>
@@ -741,66 +763,130 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
   </div>
   <!-- ═══════════════ تبويب حركة صندوق ═══════════════ -->
   <div class="tc" id="tab-vouchers">
-    <!-- شريط الفلاتر -->
-    <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px;">
-      <div style="display:flex;gap:5px;flex-wrap:wrap;" id="vch-bld-pills">
-        <button class="rpt-bld active" onclick="setVchFilter('building','all',this)">الكل</button>
-        <button class="rpt-bld" onclick="setVchFilter('building','المنارا',this)">المنارا</button>
-        <button class="rpt-bld" onclick="setVchFilter('building','جوان ان',this)">جوان ان</button>
-        <button class="rpt-bld" onclick="setVchFilter('building','الماسة',this)">الماسة</button>
-        <button class="rpt-bld" onclick="setVchFilter('building','الواحة',this)">الواحة</button>
+    <!-- كروت الأنواع -->
+    <div class="vou-cards" id="admVouCards">
+      <div class="vou-card" onclick="admShowVouSection('receipts')">
+        <div class="vou-ico-w" style="background:linear-gradient(135deg,#EFF6FF,#BFDBFE);">
+          <svg width="26" height="26" fill="none" stroke="#2563EB" stroke-width="1.8" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </div>
+        <div class="vou-lbl">سندات القبض</div>
+        <div class="vou-sublbl">إيصالات استلام المبالغ</div>
       </div>
-      <div style="display:flex;gap:5px;flex-wrap:wrap;" id="vch-type-pills">
-        <button class="rpt-bld active" onclick="setVchFilter('type','all',this)" style="border-color:var(--b2);">كل الأنواع</button>
-        <button class="rpt-bld" onclick="setVchFilter('type','receipt',this)" style="border-color:#22c55e;color:#22c55e;">سند قبض</button>
-        <button class="rpt-bld" onclick="setVchFilter('type','disbursement',this)" style="border-color:#ef4444;color:#ef4444;">سند صرف</button>
-        <button class="rpt-bld" onclick="setVchFilter('type','invoice',this)" style="border-color:var(--blue);color:var(--blue);">فاتورة</button>
-        <button class="rpt-bld" onclick="setVchFilter('type','check',this)" style="border-color:#f59e0b;color:#f59e0b;">شيك</button>
-        <button class="rpt-bld" onclick="setVchFilter('type','tax',this)" style="border-color:#8b5cf6;color:#8b5cf6;">ضريبة</button>
+      <div class="vou-card" onclick="admShowVouSection('invoices')">
+        <div class="vou-ico-w" style="background:linear-gradient(135deg,#F5F3FF,#DDD6FE);">
+          <svg width="26" height="26" fill="none" stroke="#7C3AED" stroke-width="1.8" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><path d="M6 15h4m4 0h2"/></svg>
+        </div>
+        <div class="vou-lbl">الفواتير</div>
+        <div class="vou-sublbl">فواتير الحجوزات والخدمات</div>
       </div>
-      <div style="display:flex;gap:6px;margin-right:auto;">
-        <select id="vch-year" class="si" style="font-size:11px;" onchange="loadVouchers(1)"></select>
-        <select id="vch-month" class="si" style="font-size:11px;" onchange="loadVouchers(1)">
-          <option value="">كل الأشهر</option>
-          <option value="1">يناير</option><option value="2">فبراير</option><option value="3">مارس</option>
-          <option value="4">أبريل</option><option value="5">مايو</option><option value="6">يونيو</option>
-          <option value="7">يوليو</option><option value="8">أغسطس</option><option value="9">سبتمبر</option>
-          <option value="10">أكتوبر</option><option value="11">نوفمبر</option><option value="12">ديسمبر</option>
-        </select>
+      <div class="vou-card" onclick="admShowVouSection('disbursements')">
+        <div class="vou-ico-w" style="background:linear-gradient(135deg,#FFFBEB,#FDE68A);">
+          <svg width="26" height="26" fill="none" stroke="#D97706" stroke-width="1.8" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+        <div class="vou-lbl">سندات الصرف</div>
+        <div class="vou-sublbl">مصاريف وصرفيات</div>
+      </div>
+      <div class="vou-card" onclick="admShowVouSection('checks')">
+        <div class="vou-ico-w" style="background:linear-gradient(135deg,#F0FDF4,#BBF7D0);">
+          <svg width="26" height="26" fill="none" stroke="#15803D" stroke-width="1.8" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/><path d="M6 15h3m4 0h6"/></svg>
+        </div>
+        <div class="vou-lbl">الكمبيالات</div>
+        <div class="vou-sublbl">شيكات وكمبيالات</div>
+      </div>
+      <div class="vou-card" onclick="admShowVouSection('tax')">
+        <div class="vou-ico-w" style="background:linear-gradient(135deg,#FEF2F2,#FECACA);">
+          <svg width="26" height="26" fill="none" stroke="#DC2626" stroke-width="1.8" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg>
+        </div>
+        <div class="vou-lbl">الإشعارات الضريبية</div>
+        <div class="vou-sublbl">إشعار ضريبة 15%</div>
       </div>
     </div>
 
-    <!-- KPI cards -->
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:14px;" id="vch-kpis">
-      <div class="kpi c2"><div class="kpi-lbl">سندات القبض</div><div class="kpi-val" id="vch-k-receipt">—</div><div style="font-size:10px;color:var(--t3);" id="vch-k-receipt-n">—</div></div>
-      <div class="kpi c3"><div class="kpi-lbl">سندات الصرف</div><div class="kpi-val" id="vch-k-disb">—</div><div style="font-size:10px;color:var(--t3);" id="vch-k-disb-n">—</div></div>
-      <div class="kpi c5"><div class="kpi-lbl">الفواتير</div><div class="kpi-val" id="vch-k-inv">—</div><div style="font-size:10px;color:var(--t3);" id="vch-k-inv-n">—</div></div>
-      <div class="kpi c4"><div class="kpi-lbl">الشيكات</div><div class="kpi-val" id="vch-k-chk">—</div><div style="font-size:10px;color:var(--t3);" id="vch-k-chk-n">—</div></div>
-      <div class="kpi c1"><div class="kpi-lbl">إجمالي الإيصالات</div><div class="kpi-val" id="vch-k-total">—</div><div style="font-size:10px;color:var(--t3);" id="vch-k-total-n">—</div></div>
-    </div>
-
-    <!-- الجدول -->
-    <div class="card">
-      <div class="card-hd">
-        <div class="card-title">قائمة الإيصالات</div>
-        <span class="badge b-blue" id="vch-count-badge">—</span>
+    <!-- سندات القبض -->
+    <div class="vou-section" id="adm-vou-receipts">
+      <div class="vs-btns">
+        <button class="vs-btn" onclick="admShowVouCards()" style="background:#64748b;">← رجوع</button>
+        <button class="vs-btn" onclick="admOpenVouModal('receipt')" style="background:linear-gradient(135deg,#3b82f6,#1d4ed8);">+ إضافة سند قبض</button>
+        <button class="vs-btn" onclick="admLoadVouList('receipt')" style="background:#475569;">↺ تحديث</button>
       </div>
-      <div class="tbl-wrap"><table>
-        <thead><tr>
-          <th>#</th>
-          <th>رقم السند</th>
-          <th>النوع</th>
-          <th>الاسم</th>
-          <th>الشقة</th>
-          <th>المبنى</th>
-          <th>المبلغ</th>
-          <th>طريقة الدفع</th>
-          <th>الموظف</th>
-          <th>التاريخ</th>
-        </tr></thead>
-        <tbody id="vch-tbody"></tbody>
+      <div class="vs-filter">
+        <div><label>المبنى</label><select id="adm-vou-r-bld" class="si" style="font-size:11px;"><option value="">الكل</option><option>المنارا</option><option>جوان ان</option><option>الماسة</option><option>الواحة</option></select></div>
+        <div><label>من تاريخ</label><input type="date" id="adm-vou-r-from"></div>
+        <div><label>إلى تاريخ</label><input type="date" id="adm-vou-r-to"></div>
+        <div><label>رقم السند</label><input type="text" id="adm-vou-r-num" placeholder="QBD-..." style="width:120px;"></div>
+        <div><label>طريقة الدفع</label><select id="adm-vou-r-method"><option value="">الكل</option><option value="cash">نقداً</option><option value="transfer">تحويل</option><option value="network">شبكة</option><option value="check">كمبيالة</option><option value="digital">رقمي</option></select></div>
+        <div style="align-self:flex-end;"><button onclick="admLoadVouList('receipt')" class="vs-btn" style="background:var(--blue);">بحث</button></div>
+      </div>
+      <div class="vs-tbl"><table>
+        <thead><tr><th>رقم السند</th><th>التاريخ</th><th>الاسم</th><th>الشقة</th><th>المبنى</th><th>المبلغ</th><th>البيان</th><th>طريقة الدفع</th><th>الموظف</th><th>إجراء</th></tr></thead>
+        <tbody id="adm-vou-receipt-tbody"><tr><td colspan="10" style="text-align:center;padding:20px;color:var(--t3);">اضغط تحديث لتحميل البيانات</td></tr></tbody>
       </table></div>
-      <div id="vch-pager" style="margin-top:10px;"></div>
+    </div>
+
+    <!-- الفواتير -->
+    <div class="vou-section" id="adm-vou-invoices">
+      <div class="vs-btns">
+        <button class="vs-btn" onclick="admShowVouCards()" style="background:#64748b;">← رجوع</button>
+        <button class="vs-btn" onclick="admOpenVouModal('invoice')" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9);">+ إضافة فاتورة</button>
+        <button class="vs-btn" onclick="admLoadVouList('invoice')" style="background:#475569;">↺ تحديث</button>
+      </div>
+      <div class="vs-filter">
+        <div><label>المبنى</label><select id="adm-vou-i-bld" class="si" style="font-size:11px;"><option value="">الكل</option><option>المنارا</option><option>جوان ان</option><option>الماسة</option><option>الواحة</option></select></div>
+        <div><label>من تاريخ</label><input type="date" id="adm-vou-i-from" onchange="admLoadVouList('invoice')"></div>
+        <div><label>إلى تاريخ</label><input type="date" id="adm-vou-i-to" onchange="admLoadVouList('invoice')"></div>
+        <div><label>رقم الفاتورة</label><input type="text" id="adm-vou-i-num" placeholder="INV-..." style="width:120px;"></div>
+        <div style="align-self:flex-end;"><button onclick="admLoadVouList('invoice')" class="vs-btn" style="background:var(--blue);">بحث</button></div>
+      </div>
+      <div class="vs-tbl"><table>
+        <thead><tr><th>الرقم</th><th>التاريخ</th><th>الاسم</th><th>الشقة</th><th>المبنى</th><th>البيان</th><th>المبلغ</th><th>الموظف</th><th>إجراء</th></tr></thead>
+        <tbody id="adm-vou-invoice-tbody"><tr><td colspan="9" style="text-align:center;padding:20px;color:var(--t3);">اضغط تحديث لتحميل البيانات</td></tr></tbody>
+      </table></div>
+    </div>
+
+    <!-- سندات الصرف -->
+    <div class="vou-section" id="adm-vou-disbursements">
+      <div class="vs-btns">
+        <button class="vs-btn" onclick="admShowVouCards()" style="background:#64748b;">← رجوع</button>
+        <button class="vs-btn" onclick="admOpenVouModal('disbursement')" style="background:linear-gradient(135deg,#f59e0b,#d97706);">+ إضافة سند صرف</button>
+        <button class="vs-btn" onclick="admLoadVouList('disbursement')" style="background:#475569;">↺ تحديث</button>
+      </div>
+      <div class="vs-filter">
+        <div><label>المبنى</label><select id="adm-vou-d-bld" class="si" style="font-size:11px;"><option value="">الكل</option><option>المنارا</option><option>جوان ان</option><option>الماسة</option><option>الواحة</option></select></div>
+        <div><label>من تاريخ</label><input type="date" id="adm-vou-d-from" onchange="admLoadVouList('disbursement')"></div>
+        <div><label>إلى تاريخ</label><input type="date" id="adm-vou-d-to" onchange="admLoadVouList('disbursement')"></div>
+        <div><label>رقم السند</label><input type="text" id="adm-vou-d-num" placeholder="SRF-..." style="width:120px;"></div>
+        <div style="align-self:flex-end;"><button onclick="admLoadVouList('disbursement')" class="vs-btn" style="background:var(--blue);">بحث</button></div>
+      </div>
+      <div class="vs-tbl"><table>
+        <thead><tr><th>الرقم</th><th>التاريخ</th><th>المستلم</th><th>المبنى</th><th>البيان</th><th>المبلغ</th><th>الموظف</th><th>إجراء</th></tr></thead>
+        <tbody id="adm-vou-disbursement-tbody"><tr><td colspan="8" style="text-align:center;padding:20px;color:var(--t3);">اضغط تحديث لتحميل البيانات</td></tr></tbody>
+      </table></div>
+    </div>
+
+    <!-- الكمبيالات -->
+    <div class="vou-section" id="adm-vou-checks">
+      <div class="vs-btns">
+        <button class="vs-btn" onclick="admShowVouCards()" style="background:#64748b;">← رجوع</button>
+        <button class="vs-btn" onclick="admOpenVouModal('check')" style="background:linear-gradient(135deg,#22c55e,#15803d);">+ إضافة كمبيالة</button>
+        <button class="vs-btn" onclick="admLoadVouList('check')" style="background:#475569;">↺ تحديث</button>
+      </div>
+      <div class="vs-tbl"><table>
+        <thead><tr><th>الرقم</th><th>التاريخ</th><th>الاسم</th><th>المبنى</th><th>رقم الشيك</th><th>البنك</th><th>تاريخ الاستحقاق</th><th>المبلغ</th><th>إجراء</th></tr></thead>
+        <tbody id="adm-vou-check-tbody"><tr><td colspan="9" style="text-align:center;padding:20px;color:var(--t3);">اضغط تحديث لتحميل البيانات</td></tr></tbody>
+      </table></div>
+    </div>
+
+    <!-- الإشعارات الضريبية -->
+    <div class="vou-section" id="adm-vou-tax">
+      <div class="vs-btns">
+        <button class="vs-btn" onclick="admShowVouCards()" style="background:#64748b;">← رجوع</button>
+        <button class="vs-btn" onclick="admOpenVouModal('tax')" style="background:linear-gradient(135deg,#ef4444,#b91c1c);">+ إضافة إشعار ضريبي</button>
+        <button class="vs-btn" onclick="admLoadVouList('tax')" style="background:#475569;">↺ تحديث</button>
+      </div>
+      <div class="vs-tbl"><table>
+        <thead><tr><th>الرقم</th><th>التاريخ</th><th>الاسم</th><th>الشقة</th><th>المبنى</th><th>المبلغ قبل الضريبة</th><th>الضريبة 15%</th><th>الإجمالي</th><th>إجراء</th></tr></thead>
+        <tbody id="adm-vou-tax-tbody"><tr><td colspan="9" style="text-align:center;padding:20px;color:var(--t3);">اضغط تحديث لتحميل البيانات</td></tr></tbody>
+      </table></div>
     </div>
   </div>
 
@@ -1576,6 +1662,74 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
   </div>
 </div>
 
+<!-- ══ مودال إضافة سند (حركة صندوق) ══ -->
+<div class="overlay" id="admVouModal" style="display:none;" onclick="if(event.target===this)admCloseVouModal()">
+  <div class="modal" style="max-width:460px;">
+    <div class="modal-hd"><div class="modal-title" id="admVouModalTitle">+ إضافة وثيقة</div><button class="modal-close" onclick="admCloseVouModal()">×</button></div>
+    <div class="modal-body" style="max-height:80vh;overflow-y:auto;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div style="grid-column:1/-1;">
+          <label class="flbl">التاريخ</label>
+          <input id="adm-vm-date" type="date" class="fi" style="width:100%;">
+        </div>
+        <div>
+          <label class="flbl">المبنى</label>
+          <select id="adm-vm-bld" class="fi" style="width:100%;"><option value="">بدون</option><option>المنارا</option><option>جوان ان</option><option>الماسة</option><option>الواحة</option></select>
+        </div>
+        <div>
+          <label class="flbl">الشقة</label>
+          <input id="adm-vm-apt" type="text" placeholder="رقم الشقة" class="fi" style="width:100%;">
+        </div>
+        <div>
+          <label class="flbl">الاسم</label>
+          <input id="adm-vm-name" type="text" placeholder="اسم الشخص" class="fi" style="width:100%;">
+        </div>
+        <div>
+          <label class="flbl">الجوال</label>
+          <input id="adm-vm-phone" type="tel" placeholder="05xxxxxxxx" class="fi" style="width:100%;" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,10)">
+        </div>
+        <div style="grid-column:1/-1;">
+          <label class="flbl">المبلغ (ريال) <span style="color:var(--red);">*</span></label>
+          <input id="adm-vm-amount" type="number" placeholder="0.00" class="fi" style="width:100%;" oninput="admCalcVmTax()">
+        </div>
+        <div id="adm-vm-tax-row" style="grid-column:1/-1;display:none;">
+          <label class="flbl">الضريبة 15%</label>
+          <input id="adm-vm-tax" type="number" class="fi" style="width:100%;background:var(--s2);" readonly>
+        </div>
+        <div style="grid-column:1/-1;">
+          <label class="flbl">البيان <span style="color:var(--red);">*</span></label>
+          <input id="adm-vm-desc" type="text" placeholder="وصف السند..." class="fi" style="width:100%;">
+        </div>
+        <div style="grid-column:1/-1;" id="adm-vm-method-row">
+          <label class="flbl">طريقة الدفع</label>
+          <select id="adm-vm-method" class="fi" style="width:100%;"><option value="">—</option><option value="cash">نقداً</option><option value="transfer">تحويل بنكي</option><option value="network">شبكة</option><option value="check">كمبيالة</option><option value="digital">دفع رقمي</option></select>
+        </div>
+        <div id="adm-vm-check-row1" style="display:none;">
+          <label class="flbl">رقم الشيك</label>
+          <input id="adm-vm-checknum" type="text" class="fi" style="width:100%;">
+        </div>
+        <div id="adm-vm-check-row2" style="display:none;">
+          <label class="flbl">البنك</label>
+          <input id="adm-vm-bank" type="text" class="fi" style="width:100%;">
+        </div>
+        <div id="adm-vm-check-row3" style="display:none;grid-column:1/-1;">
+          <label class="flbl">تاريخ الاستحقاق</label>
+          <input id="adm-vm-duedate" type="date" class="fi" style="width:100%;">
+        </div>
+        <div style="grid-column:1/-1;">
+          <label class="flbl">ملاحظات</label>
+          <textarea id="adm-vm-notes" rows="2" class="fi" style="width:100%;resize:vertical;" placeholder="اختياري"></textarea>
+        </div>
+      </div>
+      <div id="adm-vm-err" style="display:none;background:#fef2f2;color:#dc2626;padding:8px 12px;border-radius:8px;font-size:12px;margin-top:10px;"></div>
+      <div style="display:flex;gap:8px;margin-top:14px;">
+        <button onclick="admSubmitVoucher()" class="btn btn-gold" style="flex:1;">حفظ السند</button>
+        <button onclick="admCloseVouModal()" class="btn" style="flex:1;">إلغاء</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="ai-wrap">
   <div class="ai-panel" id="aiPanel">
     <div class="ai-hd"><div class="ai-hd-ico">🤖</div><div><div class="ai-hd-name">مساعد BAREZ</div><div class="ai-hd-status">● متصل</div></div><button class="modal-close" style="margin-right:auto;" onclick="toggleAI()">×</button></div>
@@ -1934,89 +2088,178 @@ function getSbCommCurr(){
   });
 }
 // ── Vouchers ─────────────────────────────────────────────
-let _vchBuilding='all', _vchType='all', _vchPage=1;
-const VCH_TYPE_AR={'receipt':'سند قبض','disbursement':'سند صرف','invoice':'فاتورة','check':'شيك','tax':'ضريبة'};
-const VCH_TYPE_COLOR={'receipt':'#22c55e','disbursement':'#ef4444','invoice':'var(--blue)','check':'#f59e0b','tax':'#8b5cf6'};
+// ══ حركة صندوق — Voucher Cards ══════════════════════════
 const PM_AR={'cash':'نقد','transfer':'تحويل','network':'شبكة','check':'شيك','digital':'رقمي','travel_agent':'وكيل','':''};
+const ADM_VOU_NAMES={receipt:'سند قبض',invoice:'فاتورة',disbursement:'سند صرف',check:'كمبيالة',tax:'إشعار ضريبي'};
+const ADM_VOU_COLS={receipt:10,invoice:9,disbursement:8,check:9,tax:9};
+const admEsc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const admFmtD=d=>d?new Date(d).toLocaleDateString('ar-SA',{day:'numeric',month:'short',year:'2-digit'}):'—';
 
-function setVchFilter(key, val, btn){
-  if(key==='building'){
-    _vchBuilding=val;
-    document.querySelectorAll('#vch-bld-pills .rpt-bld').forEach(b=>b.classList.remove('active'));
-  } else {
-    _vchType=val;
-    document.querySelectorAll('#vch-type-pills .rpt-bld').forEach(b=>b.classList.remove('active'));
-  }
-  btn.classList.add('active');
-  loadVouchers(1);
+function admShowVouCards(){
+  document.querySelectorAll('.vou-section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('admVouCards').style.display='flex';
+}
+function admShowVouSection(name){
+  document.getElementById('admVouCards').style.display='none';
+  document.querySelectorAll('.vou-section').forEach(s=>s.classList.remove('active'));
+  const map={receipts:'receipt',invoices:'invoice',disbursements:'disbursement',checks:'check',tax:'tax'};
+  const type=map[name]||name;
+  document.getElementById('adm-vou-'+name).classList.add('active');
+  admLoadVouList(type);
 }
 
-async function loadVouchers(page){
-  _vchPage=page||_vchPage;
-  const year=document.getElementById('vch-year')?.value||'';
-  const month=document.getElementById('vch-month')?.value||'';
-  const params=new URLSearchParams({building:_vchBuilding,type:_vchType,page:_vchPage,limit:50});
-  if(year)params.set('year',year);
-  if(month)params.set('month',month);
+async function admLoadVouList(type){
+  const tbId='adm-vou-'+type+'-tbody';
+  const tb=document.getElementById(tbId); if(!tb)return;
+  const cols=ADM_VOU_COLS[type]||9;
+  tb.innerHTML=`<tr><td colspan="${cols}" style="text-align:center;padding:20px;color:var(--t3);">جاري التحميل...</td></tr>`;
   try{
+    const params=new URLSearchParams({type,limit:200});
+    const pfx=type==='receipt'?'r':type==='invoice'?'i':type==='disbursement'?'d':null;
+    const bldEl=document.getElementById(`adm-vou-${pfx||type[0]}-bld`);
+    if(bldEl?.value) params.set('building',bldEl.value);
+    if(pfx){
+      const from=document.getElementById(`adm-vou-${pfx}-from`)?.value;
+      const to=document.getElementById(`adm-vou-${pfx}-to`)?.value;
+      const num=document.getElementById(`adm-vou-${pfx}-num`)?.value.trim();
+      if(from) params.set('from',from);
+      if(to) params.set('to',to);
+      if(num) params.set('num',num);
+    }
+    if(type==='receipt'){
+      const method=document.getElementById('adm-vou-r-method')?.value;
+      if(method) params.set('paymentMethod',method);
+    }
     const r=await fetch('/api/vouchers?'+params);
-    if(!r.ok)return;
     const data=await r.json();
-    renderVouchers(data);
-  }catch(e){}
+    const list=data.vouchers||[];
+    set('nb-vouchers',toAr(list.length));
+    if(!list.length){tb.innerHTML=`<tr><td colspan="${cols}" style="text-align:center;padding:20px;color:var(--t3);">لا توجد وثائق بعد</td></tr>`;return;}
+    tb.innerHTML=list.map((v,i)=>`<tr>${admRenderVouRow(v,type,i)}</tr>`).join('');
+  }catch(e){tb.innerHTML=`<tr><td colspan="${cols||9}" style="text-align:center;padding:20px;color:var(--red);">خطأ في التحميل</td></tr>`;}
 }
 
-function renderVouchers(data){
-  const {vouchers=[],total=0,byType={},page=1,pages=1}=data;
-  const fDate=d=>d?new Date(d).toLocaleDateString('ar-SA',{day:'numeric',month:'short',year:'2-digit'}):'—';
-  // KPIs
-  const rcpt=byType.receipt||{count:0,total:0};
-  const disb=byType.disbursement||{count:0,total:0};
-  const inv=byType.invoice||{count:0,total:0};
-  const chk=byType.check||{count:0,total:0};
-  const allTotal=Object.values(byType).reduce((a,b)=>a+(b.total||0),0);
-  const allCount=Object.values(byType).reduce((a,b)=>a+(b.count||0),0);
-  set('vch-k-receipt',fmt(rcpt.total)+' ﷼');
-  set('vch-k-receipt-n',toAr(rcpt.count)+' إيصال');
-  set('vch-k-disb',fmt(disb.total)+' ﷼');
-  set('vch-k-disb-n',toAr(disb.count)+' إيصال');
-  set('vch-k-inv',fmt(inv.total)+' ﷼');
-  set('vch-k-inv-n',toAr(inv.count)+' فاتورة');
-  set('vch-k-chk',fmt(chk.total)+' ﷼');
-  set('vch-k-chk-n',toAr(chk.count)+' شيك');
-  set('vch-k-total',fmt(allTotal)+' ﷼');
-  set('vch-k-total-n',toAr(allCount)+' إيصال');
-  set('nb-vouchers',toAr(total));
-  set('vch-count-badge',toAr(total)+' نتيجة');
-  // الجدول
-  const offset=(_vchPage-1)*50;
-  set('vch-tbody',vouchers.length===0
-    ?'<tr><td colspan="10" style="text-align:center;color:var(--t3);padding:16px;">لا توجد إيصالات</td></tr>'
-    :vouchers.map((v,i)=>{
-      const typeColor=VCH_TYPE_COLOR[v.type]||'var(--t2)';
-      return`<tr>
-        <td style="color:var(--t3);">${toAr(offset+i+1)}</td>
-        <td style="font-size:11px;font-weight:600;color:var(--t2);">${v.number||'—'}</td>
-        <td><span style="font-size:10px;font-weight:700;color:${typeColor};background:${typeColor}18;padding:2px 8px;border-radius:20px;">${VCH_TYPE_AR[v.type]||v.type}</span></td>
-        <td style="font-weight:600;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${v.name||'—'}</td>
-        <td style="color:var(--t3);font-size:11px;">${v.apt||'—'}</td>
-        <td><span class="pill ${SP[v.building]||'pm'}">${v.building||'—'}</span></td>
-        <td style="font-weight:700;color:${v.type==='disbursement'?'#ef4444':'#22c55e'};">${fmt(v.amount)} ﷼</td>
-        <td style="color:var(--t3);font-size:10px;">${PM_AR[v.paymentMethod]||v.paymentMethod||'—'}</td>
-        <td style="color:var(--t3);font-size:10px;">${v.createdBy||'—'}</td>
-        <td style="color:var(--t3);font-size:10px;">${fDate(v.date)}</td>
-      </tr>`;
-    }).join(''));
-  // Pagination
-  renderPager('vch-pager',page,pages,loadVouchers);
+function admRenderVouRow(v,type,i){
+  const date=admFmtD(v.date);
+  const amt=fmt(v.amount||0);
+  const bld=`<span class="pill ${SP[v.building]||'pm'}">${admEsc(v.building||'—')}</span>`;
+  const actions=`<div style="display:flex;gap:4px;">
+    <button onclick="admPrintVoucher('${v._id}')" style="padding:3px 8px;background:#1a3d8f;color:#fff;border:none;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer;">🖨️ طباعة</button>
+    <button onclick="admDeleteVou('${v._id}','${type}')" style="padding:3px 8px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer;">🗑️</button>
+  </div>`;
+  const pm=PM_AR[v.paymentMethod]||v.paymentMethod||'—';
+  const by=admEsc(v.createdBy||'—');
+  if(type==='receipt')
+    return `<td style="font-size:11px;font-weight:600;font-family:monospace;">${admEsc(v.number||'—')}</td><td>${date}</td><td><b>${admEsc(v.name||'—')}</b></td><td>${admEsc(v.apt||'—')}</td><td>${bld}</td><td style="font-weight:700;color:#22c55e;">${amt} ﷼</td><td style="font-size:11px;color:var(--t3);">${admEsc(v.description||'—')}</td><td style="font-size:11px;">${pm}</td><td>${by}</td><td>${actions}</td>`;
+  if(type==='invoice')
+    return `<td style="font-size:11px;font-family:monospace;">${admEsc(v.number||'—')}</td><td>${date}</td><td><b>${admEsc(v.name||'—')}</b></td><td>${admEsc(v.apt||'—')}</td><td>${bld}</td><td style="font-size:11px;color:var(--t3);">${admEsc(v.description||'—')}</td><td style="font-weight:700;">${amt} ﷼</td><td>${by}</td><td>${actions}</td>`;
+  if(type==='disbursement')
+    return `<td style="font-size:11px;font-family:monospace;">${admEsc(v.number||'—')}</td><td>${date}</td><td><b>${admEsc(v.name||'—')}</b></td><td>${bld}</td><td style="font-size:11px;color:var(--t3);">${admEsc(v.description||'—')}</td><td style="font-weight:700;color:#ef4444;">${amt} ﷼</td><td>${by}</td><td>${actions}</td>`;
+  if(type==='check')
+    return `<td style="font-size:11px;font-family:monospace;">${admEsc(v.number||'—')}</td><td>${date}</td><td><b>${admEsc(v.name||'—')}</b></td><td>${bld}</td><td>${admEsc(v.checkNumber||'—')}</td><td>${admEsc(v.bankName||'—')}</td><td>${v.dueDate?admFmtD(v.dueDate):'—'}</td><td style="font-weight:700;">${amt} ﷼</td><td>${actions}</td>`;
+  if(type==='tax'){
+    const tax=Math.round((v.amount||0)*0.15); const total=(v.amount||0)+tax;
+    return `<td style="font-size:11px;font-family:monospace;">${admEsc(v.number||'—')}</td><td>${date}</td><td><b>${admEsc(v.name||'—')}</b></td><td>${admEsc(v.apt||'—')}</td><td>${bld}</td><td>${amt} ﷼</td><td style="color:#dc2626;">${fmt(tax)} ﷼</td><td style="font-weight:700;">${fmt(total)} ﷼</td><td>${actions}</td>`;
+  }
+  return '';
 }
 
-(function initVchYear(){
-  const sel=document.getElementById('vch-year');
-  if(!sel)return;
-  const cur=new Date().getFullYear();
-  sel.innerHTML='<option value="">كل السنوات</option>'+[cur,cur-1,cur-2].map(y=>`<option value="${y}"${y===cur?'selected':''}>${y}</option>`).join('');
-})();
+async function admDeleteVou(id,type){
+  if(!confirm('حذف هذه الوثيقة؟'))return;
+  try{
+    const r=await fetch('/api/vouchers/'+id,{method:'DELETE'});
+    const d=await r.json();
+    if(!r.ok){showToast('❌ '+(d.error||'حدث خطأ'));return;}
+    showToast('🗑️ تم الحذف');
+    admLoadVouList(type);
+  }catch(e){showToast('❌ حدث خطأ');}
+}
+
+// ── مودال إضافة السند ──
+let admVouModalType=null;
+function admOpenVouModal(type){
+  admVouModalType=type;
+  document.getElementById('admVouModalTitle').textContent='+ إضافة '+ADM_VOU_NAMES[type];
+  const today=new Date().toISOString().split('T')[0];
+  ['adm-vm-date','adm-vm-name','adm-vm-phone','adm-vm-apt','adm-vm-amount','adm-vm-tax','adm-vm-desc','adm-vm-notes','adm-vm-checknum','adm-vm-bank','adm-vm-duedate'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=id==='adm-vm-date'?today:'';});
+  document.getElementById('adm-vm-err').style.display='none';
+  document.getElementById('adm-vm-tax-row').style.display=type==='tax'?'':'none';
+  ['adm-vm-check-row1','adm-vm-check-row2','adm-vm-check-row3'].forEach(id=>document.getElementById(id).style.display=type==='check'?'':'none');
+  document.getElementById('admVouModal').style.display='flex';
+}
+function admCloseVouModal(){document.getElementById('admVouModal').style.display='none';admVouModalType=null;}
+function admCalcVmTax(){
+  const amt=parseFloat(document.getElementById('adm-vm-amount').value)||0;
+  const el=document.getElementById('adm-vm-tax'); if(el) el.value=Math.round(amt*0.15)||'';
+}
+async function admSubmitVoucher(){
+  const errEl=document.getElementById('adm-vm-err');
+  const amount=parseFloat(document.getElementById('adm-vm-amount').value)||0;
+  const description=document.getElementById('adm-vm-desc').value.trim();
+  if(!amount||!description){errEl.textContent='المبلغ والبيان مطلوبان';errEl.style.display='block';return;}
+  const body={
+    type:admVouModalType,
+    date:document.getElementById('adm-vm-date').value,
+    building:document.getElementById('adm-vm-bld').value,
+    name:document.getElementById('adm-vm-name').value.trim(),
+    phone:document.getElementById('adm-vm-phone').value.trim(),
+    apt:document.getElementById('adm-vm-apt').value.trim(),
+    amount, description,
+    notes:document.getElementById('adm-vm-notes').value.trim(),
+    paymentMethod:document.getElementById('adm-vm-method')?.value||'',
+    checkNumber:document.getElementById('adm-vm-checknum').value.trim(),
+    bankName:document.getElementById('adm-vm-bank').value.trim(),
+    dueDate:document.getElementById('adm-vm-duedate').value||null,
+  };
+  try{
+    const r=await fetch('/api/vouchers',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const d=await r.json();
+    if(!r.ok){errEl.textContent=d.error||'حدث خطأ';errEl.style.display='block';return;}
+    admCloseVouModal();
+    showToast('✅ تم الحفظ — رقم الوثيقة: '+d.number);
+    admLoadVouList(admVouModalType||body.type);
+  }catch(e){errEl.textContent='حدث خطأ';errEl.style.display='block';}
+}
+
+// ── طباعة سند ──
+async function admPrintVoucher(id){
+  try{
+    const r=await fetch('/api/vouchers?limit=1&id='+id);
+    const data=await r.json();
+    const list=data.vouchers||[];
+    const v=list.find(x=>x._id===id)||list[0];
+    if(!v){showToast('❌ تعذر تحميل الوثيقة');return;}
+    const typeInfo={receipt:{lbl:'سند قبض',color:'#3b82f6'},invoice:{lbl:'فاتورة',color:'#8b5cf6'},disbursement:{lbl:'سند صرف',color:'#f59e0b'},check:{lbl:'كمبيالة',color:'#22c55e'},tax:{lbl:'إشعار ضريبي',color:'#ef4444'}}[v.type]||{lbl:'وثيقة',color:'#1a3d8f'};
+    const tax=v.type==='tax'?Math.round((v.amount||0)*0.15):0;
+    const date=admFmtD(v.date);
+    const w=window.open('','_blank','width=700,height=900');
+    w.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><title>${typeInfo.lbl} — ${v.number||''}</title>
+    <style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:#f8fafc;color:#1e293b;padding:24px;direction:rtl;}
+    .doc{background:#fff;border-radius:16px;padding:32px;max-width:600px;margin:0 auto;box-shadow:0 4px 24px rgba(0,0,0,.08);}
+    .hd{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid #f1f5f9;}
+    .logo{font-size:22px;font-weight:900;color:#1a3d8f;}
+    .type-badge{padding:6px 16px;border-radius:20px;font-size:13px;font-weight:700;color:#fff;background:${typeInfo.color};}
+    .meta{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px;padding:16px;background:#f8fafc;border-radius:10px;}
+    .meta-row{font-size:12px;} .meta-row span{color:#64748b;margin-left:6px;}
+    table{width:100%;border-collapse:collapse;margin-bottom:16px;}th,td{padding:10px;text-align:right;border-bottom:1px solid #f1f5f9;}th{background:#f8fafc;font-size:11px;font-weight:700;color:#64748b;}
+    .total-box{background:#1a3d8f;color:#fff;padding:14px 20px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+    .total-lbl{font-size:12px;opacity:.8;} .total-val{font-size:20px;font-weight:800;}
+    .footer{text-align:center;font-size:10px;color:#94a3b8;margin-top:20px;padding-top:16px;border-top:1px solid #f1f5f9;}
+    @media print{body{padding:0;background:#fff;}.doc{box-shadow:none;}button{display:none!important;}}</style></head><body>
+    <div style="text-align:left;margin-bottom:12px;"><button onclick="window.print()" style="padding:8px 20px;background:#1a3d8f;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;margin-left:8px;">🖨️ طباعة</button><button onclick="window.close()" style="padding:8px 16px;background:#f1f5f9;color:#475569;border:none;border-radius:8px;font-size:13px;cursor:pointer;">✕ إغلاق</button></div>
+    <div class="doc"><div class="hd"><div><div class="logo">BAREZ</div><div style="font-size:11px;color:#64748b;margin-top:4px;">${admEsc(v.building||'')} · نظام إدارة الشقق</div></div>
+    <div style="text-align:left;"><div class="type-badge">${typeInfo.lbl}</div><div style="font-size:11px;color:#64748b;margin-top:6px;">رقم: ${admEsc(v.number||'—')}</div><div style="font-size:11px;color:#64748b;">التاريخ: ${date}</div></div></div>
+    <div class="meta">${v.name?`<div class="meta-row"><span>الاسم:</span><b>${admEsc(v.name)}</b></div>`:''} ${v.apt?`<div class="meta-row"><span>الشقة:</span><b>${admEsc(v.apt)}</b></div>`:''} ${v.phone?`<div class="meta-row"><span>الجوال:</span><b>${admEsc(v.phone)}</b></div>`:''} <div class="meta-row"><span>أنشئ بواسطة:</span><b>${admEsc(v.createdBy||'—')}</b></div></div>
+    <table><thead><tr><th>البيان</th><th style="text-align:left;">المبلغ (ريال)</th></tr></thead><tbody>
+    <tr><td>${admEsc(v.description||'—')}</td><td style="text-align:left;">${fmt(v.amount||0)}</td></tr>
+    ${tax?`<tr><td style="color:#dc2626;">ضريبة القيمة المضافة 15%</td><td style="text-align:left;color:#dc2626;">${fmt(tax)}</td></tr>`:''}
+    </tbody></table>
+    <div class="total-box"><div class="total-lbl">الإجمالي</div><div class="total-val">${fmt((v.amount||0)+tax)} ريال</div></div>
+    ${v.notes?`<div style="padding:10px;background:#f8fafc;border-radius:8px;font-size:12px;color:#475569;margin-bottom:12px;"><b>ملاحظات:</b> ${admEsc(v.notes)}</div>`:''}
+    <div class="footer">BAREZ — نظام إدارة الشقق الفندقية<br>هذه الوثيقة صادرة إلكترونياً وصالحة بدون توقيع</div></div></body></html>`);
+    w.document.close();
+  }catch(e){showToast('❌ حدث خطأ');}
+}
 // ─────────────────────────────────────────────────────────
 
 // ── Proof image helpers ──────────────────────────────────
@@ -2538,7 +2781,7 @@ function _activateTab(id){
   if(id==='users')loadAdminUsers();if(id==='audit')loadAuditLogs(1);
   if(id==='contracts')loadStaffBookings();
   if(id==='commissions')loadCommissions();
-  if(id==='vouchers')loadVouchers(1);
+  if(id==='vouchers')admShowVouCards();
   if(id==='reports')setTimeout(renderReports,60);
   set('pageTitle',titles[id]||id);
   document.getElementById('addBtn').style.display=id==='contracts'?'flex':'none';
