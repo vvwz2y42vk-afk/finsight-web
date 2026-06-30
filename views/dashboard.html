@@ -508,6 +508,7 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
     <div class="kpi-grid">
       <div class="kpi c1"><div class="kpi-ico"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div class="kpi-lbl">إجمالي العقود</div><div class="kpi-val" id="k0">—</div><div class="kpi-note">كل المباني</div><div id="k0-delta"></div></div>
       <div class="kpi c2"><div class="kpi-ico"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="kpi-lbl">المحصّل</div><div class="kpi-val" id="k1">—</div><div class="kpi-note" id="k1n">—</div><div id="k1-delta"></div></div>
+      <div class="kpi c4"><div class="kpi-ico"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div><div class="kpi-lbl">إيرادات الشهر</div><div class="kpi-val" id="k-mrev">—</div><div class="kpi-note" id="k-mrevn">—</div></div>
       <div class="kpi c3"><div class="kpi-ico"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><div class="kpi-lbl">المتبقي</div><div class="kpi-val" id="k2">—</div><div class="kpi-note">يحتاج متابعة</div></div>
       <div class="kpi c5"><div class="kpi-ico"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg></div><div class="kpi-lbl">عقود مفتوحة</div><div class="kpi-val" id="k4">—</div><div class="kpi-note" id="k4n">—</div></div>
     </div>
@@ -4705,17 +4706,13 @@ function renderKPIs(){
   const activeStatuses=['active','awaiting_checkin','awaiting_payment'];
   const open=bks.filter(b=>activeStatuses.includes(b.status)).length;
   const closed=bks.filter(b=>b.status==='checkout').length;
-  // عمولات المبنى المختار من currComm (currComm مرتبط بالشهر الحالي بطبيعته)
-  const commBks=bld==='all'?currComm:currComm.filter(c=>c.sh===bld);
-  const amT=commBks.filter(c=>c.m==='عبدالملك').reduce((a,c)=>a+c.a,0);
-  const amN=commBks.filter(c=>c.m==='عبدالملك').length;
   // تحديث الكاردات
   set('k0',toAr(total));
   set('k1',fmt(Math.round(paid))+' ﷼');
   set('k1n',Math.round(paid/(rev||1)*100)+'٪ تحصيل');
+  set('k-mrev',fmt(Math.round(rev))+' ﷼');
+  set('k-mrevn',toAr(bks.filter(b=>b.status==='active'||b.status==='checkout').length)+' حجز');
   set('k2',fmt(Math.round(rem))+' ﷼');
-  set('k3',fmt(amT)+' ﷼');
-  set('k3n',toAr(amN)+' عقد');
   set('k4',toAr(open));
   set('k4n',toAr(closed)+' مغلق');
   // عنوان الصفحة — أضف اسم الفرع
