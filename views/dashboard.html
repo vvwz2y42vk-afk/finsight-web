@@ -411,6 +411,7 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
     <button id="nav-dashboard" class="ni active" onclick="go('dashboard',this)"><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>لوحة التحكم</button>
     <button id="nav-contracts" class="ni" onclick="go('contracts',this)"><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>العقود<span class="ni-badge" id="nb-total">—</span></button>
     <button id="nav-commissions" class="ni" onclick="go('commissions',this)"><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span>العمولات</button>
+    <button id="nav-vouchers" class="ni" onclick="go('vouchers',this)"><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="12" y1="17" x2="8" y2="17"/><line x1="12" y1="9" x2="16" y2="9"/></svg></span>الإيصالات<span class="ni-badge" id="nb-vouchers">—</span></button>
     <button id="nav-collection" class="ni" onclick="go('collection',this)"><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>التحصيل<span class="ni-badge" id="nb-debt">—</span></button>
     <button id="nav-expiry" class="ni" onclick="go('expiry',this)"><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>المنتهية<span id="expiry-badge" style="display:none;background:#DC2626;color:#fff;font-size:9px;font-weight:700;border-radius:20px;padding:1px 7px;margin-right:auto;"></span></button>
     <button id="nav-performance" class="ni" onclick="go('performance',this)"><span class="ni-ico"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></span>الأداء</button>
@@ -464,6 +465,7 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
     <button id="tab-nav-dashboard" class="tab active" onclick="st('dashboard',this)">⬡ الرئيسية</button>
     <button id="tab-nav-contracts" class="tab" onclick="st('contracts',this)">📋 العقود</button>
     <button id="tab-nav-commissions" class="tab" onclick="st('commissions',this)">💰 العمولات</button>
+    <button id="tab-nav-vouchers" class="tab" onclick="st('vouchers',this)">🧾 الإيصالات</button>
     <button id="tab-nav-collection" class="tab" onclick="st('collection',this)">🚨 التحصيل</button>
     <button id="tab-nav-expiry" class="tab" onclick="st('expiry',this)">⏰ المنتهية</button>
     <button id="tab-nav-performance" class="tab" onclick="st('performance',this)">📈 الأداء</button>
@@ -737,6 +739,71 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
       <div id="comm-history"></div>
     </div>
   </div>
+  <!-- ═══════════════ تبويب الإيصالات ═══════════════ -->
+  <div class="tc" id="tab-vouchers">
+    <!-- شريط الفلاتر -->
+    <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px;">
+      <div style="display:flex;gap:5px;flex-wrap:wrap;" id="vch-bld-pills">
+        <button class="rpt-bld active" onclick="setVchFilter('building','all',this)">الكل</button>
+        <button class="rpt-bld" onclick="setVchFilter('building','المنارا',this)">المنارا</button>
+        <button class="rpt-bld" onclick="setVchFilter('building','جوان ان',this)">جوان ان</button>
+        <button class="rpt-bld" onclick="setVchFilter('building','الماسة',this)">الماسة</button>
+        <button class="rpt-bld" onclick="setVchFilter('building','الواحة',this)">الواحة</button>
+      </div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;" id="vch-type-pills">
+        <button class="rpt-bld active" onclick="setVchFilter('type','all',this)" style="border-color:var(--b2);">كل الأنواع</button>
+        <button class="rpt-bld" onclick="setVchFilter('type','receipt',this)" style="border-color:#22c55e;color:#22c55e;">سند قبض</button>
+        <button class="rpt-bld" onclick="setVchFilter('type','disbursement',this)" style="border-color:#ef4444;color:#ef4444;">سند صرف</button>
+        <button class="rpt-bld" onclick="setVchFilter('type','invoice',this)" style="border-color:var(--blue);color:var(--blue);">فاتورة</button>
+        <button class="rpt-bld" onclick="setVchFilter('type','check',this)" style="border-color:#f59e0b;color:#f59e0b;">شيك</button>
+        <button class="rpt-bld" onclick="setVchFilter('type','tax',this)" style="border-color:#8b5cf6;color:#8b5cf6;">ضريبة</button>
+      </div>
+      <div style="display:flex;gap:6px;margin-right:auto;">
+        <select id="vch-year" class="si" style="font-size:11px;" onchange="loadVouchers(1)"></select>
+        <select id="vch-month" class="si" style="font-size:11px;" onchange="loadVouchers(1)">
+          <option value="">كل الأشهر</option>
+          <option value="1">يناير</option><option value="2">فبراير</option><option value="3">مارس</option>
+          <option value="4">أبريل</option><option value="5">مايو</option><option value="6">يونيو</option>
+          <option value="7">يوليو</option><option value="8">أغسطس</option><option value="9">سبتمبر</option>
+          <option value="10">أكتوبر</option><option value="11">نوفمبر</option><option value="12">ديسمبر</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- KPI cards -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:14px;" id="vch-kpis">
+      <div class="kpi c2"><div class="kpi-lbl">سندات القبض</div><div class="kpi-val" id="vch-k-receipt">—</div><div style="font-size:10px;color:var(--t3);" id="vch-k-receipt-n">—</div></div>
+      <div class="kpi c3"><div class="kpi-lbl">سندات الصرف</div><div class="kpi-val" id="vch-k-disb">—</div><div style="font-size:10px;color:var(--t3);" id="vch-k-disb-n">—</div></div>
+      <div class="kpi c5"><div class="kpi-lbl">الفواتير</div><div class="kpi-val" id="vch-k-inv">—</div><div style="font-size:10px;color:var(--t3);" id="vch-k-inv-n">—</div></div>
+      <div class="kpi c4"><div class="kpi-lbl">الشيكات</div><div class="kpi-val" id="vch-k-chk">—</div><div style="font-size:10px;color:var(--t3);" id="vch-k-chk-n">—</div></div>
+      <div class="kpi c1"><div class="kpi-lbl">إجمالي الإيصالات</div><div class="kpi-val" id="vch-k-total">—</div><div style="font-size:10px;color:var(--t3);" id="vch-k-total-n">—</div></div>
+    </div>
+
+    <!-- الجدول -->
+    <div class="card">
+      <div class="card-hd">
+        <div class="card-title">قائمة الإيصالات</div>
+        <span class="badge b-blue" id="vch-count-badge">—</span>
+      </div>
+      <div class="tbl-wrap"><table>
+        <thead><tr>
+          <th>#</th>
+          <th>رقم السند</th>
+          <th>النوع</th>
+          <th>الاسم</th>
+          <th>الشقة</th>
+          <th>المبنى</th>
+          <th>المبلغ</th>
+          <th>طريقة الدفع</th>
+          <th>الموظف</th>
+          <th>التاريخ</th>
+        </tr></thead>
+        <tbody id="vch-tbody"></tbody>
+      </table></div>
+      <div id="vch-pager" style="margin-top:10px;"></div>
+    </div>
+  </div>
+
   <div class="tc" id="tab-collection">
     <!-- شريط الفلاتر -->
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;padding:10px 14px;background:var(--s);border:1px solid var(--b);border-radius:12px;">
@@ -1866,6 +1933,92 @@ function getSbCommCurr(){
     return d>=periodStart;
   });
 }
+// ── Vouchers ─────────────────────────────────────────────
+let _vchBuilding='all', _vchType='all', _vchPage=1;
+const VCH_TYPE_AR={'receipt':'سند قبض','disbursement':'سند صرف','invoice':'فاتورة','check':'شيك','tax':'ضريبة'};
+const VCH_TYPE_COLOR={'receipt':'#22c55e','disbursement':'#ef4444','invoice':'var(--blue)','check':'#f59e0b','tax':'#8b5cf6'};
+const PM_AR={'cash':'نقد','transfer':'تحويل','network':'شبكة','check':'شيك','digital':'رقمي','travel_agent':'وكيل','':''};
+
+function setVchFilter(key, val, btn){
+  if(key==='building'){
+    _vchBuilding=val;
+    document.querySelectorAll('#vch-bld-pills .rpt-bld').forEach(b=>b.classList.remove('active'));
+  } else {
+    _vchType=val;
+    document.querySelectorAll('#vch-type-pills .rpt-bld').forEach(b=>b.classList.remove('active'));
+  }
+  btn.classList.add('active');
+  loadVouchers(1);
+}
+
+async function loadVouchers(page){
+  _vchPage=page||_vchPage;
+  const year=document.getElementById('vch-year')?.value||'';
+  const month=document.getElementById('vch-month')?.value||'';
+  const params=new URLSearchParams({building:_vchBuilding,type:_vchType,page:_vchPage,limit:50});
+  if(year)params.set('year',year);
+  if(month)params.set('month',month);
+  try{
+    const r=await fetch('/api/vouchers?'+params);
+    if(!r.ok)return;
+    const data=await r.json();
+    renderVouchers(data);
+  }catch(e){}
+}
+
+function renderVouchers(data){
+  const {vouchers=[],total=0,byType={},page=1,pages=1}=data;
+  const fDate=d=>d?new Date(d).toLocaleDateString('ar-SA',{day:'numeric',month:'short',year:'2-digit'}):'—';
+  // KPIs
+  const rcpt=byType.receipt||{count:0,total:0};
+  const disb=byType.disbursement||{count:0,total:0};
+  const inv=byType.invoice||{count:0,total:0};
+  const chk=byType.check||{count:0,total:0};
+  const allTotal=Object.values(byType).reduce((a,b)=>a+(b.total||0),0);
+  const allCount=Object.values(byType).reduce((a,b)=>a+(b.count||0),0);
+  set('vch-k-receipt',fmt(rcpt.total)+' ﷼');
+  set('vch-k-receipt-n',toAr(rcpt.count)+' إيصال');
+  set('vch-k-disb',fmt(disb.total)+' ﷼');
+  set('vch-k-disb-n',toAr(disb.count)+' إيصال');
+  set('vch-k-inv',fmt(inv.total)+' ﷼');
+  set('vch-k-inv-n',toAr(inv.count)+' فاتورة');
+  set('vch-k-chk',fmt(chk.total)+' ﷼');
+  set('vch-k-chk-n',toAr(chk.count)+' شيك');
+  set('vch-k-total',fmt(allTotal)+' ﷼');
+  set('vch-k-total-n',toAr(allCount)+' إيصال');
+  set('nb-vouchers',toAr(total));
+  set('vch-count-badge',toAr(total)+' نتيجة');
+  // الجدول
+  const offset=(_vchPage-1)*50;
+  set('vch-tbody',vouchers.length===0
+    ?'<tr><td colspan="10" style="text-align:center;color:var(--t3);padding:16px;">لا توجد إيصالات</td></tr>'
+    :vouchers.map((v,i)=>{
+      const typeColor=VCH_TYPE_COLOR[v.type]||'var(--t2)';
+      return`<tr>
+        <td style="color:var(--t3);">${toAr(offset+i+1)}</td>
+        <td style="font-size:11px;font-weight:600;color:var(--t2);">${v.number||'—'}</td>
+        <td><span style="font-size:10px;font-weight:700;color:${typeColor};background:${typeColor}18;padding:2px 8px;border-radius:20px;">${VCH_TYPE_AR[v.type]||v.type}</span></td>
+        <td style="font-weight:600;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${v.name||'—'}</td>
+        <td style="color:var(--t3);font-size:11px;">${v.apt||'—'}</td>
+        <td><span class="pill ${SP[v.building]||'pm'}">${v.building||'—'}</span></td>
+        <td style="font-weight:700;color:${v.type==='disbursement'?'#ef4444':'#22c55e'};">${fmt(v.amount)} ﷼</td>
+        <td style="color:var(--t3);font-size:10px;">${PM_AR[v.paymentMethod]||v.paymentMethod||'—'}</td>
+        <td style="color:var(--t3);font-size:10px;">${v.createdBy||'—'}</td>
+        <td style="color:var(--t3);font-size:10px;">${fDate(v.date)}</td>
+      </tr>`;
+    }).join(''));
+  // Pagination
+  renderPager('vch-pager',page,pages,loadVouchers);
+}
+
+(function initVchYear(){
+  const sel=document.getElementById('vch-year');
+  if(!sel)return;
+  const cur=new Date().getFullYear();
+  sel.innerHTML='<option value="">كل السنوات</option>'+[cur,cur-1,cur-2].map(y=>`<option value="${y}"${y===cur?'selected':''}>${y}</option>`).join('');
+})();
+// ─────────────────────────────────────────────────────────
+
 // ── Proof image helpers ──────────────────────────────────
 let _proofBkId='';
 function openProofModal(id,currentUrl,proofAt){
@@ -2335,7 +2488,7 @@ async function confirmDelete(){
   showToast('🗑️ تم الحذف — جاري المزامنة...');if(c)await syncToSheet('deleteContract',c);
 }
 
-const titles={dashboard:'لوحة <span>التحكم</span>',contracts:'<span>العقود</span>',commissions:'<span>العمولات</span>',collection:'<span>التحصيل</span>',expiry:'العقود <span>المنتهية</span>',map:'خريطة <span>الشقق</span>',performance:'تحليل <span>الأداء</span>',sources:'تحليل <span>المصادر</span>',reports:'<span>التقارير</span> الشهرية',listings:'إدارة <span>الإعلانات</span>',bookings:'طلبات <span>الحجز</span>',customers:'العملاء <span>المسجلون</span>',hosts:'المضيفون <span>الخارجيون</span>',msgs:'الرسائل <span>والمحادثات</span>',apts:'الشقق <span>والتسكين</span>',staff:'إدارة <span>الموظفين</span>',users:'مستخدمو <span>النظام</span>',audit:'سجل <span>المراقبة</span>'};
+const titles={dashboard:'لوحة <span>التحكم</span>',contracts:'<span>العقود</span>',commissions:'<span>العمولات</span>',vouchers:'<span>الإيصالات</span>',collection:'<span>التحصيل</span>',expiry:'العقود <span>المنتهية</span>',map:'خريطة <span>الشقق</span>',performance:'تحليل <span>الأداء</span>',sources:'تحليل <span>المصادر</span>',reports:'<span>التقارير</span> الشهرية',listings:'إدارة <span>الإعلانات</span>',bookings:'طلبات <span>الحجز</span>',customers:'العملاء <span>المسجلون</span>',hosts:'المضيفون <span>الخارجيون</span>',msgs:'الرسائل <span>والمحادثات</span>',apts:'الشقق <span>والتسكين</span>',staff:'إدارة <span>الموظفين</span>',users:'مستخدمو <span>النظام</span>',audit:'سجل <span>المراقبة</span>'};
 async function loadCommissions(){
   try{
     const r=await fetch('/api/commissions');
@@ -2385,6 +2538,7 @@ function _activateTab(id){
   if(id==='users')loadAdminUsers();if(id==='audit')loadAuditLogs(1);
   if(id==='contracts')loadStaffBookings();
   if(id==='commissions')loadCommissions();
+  if(id==='vouchers')loadVouchers(1);
   if(id==='reports')setTimeout(renderReports,60);
   set('pageTitle',titles[id]||id);
   document.getElementById('addBtn').style.display=id==='contracts'?'flex':'none';

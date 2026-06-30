@@ -11,6 +11,7 @@ const ActivityLog = require('../models/ActivityLog');
 const Conversation = require('../models/Conversation');
 const Message = require('../models/Message');
 const HousekeepingTask = require('../models/HousekeepingTask');
+const Voucher = require('../models/Voucher');
 const AdminUser = require('../models/AdminUser');
 const AuditLog = require('../models/AuditLog');
 const { verifyToken, requireRole } = require('../utils/auth');
@@ -152,6 +153,37 @@ router.put('/bookings/:id/marketer-proof', auth, async (req, res) => {
       'marketerProof.uploadedAt': url ? new Date() : null,
     });
     res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ─── Vouchers (staff receipts) ───────────────────────────
+router.get('/vouchers', auth, async (req, res) => {
+  try {
+    const { building, type, year, month, page = 1, limit = 50 } = req.query;
+    const filter = { propertyId: null };
+    if (building && building !== 'all') filter.building = building;
+    if (type && type !== 'all') filter.type = type;
+    if (year || month) {
+      const y = parseInt(year) || new Date().getFullYear();
+      const m = month ? parseInt(month) - 1 : null;
+      if (m !== null) {
+        filter.date = { $gte: new Date(y, m, 1), $lt: new Date(y, m + 1, 1) };
+      } else {
+        filter.date = { $gte: new Date(y, 0, 1), $lt: new Date(y + 1, 0, 1) };
+      }
+    }
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const [vouchers, total] = await Promise.all([
+      Voucher.find(filter).sort({ date: -1 }).skip(skip).limit(parseInt(limit)).lean(),
+      Voucher.countDocuments(filter),
+    ]);
+    const agg = await Voucher.aggregate([
+      { $match: filter },
+      { $group: { _id: '$type', count: { $sum: 1 }, total: { $sum: '$amount' } } },
+    ]);
+    const byType = {};
+    agg.forEach(a => { byType[a._id] = { count: a.count, total: a.total }; });
+    res.json({ vouchers, total, byType, page: parseInt(page), pages: Math.ceil(total / parseInt(limit)) });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
