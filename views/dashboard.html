@@ -2769,10 +2769,16 @@ async function loadUser(){
     document.getElementById('user-av').textContent=currentUser.avatar||currentUser.name[0];
     document.getElementById('user-name').textContent=currentUser.name;
     document.getElementById('user-role').textContent=currentUser.role==='admin'?'مدير · BAREZ':currentUser.role==='manager'?'مدير · BAREZ':'موظفة · BAREZ';
-    ['dashboard','contracts','commissions','collection','expiry','map','performance','sources','reports'].forEach(s=>{
-      if(!currentUser.allowed.includes(s)){
-        const nb=document.getElementById('nav-'+s);if(nb)nb.style.display='none';
-        const tb=document.getElementById('tab-nav-'+s);if(tb)tb.style.display='none';
+    ['dashboard','contracts','commissions','collection','expiry','map','performance','sources','reports','vouchers','receipts'].forEach(s=>{
+      const nb=document.getElementById('nav-'+s);
+      if(nb){
+        if(!currentUser.allowed.includes(s)){
+          nb.style.opacity='0.45';
+          nb.title='🔒 ليس لديك صلاحية';
+          nb.dataset.locked='1';
+        } else {
+          nb.style.opacity='';nb.title='';nb.dataset.locked='';
+        }
       }
     });
     if(currentUser.role!=='admin'){
@@ -2812,14 +2818,14 @@ function _activateTab(id){
   localStorage.setItem('fs-active-tab',id);
 }
 function go(id,el){
-  if(currentUser&&!currentUser.allowed.includes(id)&&!PUBLIC_SECTIONS.includes(id)){showToast('⛔ ليس لديك صلاحية لعرض هذا القسم');return;}
+  if(currentUser&&!currentUser.allowed.includes(id)&&!PUBLIC_SECTIONS.includes(id)){showToast('🔒 لا توجد لديك صلاحية لعرض هذا القسم');return;}
   if((id==='users'||id==='audit')&&currentUser?.role!=='admin'){showToast('⛔ هذا القسم للمدير العام فقط');return;}
   document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));el?.classList.add('active');
   _activateTab(id);
   closeMobNav();
 }
 function st(id,el){
-  if(currentUser&&!currentUser.allowed.includes(id)&&!PUBLIC_SECTIONS.includes(id)){showToast('⛔ ليس لديك صلاحية لعرض هذا القسم');return;}
+  if(currentUser&&!currentUser.allowed.includes(id)&&!PUBLIC_SECTIONS.includes(id)){showToast('🔒 لا توجد لديك صلاحية لعرض هذا القسم');return;}
   if((id==='users'||id==='audit')&&currentUser?.role!=='admin'){showToast('⛔ هذا القسم للمدير العام فقط');return;}
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el?.classList.add('active');
   _activateTab(id);
