@@ -218,6 +218,98 @@ router.delete('/vouchers/:id', auth, requireRole('admin', 'manager'), async (req
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ─── Cash Flow Report ──────────────────────────────────────
+router.get('/reports/cash-flow', auth, async (req, res) => {
+  try {
+    const { dateFrom, dateTo, user, building, includeClosed, includeServices } = req.query;
+    const from = dateFrom ? new Date(dateFrom) : (() => { const d=new Date(); d.setHours(0,0,0,0); return d; })();
+    const to   = dateTo   ? new Date(dateTo)   : (() => { const d=new Date(); d.setHours(23,59,59,999); return d; })();
+
+    const baseFilter = { propertyId: null };
+    if (building) baseFilter.building = building;
+
+    const vFilter = { ...baseFilter, date: { $gte: from, $lte: to } };
+    if (user) vFilter.createdBy = user;
+
+    const receiptTypes = ['receipt'];
+    if (includeServices === 'true') receiptTypes.push('invoice');
+
+    const [rawReceipts, rawDisbursements, rawChecks, users] = await Promise.all([
+      Voucher.find({ ...vFilter, type: { $in: receiptTypes } }).sort({ date: 1 }).lean(),
+      Voucher.find({ ...vFilter, type: 'disbursement' }).sort({ date: 1 }).lean(),
+      Voucher.find({ ...baseFilter, type: 'check', date: { $gte: from, $lte: to } }).sort({ date: 1 }).lean(),
+      Voucher.distinct('createdBy', baseFilter),
+    ]);
+
+    const resolveMethod = v => v.paymentMethod || (v.bankName ? 'transfer' : 'cash');
+    const mapV = v => ({
+      _id: v._id, number: v.number || '-', date: v.date || v.createdAt || null,
+      name: v.name || '', apt: v.apt || '', description: v.description || '',
+      paymentMethod: resolveMethod(v), bankName: v.bankName || '',
+      amount: v.amount || 0, createdBy: v.createdBy || '',
+    });
+
+    let receipts      = rawReceipts.map(mapV);
+    let disbursements = rawDisbursements.map(mapV);
+    const checks      = rawChecks.map(mapV);
+
+    if (includeClosed === 'true') {
+      const B = require('../models/Booking');
+      const bkFilter = { ...baseFilter, status: 'checkout', checkOut: { $gte: from, $lte: to } };
+      const closed = await B.find(bkFilter).sort({ checkOut: 1 }).lean();
+      const bkRows = closed.filter(b => (b.paidAmount||0) > 0).map(b => ({
+        _id: b._id, number: 'BK-'+b._id.toString().slice(-5).toUpperCase(),
+        date: b.checkOut, name: b.name, apt: b.apt,
+        description: `حجز شقة ${b.apt}`, paymentMethod: b.paymentMethod||'cash',
+        bankName: '', amount: b.paidAmount||0, createdBy: '',
+      }));
+      receipts = [...receipts, ...bkRows].sort((a,b) => new Date(a.date)-new Date(b.date));
+    }
+
+    const sum  = arr => arr.reduce((s,v) => s+v.amount, 0);
+    const byPm = (arr, pm) => sum(arr.filter(v => (v.paymentMethod||'cash') === pm));
+
+    const totalReceipts      = sum(receipts);
+    const totalDisbursements = sum(disbursements);
+    const bankReceipts       = byPm(receipts, 'transfer');
+    const bankDisbursements  = byPm(disbursements, 'transfer');
+    const totalChecks        = sum(checks);
+    const vatOnReceipts      = Math.round(totalReceipts / 1.15 * 0.15 * 100) / 100;
+    const vatOnDisbursements = Math.round(totalDisbursements / 1.15 * 0.15 * 100) / 100;
+    const pmReceipts = {
+      cash:         byPm(receipts, 'cash') + sum(receipts.filter(v => !v.paymentMethod)),
+      check:        byPm(receipts, 'check'),
+      network:      byPm(receipts, 'network'),
+      transfer:     byPm(receipts, 'transfer'),
+      digital:      byPm(receipts, 'digital'),
+      travel_agent: byPm(receipts, 'travel_agent'),
+    };
+    const [allBankR, allBankD] = await Promise.all([
+      Voucher.aggregate([{ $match: { ...baseFilter, type: { $in: ['receipt','invoice'] }, $or:[{paymentMethod:'transfer'},{bankName:{$ne:'',$exists:true}}] } }, { $group:{_id:null,t:{$sum:'$amount'}} }]),
+      Voucher.aggregate([{ $match: { ...baseFilter, type: 'disbursement', $or:[{paymentMethod:'transfer'},{bankName:{$ne:'',$exists:true}}] } }, { $group:{_id:null,t:{$sum:'$amount'}} }]),
+    ]);
+    const totalBankBalance = (allBankR[0]?.t||0) - (allBankD[0]?.t||0);
+    const net     = totalReceipts - totalDisbursements;
+    const netBank = bankReceipts - bankDisbursements;
+
+    res.json({
+      receipts, disbursements, checks,
+      users: users.filter(Boolean),
+      summary: {
+        totalReceipts, totalDisbursements,
+        countReceipts: receipts.length, countDisbursements: disbursements.length,
+        bankReceipts, bankDisbursements,
+        vatOnReceipts, vatOnDisbursements,
+        net, netBank,
+        totalFund: net, bankBalance: netBank,
+        totalBankBalance, totalChecks,
+        pmReceipts,
+        depositReceipts: 0, depositDisbursements: 0, netDeposit: 0, prevDeposits: 0, prevAmounts: 0,
+      },
+    });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 // ─── Commissions History ──────────────────────────────────
 router.get('/commission-history', auth, async (req, res) => {
   try {
