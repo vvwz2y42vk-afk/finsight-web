@@ -765,7 +765,7 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
   <div class="tc" id="tab-vouchers">
     <!-- فلاتر -->
     <div style="background:var(--s);border:1.5px solid var(--b);border-radius:14px;padding:16px;margin-bottom:16px;">
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:flex-end;">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:10px;align-items:flex-end;">
         <div>
           <label style="font-size:11px;font-weight:600;color:var(--t3);display:block;margin-bottom:4px;">من (تاريخ + وقت)</label>
           <input type="datetime-local" id="adm-cf-from" style="width:100%;padding:7px 10px;border:1.5px solid var(--b);border-radius:9px;font-family:inherit;font-size:12px;outline:none;background:var(--s2);color:var(--t1);">
@@ -773,6 +773,16 @@ tbody td{border-bottom:1px solid #f1f4fb!important;padding:11px 14px!important;}
         <div>
           <label style="font-size:11px;font-weight:600;color:var(--t3);display:block;margin-bottom:4px;">إلى (تاريخ + وقت)</label>
           <input type="datetime-local" id="adm-cf-to" style="width:100%;padding:7px 10px;border:1.5px solid var(--b);border-radius:9px;font-family:inherit;font-size:12px;outline:none;background:var(--s2);color:var(--t1);">
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--t3);display:block;margin-bottom:4px;">المبنى</label>
+          <select id="adm-cf-building" style="width:100%;padding:8px 10px;border:1.5px solid var(--b);border-radius:9px;font-family:inherit;font-size:12px;outline:none;background:var(--s2);color:var(--t1);">
+            <option value="">الكل</option>
+            <option value="المنارا">المنارا</option>
+            <option value="جوان ان">جوان ان</option>
+            <option value="الماسة">الماسة</option>
+            <option value="الواحة">الواحة</option>
+          </select>
         </div>
         <div>
           <label style="font-size:11px;font-weight:600;color:var(--t3);display:block;margin-bottom:4px;">اسم المستخدم</label>
@@ -1941,6 +1951,7 @@ async function admLoadCashFlow(){
   admInitCfDates();
   const from=document.getElementById('adm-cf-from').value;
   const to=document.getElementById('adm-cf-to').value;
+  const building=document.getElementById('adm-cf-building').value;
   const user=document.getElementById('adm-cf-user').value;
   const includeClosed=document.getElementById('adm-cf-closed').checked;
   const includeServices=document.getElementById('adm-cf-services').checked;
@@ -1948,6 +1959,7 @@ async function admLoadCashFlow(){
   body.innerHTML='<div style="text-align:center;padding:40px;color:var(--t3);">⏳ جاري التحميل...</div>';
   try{
     const p=new URLSearchParams({dateFrom:from,dateTo:to,user,includeClosed,includeServices});
+    if(building) p.set('building',building);
     const r=await fetch('/api/reports/cash-flow?'+p);
     const d=await r.json();
     if(!r.ok){body.innerHTML=`<div style="color:var(--red);padding:20px;">❌ ${d.error||'حدث خطأ'}</div>`;return;}
