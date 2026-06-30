@@ -4779,8 +4779,8 @@ function renderAdminWeeklyChart(){
 // ── Admin Users ───────────────────────────────────────────
 let adminUsers=[];
 let editingUserId=null;
-const ALL_PAGES=['dashboard','contracts','commissions','collection','expiry','map','performance','sources','reports','listings','bookings','customers','hosts','msgs','apts','staff'];
-const PAGE_LABELS={dashboard:'الرئيسية',contracts:'العقود',commissions:'العمولات',collection:'التحصيل',expiry:'المنتهية',map:'الخريطة',performance:'الأداء',sources:'المصادر',reports:'التقارير',listings:'الإعلانات',bookings:'الحجوزات',customers:'العملاء',hosts:'المضيفون',msgs:'الرسائل',apts:'الشقق',staff:'الموظفون'};
+const ALL_PAGES=['dashboard','contracts','commissions','vouchers','receipts','collection','expiry','map','performance','sources','reports','listings','bookings','customers','hosts','msgs','apts','staff'];
+const PAGE_LABELS={dashboard:'الرئيسية',contracts:'العقود',commissions:'العمولات',vouchers:'حركة صندوق',receipts:'إيصالات الدفع',collection:'التحصيل',expiry:'المنتهية',map:'الخريطة',performance:'الأداء',sources:'المصادر',reports:'التقارير',listings:'الإعلانات',bookings:'الحجوزات',customers:'العملاء',hosts:'المضيفون',msgs:'الرسائل',apts:'الشقق',staff:'الموظفون'};
 const ROLE_LABEL={admin:'مدير عام',manager:'مدير',employee:'موظف'};
 const ROLE_COLOR={admin:'b-gold',manager:'pa',employee:'pcl'};
 
@@ -4952,20 +4952,23 @@ function toggleDD(id){
     const menu=wrap.querySelector('.dd-menu');
     if(btn&&menu){
       const r=btn.getBoundingClientRect();
+      // Measure off-screen to avoid flash before positioning
+      menu.style.visibility='hidden';
       menu.style.display='block';
+      menu.style.position='fixed';
+      menu.style.top='-9999px';
+      menu.style.left='-9999px';
       const mw=menu.offsetWidth||168;
-      // Align right edge of menu with right edge of button; clamp to viewport
+      const mh=menu.offsetHeight||80;
       let left=r.right-mw;
       if(left<8)left=8;
       if(left+mw>window.innerWidth-8)left=window.innerWidth-mw-8;
-      // Show below button; if not enough room below, show above
       let top=r.bottom+4;
-      const mh=menu.offsetHeight||160;
       if(top+mh>window.innerHeight-8)top=r.top-mh-4;
-      menu.style.position='fixed';
       menu.style.top=top+'px';
       menu.style.left=left+'px';
       menu.style.zIndex='9999';
+      menu.style.visibility='';
     }
   }
 }
