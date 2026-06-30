@@ -73,12 +73,17 @@ function totalAptsFromConfig(bldgs, bldName) {
 
 function staffAuth(req,res,next){ req.staff=verifyToken(req.cookies?.[COOKIE])||null; next(); }
 function reqStaff(req,res,next){
-  if(!req.staff) return res.redirect('/staff/login');
+  const isApi = req.path.startsWith('/api/');
+  if(!req.staff) return isApi
+    ? res.status(401).json({ error: 'انتهت جلسة العمل، يرجى تسجيل الدخول مجدداً' })
+    : res.redirect('/staff/login');
   // Subscription check for registered properties
   if(req.staff.propertyId && req.staff.planExpiry) {
     if(Date.now() > new Date(req.staff.planExpiry).getTime()) {
       res.clearCookie(COOKIE);
-      return res.redirect('/staff/login?expired=1');
+      return isApi
+        ? res.status(401).json({ error: 'انتهت صلاحية الاشتراك' })
+        : res.redirect('/staff/login?expired=1');
     }
   }
   next();
@@ -3773,16 +3778,22 @@ router.get('/api/receipts', reqStaff, async (req, res) => {
     if (req.query.bookingId) {
       filter.bookingId = req.query.bookingId;
     } else {
-      filter.building = req.query.building || req.staff.building;
+      if (req.query.building) filter.building = req.query.building;
+      else filter.building = req.staff.building;
     }
     if (req.query.type       && req.query.type       !== 'all') filter['analysis.paymentType'] = req.query.type;
     if (req.query.recStatus  && req.query.recStatus  !== 'all') filter.status = req.query.recStatus;
     if (req.query.matchStatus === 'matched') filter['analysis.matchesBuilding'] = true;
     if (req.query.matchStatus === 'warned')  filter['analysis.matchesBuilding'] = false;
+    if (req.query.createdBy) filter.createdBy = req.query.createdBy;
     if (req.query.dateFrom || req.query.dateTo) {
       filter.createdAt = {};
       if (req.query.dateFrom) filter.createdAt.$gte = new Date(req.query.dateFrom);
       if (req.query.dateTo)   filter.createdAt.$lte = new Date(req.query.dateTo + 'T23:59:59');
+    }
+    if (req.query.q) {
+      const re = new RegExp(req.query.q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      filter.$or = [{ guestName: re }, { apt: re }, { 'analysis.transactionNumber': re }];
     }
     const recs = await Receipt.find(filter).sort({ createdAt: -1 }).limit(200).lean();
     res.json(recs);
