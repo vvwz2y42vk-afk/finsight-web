@@ -1732,9 +1732,8 @@ async function loadData(){
     commHistory=Array.isArray(chData)?chData:[];
     if(bsRes.ok){try{window._bkStats=await bsRes.json();}catch{window._bkStats=null;}}
     if(sbRes.ok){try{const sbData=await sbRes.json();allStaffBookings=Array.isArray(sbData)?sbData:[];}catch{}}
-    const key=currMonthKey();
-    const curr=commHistory.find(h=>h.key===key);
-    currComm=curr?curr.comm:(lsGet('fs-curr-comm')||getInitialComm());
+    const curr=commHistory.find(h=>h.key==='current');
+    currComm=curr?curr.comm:(lsGet('fs-curr-comm')||[]);
     const rd=lsGet('fs-reset-date');
     if(rd){resetDate=new Date(rd);set('reset-info','آخر تصفير: '+resetDate.toLocaleDateString('ar-SA'));}
     setSyncStatus('ok','متصل بقاعدة البيانات ✓');
@@ -1762,7 +1761,12 @@ async function doReset(){
   set('reset-info','آخر تصفير: '+resetDate.toLocaleDateString('ar-SA'));
   renderAll();
   showToast('✅ تم التصفير! لن ترجع العمولات عند تحديث الصفحة');
-  try{await fetch('/api/commission-history',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key,label,comm:savedComm})});}catch(e){}
+  try{
+    // أرشف الشهر المنتهي
+    await fetch('/api/commission-history',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key,label,comm:savedComm})});
+    // صفّر السجل النشط
+    await fetch('/api/commission-history',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:'current',label:'الحالية',comm:[]})});
+  }catch(e){}
 }
 
 // ── إثبات التسويق ──────────────────────────────────────────────────────
@@ -1829,8 +1833,7 @@ async function submitProofUpload(){
       const idx=currComm.findIndex(c=>c.id===_proofCommId);
       if(idx>=0)currComm[idx]={...currComm[idx],proof};
       lsSet('fs-curr-comm',currComm);
-      const key=currMonthKey();
-      await fetch('/api/commission-history',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key,label:monthLabel(key),comm:currComm})});
+      await fetch('/api/commission-history',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:'current',label:'الحالية',comm:currComm})});
     }
     closeProofUpload();
     renderCommissions();
@@ -2740,7 +2743,9 @@ async function saveContract(){
       const d=await r.json();
       if(!r.ok){showToast('❌ '+(d.error||'حدث خطأ'));return;}
       if(mkt&&COMM_RATE[mkt])currComm.push({id:uid(),m:mkt,c:name,sh:c.sheet,d:ds,a:COMM_RATE[mkt]});
-      saveData();closeForm();showToast('✅ تم حفظ الحجز في قاعدة البيانات');
+      saveData();
+      try{await fetch('/api/commission-history',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:'current',label:'الحالية',comm:currComm})});}catch(e){}
+      closeForm();showToast('✅ تم حفظ الحجز في قاعدة البيانات');
       loadStaffBookings();
     }catch(e){showToast('❌ حدث خطأ في الحفظ');}
   }
