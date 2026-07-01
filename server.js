@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const compression = require('compression');
 const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
 const path = require('path');
@@ -90,6 +91,7 @@ const apiRateLimit = createRateLimiter({
 });
 
 // ── Middleware ───────────────────────────────────────────
+app.use(compression({ level: 6, threshold: 1024 })); // Gzip — يقلص 4MB إلى ~350KB
 app.use(securityHeaders);
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true, limit: '2mb' }));

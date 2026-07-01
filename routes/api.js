@@ -693,8 +693,9 @@ router.get('/staff-bookings-full', auth, async (req, res) => {
   try {
     const bookings = await Booking.find(
       { building: { $exists: true, $ne: null }, listing: null },
-      { name:1, phone:1, building:1, apt:1, totalPrice:1, paidAmount:1, status:1, checkIn:1, checkOut:1, source:1, bookingType:1, nights:1, marketer:1, createdAt:1 }
+      { name:1, building:1, apt:1, totalPrice:1, paidAmount:1, status:1, checkIn:1, checkOut:1, source:1, bookingType:1, nights:1, marketer:1, createdAt:1 }
     ).sort({ checkIn: -1 }).lean();
+    res.set('Cache-Control', 'private, max-age=300'); // cache في المتصفح 5 دقائق
     res.json(bookings);
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
