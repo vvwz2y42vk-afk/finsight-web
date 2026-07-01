@@ -1733,7 +1733,15 @@ async function loadData(){
     if(bsRes.ok){try{window._bkStats=await bsRes.json();}catch{window._bkStats=null;}}
     if(sbRes.ok){try{const sbData=await sbRes.json();allStaffBookings=Array.isArray(sbData)?sbData:[];}catch{}}
     const curr=commHistory.find(h=>h.key==='current');
-    currComm=curr?curr.comm:(lsGet('fs-curr-comm')||[]);
+    if(curr&&curr.comm&&curr.comm.length>0){
+      currComm=curr.comm;
+    }else{
+      // لا يوجد سجل نشط — جلب أحدث شهر محفوظ تلقائياً
+      const recent=commHistory.filter(h=>h.key!=='current').sort((a,b)=>b.key.localeCompare(a.key))[0];
+      currComm=recent?recent.comm:(lsGet('fs-curr-comm')||[]);
+      // احفظه كـ current حتى لا يحتاج البحث مرة ثانية
+      if(currComm.length>0)try{await fetch('/api/commission-history',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:'current',label:'الحالية',comm:currComm})});}catch(e){}
+    }
     const rd=lsGet('fs-reset-date');
     if(rd){resetDate=new Date(rd);set('reset-info','آخر تصفير: '+resetDate.toLocaleDateString('ar-SA'));}
     setSyncStatus('ok','متصل بقاعدة البيانات ✓');
