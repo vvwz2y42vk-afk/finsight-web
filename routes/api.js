@@ -1280,6 +1280,4 @@ router.get('/receipts', auth, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-router.get('/ping', (req, res) => res.json({ ok: true, ts: Date.now() }));
-
 module.exports = router;

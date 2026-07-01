@@ -20,14 +20,15 @@ const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/finsight';
 
 const MONGO_OPTS = {
   serverSelectionTimeoutMS: 8000,
-  socketTimeoutMS: 30000,
+  socketTimeoutMS: 45000,
   connectTimeoutMS: 8000,
+  heartbeatFrequencyMS: 30000,   // فحص حالة الخادم كل 30 ثانية
   family: 4,
   tls: true,
   tlsAllowInvalidCertificates: false,
-  maxPoolSize: 3,        // M0 free tier: 500 connection limit — keep per-instance pool tiny
-  minPoolSize: 0,        // release idle connections immediately
-  maxIdleTimeMS: 270000, // أبقِ الاتصال حياً 4.5 دقيقة (أطول من ping interval)
+  maxPoolSize: 3,
+  minPoolSize: 0,
+  maxIdleTimeMS: 270000,         // 4.5 دقيقة — أطول من فترة الـ ping
   bufferCommands: false,
 };
 
@@ -36,7 +37,10 @@ const MONGO_OPTS = {
 let _connPromise = null;
 
 async function connectDB() {
-  if (mongoose.connection.readyState === 1) return;
+  const state = mongoose.connection.readyState;
+  if (state === 1) return;           // متصل
+  if (state === 2) return _connPromise; // جاري الاتصال — انتظر
+  // 0=مقطوع  3=قيد القطع — أعد الاتصال
   if (!_connPromise) {
     _connPromise = mongoose.connect(MONGO_URI, MONGO_OPTS)
       .then(async () => {
@@ -140,6 +144,13 @@ function hostMiddleware(req, res, next) {
   res.locals.hostAccount = req.hostAccount;
   next();
 }
+
+// ── Health / Keep-Alive — NO middleware, fastest possible response ──
+app.get('/api/ping', (req, res) => {
+  res.set('Cache-Control', 'no-store').json({ ok: true, ts: Date.now() });
+  // سخّن اتصال MongoDB في الخلفية بعد إرسال الرد
+  connectDB().catch(() => {});
+});
 
 // ── Routes ───────────────────────────────────────────────
 app.use('/api', dbMiddleware, apiRateLimit, (req, res, next) => {
