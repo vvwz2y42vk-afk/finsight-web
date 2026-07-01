@@ -1786,6 +1786,18 @@ async function loadData(){
       // احفظه كـ current حتى لا يحتاج البحث مرة ثانية
       if(currComm.length>0)try{await fetch('/api/commission-history',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:'current',label:'الحالية',comm:currComm})});}catch(e){}
     }
+    // استعادة إثباتات يونيو تلقائياً إذا ناقصة
+    if(currComm.length>0&&currComm.some(c=>!c.proof)){
+      try{
+        const rp=await fetch('/api/restore-june-proofs');
+        if(rp.ok){const rpd=await rp.json();if(rpd.ok&&rpd.matched?.length>0){
+          // أعد تحميل العمولات من DB بعد الاستعادة
+          const rh=await fetch('/api/commission-history');
+          if(rh.ok){const rhd=await rh.json();commHistory=Array.isArray(rhd)?rhd:[];
+            const c2=commHistory.find(h=>h.key==='current');if(c2?.comm?.length>0)currComm=c2.comm;}
+        }}
+      }catch(e2){}
+    }
     const rd=lsGet('fs-reset-date');
     if(rd){resetDate=new Date(rd);const ri=document.getElementById('reset-info');if(ri){ri.textContent='آخر إغلاق: '+resetDate.toLocaleDateString('ar-SA');ri.style.display='block';}}
     setSyncStatus('ok','متصل بقاعدة البيانات ✓');

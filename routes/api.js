@@ -357,9 +357,8 @@ router.post('/commission-proof', auth, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// مؤقت: استرجاع وربط إثباتات يونيو من Cloudinary تلقائياً
-router.get('/restore-june-proofs', async (req, res) => {
-  if (req.query.secret !== process.env.SESSION_SECRET) return res.status(401).json({ error: 'unauthorized' });
+// استرجاع وربط إثباتات يونيو من Cloudinary تلقائياً
+router.get('/restore-june-proofs', auth, async (req, res) => {
   try {
     const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
     const apiKey    = process.env.CLOUDINARY_API_KEY;
