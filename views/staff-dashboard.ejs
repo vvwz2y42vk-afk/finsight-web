@@ -7917,6 +7917,7 @@ window.addEventListener('load',()=>{
   }
 });
 
+setInterval(()=>fetch('/staff/api/stats').catch(()=>{}), 4*60*1000);
 document.addEventListener('visibilitychange',()=>{
   if(document.hidden){ _stopIntervals(); }
   else{ loadStats(); loadApartments(); _startIntervals(); }

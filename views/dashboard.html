@@ -4993,6 +4993,7 @@ function closeDD(id){_closeDDs();}
 document.addEventListener('click',e=>{if(!e.target.closest('.dd-wrap')&&!e.target.closest('.dd-menu'))_closeDDs();});
 document.addEventListener('scroll',_closeDDs,true);
 
+setInterval(()=>fetch('/api/ping').catch(()=>{}), 4*60*1000);
 window.addEventListener('load',()=>{
   // استعادة التبويب فوراً قبل أي تحميل
   const _st=localStorage.getItem('fs-active-tab');

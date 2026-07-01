@@ -25,9 +25,9 @@ const MONGO_OPTS = {
   family: 4,
   tls: true,
   tlsAllowInvalidCertificates: false,
-  maxPoolSize: 3,      // M0 free tier: 500 connection limit — keep per-instance pool tiny
-  minPoolSize: 0,      // release idle connections immediately
-  maxIdleTimeMS: 8000, // close idle connections after 8s so M0 slot freed fast
+  maxPoolSize: 3,        // M0 free tier: 500 connection limit — keep per-instance pool tiny
+  minPoolSize: 0,        // release idle connections immediately
+  maxIdleTimeMS: 270000, // أبقِ الاتصال حياً 4.5 دقيقة (أطول من ping interval)
   bufferCommands: false,
 };
 
