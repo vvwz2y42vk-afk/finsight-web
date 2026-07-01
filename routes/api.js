@@ -357,14 +357,17 @@ router.post('/commission-proof', auth, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// مؤقت: سرد صور الإثباتات من Cloudinary
-router.get('/cloudinary-proofs-list', auth, async (req, res) => {
+// مؤقت: استرجاع وربط إثباتات يونيو من Cloudinary تلقائياً
+router.get('/restore-june-proofs', async (req, res) => {
+  if (req.query.secret !== process.env.SESSION_SECRET) return res.status(401).json({ error: 'unauthorized' });
   try {
     const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
     const apiKey    = process.env.CLOUDINARY_API_KEY;
     const apiSecret = process.env.CLOUDINARY_API_SECRET;
     if (!cloudName || !apiKey || !apiSecret)
       return res.status(503).json({ error: 'Cloudinary not configured' });
+
+    // جلب كل الصور من مجلد الإثباتات
     const creds = Buffer.from(`${apiKey}:${apiSecret}`).toString('base64');
     const r = await fetch(
       `https://api.cloudinary.com/v1_1/${cloudName}/resources/image?prefix=barez/commission-proofs&max_results=100&type=upload`,
@@ -372,12 +375,46 @@ router.get('/cloudinary-proofs-list', auth, async (req, res) => {
     );
     if (!r.ok) return res.status(500).json({ error: 'Cloudinary error', status: r.status });
     const data = await r.json();
-    const files = (data.resources || []).map(f => ({
-      url: f.secure_url,
-      created: f.created_at,
-      public_id: f.public_id,
-    })).sort((a, b) => new Date(b.created) - new Date(a.created));
-    res.json({ files });
+
+    // فلتر صور يونيو 2026 فقط، مرتبة من الأقدم للأحدث
+    const juneFiles = (data.resources || [])
+      .filter(f => f.created_at && f.created_at.startsWith('2026-06'))
+      .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+    if (juneFiles.length === 0)
+      return res.json({ ok: false, msg: 'لا توجد صور يونيو على Cloudinary', all: data.resources?.length });
+
+    // جلب عمولات current من DB
+    const CommissionHistory = require('../models/CommissionHistory');
+    const curr = await CommissionHistory.findOne({ key: 'current' });
+    if (!curr) return res.json({ ok: false, msg: 'لا يوجد سجل current في DB' });
+
+    // ترتيب عمولات يونيو من الأقدم للأحدث (بالتاريخ)
+    const juneComm = curr.comm
+      .map((c, i) => ({ ...c, _idx: i }))
+      .sort((a, b) => new Date(a.d || 0) - new Date(b.d || 0));
+
+    // ربط كل صورة بالعمولة المقابلة بالترتيب
+    const matched = [];
+    juneComm.forEach((c, i) => {
+      if (juneFiles[i]) {
+        curr.comm[c._idx].proof = { url: juneFiles[i].secure_url, ts: juneFiles[i].created_at };
+        matched.push({ client: c.c, url: juneFiles[i].secure_url });
+      }
+    });
+
+    curr.markModified('comm');
+    await curr.save();
+
+    // حدّث أيضاً أرشيف 2026-06
+    const june = await CommissionHistory.findOne({ key: '2026-06' });
+    if (june) {
+      june.comm = curr.comm;
+      june.markModified('comm');
+      await june.save();
+    }
+
+    res.json({ ok: true, matched, total_june_imgs: juneFiles.length, total_comms: juneComm.length });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
