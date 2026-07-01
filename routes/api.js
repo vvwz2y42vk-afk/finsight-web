@@ -357,6 +357,30 @@ router.post('/commission-proof', auth, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// مؤقت: سرد صور الإثباتات من Cloudinary
+router.get('/cloudinary-proofs-list', auth, async (req, res) => {
+  try {
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+    const apiKey    = process.env.CLOUDINARY_API_KEY;
+    const apiSecret = process.env.CLOUDINARY_API_SECRET;
+    if (!cloudName || !apiKey || !apiSecret)
+      return res.status(503).json({ error: 'Cloudinary not configured' });
+    const creds = Buffer.from(`${apiKey}:${apiSecret}`).toString('base64');
+    const r = await fetch(
+      `https://api.cloudinary.com/v1_1/${cloudName}/resources/image?prefix=barez/commission-proofs&max_results=100&type=upload`,
+      { headers: { Authorization: `Basic ${creds}` } }
+    );
+    if (!r.ok) return res.status(500).json({ error: 'Cloudinary error', status: r.status });
+    const data = await r.json();
+    const files = (data.resources || []).map(f => ({
+      url: f.secure_url,
+      created: f.created_at,
+      public_id: f.public_id,
+    })).sort((a, b) => new Date(b.created) - new Date(a.created));
+    res.json({ files });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // ─── Available Apartments (public) ───────────────────────
 router.get('/apartments/available', async (req, res) => {
   try {
